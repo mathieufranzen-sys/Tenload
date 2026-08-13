@@ -1,0 +1,15 @@
+node_modules
+dist
+dist-ssr
+.env
+.env.local
+.env.*.local
+*.local
+.env*.bak
+.env*.hidden-temp
+.DS_Store
+.netlify
+.vite
+coverage
+*.log
+.tsbuild
