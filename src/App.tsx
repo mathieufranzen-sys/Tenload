@@ -247,10 +247,12 @@ function Coquille({
           load={load}
           pain={data.pain}
           feedback={feedback}
+          activities={data.activities}
           marathonPace={marathonPace}
           journalActif={journalActif}
           onVoirSuivi={() => setOnglet('track')}
           onOuvrirSeance={(semaine, session, slot) => setSeance({ semaine, session, slot })}
+          onOuvrirProfil={() => setOnglet('profile')}
         />
       )}
       {onglet === 'plan' && (
@@ -262,13 +264,27 @@ function Coquille({
           numeroSemaine={numeroSemaine}
           onChangerSemaine={(n) => setNumeroSemaine(Math.max(1, Math.min(35, n)))}
           onOuvrirSeance={(semaine, session, slot) => setSeance({ semaine, session, slot })}
+          onOuvrirProfil={() => setOnglet('profile')}
         />
       )}
       {onglet === 'track' && (
-        <Track load={load} pain={data.pain} logs={data.logs} activities={data.activities} feedback={feedback} />
+        <Track
+          load={load}
+          pain={data.pain}
+          activities={data.activities}
+          feedback={feedback}
+          onOuvrirProfil={() => setOnglet('profile')}
+        />
       )}
       {onglet === 'paces' && (
-        <Paces marathonPace={marathonPace} fitnessPace={fitnessPace} test3k={test3k} goalLabel={goalLabel} onSave={onSaveProfil} />
+        <Paces
+          marathonPace={marathonPace}
+          fitnessPace={fitnessPace}
+          test3k={test3k}
+          goalLabel={goalLabel}
+          onSave={onSaveProfil}
+          onOuvrirProfil={() => setOnglet('profile')}
+        />
       )}
       {onglet === 'profile' && <Profile load={load} pain={data.pain} feedback={feedback} />}
 

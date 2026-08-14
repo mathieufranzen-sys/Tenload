@@ -29,13 +29,13 @@ export function SessionCard({ session: s, day, marathonPace, feedback, onClick }
   return (
     <button
       onClick={onClick}
+      className="glass"
       style={{
         position: 'relative',
         display: 'block',
         width: '100%',
         textAlign: 'left',
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
+        color: 'inherit',
         borderRadius: 'var(--radius)',
         padding: '16px 17px 16px 26px',
         marginBottom: 11,
@@ -58,32 +58,33 @@ export function SessionCard({ session: s, day, marathonPace, feedback, onClick }
       <h3
         style={{
           margin: '0 0 3px',
-          fontSize: 'var(--fs-card)',
-          fontWeight: 800,
-          letterSpacing: '-.45px',
-          lineHeight: 1.2,
+          fontSize: 18,
+          fontWeight: 600,
+          letterSpacing: '-.35px',
+          lineHeight: 1.25,
           paddingRight: feedback ? 32 : 0,
         }}
       >
         {s.title}
       </h3>
-      <div style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-meta)', fontWeight: 500 }}>
+      <div style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500 }}>
         {formatDayLong(day)}
         {s.type !== 'repos' && ` · ${duration}`}
       </div>
-      <div style={{ fontSize: 14.5, fontWeight: 500, marginTop: 9 }}>{subtitle}</div>
+      <div style={{ fontSize: 13.5, fontWeight: 500, marginTop: 9 }}>{subtitle}</div>
 
       {s.adapted && (
         <div style={{ marginTop: 9 }}>
           <span
             style={{
               display: 'inline-block',
-              fontSize: 11.5,
-              fontWeight: 700,
+              fontSize: 11,
+              fontWeight: 600,
               padding: '3.5px 9px',
               borderRadius: 'var(--pill)',
-              background: 'rgba(250,178,25,.16)',
+              background: 'rgba(250,178,25,.18)',
               color: '#FFD166',
+              border: '1px solid rgba(250,178,25,.26)',
             }}
           >
             {s.adapted}
@@ -92,7 +93,7 @@ export function SessionCard({ session: s, day, marathonPace, feedback, onClick }
       )}
 
       {feedback && (
-        <div style={{ marginTop: 9, color: 'var(--ink-2)', fontSize: 13.5, fontWeight: 600 }}>
+        <div style={{ marginTop: 9, color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500 }}>
           Douleur {formatNumber(feedback.pain)}/10 · Effort {feedback.rpe}/10
         </div>
       )}

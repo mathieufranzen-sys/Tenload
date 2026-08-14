@@ -92,6 +92,7 @@ export function buildPain({
       eccentric: historique
         ? Boolean(l.eccentric) || Boolean(eccentriqueDevine?.has(l.day))
         : Boolean(l.eccentric),
+      hydrated: (num(l.hydration_l) ?? 0) >= 2,
     }
     pain[l.day] = jour
   }

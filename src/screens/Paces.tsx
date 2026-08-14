@@ -6,6 +6,7 @@ import planJson from '../data/plan.json'
 import type { Plan, ZoneKey } from '../data/types'
 import { today } from '../lib/dates'
 import { MARATHON_KM, formatDuration, formatPace, zonePace } from '../lib/paces'
+import { ProfileButton } from '../components/ProfileButton'
 
 const plan = planJson as unknown as Plan
 
@@ -46,9 +47,10 @@ interface Props {
   goalLabel: string
   /** Absent en mode instantanés : les deux cartes de réglage restent en lecture seule. */
   onSave?: (patch: ProfilPatch) => void
+  onOuvrirProfil: () => void
 }
 
-export function Paces({ marathonPace, fitnessPace, test3k, goalLabel, onSave }: Props) {
+export function Paces({ marathonPace, fitnessPace, test3k, goalLabel, onSave, onOuvrirProfil }: Props) {
   const gt = marathonPace * MARATHON_KM
   const ft = fitnessPace * MARATHON_KM
   const gap = Math.round((ft - gt) / 60)
@@ -85,11 +87,14 @@ export function Paces({ marathonPace, fitnessPace, test3k, goalLabel, onSave }: 
 
   return (
     <div style={{ maxWidth: 'var(--shell-max)', margin: '0 auto', padding: '22px var(--page-x) 90px' }}>
-      <header style={{ marginBottom: 18 }}>
-        <h1 style={{ margin: 0, fontSize: 27, fontWeight: 800, letterSpacing: '-.6px' }}>Allures</h1>
-        <p style={{ color: 'var(--ink-2)', fontSize: 14.5, fontWeight: 500, margin: '3px 0 0' }}>
-          Objectif {goalLabel} · calibré sur ton dernier test de 3 km
-        </p>
+      <header style={{ marginBottom: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 27, fontWeight: 800, letterSpacing: '-.6px' }}>Allures</h1>
+          <p style={{ color: 'var(--ink-2)', fontSize: 14.5, fontWeight: 500, margin: '3px 0 0' }}>
+            Objectif {goalLabel} · calibré sur ton dernier test de 3 km
+          </p>
+        </div>
+        <ProfileButton onClick={onOuvrirProfil} />
       </header>
 
       <div style={{ position: 'relative', borderRadius: 'var(--radius-lg)', padding: 20, marginBottom: 13, overflow: 'hidden', background: 'var(--g-long)', color: '#fff' }}>

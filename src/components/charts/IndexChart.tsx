@@ -42,7 +42,7 @@ export function IndexChart({ series, now }: { series: Array<{ day: string; idx: 
             width={IW}
             height={Math.max(0, y(prevMax) - y(b.max))}
             fill={b.color}
-            opacity={0.075}
+            opacity={0.13}
           />
         )
         prevMax = b.max
@@ -51,18 +51,18 @@ export function IndexChart({ series, now }: { series: Array<{ day: string; idx: 
 
       {[0, 25, 50, 75, 100].map((v) => (
         <g key={v}>
-          <line x1={P.l} x2={W - P.r} y1={y(v)} y2={y(v)} stroke="var(--grid)" strokeWidth={1} />
-          <text x={P.l - 7} y={y(v) + 3.5} textAnchor="end" fontSize={10} fill="var(--muted)">
+          <line x1={P.l} x2={W - P.r} y1={y(v)} y2={y(v)} stroke="var(--chart-grille)" strokeWidth={1} />
+          <text x={P.l - 7} y={y(v) + 3.5} textAnchor="end" fontSize={10} fill="var(--chart-texte)">
             {v}
           </text>
         </g>
       ))}
 
-      <path d={chemin(0, cut)} fill="none" stroke="var(--series-1)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={chemin(0, cut)} fill="none" stroke="var(--chart-ligne)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       <path
         d={chemin(Math.max(0, cut), n - 1)}
         fill="none"
-        stroke="var(--series-1)"
+        stroke="var(--chart-ligne)"
         strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -81,7 +81,7 @@ export function IndexChart({ series, now }: { series: Array<{ day: string; idx: 
 
       {series.map((r, i) =>
         i % stepX === 0 || i === n - 1 ? (
-          <text key={i} x={x(i)} y={H - 6} textAnchor="middle" fontSize={10} fill="var(--muted)">
+          <text key={i} x={x(i)} y={H - 6} textAnchor="middle" fontSize={10} fill="var(--chart-texte)">
             {formatDay(r.day)}
           </text>
         ) : null,

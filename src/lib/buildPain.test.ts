@@ -32,6 +32,7 @@ function painEmbarque(): PainMap {
       icing: r.icing,
       jumps: r.jumps,
       eccentric: (r.activities ?? []).some((a) => /renfo bas/i.test(a)),
+      hydrated: false,
     }
   }
   return pain

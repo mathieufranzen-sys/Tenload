@@ -70,6 +70,8 @@ export interface PainDay {
   icing?: boolean
   /** Sauts / pliométrie (test de charge du kiné). */
   jumps?: boolean
+  /** Au moins 2 litres bus dans la journée : un tendon mal hydraté encaisse moins bien. */
+  hydrated?: boolean
 }
 
 /** Charge tendineuse par jour, en kilomètres-équivalents. Clé = date ISO. */
@@ -90,7 +92,7 @@ export interface IndexBreakdown {
   trend: number
   /** Monotonie de la semaine, jusqu'à 8. */
   monotony: number
-  /** Gestes protecteurs, jusqu'à 15 (valeur positive, soustraite). */
+  /** Gestes protecteurs, jusqu'à 17 (valeur positive, soustraite). */
   credits: number
   /** Charge aiguë (moyenne exponentielle, demi-vie 3,5 j). */
   acute: number
@@ -328,6 +330,7 @@ export function tendonIndex(
   if (y?.eccentric) credits += 6
   if (y?.jumps) credits += 2
   if (y?.icing) credits += 2
+  if (y?.hydrated) credits += 2
   if ((load[shiftDay(day, -1)] ?? 0) < 2) credits += 5
 
   let idx = ratio + freshness + painPts + trendPts + monotony - credits

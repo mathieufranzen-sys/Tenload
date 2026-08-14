@@ -60,6 +60,7 @@
   --g-inter: linear-gradient(180deg, #e5433d, #f5872e);
   --g-tempo: linear-gradient(180deg, #f5a623, #f5de23);
   --g-test: linear-gradient(180deg, #ff5e3a, #ffb03a);
+  --g-course: linear-gradient(180deg, #f5527a, #c9184a);
   --g-race: linear-gradient(180deg, #e5484d, #8b1a1a);
   --g-muscu-haut: linear-gradient(180deg, #2e7be8, #5cacff);
   --g-muscu-bas: linear-gradient(180deg, #1c5fd0, #3e90f5);
@@ -88,6 +89,22 @@
   --axis: #33373f;
   --muted: #898781;
 
+  /* ─── graphiques du Suivi ────────────────────────────────────────────────
+     Triade saturée posée sur un fond très sombre. Les trois teintes sont
+     écartées en luminosité autant qu'en teinte (cyan clair, magenta moyen,
+     ambre clair) : sur une déficience rouge-vert, c'est l'écart de clarté qui
+     continue de séparer les courbes quand la teinte se brouille. La courbe de
+     fin de journée est en plus tracée plus épaisse — c'est le signal qui
+     compte le plus chez Mathieu, il doit se lire en premier. */
+  --chart-1: #22d3ee;
+  --chart-2: #f472b6;
+  --chart-3: #fbbf24;
+  /* L'indice n'a pas de teinte propre : ce sont les bandes de fond qui
+     portent la gravité, la ligne ne porte que la valeur. */
+  --chart-ligne: #e8eaed;
+  --chart-grille: rgba(255, 255, 255, 0.09);
+  --chart-texte: rgba(255, 255, 255, 0.45);
+
   /* ─── bandes de l'indice de charge du tendon ─────────────────────────── */
   --band-vert: #0ca30c;
   --band-jaune: #fab219;
@@ -100,4 +117,67 @@
   --warning: #fab219;
   --serious: #ec835a;
   --critical: #d03b3b;
+
+  /* ─── verre dépoli ───────────────────────────────────────────────────────
+     Les cartes posées sur le dégradé de l'écran Aujourd'hui. Le liseré clair
+     du haut donne l'épaisseur : sans lui la carte a l'air d'un simple voile. */
+  --glass: rgba(255, 255, 255, 0.11);
+  --glass-fort: rgba(255, 255, 255, 0.13);
+  --glass-border: rgba(255, 255, 255, 0.17);
+  --glass-blur: blur(22px) saturate(1.5);
+  --glass-lueur: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+
+  /* ─── typographie du dégradé ─────────────────────────────────────────────
+     Sur le dégradé, les encres grises de l'app (--ink-2, --ink-3) deviennent
+     sales : on passe par du blanc transparent, qui prend la couleur du fond. */
+  --sur-ink-2: rgba(255, 255, 255, 0.68);
+  --sur-ink-3: rgba(255, 255, 255, 0.55);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Camaïeux du dégradé d'accueil
+
+   Six teintes d'une même famille par bande, pas une couleur unique déclinée
+   en opacité : c'est ce qui donne la profondeur. --m6 est le fond du bas, il
+   sert aussi de couleur d'écran derrière le dégradé.
+   ══════════════════════════════════════════════════════════════════════════ */
+[data-band='vert'] {
+  --m1: #a7f3d0;
+  --m2: #34d399;
+  --m3: #15803d;
+  --m4: #bef264;
+  --m5: #0d9488;
+  --m6: #04140e;
+}
+[data-band='jaune'] {
+  --m1: #fef08a;
+  --m2: #facc15;
+  --m3: #a16207;
+  --m4: #bef264;
+  --m5: #b45309;
+  --m6: #141002;
+}
+[data-band='orange'] {
+  --m1: #fed7aa;
+  --m2: #fb923c;
+  --m3: #c2410c;
+  --m4: #fbbf24;
+  --m5: #9a3412;
+  --m6: #170a05;
+}
+[data-band='rouge'] {
+  --m1: #fecaca;
+  --m2: #f87171;
+  --m3: #b91c1c;
+  --m4: #fb923c;
+  --m5: #7f1d1d;
+  --m6: #160406;
+}
+[data-band='noir'] {
+  --m1: #fca5a5;
+  --m2: #b91c1c;
+  --m3: #7f1d1d;
+  --m4: #a1526b;
+  --m5: #4c1d3d;
+  --m6: #0e0305;
 }

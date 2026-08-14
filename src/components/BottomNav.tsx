@@ -1,13 +1,14 @@
 import { Icon } from './Icon'
 
+/** `profile` reste un onglet valable : on peut toujours s'y trouver, il n'a
+ *  simplement plus d'entrée dans la barre — on y arrive par ProfileButton. */
 export type Onglet = 'today' | 'plan' | 'track' | 'paces' | 'profile'
 
-const ONGLETS: Array<{ key: Onglet; icon: 'sun' | 'clip' | 'chart' | 'gauge' | 'user'; label: string }> = [
+const ONGLETS: Array<{ key: Onglet; icon: 'sun' | 'clip' | 'chart' | 'gauge'; label: string }> = [
   { key: 'today', icon: 'sun', label: "Aujourd'hui" },
   { key: 'plan', icon: 'clip', label: 'Programme' },
   { key: 'track', icon: 'chart', label: 'Suivi' },
   { key: 'paces', icon: 'gauge', label: 'Allures' },
-  { key: 'profile', icon: 'user', label: 'Profil' },
 ]
 
 export function BottomNav({ actif, onChange }: { actif: Onglet; onChange: (o: Onglet) => void }) {
@@ -15,19 +16,24 @@ export function BottomNav({ actif, onChange }: { actif: Onglet; onChange: (o: On
     <nav
       style={{
         position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
         zIndex: 40,
-        display: 'flex',
-        justifyContent: 'center',
-        background: 'rgba(15,17,21,.92)',
-        backdropFilter: 'blur(20px)',
-        borderTop: '1px solid var(--border)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        width: 'calc(100% - 28px)',
+        maxWidth: 400,
       }}
     >
-      <div style={{ display: 'flex', width: '100%', maxWidth: 'var(--shell-max)' }}>
+      <div
+        className="glass"
+        style={{
+          display: 'flex',
+          borderRadius: 26,
+          padding: '4px',
+          backdropFilter: 'blur(34px) saturate(1.7)',
+          WebkitBackdropFilter: 'blur(34px) saturate(1.7)',
+        }}
+      >
         {ONGLETS.map((o) => {
           const courant = o.key === actif
           return (
@@ -37,17 +43,19 @@ export function BottomNav({ actif, onChange }: { actif: Onglet; onChange: (o: On
               aria-current={courant ? 'page' : undefined}
               style={{
                 flex: 1,
-                padding: '9px 2px 10px',
+                padding: '9px 2px 8px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: 3,
-                color: courant ? 'var(--ink)' : 'var(--ink-3)',
-                fontSize: 10.5,
+                borderRadius: 21,
+                background: courant ? 'rgba(255,255,255,.14)' : 'transparent',
+                color: courant ? 'var(--ink)' : 'var(--sur-ink-3)',
+                fontSize: 10,
                 fontWeight: 700,
               }}
             >
-              <Icon name={o.icon} size={23} style={{ strokeWidth: 1.9 }} />
+              <Icon name={o.icon} size={21} style={{ strokeWidth: 1.9 }} />
               <span>{o.label}</span>
             </button>
           )

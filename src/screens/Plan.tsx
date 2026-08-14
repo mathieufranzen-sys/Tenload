@@ -10,6 +10,7 @@ import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { FeedbackRow } from '../lib/buildPain'
 import { SessionCard } from '../components/SessionCard'
 import { Icon } from '../components/Icon'
+import { ProfileButton } from '../components/ProfileButton'
 
 const plan = planJson as unknown as PlanType
 
@@ -23,9 +24,19 @@ interface Props {
   numeroSemaine: number
   onChangerSemaine: (n: number) => void
   onOuvrirSeance?: (semaine: Week, session: Session, slot: number) => void
+  onOuvrirProfil: () => void
 }
 
-export function Plan({ load, pain, feedback, marathonPace, numeroSemaine, onChangerSemaine, onOuvrirSeance }: Props) {
+export function Plan({
+  load,
+  pain,
+  feedback,
+  marathonPace,
+  numeroSemaine,
+  onChangerSemaine,
+  onOuvrirSeance,
+  onOuvrirProfil,
+}: Props) {
   const now = todayISO()
   const semaine = plan.weeks.find((w) => w.n === numeroSemaine) ?? plan.weeks[0]
   const bloc = plan.blocs.find((b) => b.id === semaine.bloc)!
@@ -45,11 +56,14 @@ export function Plan({ load, pain, feedback, marathonPace, numeroSemaine, onChan
 
   return (
     <div style={{ maxWidth: 'var(--shell-max)', margin: '0 auto', padding: '22px var(--page-x) 90px' }}>
-      <header style={{ marginBottom: 18 }}>
-        <h1 style={{ margin: 0, fontSize: 27, fontWeight: 800, letterSpacing: '-.6px' }}>Programme</h1>
-        <p style={{ color: 'var(--ink-2)', fontSize: 14.5, fontWeight: 500, margin: '3px 0 0' }}>
-          Marathon de Paris · dimanche 11 avril 2027
-        </p>
+      <header style={{ marginBottom: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 27, fontWeight: 800, letterSpacing: '-.6px' }}>Programme</h1>
+          <p style={{ color: 'var(--ink-2)', fontSize: 14.5, fontWeight: 500, margin: '3px 0 0' }}>
+            Marathon de Paris · dimanche 11 avril 2027
+          </p>
+        </div>
+        <ProfileButton onClick={onOuvrirProfil} />
       </header>
 
       <div

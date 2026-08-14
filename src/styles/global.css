@@ -87,6 +87,136 @@ input[type='range']::-moz-range-thumb {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   Champ de formes de l'écran Aujourd'hui
+
+   Sept masses colorées, aux rayons volontairement asymétriques et inclinées :
+   floutées à 38 px elles se lisent comme un dégradé organique, pas comme des
+   cercles empilés. Les couleurs viennent du camaïeu de la bande (tokens.css).
+   ══════════════════════════════════════════════════════════════════════════ */
+.mesh {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  filter: blur(48px) saturate(1.3);
+  pointer-events: none;
+}
+.mesh i {
+  position: absolute;
+  display: block;
+}
+/* galet allongé */
+.mesh .s1 {
+  width: 300px;
+  height: 170px;
+  left: -90px;
+  top: -40px;
+  background: var(--m1);
+  border-radius: 58% 42% 64% 36% / 62% 55% 45% 38%;
+  transform: rotate(-22deg);
+  opacity: 0.92;
+}
+/* fuseau vertical */
+.mesh .s2 {
+  width: 150px;
+  height: 340px;
+  right: -70px;
+  top: 20px;
+  background: var(--m4);
+  border-radius: 52% 48% 40% 60% / 38% 34% 66% 62%;
+  transform: rotate(18deg);
+  opacity: 0.85;
+}
+/* bandeau large */
+.mesh .s3 {
+  width: 420px;
+  height: 150px;
+  left: -60px;
+  top: 270px;
+  background: var(--m2);
+  border-radius: 46% 54% 58% 42% / 70% 62% 38% 30%;
+  transform: rotate(-8deg);
+  opacity: 0.8;
+}
+/* croissant */
+.mesh .s4 {
+  width: 280px;
+  height: 300px;
+  right: -110px;
+  top: 430px;
+  background: var(--m3);
+  border-radius: 63% 37% 30% 70% / 45% 60% 40% 55%;
+  transform: rotate(32deg);
+  opacity: 0.88;
+}
+/* écharpe diagonale */
+.mesh .s5 {
+  width: 340px;
+  height: 120px;
+  left: -80px;
+  top: 520px;
+  background: var(--m5);
+  border-radius: 60% 40% 55% 45% / 55% 48% 52% 45%;
+  transform: rotate(26deg);
+  opacity: 0.75;
+}
+/* pastille d'accent — le seul vrai rond */
+.mesh .s6 {
+  width: 130px;
+  height: 130px;
+  left: 150px;
+  top: 150px;
+  background: var(--m1);
+  border-radius: 50%;
+  opacity: 0.5;
+}
+/* assise sombre : referme la composition sous la carte de séance */
+.mesh .s7 {
+  width: 460px;
+  height: 300px;
+  left: -70px;
+  top: 640px;
+  background: var(--m6);
+  border-radius: 50% 50% 0 0 / 40% 40% 0 0;
+  opacity: 0.9;
+}
+
+/* Voile de lisibilité. Les arrêts sont en pixels et non en pourcentages :
+   le dégradé court sur toute la page, mais sa composition doit rester celle
+   du premier écran, quelle que soit la longueur du scroll en dessous. */
+.mesh-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(6, 7, 10, 0.36) 0px,
+    rgba(6, 7, 10, 0.06) 250px,
+    rgba(6, 7, 10, 0.2) 520px,
+    rgba(6, 7, 10, 0.62) 820px,
+    rgba(6, 7, 10, 0.82) 1040px
+  );
+}
+
+/* Carte en verre dépoli, posée sur le dégradé. */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-lueur);
+}
+
+/* Le flou d'arrière-plan coûte cher et sature les GPU anciens : on le coupe
+   quand l'utilisateur demande moins d'animation, la carte reste lisible. */
+@media (prefers-reduced-motion: reduce) {
+  .mesh {
+    filter: blur(40px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
