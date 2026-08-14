@@ -28,7 +28,11 @@ export const supabase = isConfigured
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        flowType: 'pkce',
+        // PKCE exige que le lien soit ouvert dans le navigateur qui a fait la
+        // demande : sur mobile, cliquer depuis l'appli mail ouvre presque
+        // toujours un autre contexte, et l'échange échoue en silence. Implicit
+        // met le jeton dans l'URL, sans code-verifier local — ça marche partout.
+        flowType: 'implicit',
       },
     })
   : null
