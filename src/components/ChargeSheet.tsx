@@ -81,7 +81,7 @@ export function ChargeSheet({
       valeur: -b.credits,
       plafond: -15,
       couleur: 'var(--series-3)',
-      detail: 'Excentrique −6, repos −5, glaçage −2, sauts −2',
+      detail: 'Excentrique −6, repos −5, sauts −2, hydratation −2',
     },
   ]
 

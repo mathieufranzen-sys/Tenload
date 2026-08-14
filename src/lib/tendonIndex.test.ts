@@ -225,10 +225,16 @@ describe('les gestes protecteurs récompensent l’observance', () => {
   it('le protocole excentrique de la veille fait baisser l’indice', () => {
     const sans = tendonIndex('2026-08-14', WEEK1, { '2026-08-13': { wake: 1 } })
     const avec = tendonIndex('2026-08-14', WEEK1, {
-      '2026-08-13': { wake: 1, eccentric: true, icing: true },
+      '2026-08-13': { wake: 1, eccentric: true },
     })
     expect(avec.idx).toBeLessThan(sans.idx)
-    expect(avec.credits - sans.credits).toBe(8) // 6 pour l'excentrique, 2 pour le glaçage
+    expect(avec.credits - sans.credits).toBe(6)
+  })
+
+  it('le glaçage est saisi mais ne pèse plus sur le crédit', () => {
+    const sans = tendonIndex('2026-08-14', WEEK1, { '2026-08-13': { wake: 1 } })
+    const avec = tendonIndex('2026-08-14', WEEK1, { '2026-08-13': { wake: 1, icing: true } })
+    expect(avec.credits).toBe(sans.credits)
   })
 
   it('bien s’hydrater la veille fait aussi baisser l’indice', () => {

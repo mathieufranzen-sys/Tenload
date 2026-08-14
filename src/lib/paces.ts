@@ -82,6 +82,39 @@ export const hrRange = (zone: (typeof HR_ZONES)[number], hrMax = HR_MAX) =>
   [Math.round(zone.pct[0] * hrMax), Math.round(zone.pct[1] * hrMax)] as const
 
 /**
+ * Correspondance entre les six zones d'allure et les cinq zones de FC.
+ * `rep` partage la zone de `vo2` : sur un 400-600 m la FC n'a pas le temps de
+ * suivre l'effort, la cible cardiaque n'y est de toute façon pas fiable.
+ */
+const ZONE_HR: Record<ZoneKey, (typeof HR_ZONES)[number]['key']> = {
+  recup: 'Z1',
+  ef: 'Z2',
+  am: 'Z3',
+  seuil: 'Z4',
+  vo2: 'Z5',
+  rep: 'Z5',
+}
+
+/**
+ * Chez Mathieu, la FC cible à vélo est inférieure de 20 bpm à sa FC de course
+ * à effort équivalent — une mesure personnelle, pas une règle physiologique
+ * générale.
+ */
+export const HR_VELO_OFFSET = 20
+
+/** Fourchette de FC d'une zone d'allure, en course ou à vélo. */
+export function zoneHrRange(
+  zone: ZoneKey,
+  discipline: 'course' | 'velo' = 'course',
+  hrMax = HR_MAX,
+): readonly [number, number] {
+  const z = HR_ZONES.find((h) => h.key === ZONE_HR[zone])!
+  const [lo, hi] = hrRange(z, hrMax)
+  const decalage = discipline === 'velo' ? -HR_VELO_OFFSET : 0
+  return [Math.max(0, lo + decalage), Math.max(0, hi + decalage)]
+}
+
+/**
  * Durée estimée d'une séance, à partir de sa structure et des allures courantes.
  * Renvoie une fourchette en minutes, arrondie à 5 minutes près.
  */

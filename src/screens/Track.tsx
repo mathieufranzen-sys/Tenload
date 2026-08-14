@@ -65,16 +65,18 @@ export function Track({ load, pain, activities, feedback, onOuvrirProfil }: Prop
   const painRef = jours.length ? jours[jours.length - 1] : now
   const fenetre = (from: number, to: number) =>
     jours.filter((d) => d > addDays(painRef, -to) && d <= addDays(painRef, -from))
-  const last7 = fenetre(0, 7)
+  // Santé du tendon lit 30 jours, pas 7 : une catégorie qui bascule sur une
+  // semaine chargée n'aide pas, c'est une lecture de fond qu'on veut ici.
+  const last30 = fenetre(0, 30)
 
   const moyenne = (liste: string[], champ: 'wake' | 'effort' | 'evening'): number | null => {
     const vs = liste.map((d) => pain[d]?.[champ]).filter((v): v is number => v != null)
     return vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : null
   }
 
-  const reveil7 = moyenne(last7, 'wake')
-  const soir7 = moyenne(last7, 'evening')
-  const sante = santeDuTendon(reveil7, soir7)
+  const reveil30 = moyenne(last30, 'wake')
+  const soir30 = moyenne(last30, 'evening')
+  const sante = santeDuTendon(reveil30, soir30)
 
   const stravaRef = useMemo(() => {
     const jrs = activities.map((a) => a.day).sort()
@@ -199,7 +201,7 @@ export function Track({ load, pain, activities, feedback, onOuvrirProfil }: Prop
             valeur={sante.label}
             suffix=""
             couleur={sante.couleur}
-            detail="douleur des 7 derniers jours"
+            detail="douleur des 30 derniers jours"
           />
           <Kpi
             label="Séances notées"

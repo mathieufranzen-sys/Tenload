@@ -1,9 +1,9 @@
 /**
  * Le point du jour : les seules saisies qui nourrissent l'indice de charge.
  *
- * Volontairement limité à ce qui compte pour le modèle — trois curseurs
- * n'existent pas ici (`stretching` est en base mais n'entre dans aucun terme
- * de `tendonIndex.ts`, l'exposer laisserait croire qu'il compte).
+ * Volontairement limité à ce qui compte pour le modèle — `stretching` et
+ * `icing` sont en base mais n'entrent dans aucun terme de `tendonIndex.ts`,
+ * les exposer laisserait croire qu'ils comptent.
  */
 import type { DailyLogRow } from '../lib/buildPain'
 import { formatNumber } from '../lib/dates'
@@ -14,9 +14,8 @@ interface Props {
   day: string
 }
 
-const GESTES: Array<{ champ: 'eccentric' | 'icing' | 'jumps'; label: string; effet: string }> = [
+const GESTES: Array<{ champ: 'eccentric' | 'jumps'; label: string; effet: string }> = [
   { champ: 'eccentric', label: 'Excentrique', effet: '−6' },
-  { champ: 'icing', label: 'Glaçage', effet: '−2' },
   { champ: 'jumps', label: 'Sauts', effet: '−2' },
 ]
 

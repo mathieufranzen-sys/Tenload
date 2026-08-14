@@ -16,24 +16,38 @@ import { TendonIndexInfo } from './profile/TendonIndexInfo'
 import { HeartRateZones } from './profile/HeartRateZones'
 import { StravaStatus } from './profile/StravaStatus'
 import { PlanStructure } from './profile/PlanStructure'
+import { PaceSettings } from './profile/PaceSettings'
 
-type SectionKey = 'contraintes' | 'indice' | 'coeur' | 'strava' | 'structure'
+type SectionKey = 'contraintes' | 'indice' | 'coeur' | 'strava' | 'structure' | 'allure'
 
 const SECTIONS: Array<{ key: SectionKey; titre: string; description: string }> = [
   { key: 'contraintes', titre: 'Tes contraintes', description: 'Les règles non négociables du plan' },
   { key: 'indice', titre: 'Indice de charge du tendon', description: 'Les bandes et le détail du calcul' },
+  { key: 'allure', titre: 'Réglages d’allure', description: 'Recalibrer ta forme, changer l’objectif' },
   { key: 'coeur', titre: 'Zones cardiaques', description: 'Corrigées sur ta FC max réelle' },
   { key: 'strava', titre: 'Connexion Strava', description: 'Statut de la synchronisation' },
   { key: 'structure', titre: 'Structure des 35 semaines', description: 'Les cinq blocs du plan' },
 ]
 
+interface ProfilPatch {
+  fitness_pace_s?: number
+  test_3k_s?: number
+  test_3k_date?: string
+  marathon_pace_s?: number
+  goal_label?: string
+}
+
 interface Props {
   load: LoadMap
   pain: PainMap
   feedback: FeedbackRow[]
+  marathonPace: number
+  test3k: number | null
+  /** Absent en mode instantanés : les réglages d'allure restent alors en lecture seule. */
+  onSaveProfil?: (patch: ProfilPatch) => void
 }
 
-export function Profile({ load, pain, feedback }: Props) {
+export function Profile({ load, pain, feedback, marathonPace, test3k, onSaveProfil }: Props) {
   const [section, setSection] = useState<SectionKey | null>(null)
   const now = todayISO()
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
@@ -78,6 +92,7 @@ export function Profile({ load, pain, feedback }: Props) {
       <SubPage ouvert={section != null} titre={active?.titre ?? ''} onBack={() => setSection(null)}>
         {section === 'contraintes' && <Constraints />}
         {section === 'indice' && <TendonIndexInfo idx={A.detail.idx} band={A.band} />}
+        {section === 'allure' && <PaceSettings marathonPace={marathonPace} test3k={test3k} onSave={onSaveProfil} />}
         {section === 'coeur' && <HeartRateZones />}
         {section === 'strava' && <StravaStatus />}
         {section === 'structure' && <PlanStructure />}

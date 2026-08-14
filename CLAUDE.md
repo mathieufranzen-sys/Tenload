@@ -131,7 +131,7 @@ Six termes s'additionnent, moins ce qui protège :
 | Fraîcheur immédiate | 20 | Charge de la veille et de l'avant-veille, rapportée au niveau habituel. |
 | Tendance | 6 | Pente de la raideur matinale sur quatre jours. Seule une hausse compte. |
 | Monotonie | 8 | Écart-type de la charge sur sept jours (Foster). Une semaine sans jour léger use le tendon. |
-| Gestes protecteurs | −17 | Excentrique la veille −6, vraie journée de repos −5, glaçage −2, sauts −2, hydratation ≥ 2 L −2. |
+| Gestes protecteurs | −15 | Excentrique la veille −6, vraie journée de repos −5, sauts −2, hydratation ≥ 2 L −2. Le glaçage est saisi mais ne pèse plus : pas d'effet démontré sur la charge mécanique du tendon. |
 
 ### Trois décisions à ne pas défaire
 

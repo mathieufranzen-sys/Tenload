@@ -32,7 +32,7 @@ const TERMES: Array<{ nom: string; poids: string; texte: string }> = [
     nom: 'Gestes protecteurs',
     poids: 'jusqu’à −15 points',
     texte:
-      'Le protocole excentrique de la veille vaut −6, une vraie journée de repos −5, le glaçage −2, les sauts −2. Faire ta muscu fait baisser ton indice : c’est le traitement, pas une agression.',
+      'Le protocole excentrique de la veille vaut −6, une vraie journée de repos −5, les sauts −2, boire au moins 2 litres −2. Faire ta muscu fait baisser ton indice : c’est le traitement, pas une agression. Le glaçage est saisi mais ne pèse plus : pas d’effet démontré sur la charge mécanique.',
   },
 ]
 

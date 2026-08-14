@@ -278,15 +278,25 @@ function Coquille({
       )}
       {onglet === 'paces' && (
         <Paces
+          load={load}
+          pain={data.pain}
+          feedback={feedback}
           marathonPace={marathonPace}
           fitnessPace={fitnessPace}
-          test3k={test3k}
           goalLabel={goalLabel}
-          onSave={onSaveProfil}
           onOuvrirProfil={() => setOnglet('profile')}
         />
       )}
-      {onglet === 'profile' && <Profile load={load} pain={data.pain} feedback={feedback} />}
+      {onglet === 'profile' && (
+        <Profile
+          load={load}
+          pain={data.pain}
+          feedback={feedback}
+          marathonPace={marathonPace}
+          test3k={test3k}
+          onSaveProfil={onSaveProfil}
+        />
+      )}
 
       <BottomNav actif={onglet} onChange={setOnglet} />
 

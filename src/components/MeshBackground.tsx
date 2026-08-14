@@ -7,22 +7,26 @@
  */
 import type { BandKey } from '../lib/tendonIndex'
 
-export function MeshBackground({ band }: { band: BandKey }) {
+/** `formes=false` garde le camaïeu et le voile de lisibilité, sans les masses
+ *  floutées — pour un écran de lecture (Allures) plutôt qu'un écran hero. */
+export function MeshBackground({ band, formes = true }: { band: BandKey; formes?: boolean }) {
   return (
     <div
       data-band={band}
       aria-hidden
       style={{ position: 'absolute', inset: 0, zIndex: 0, background: 'var(--m6)' }}
     >
-      <div className="mesh">
-        <i className="s1" />
-        <i className="s2" />
-        <i className="s3" />
-        <i className="s4" />
-        <i className="s5" />
-        <i className="s6" />
-        <i className="s7" />
-      </div>
+      {formes && (
+        <div className="mesh">
+          <i className="s1" />
+          <i className="s2" />
+          <i className="s3" />
+          <i className="s4" />
+          <i className="s5" />
+          <i className="s6" />
+          <i className="s7" />
+        </div>
+      )}
       <div className="mesh-veil" />
     </div>
   )

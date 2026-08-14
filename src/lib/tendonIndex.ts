@@ -66,7 +66,8 @@ export interface PainDay {
   evening?: number | null
   /** Protocole excentrique effectué ce jour-là. */
   eccentric?: boolean
-  /** Glaçage. */
+  /** Glaçage. Saisi mais n'entre plus dans le calcul : pas d'effet démontré
+   *  sur la charge mécanique du tendon, contrairement à l'excentrique. */
   icing?: boolean
   /** Sauts / pliométrie (test de charge du kiné). */
   jumps?: boolean
@@ -92,7 +93,7 @@ export interface IndexBreakdown {
   trend: number
   /** Monotonie de la semaine, jusqu'à 8. */
   monotony: number
-  /** Gestes protecteurs, jusqu'à 17 (valeur positive, soustraite). */
+  /** Gestes protecteurs, jusqu'à 15 (valeur positive, soustraite). */
   credits: number
   /** Charge aiguë (moyenne exponentielle, demi-vie 3,5 j). */
   acute: number
@@ -329,7 +330,6 @@ export function tendonIndex(
   const y = pain[shiftDay(day, -1)]
   if (y?.eccentric) credits += 6
   if (y?.jumps) credits += 2
-  if (y?.icing) credits += 2
   if (y?.hydrated) credits += 2
   if ((load[shiftDay(day, -1)] ?? 0) < 2) credits += 5
 
