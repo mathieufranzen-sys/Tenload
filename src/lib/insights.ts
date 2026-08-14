@@ -36,6 +36,9 @@ const FAMILLE_SPORT: Record<string, Famille> = {
   Weight: 'renfo',
 }
 
+/** Famille d'une activité importée. Escalade et rando n'en ont pas. */
+export const familleDuSport = (sport: string): Famille | null => FAMILLE_SPORT[sport] ?? null
+
 export interface Compteur {
   prevu: number
   realise: number

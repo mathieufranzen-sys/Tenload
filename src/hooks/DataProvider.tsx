@@ -43,6 +43,8 @@ export interface ActiviteRow {
   name: string | null
   distance_m: number
   moving_s: number
+  /** Dénivelé positif Strava. Sert à la VAP, absent des instantanés embarqués. */
+  elevation_m: number | null
   relative_effort: number | null
 }
 

@@ -115,6 +115,48 @@ export function zoneHrRange(
 }
 
 /**
+ * Vitesse ajustée à la pente.
+ *
+ * Strava affiche une VAP mais ne l'expose pas dans son API : elle est
+ * recalculée ici. Le coût énergétique de la course selon la pente vient de
+ * Minetti et al. (2002) — un polynôme du cinquième degré en J/kg/m, valable
+ * entre −45 % et +45 %. Monter coûte plus que descendre ne rapporte, donc un
+ * parcours vallonné ressort plus cher qu'un plat même quand on revient au
+ * point de départ.
+ *
+ * Approximation assumée : on ne dispose que du dénivelé total et de la
+ * distance, pas du profil. On suppose donc une moitié en montée à la pente
+ * moyenne, une moitié en descente. Sur route et faible dénivelé l'écart
+ * ressort petit, ce qui est le comportement attendu.
+ */
+const coutParPente = (i: number): number =>
+  155.4 * i ** 5 - 30.4 * i ** 4 - 43.3 * i ** 3 + 46.3 * i ** 2 + 19.5 * i + 3.6
+
+/** Coût du terrain rapporté au plat. 1 = plat, 1,08 = 8 % plus cher. */
+export function coutDuRelief(distanceM: number, deniveleM: number): number {
+  if (distanceM <= 0 || deniveleM <= 0) return 1
+  // Pente moyenne de la moitié montante, bornée au domaine du modèle.
+  const pente = clampPente(deniveleM / (distanceM / 2))
+  return (coutParPente(pente) + coutParPente(-pente)) / (2 * coutParPente(0))
+}
+const clampPente = (i: number) => Math.max(0, Math.min(0.45, i))
+
+/**
+ * Allure équivalente sur le plat, en secondes par kilomètre.
+ * Renvoie null sans dénivelé connu : mieux vaut ne rien afficher qu'un chiffre
+ * qui laisserait croire que le parcours était plat.
+ */
+export function vap(
+  distanceM: number,
+  movingS: number,
+  deniveleM: number | null | undefined,
+): number | null {
+  if (deniveleM == null || distanceM <= 0 || movingS <= 0) return null
+  const allure = movingS / (distanceM / 1000)
+  return Math.round(allure / coutDuRelief(distanceM, deniveleM))
+}
+
+/**
  * Durée estimée d'une séance, à partir de sa structure et des allures courantes.
  * Renvoie une fourchette en minutes, arrondie à 5 minutes près.
  */

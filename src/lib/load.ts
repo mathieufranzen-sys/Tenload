@@ -19,6 +19,9 @@ export interface ActivityRow {
   name?: string | null
   distance_m: number
   moving_s: number
+  /** Dénivelé positif, en mètres. Absent des instantanés embarqués : la VAP
+   *  ne s'affiche que quand Strava l'a remonté. */
+  elevation_m?: number | null
   /** Effort relatif Strava. Absent des séances saisies à la main. */
   relative_effort?: number | null
 }

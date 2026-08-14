@@ -76,6 +76,7 @@ function CoquilleConnectee() {
         name: a.name,
         distance_m: a.distance_m,
         moving_s: a.moving_s,
+        elevation_m: a.elevation_m,
         relative_effort: a.relative_effort,
       })),
     [activites],
@@ -102,13 +103,22 @@ function CoquilleConnectee() {
 /** Instantanés embarqués : ils font tourner l'app avant tout branchement Supabase. */
 function seedData() {
   const activities: ActivityRow[] = (
-    stravaSeed as Array<{ date: string; sport: string; name: string; km: number; min: number; eff: number }>
+    stravaSeed as Array<{
+      date: string
+      sport: string
+      name: string
+      km: number
+      min: number
+      eff: number
+      dplus?: number
+    }>
   ).map((a) => ({
     day: a.date,
     sport: versSport(a.sport),
     name: a.name,
     distance_m: a.km * 1000,
     moving_s: a.min * 60,
+    elevation_m: a.dplus ?? null,
     relative_effort: a.eff,
   }))
 

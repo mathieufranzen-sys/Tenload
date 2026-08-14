@@ -9,6 +9,11 @@ import { formatDayLong, formatNumber } from '../lib/dates'
 import { formatPace, zonePace } from '../lib/paces'
 import type { FeedbackRow } from '../lib/buildPain'
 import { Icon } from './Icon'
+import { RessentiJauges } from './RessentiJauges'
+import { JaugeRessenti } from './JaugeRessenti'
+import { StatsSeance } from './StatsSeance'
+import { ZonesSeance } from './ZonesSeance'
+import { repartitionZones } from '../lib/repartition'
 
 const plan = planJson as unknown as Plan
 
@@ -29,7 +34,16 @@ interface Props {
   onClose: () => void
 }
 
-export function SessionSheet({ week, session: s, slot, day, feedback, marathonPace, onSave, onClose }: Props) {
+export function SessionSheet({
+  week,
+  session: s,
+  slot,
+  day,
+  feedback,
+  marathonPace,
+  onSave,
+  onClose,
+}: Props) {
   const [surface, setSurface] = useState<'out' | 'mill'>('out')
   const [modifie, setModifie] = useState(false)
 
@@ -63,22 +77,37 @@ export function SessionSheet({ week, session: s, slot, day, feedback, marathonPa
         margin: '0 auto',
       }}
     >
-      <div style={{ position: 'relative', padding: '14px var(--page-x) 40px' }}>
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 230,
-            background: `var(--g-${s.type})`,
-            opacity: 0.3,
-            filter: 'blur(46px)',
-            pointerEvents: 'none',
-          }}
-        />
+      {/* Le dégradé du type de séance tient tout le haut de l'écran, à la
+          manière des fiches santé qui ont servi de référence : c'est lui qui
+          annonce la nature de la séance avant même le titre. */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 460,
+          background: `var(--g-${s.type})`,
+          opacity: 0.42,
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 460,
+          background:
+            'linear-gradient(180deg, rgba(8,9,11,.34) 0px, rgba(8,9,11,.12) 150px, rgba(8,9,11,.62) 350px, var(--bg) 460px)',
+          pointerEvents: 'none',
+        }}
+      />
 
+      <div style={{ position: 'relative', padding: '14px var(--page-x) 40px' }}>
         <div style={{ position: 'relative' }}>
           <button
             onClick={onClose}
@@ -89,8 +118,10 @@ export function SessionSheet({ week, session: s, slot, day, feedback, marathonPa
               borderRadius: '50%',
               display: 'grid',
               placeItems: 'center',
-              background: 'rgba(255,255,255,.08)',
-              marginBottom: 18,
+              background: 'rgba(255,255,255,.14)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              marginBottom: 20,
             }}
           >
             <Icon name="x" size={18} />
@@ -103,11 +134,13 @@ export function SessionSheet({ week, session: s, slot, day, feedback, marathonPa
               gap: 7,
               fontSize: 11.5,
               fontWeight: 700,
-              padding: '5px 10px 5px 8px',
+              padding: '5px 11px 5px 9px',
               borderRadius: 'var(--pill)',
-              background: `color-mix(in srgb, var(--c-${s.type}) 18%, transparent)`,
+              background: 'rgba(8,9,11,.34)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
               color: '#fff',
-              marginBottom: 10,
+              marginBottom: 12,
             }}
           >
             <span
@@ -116,7 +149,7 @@ export function SessionSheet({ week, session: s, slot, day, feedback, marathonPa
             {s.cat} · {formatDayLong(day)}
           </div>
 
-          <h2 style={{ margin: '0 0 7px', fontSize: 30, fontWeight: 800, letterSpacing: '-1px', lineHeight: 1.12 }}>
+          <h2 style={{ margin: '0 0 7px', fontSize: 32, fontWeight: 700, letterSpacing: '-1px', lineHeight: 1.1 }}>
             {s.title}
           </h2>
 
@@ -140,20 +173,14 @@ export function SessionSheet({ week, session: s, slot, day, feedback, marathonPa
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: 34, margin: '20px 0' }}>
-            {s.dist ? (
-              <Kv label="Distance" value={`${formatNumber(s.dist)} km`} />
-            ) : s.type === 'repos' ? (
-              <Kv label="Charge" value="Aucune" />
-            ) : null}
-            {s.type !== 'repos' && s.dur && (
-              <Kv
-                label="Durée"
-                value={s.dur[0] === s.dur[1] ? `${s.dur[0]} min` : `${s.dur[0]}-${s.dur[1]} min`}
-              />
-            )}
-          </div>
-          <div style={{ height: 1, background: 'var(--border)', margin: '20px 0' }} />
+          {/* Distance, durée et allure sur une seule ligne, chacune à sa
+              propre échelle : le chiffre qui définit la séance reste le plus
+              gros, les deux autres l'accompagnent sans le concurrencer. */}
+          <StatsSeance session={s} marathonPace={marathonPace} />
+
+          <ZonesSeance parts={repartitionZones(s, marathonPace)} />
+
+          <div style={{ height: 1, background: 'var(--border)', margin: '24px 0 20px' }} />
 
           {afficherDetails && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14 }}>
@@ -271,9 +298,8 @@ export function SessionSheet({ week, session: s, slot, day, feedback, marathonPa
 
           {surface === 'mill' && estCourse && (
             <div
+              className="glass"
               style={{
-                background: 'var(--surface)',
-                border: '1px solid var(--border-2)',
                 borderRadius: 'var(--radius)',
                 padding: '15px 16px',
                 marginTop: 18,
@@ -296,31 +322,31 @@ export function SessionSheet({ week, session: s, slot, day, feedback, marathonPa
                 'repeating-linear-gradient(90deg, var(--border-2) 0 4px, transparent 4px 9px)',
             }}
           />
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center', margin: '22px 0 12px' }}>
+          <div
+            style={{
+              position: 'relative',
+              borderRadius: 22,
+              padding: '17px 18px 18px',
+              margin: '22px 0 4px',
+              overflow: 'hidden',
+              background: 'linear-gradient(145deg, rgba(217,119,87,.20), rgba(217,119,87,.05) 58%, rgba(255,255,255,.04))',
+              border: '1px solid rgba(217,119,87,.28)',
+            }}
+          >
             <div
               style={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                flex: 'none',
-                display: 'grid',
-                placeItems: 'center',
-                background: 'linear-gradient(135deg,#D97757,#C15F3C)',
-                fontWeight: 800,
-                fontSize: 16,
-                color: '#fff',
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: '1.4px',
+                textTransform: 'uppercase',
+                color: '#F0A683',
+                marginBottom: 9,
               }}
             >
-              C
+              Coach
             </div>
-            <div>
-              <b style={{ display: 'block', fontSize: 16, fontWeight: 700 }}>Coach Claude</b>
-              <span style={{ color: 'var(--ink-2)', fontSize: 13.5, fontWeight: 500 }}>
-                Ton plan, tes contraintes
-              </span>
-            </div>
+            <p style={{ margin: 0, color: '#E4E7EB', fontSize: 15.5, lineHeight: 1.55 }}>{s.note}</p>
           </div>
-          <p style={{ color: '#D6D9DE', fontSize: 15.5, lineHeight: 1.55 }}>{s.note}</p>
 
           <div
             style={{
@@ -334,28 +360,20 @@ export function SessionSheet({ week, session: s, slot, day, feedback, marathonPa
           {feedback && !modifie ? (
             <>
               <div
+                className="glass"
                 style={{
-                  background: 'rgba(12,163,12,.09)',
-                  border: '1px solid rgba(12,163,12,.32)',
                   borderRadius: 'var(--radius)',
                   padding: '15px 16px',
                   marginBottom: 13,
                 }}
               >
-                <h4 style={{ margin: '0 0 6px', fontSize: 15.5, fontWeight: 800, color: '#5BE05B', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h4 style={{ margin: '0 0 12px', fontSize: 15.5, fontWeight: 800, color: '#5BE05B', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Icon name="check" size={18} />
                   Séance notée
                 </h4>
-                <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.5, color: '#D6D9DE' }}>
-                  Douleur au tendon {formatNumber(feedback.pain)}/10 · effort perçu {feedback.rpe}/10
-                  {feedback.note && (
-                    <>
-                      <br />
-                      <span style={{ color: 'var(--ink-2)' }}>« {feedback.note} »</span>
-                    </>
-                  )}
-                </p>
+                <RessentiJauges pain={feedback.pain} rpe={feedback.rpe} />
               </div>
+
               {onSave && (
                 <button
                   onClick={() => setModifie(true)}
@@ -397,15 +415,6 @@ export function SessionSheet({ week, session: s, slot, day, feedback, marathonPa
           )}
         </div>
       </div>
-    </div>
-  )
-}
-
-function Kv({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <span style={{ display: 'block', color: 'var(--ink-2)', fontSize: 13.5, fontWeight: 500 }}>{label}</span>
-      <b style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-.5px' }}>{value}</b>
     </div>
   )
 }
@@ -487,8 +496,21 @@ const PAIN_H = [
   'Stop et kiné. On ne discute pas.',
   'Stop et kiné. On ne discute pas.',
 ]
+const PAIN_COURT = [
+  'Rien',
+  'À peine',
+  'Sensible',
+  'Gênant',
+  'Douloureux',
+  'Franchement douloureux',
+  'Trop',
+  'Beaucoup trop',
+  'Stop',
+  'Stop, et kiné',
+  'Stop, et kiné',
+]
 const RPE_H = [
-  '',
+  'Aucun effort.',
   'Très facile, tu pourrais recommencer tout de suite.',
   'Facile. Conversation possible sans effort.',
   'Confortable. Le socle de l’endurance.',
@@ -499,6 +521,19 @@ const RPE_H = [
   'Très dur. Tu comptes les répétitions.',
   'Presque maximal. Séance réussie de justesse.',
   'Maximal. Tu n’aurais pas pu faire plus.',
+]
+const RPE_COURT = [
+  'Repos',
+  'Très facile',
+  'Facile',
+  'Confortable',
+  'Modéré',
+  'Soutenu',
+  'Difficile',
+  'Dur',
+  'Très dur',
+  'Presque maximal',
+  'Maximal',
 ]
 
 function FormulaireRessenti({
@@ -512,36 +547,42 @@ function FormulaireRessenti({
 }) {
   const [pain, setPain] = useState(feedback?.pain ?? 0)
   const [rpe, setRpe] = useState(feedback?.rpe ?? 5)
-  const [note, setNote] = useState(feedback?.note ?? '')
+
+  const idx = (v: number) => Math.max(0, Math.min(10, Math.round(v)))
 
   return (
     <div>
-      <p style={{ color: 'var(--ink-2)', fontSize: 14.5, lineHeight: 1.5, margin: '0 0 4px' }}>
+      <p style={{ color: 'var(--sur-ink-2)', fontSize: 14, lineHeight: 1.5, margin: '0 0 18px' }}>
         Deux curseurs après chaque séance. C'est ce qui pilote l'adaptation du plan : au-delà de 4
         sur la douleur, la semaine suivante change automatiquement.
       </p>
-      <SliderRessenti label="Douleur au tendon d’Achille" valeur={pain} onChange={setPain} hints={PAIN_H} degrade="pain" />
-      <SliderRessenti label="Effort perçu" valeur={rpe} onChange={setRpe} hints={RPE_H} degrade="rpe" />
-      <textarea
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        placeholder="Note libre : sensations, terrain, ce qui a coincé…"
-        disabled={disabled}
-        style={{
-          width: '100%',
-          background: 'var(--surface-2)',
-          border: '1px solid var(--border-2)',
-          borderRadius: 14,
-          padding: 13,
-          minHeight: 82,
-          resize: 'vertical',
-          fontSize: 15,
-          lineHeight: 1.45,
-          marginTop: 14,
-        }}
-      />
+
+      <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '18px 16px 14px', marginBottom: 12 }}>
+        <JaugeRessenti
+          label="Douleur au tendon"
+          valeur={pain}
+          onChange={setPain}
+          disabled={disabled}
+          court={PAIN_COURT[idx(pain)]}
+          detail={PAIN_H[idx(pain)]}
+          degrade="pain"
+        />
+      </div>
+
+      <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '18px 16px 14px', marginBottom: 12 }}>
+        <JaugeRessenti
+          label="Effort perçu"
+          valeur={rpe}
+          onChange={setRpe}
+          disabled={disabled}
+          court={RPE_COURT[idx(rpe)]}
+          detail={RPE_H[idx(rpe)]}
+          degrade="rpe"
+        />
+      </div>
+
       <button
-        onClick={() => onSave(pain, rpe, note.trim())}
+        onClick={() => onSave(pain, rpe, '')}
         disabled={disabled}
         style={{
           display: 'block',
@@ -563,54 +604,6 @@ function FormulaireRessenti({
           Connecte-toi pour enregistrer un ressenti.
         </p>
       )}
-    </div>
-  )
-}
-
-function SliderRessenti({
-  label,
-  valeur,
-  onChange,
-  hints,
-  degrade,
-}: {
-  label: string
-  valeur: number
-  onChange: (v: number) => void
-  hints: string[]
-  degrade: 'pain' | 'rpe'
-}) {
-  const track =
-    degrade === 'pain'
-      ? 'linear-gradient(90deg,#0ca30c 0%,#8fc41a 25%,#fab219 45%,#ec835a 68%,#d03b3b 100%)'
-      : 'linear-gradient(90deg,#3987e5 0%,#199e70 35%,#fab219 70%,#d03b3b 100%)'
-
-  return (
-    <div style={{ margin: '20px 0 4px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 11 }}>
-        <b style={{ fontSize: 15.5, fontWeight: 700, letterSpacing: '-.2px' }}>{label}</b>
-        <span style={{ fontSize: 29, fontWeight: 800, letterSpacing: '-1px', fontVariantNumeric: 'tabular-nums' }}>
-          {valeur}
-          <span style={{ fontSize: 15, color: 'var(--ink-2)' }}>/10</span>
-        </span>
-      </div>
-      <input
-        type="range"
-        min={0}
-        max={10}
-        step={1}
-        value={valeur}
-        onChange={(e) => onChange(Number(e.target.value))}
-        style={{ ['--track' as string]: track }}
-      />
-      <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--ink-3)', fontSize: 11, fontWeight: 600, marginTop: -2 }}>
-        {[0, 2, 4, 6, 8, 10].map((n) => (
-          <span key={n}>{n}</span>
-        ))}
-      </div>
-      <div style={{ color: 'var(--ink-2)', fontSize: 13, fontWeight: 500, marginTop: 9, minHeight: 34 }}>
-        {hints[valeur] ?? ''}
-      </div>
     </div>
   )
 }
