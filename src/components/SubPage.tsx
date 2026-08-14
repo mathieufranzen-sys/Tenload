@@ -40,19 +40,21 @@ export function SubPage({
           <button
             onClick={onBack}
             aria-label="Retour"
+            className="glass"
             style={{
               width: 40,
               height: 40,
               borderRadius: '50%',
               display: 'grid',
               placeItems: 'center',
-              background: 'var(--surface)',
               flex: 'none',
+              color: 'var(--ink)',
+              cursor: 'pointer',
             }}
           >
             <Icon name="chevronLeft" size={20} />
           </button>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: '-.4px' }}>{titre}</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 650, letterSpacing: '-.45px' }}>{titre}</h2>
         </div>
         {children}
       </div>

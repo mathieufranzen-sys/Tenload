@@ -7,7 +7,7 @@ const plan = planJson as unknown as Plan
 /** Les règles non négociables du plan — vérifiées par reference/check_plan.py. */
 export function Constraints() {
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 17px' }}>
+    <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px' }}>
       <p style={{ color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, margin: '0 0 4px' }}>
         Inscrites dans le plan pour protéger le tendon. Aucune adaptation ne peut les casser.
       </p>

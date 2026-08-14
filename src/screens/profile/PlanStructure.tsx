@@ -6,7 +6,7 @@ const plan = planJson as unknown as Plan
 
 export function PlanStructure() {
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 17px' }}>
+    <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px' }}>
       {plan.blocs.map((b, i) => {
         const semaines = plan.weeks.filter((w) => w.bloc === b.id)
         const slMin = Math.min(...semaines.map((w) => w.sl))

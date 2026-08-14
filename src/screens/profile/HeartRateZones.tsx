@@ -2,7 +2,7 @@ import { HR_MAX, HR_ZONES, hrRange } from '../../lib/paces'
 
 export function HeartRateZones() {
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 17px' }}>
+    <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px' }}>
       <p style={{ color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, margin: '0 0 12px' }}>
         Strava calcule tes zones sur une fréquence maximale d'environ 193, alors que tu plafonnes à{' '}
         {HR_MAX}. Résultat : ce que tu crois être de l'endurance est en réalité un cran plus haut.

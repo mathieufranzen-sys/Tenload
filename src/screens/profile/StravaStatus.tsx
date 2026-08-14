@@ -39,7 +39,7 @@ export function StravaStatus() {
   }
 
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 17px' }}>
+    <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px' }}>
       <p style={{ color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, margin: '0 0 14px' }}>
         Une fois branché, tes séances remontent automatiquement dans le carnet de charge : plus
         besoin de les ressaisir à la main.

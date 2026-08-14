@@ -40,7 +40,7 @@ const TERMES: Array<{ nom: string; poids: string; texte: string }> = [
 export function TendonIndexInfo({ idx, band }: { idx: number; band: Band }) {
   return (
     <>
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
+      <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
         <p style={{ color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, margin: '0 0 14px' }}>
           Une note de 0 à 100 recalculée à chaque saisie. Elle pilote le programme toute seule : les
           séances se transforment sans que tu aies à demander. Aujourd'hui :{' '}
@@ -62,7 +62,7 @@ export function TendonIndexInfo({ idx, band }: { idx: number; band: Band }) {
         ))}
       </div>
 
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 17px' }}>
+      <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px' }}>
         <b style={{ fontSize: 16, display: 'block', marginBottom: 4 }}>Comment il est calculé</b>
         <p style={{ color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, margin: '6px 0 12px' }}>
           Cinq termes qui s'additionnent, moins ce qui protège. Le modèle est calibré sur 45 jours

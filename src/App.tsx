@@ -56,12 +56,12 @@ export function App() {
   if (auth.state === 'signedOut') return <Login auth={auth} />
   return (
     <DataProvider userId={auth.user!.id}>
-      <CoquilleConnectee />
+      <CoquilleConnectee onDeconnexion={auth.deconnexion} />
     </DataProvider>
   )
 }
 
-function CoquilleConnectee() {
+function CoquilleConnectee({ onDeconnexion }: { onDeconnexion: () => void }) {
   const { logs, chargement: chargeLogs, erreur } = useLogs()
   const { feedback, chargement: chargeFeedback } = useFeedback()
   const { activites, chargement: chargeActivites } = useActivities()
@@ -96,6 +96,7 @@ function CoquilleConnectee() {
       erreurSync={erreur}
       onSaveFeedback={enregistrerFeedback}
       onSaveProfil={enregistrerProfil}
+      onDeconnexion={onDeconnexion}
     />
   )
 }
@@ -167,6 +168,7 @@ function Coquille({
   erreurSync,
   onSaveFeedback,
   onSaveProfil,
+  onDeconnexion,
 }: {
   activities?: ActivityRow[]
   pain?: PainMap
@@ -175,6 +177,8 @@ function Coquille({
   profil?: ProfilRow | null
   journalActif?: boolean
   erreurSync?: string | null
+  /** Absent en mode instantanés : il n'y a alors pas de session à fermer. */
+  onDeconnexion?: () => void
   /** Absent en mode instantanés : la feuille de séance reste alors en lecture seule. */
   onSaveFeedback?: (ligne: FeedbackRow) => void
   /** Absent en mode instantanés : les réglages d'allure restent alors en lecture seule. */
@@ -305,6 +309,7 @@ function Coquille({
           marathonPace={marathonPace}
           test3k={test3k}
           onSaveProfil={onSaveProfil}
+          onDeconnexion={onDeconnexion}
         />
       )}
 

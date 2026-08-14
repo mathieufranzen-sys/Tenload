@@ -67,7 +67,7 @@ export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
 
   return (
     <>
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
+      <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
         <b style={{ fontSize: 16 }}>Recalibrer</b>
         <p style={{ color: 'var(--ink-2)', fontSize: 14.5, lineHeight: 1.5, margin: '6px 0 14px' }}>
           Après une séance test ou une course, entre ton temps sur 3 km. Ça met à jour ta forme
@@ -126,7 +126,7 @@ export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
         )}
       </div>
 
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 17px' }}>
+      <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px' }}>
         <b style={{ fontSize: 16 }}>Changer l'objectif</b>
         <p style={{ color: 'var(--ink-2)', fontSize: 14.5, lineHeight: 1.5, margin: '6px 0 12px' }}>
           Toutes les allures du plan se recalculent. Le point de décision est prévu après le semi
