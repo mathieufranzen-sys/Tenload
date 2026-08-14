@@ -1,7 +1,7 @@
 /**
  * Écran Programme, porté depuis reference/tendo-v3.html (`vPlan`).
  */
-import { useMemo } from 'react'
+import { useMemo, type CSSProperties } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan as PlanType, Session, Week } from '../data/types'
 import { DAYS_LONG, addDays, formatDay, today as todayISO } from '../lib/dates'
@@ -11,6 +11,7 @@ import type { FeedbackRow } from '../lib/buildPain'
 import { SessionCard } from '../components/SessionCard'
 import { Icon } from '../components/Icon'
 import { ProfileButton } from '../components/ProfileButton'
+import { MeshBackground } from '../components/MeshBackground'
 
 const plan = planJson as unknown as PlanType
 
@@ -54,177 +55,225 @@ export function Plan({
     return feedback.find((f) => f.week === semaine.n && f.day_index === s.day && f.slot === slot) ?? null
   }
 
+  const [premiere, derniere] = bloc.weeks
+  const rangDansBloc = semaine.n - premiere + 1
+  const dureeBloc = derniere - premiere + 1
+
   return (
-    <div style={{ maxWidth: 'var(--shell-max)', margin: '0 auto', padding: '22px var(--page-x) 90px' }}>
-      <header style={{ marginBottom: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 27, fontWeight: 800, letterSpacing: '-.6px' }}>Programme</h1>
-          <p style={{ color: 'var(--ink-2)', fontSize: 14.5, fontWeight: 500, margin: '3px 0 0' }}>
-            Marathon de Paris · dimanche 11 avril 2027
-          </p>
-        </div>
-        <ProfileButton onClick={onOuvrirProfil} />
-      </header>
+    <div style={{ position: 'relative', maxWidth: 'var(--shell-max)', margin: '0 auto', paddingBottom: 90 }}>
+      <MeshBackground band={A.band.key} formes={false} />
 
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 8,
-          padding: '11px 4px',
-          marginBottom: 10,
-          borderBottom: '1px solid var(--border)',
-        }}
-      >
-        <button
-          onClick={() => onChangerSemaine(numeroSemaine - 1)}
-          disabled={numeroSemaine <= 1}
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: '50%',
-            display: 'grid',
-            placeItems: 'center',
-            color: 'var(--ink-2)',
-            opacity: numeroSemaine <= 1 ? 0.25 : 1,
-          }}
-        >
-          <Icon name="chevronLeft" size={20} />
-        </button>
-        <div style={{ textAlign: 'center', flex: 1 }}>
-          <b style={{ display: 'block', fontSize: 17.5, fontWeight: 800, letterSpacing: '-.4px' }}>
-            Semaine {semaine.n}
-          </b>
-          <span style={{ fontSize: 12.5, color: 'var(--ink-2)', fontWeight: 600 }}>
-            {formatDay(semaine.monday)} — {formatDay(addDays(semaine.monday, 6))}
-          </span>
-        </div>
-        <button
-          onClick={() => onChangerSemaine(numeroSemaine + 1)}
-          disabled={numeroSemaine >= 35}
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: '50%',
-            display: 'grid',
-            placeItems: 'center',
-            color: 'var(--ink-2)',
-            opacity: numeroSemaine >= 35 ? 0.25 : 1,
-          }}
-        >
-          <Icon name="chevronRight" size={20} />
-        </button>
-      </div>
+      <div style={{ position: 'relative', zIndex: 5, padding: '22px var(--page-x) 0' }}>
+        <header style={{ marginBottom: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>Programme</h1>
+            <p style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500, margin: '3px 0 0' }}>
+              Marathon de Paris · dimanche 11 avril 2027
+            </p>
+          </div>
+          <ProfileButton onClick={onOuvrirProfil} />
+        </header>
 
-      <div
-        style={{
-          background: `linear-gradient(135deg, ${bloc.color}14, var(--surface))`,
-          border: `1px solid ${bloc.color}44`,
-          borderRadius: 'var(--radius)',
-          padding: '14px 15px',
-          marginBottom: 14,
-        }}
-      >
-        <span
-          style={{
-            display: 'inline-block',
-            fontSize: 11.5,
-            fontWeight: 800,
-            letterSpacing: '.5px',
-            textTransform: 'uppercase',
-            padding: '5px 11px',
-            borderRadius: 'var(--pill)',
-            background: `${bloc.color}22`,
-            color: bloc.color,
-            marginBottom: 11,
-          }}
-        >
-          Bloc {bloc.id} · {bloc.name}
-        </span>
-        <div style={{ fontSize: 14.5, lineHeight: 1.5, color: '#D6D9DE' }}>{bloc.focus}</div>
-        <div style={{ display: 'flex', gap: 20, marginTop: 13 }}>
-          <BlocStat value={`${semaine.sl} km`} label="sortie longue" />
-          <BlocStat value={`${nbCourses}`} label={nbCourses > 1 ? 'courses' : 'course'} />
-          <BlocStat value={semaine.deload ? 'Oui' : 'Non'} label="décharge" />
-        </div>
-      </div>
-
-      {Array.from({ length: 7 }, (_, d) => d).map((d) => {
-        const duJour = seances.map((s, i) => [s, i] as const).filter(([s]) => s.day === d)
-        if (!duJour.length) return null
-        const estAujourdhui = addDays(semaine.monday, d) === now
-        return (
-          <div key={d}>
-            <div
+        {/* En-tête de bloc : ce qui situe la semaine dans les 35. Le nom du
+            bloc et sa couleur restent le repère, la barre dit où on en est. */}
+        <div className="glass" style={{ borderRadius: 22, padding: '16px 17px', marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+            <span
               style={{
-                fontSize: 12,
-                fontWeight: 800,
-                letterSpacing: '1.1px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 7,
+                fontSize: 11.5,
+                fontWeight: 700,
+                letterSpacing: '.4px',
                 textTransform: 'uppercase',
-                color: 'var(--ink-3)',
-                margin: '18px 0 9px 2px',
+                padding: '5px 11px 5px 8px',
+                borderRadius: 'var(--pill)',
+                background: `color-mix(in srgb, ${bloc.color} 18%, transparent)`,
+                border: `1px solid color-mix(in srgb, ${bloc.color} 38%, transparent)`,
+                color: bloc.color,
               }}
             >
-              {DAYS_LONG[d]} {formatDay(addDays(semaine.monday, d))}
-              {estAujourdhui && (
-                <span
-                  style={{
-                    marginLeft: 6,
-                    display: 'inline-flex',
-                    fontSize: 11.5,
-                    fontWeight: 700,
-                    padding: '3.5px 9px',
-                    borderRadius: 'var(--pill)',
-                    background: 'rgba(12,163,12,.16)',
-                    color: '#5BE05B',
-                  }}
-                >
-                  aujourd'hui
-                </span>
-              )}
+              <span
+                aria-hidden
+                style={{ width: 6, height: 6, borderRadius: '50%', background: bloc.color, flex: 'none' }}
+              />
+              Bloc {bloc.id} · {bloc.name}
+            </span>
+            {semaine.deload && (
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: '3.5px 9px',
+                  borderRadius: 'var(--pill)',
+                  background: 'rgba(250,178,25,.18)',
+                  border: '1px solid rgba(250,178,25,.26)',
+                  color: '#FFD166',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Décharge
+              </span>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0 4px' }}>
+            <button
+              onClick={() => onChangerSemaine(numeroSemaine - 1)}
+              disabled={numeroSemaine <= 1}
+              aria-label="Semaine précédente"
+              style={fleche(numeroSemaine <= 1)}
+            >
+              <Icon name="chevronLeft" size={19} />
+            </button>
+            <div style={{ flex: 1, textAlign: 'center' }}>
+              <div style={{ fontSize: 22, fontWeight: 650, letterSpacing: '-.6px', lineHeight: 1.1 }}>
+                Semaine {semaine.n}
+                <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--sur-ink-3)' }}> / 35</span>
+              </div>
+              <div style={{ fontSize: 12.5, color: 'var(--sur-ink-2)', fontWeight: 500, marginTop: 2 }}>
+                {formatDay(semaine.monday)} — {formatDay(addDays(semaine.monday, 6))}
+              </div>
             </div>
-            {duJour.map(([s]) => (
-              <SessionCard
-                key={`${d}-${s.title}`}
-                session={s}
-                day={addDays(semaine.monday, d)}
-                marathonPace={marathonPace}
-                feedback={feedbackDe(s)}
-                onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, s, slotOf(seances, s)))}
+            <button
+              onClick={() => onChangerSemaine(numeroSemaine + 1)}
+              disabled={numeroSemaine >= 35}
+              aria-label="Semaine suivante"
+              style={fleche(numeroSemaine >= 35)}
+            >
+              <Icon name="chevronRight" size={19} />
+            </button>
+          </div>
+
+          {/* Avancement dans le bloc, pas dans le plan : c'est l'échelle à
+              laquelle le contenu des séances change vraiment. */}
+          <div style={{ display: 'flex', gap: 3, margin: '14px 0 8px' }}>
+            {Array.from({ length: dureeBloc }, (_, i) => (
+              <span
+                key={i}
+                aria-hidden
+                style={{
+                  flex: 1,
+                  height: 4,
+                  borderRadius: 'var(--pill)',
+                  background: i < rangDansBloc ? bloc.color : 'rgba(255,255,255,.14)',
+                }}
               />
             ))}
           </div>
-        )
-      })}
+          <div style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--sur-ink-3)' }}>
+            {rangDansBloc}<sup style={{ fontSize: 8 }}>{rangDansBloc === 1 ? 're' : 'e'}</sup> semaine sur {dureeBloc} du bloc
+          </div>
 
-      {semaineCourante && semaineCourante.n !== numeroSemaine && (
-        <button
-          onClick={() => onChangerSemaine(semaineCourante.n)}
-          style={{
-            display: 'block',
-            width: '100%',
-            marginTop: 16,
-            padding: 15,
-            borderRadius: 'var(--pill)',
-            fontWeight: 700,
-            fontSize: 16,
-            background: '#F2F2F4',
-            color: '#0B0C0E',
-          }}
-        >
-          Aller à la semaine en cours
-        </button>
-      )}
+          <p style={{ fontSize: 13.5, lineHeight: 1.5, color: 'var(--sur-ink-2)', margin: '13px 0 0' }}>
+            {bloc.focus}
+          </p>
+
+          <div style={{ display: 'flex', gap: 22, marginTop: 15 }}>
+            <BlocStat value={semaine.sl ? `${semaine.sl} km` : '—'} label="sortie longue" />
+            <BlocStat value={`${nbCourses}`} label={nbCourses > 1 ? 'courses' : 'course'} />
+            <BlocStat value={`${semaine.efKm} km`} label="endurance" />
+          </div>
+        </div>
+
+        {Array.from({ length: 7 }, (_, d) => d).map((d) => {
+          const duJour = seances.map((s, i) => [s, i] as const).filter(([s]) => s.day === d)
+          if (!duJour.length) return null
+          const estAujourdhui = addDays(semaine.monday, d) === now
+          return (
+            <div key={d}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: '1.2px',
+                  textTransform: 'uppercase',
+                  color: 'var(--sur-ink-3)',
+                  margin: '20px 0 10px 2px',
+                }}
+              >
+                {DAYS_LONG[d]} {formatDay(addDays(semaine.monday, d))}
+                {estAujourdhui && (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: '.6px',
+                      padding: '3.5px 9px',
+                      borderRadius: 'var(--pill)',
+                      background: 'rgba(52,211,153,.18)',
+                      border: '1px solid rgba(52,211,153,.3)',
+                      color: '#6ee7b7',
+                    }}
+                  >
+                    aujourd'hui
+                  </span>
+                )}
+              </div>
+              {duJour.map(([s]) => (
+                <SessionCard
+                  key={`${d}-${s.title}`}
+                  session={s}
+                  day={addDays(semaine.monday, d)}
+                  marathonPace={marathonPace}
+                  feedback={feedbackDe(s)}
+                  onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, s, slotOf(seances, s)))}
+                />
+              ))}
+            </div>
+          )
+        })}
+
+        {semaineCourante && semaineCourante.n !== numeroSemaine && (
+          <button
+            onClick={() => onChangerSemaine(semaineCourante.n)}
+            className="glass"
+            style={{
+              display: 'block',
+              width: '100%',
+              marginTop: 18,
+              padding: 15,
+              borderRadius: 'var(--pill)',
+              fontWeight: 650,
+              fontSize: 15.5,
+              color: 'var(--ink)',
+              cursor: 'pointer',
+            }}
+          >
+            Aller à la semaine en cours
+          </button>
+        )}
+      </div>
     </div>
   )
 }
 
+const fleche = (inactif: boolean): CSSProperties => ({
+  width: 36,
+  height: 36,
+  borderRadius: '50%',
+  flex: 'none',
+  display: 'grid',
+  placeItems: 'center',
+  background: 'rgba(255,255,255,.08)',
+  border: '1px solid var(--glass-border)',
+  color: 'var(--ink)',
+  opacity: inactif ? 0.28 : 1,
+  cursor: inactif ? 'default' : 'pointer',
+})
+
 function BlocStat({ value, label }: { value: string; label: string }) {
   return (
     <div>
-      <b style={{ fontSize: 19, fontWeight: 800 }}>{value}</b>
-      <div style={{ fontSize: 12, color: 'var(--ink-2)', fontWeight: 600 }}>{label}</div>
+      <b style={{ fontSize: 19, fontWeight: 650, letterSpacing: '-.4px', fontVariantNumeric: 'tabular-nums' }}>
+        {value}
+      </b>
+      <div style={{ fontSize: 11.5, color: 'var(--sur-ink-2)', fontWeight: 500, marginTop: 1 }}>{label}</div>
     </div>
   )
 }
