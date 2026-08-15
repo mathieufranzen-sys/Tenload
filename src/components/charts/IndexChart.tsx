@@ -3,6 +3,7 @@
  * Porté depuis reference/tendo-v3.html (`idxChart`).
  */
 import { bandOf } from '../../lib/tendonIndex'
+import { indicesEtiquettes } from './etiquettes'
 import { formatDay } from '../../lib/dates'
 
 const W = 320
@@ -28,7 +29,7 @@ export function IndexChart({ series, now }: { series: Array<{ day: string; idx: 
     return d
   }
 
-  const stepX = Math.max(1, Math.ceil(n / 5))
+  const etiquettes = indicesEtiquettes(n, x)
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Indice de charge du tendon">
@@ -67,7 +68,7 @@ export function IndexChart({ series, now }: { series: Array<{ day: string; idx: 
       )}
 
       {series.map((r, i) =>
-        i % stepX === 0 || i === n - 1 ? (
+        etiquettes.has(i) ? (
           <text key={i} x={x(i)} y={H - 6} textAnchor="middle" fontSize={10} fill="var(--chart-texte)">
             {formatDay(r.day)}
           </text>

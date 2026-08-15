@@ -9,10 +9,11 @@
  * Règle anti-double-comptage : si une journée passée porte au moins une
  * activité enregistrée, on ignore le plan pour cette journée.
  */
-import type { Session, Week } from '../data/types'
+import type { Session, SessionType, Week } from '../data/types'
 import { KM_COST, MIN_COST, RUN_COST, type LoadMap } from './tendonIndex'
 import { addDays } from './dates'
 import { seancesAvecEcarts, slotsParJour, type EcartRow } from './overrides'
+import { familleDe, familleDuSport } from './insights'
 
 export interface ActivityRow {
   day: string
@@ -77,19 +78,48 @@ export interface BuildLoadInput {
   ecarts?: Map<string, EcartRow>
 }
 
-export function buildLoad({
+export interface LoadParDiscipline {
+  course: number
+  velo: number
+  autre: number
+}
+
+const familleActivite = (sport: string): keyof LoadParDiscipline => {
+  const f = familleDuSport(sport)
+  return f === 'course' || f === 'velo' ? f : 'autre'
+}
+
+const familleSession = (type: SessionType): keyof LoadParDiscipline => {
+  const f = familleDe(type)
+  return f === 'course' || f === 'velo' ? f : 'autre'
+}
+
+/**
+ * Comme `buildLoad`, mais la charge de chaque jour est répartie par
+ * discipline plutôt que sommée en un seul nombre. Sert le graphique « Charge
+ * d'entraînement par semaine » de l'écran Suivi : il doit lire le même coût
+ * que l'indice de charge, pas l'effort relatif de Strava, un chiffre que
+ * Strava calcule à sa façon et qui n'a rien à voir avec le modèle de l'app.
+ */
+export function buildLoadParDiscipline({
   weeks,
   activities,
   completed,
   today,
   horizon = 21,
   ecarts,
-}: BuildLoadInput): LoadMap {
-  const load: LoadMap = {}
-  const daysWithActivity = new Set<string>()
+}: BuildLoadInput): Record<string, LoadParDiscipline> {
+  const load: Record<string, LoadParDiscipline> = {}
+  const bump = (day: string, famille: keyof LoadParDiscipline, valeur: number) => {
+    if (!valeur) return
+    const cur = load[day] ?? { course: 0, velo: 0, autre: 0 }
+    cur[famille] += valeur
+    load[day] = cur
+  }
 
+  const daysWithActivity = new Set<string>()
   for (const a of activities) {
-    load[a.day] = (load[a.day] ?? 0) + activityLoad(a)
+    bump(a.day, familleActivite(a.sport), activityLoad(a))
     daysWithActivity.add(a.day)
   }
 
@@ -116,9 +146,18 @@ export function buildLoad({
         // détacher le ressenti qui lui était déjà rattaché.
         if (!completed.has(`${w.n}-${w.sessions[i].day}-${slots[i]}`)) return
       }
-      load[day] = (load[day] ?? 0) + sessionLoad(s)
+      bump(day, familleSession(s.type), sessionLoad(s))
     })
   }
 
+  return load
+}
+
+export function buildLoad(input: BuildLoadInput): LoadMap {
+  const parDiscipline = buildLoadParDiscipline(input)
+  const load: LoadMap = {}
+  for (const [day, v] of Object.entries(parDiscipline)) {
+    load[day] = v.course + v.velo + v.autre
+  }
   return load
 }

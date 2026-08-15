@@ -5,6 +5,8 @@
  * charge qui use le tendon — ou le cumul avec le vélo, qui dit le volume
  * aérobie réel. Les deux comptent, mais pas pour la même chose.
  */
+import { indicesEtiquettes } from './etiquettes'
+
 const W = 320
 const H = 176
 const P = { t: 8, r: 6, b: 22, l: 26 }
@@ -33,7 +35,7 @@ export function VolumeChart({ rows, vue }: { rows: BarRow[]; vue: VueVolume }) {
   const bw = clamp(slot - Math.min(4, slot * 0.32), 2.5, 34)
   const x = (i: number) => P.l + i * slot + (slot - bw) / 2
   const y = (v: number) => P.t + IH - (v / max) * IH
-  const stepX = Math.max(1, Math.ceil(n / 6))
+  const etiquettes = indicesEtiquettes(n, x)
   const rayon = Math.min(4, bw / 2)
 
   return (
@@ -74,7 +76,7 @@ export function VolumeChart({ rows, vue }: { rows: BarRow[]; vue: VueVolume }) {
       })}
 
       {rows.map((r, i) =>
-        i % stepX === 0 || i === n - 1 ? (
+        etiquettes.has(i) ? (
           <text key={i} x={x(i) + bw / 2} y={H - 6} textAnchor="middle" fontSize={10} fill="var(--chart-texte)">
             {r.label}
           </text>

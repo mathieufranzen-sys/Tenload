@@ -5,6 +5,8 @@
  * pour Mathieu, elle doit garder une base à zéro constante pour rester lisible.
  * Vélo et autres (muscu, escalade, rando) empilés au-dessus, dans cet ordre.
  */
+import { indicesEtiquettes } from './etiquettes'
+
 const W = 320
 const H = 176
 const P = { t: 8, r: 6, b: 22, l: 28 }
@@ -29,7 +31,7 @@ export function LoadChart({ rows }: { rows: StackRow[] }) {
   const bw = clamp(slot - Math.min(4, slot * 0.32), 2.5, 34)
   const x = (i: number) => P.l + i * slot + (slot - bw) / 2
   const y = (v: number) => P.t + IH - (v / max) * IH
-  const stepX = Math.max(1, Math.ceil(n / 6))
+  const etiquettes = indicesEtiquettes(n, x)
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Charge d'entraînement par semaine">
@@ -68,7 +70,7 @@ export function LoadChart({ rows }: { rows: StackRow[] }) {
         )
       })}
       {rows.map((r, i) =>
-        i % stepX === 0 || i === n - 1 ? (
+        etiquettes.has(i) ? (
           <text key={i} x={x(i) + bw / 2} y={H - 6} textAnchor="middle" fontSize={10} fill="var(--chart-texte)">
             {r.label}
           </text>

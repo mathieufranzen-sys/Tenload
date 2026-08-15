@@ -4,10 +4,11 @@ import type { Session, Week } from '../data/types'
 import type { ActivityRow } from './load'
 import type { FeedbackRow } from './buildPain'
 import type { SeancePlanifiee } from './adapt'
-import { slotsParJour } from './overrides'
+import { slotsParJour, indexerEcarts } from './overrides'
 import { addDays } from './dates'
 
 const LUNDI = '2026-08-10'
+const LUNDI_SUIVANT = '2026-08-17'
 
 const seance = (extra: Partial<Session>): Session => ({
   day: 0,
@@ -28,6 +29,14 @@ const semaine: Week = {
   efKm: 7,
   sessions: [],
 }
+
+/** Semaine dont les sessions sont fournies : sert les tests de kilométrage. */
+const semaineAvec = (n: number, monday: string, sessions: Session[]): Week => ({
+  ...semaine,
+  n,
+  monday,
+  sessions,
+})
 
 const activite = (day: string, sport: string, km = 10): ActivityRow => ({
   day,
@@ -63,7 +72,14 @@ const planifiees = (sessions: Session[]): SeancePlanifiee[] => {
   }))
 }
 
-const base = { semaine, now: '2026-08-13', feedback: [], activities: [], byDate: {} }
+const base = {
+  semaine,
+  now: '2026-08-13',
+  feedback: [],
+  activities: [],
+  byDate: {},
+  weeks: [semaine],
+}
 
 describe('familleDe', () => {
   it('range toutes les courses dans la même famille', () => {
@@ -149,60 +165,83 @@ describe('compteur de séances', () => {
 })
 
 describe('volume de course', () => {
-  it('additionne les sept derniers jours, course uniquement', () => {
-    const r = construireInsights({
-      ...base,
-      seances: [] as SeancePlanifiee[],
-      activities: [
-        activite('2026-08-13', 'Run', 10),
-        activite('2026-08-11', 'Run', 7),
-        activite('2026-08-11', 'Ride', 30),
-        // hors fenêtre : huit jours avant
-        activite('2026-08-05', 'Run', 20),
-      ],
-    })
-    expect(r.km7).toBe(17)
+  // Aucune de ces séances n'est « prévue aujourd'hui » dans `base.semaine` :
+  // le kilométrage se lit sur `weeks`, indépendamment de la semaine affichée.
+  it('additionne les distances du plan sur les sept derniers jours', () => {
+    const w = semaineAvec(1, LUNDI, [
+      seance({ day: 0, type: 'long', dist: 20 }), // lundi 10 août
+      seance({ day: 3, type: 'ef', dist: 7 }), // jeudi 13 août — c'est `now`
+    ])
+    const r = construireInsights({ ...base, seances: [] as SeancePlanifiee[], weeks: [w] })
+    expect(r.km7).toBe(27)
     expect(r.km7Jours).toHaveLength(7)
-    expect(r.km7Jours[6]).toBe(10)
+    expect(r.km7Jours[6]).toBe(7) // aujourd'hui, en dernière position
+    expect(r.km7Jours[3]).toBe(20) // lundi, trois jours avant
   })
 
-  it('compte la distance du ressenti quand aucune activité Strava n’a été importée', () => {
-    // Une course notée à la main — sans Strava — ne doit pas compter pour zéro.
-    const r = construireInsights({
-      ...base,
-      seances: [] as SeancePlanifiee[],
-      activities: [],
-      feedback: [
-        { week: 1, day_index: 2, slot: 0, day: '2026-08-12', session_type: 'ef', pain: 1, rpe: 5, distance_km: 8 },
-      ],
-    })
-    expect(r.km7).toBe(8)
-  })
-
-  it('donne la priorité à Strava sur le ressenti le même jour, sans additionner les deux', () => {
-    const r = construireInsights({
-      ...base,
-      seances: [] as SeancePlanifiee[],
-      activities: [activite('2026-08-12', 'Run', 8)],
-      feedback: [
-        // La distance réellement parcourue, saisie après un écart : Strava
-        // reste la source de vérité quand les deux coexistent.
-        { week: 1, day_index: 2, slot: 0, day: '2026-08-12', session_type: 'ef', pain: 1, rpe: 5, distance_km: 6 },
-      ],
-    })
-    expect(r.km7).toBe(8)
-  })
-
-  it('ignore le ressenti d’une séance qui n’est pas de la course', () => {
-    const r = construireInsights({
-      ...base,
-      seances: [] as SeancePlanifiee[],
-      activities: [],
-      feedback: [
-        { week: 1, day_index: 2, slot: 0, day: '2026-08-12', session_type: 'muscu-bas', pain: 1, rpe: 5, distance_km: 8 },
-      ],
-    })
+  it('ignore ce qui n’est pas de la course, même avec une distance', () => {
+    // Le vélo ne porte jamais de distance dans le plan, mais si un jour il en
+    // portait une, elle ne devrait toujours pas compter ici : c'est l'impact
+    // au sol qui définit ce kilométrage, pas le volume aérobie.
+    const w = semaineAvec(1, LUNDI, [seance({ day: 3, type: 'velo', dist: 30 })])
+    const r = construireInsights({ ...base, seances: [] as SeancePlanifiee[], weeks: [w] })
     expect(r.km7).toBe(0)
+  })
+
+  it('ne remonte rien au-delà de sept jours', () => {
+    const w = semaineAvec(1, LUNDI, [seance({ day: 0, type: 'long', dist: 20 })]) // lundi, 3 jours avant `now`
+    const r = construireInsights({ ...base, seances: [] as SeancePlanifiee[], weeks: [w], now: '2026-08-20' })
+    expect(r.km7).toBe(0)
+  })
+
+  it('applique l’écart avant de sommer, pas la distance d’origine', () => {
+    const w = semaineAvec(1, LUNDI, [seance({ day: 3, type: 'ef', dist: 7 })]) // jeudi, `now`
+    const ecarts = indexerEcarts([{ week: 1, day_index: 3, slot: 0, patch: { dist: 4 }, reason: null }])
+    const r = construireInsights({ ...base, seances: [] as SeancePlanifiee[], weeks: [w], ecarts })
+    expect(r.km7).toBe(4)
+  })
+
+  it('ne compte pas une séance déclarée non faite', () => {
+    const w = semaineAvec(1, LUNDI, [seance({ day: 3, type: 'ef', dist: 7 })])
+    const ecarts = indexerEcarts([
+      { week: 1, day_index: 3, slot: 0, patch: { skipped: true }, reason: null },
+    ])
+    const r = construireInsights({ ...base, seances: [] as SeancePlanifiee[], weeks: [w], ecarts })
+    expect(r.km7).toBe(0)
+  })
+
+  it('compte la distance sur le jour d’arrivée quand l’écart déplace la séance', () => {
+    // now = jeudi 20 août, fenêtre du 14 au 20. Le lundi 10 (jour 0) en est
+    // hors ; déplacée au dimanche 16 (jour 6), elle doit entrer dans le total.
+    const w = semaineAvec(1, LUNDI, [seance({ day: 0, type: 'ef', dist: 9 })])
+    const ecarts = indexerEcarts([{ week: 1, day_index: 0, slot: 0, patch: { day: 6 }, reason: null }])
+    const r = construireInsights({ ...base, seances: [] as SeancePlanifiee[], weeks: [w], ecarts, now: '2026-08-20' })
+    expect(r.km7).toBe(9)
+  })
+
+  it('additionne à travers deux semaines quand la fenêtre chevauche', () => {
+    // now = mardi 18 août (semaine 2) : la fenêtre de sept jours remonte au
+    // mercredi 12 août, dans la semaine 1.
+    const w1 = semaineAvec(1, LUNDI, [seance({ day: 2, type: 'ef', dist: 6 })]) // mercredi 12 août
+    const w2 = semaineAvec(2, LUNDI_SUIVANT, [seance({ day: 1, type: 'long', dist: 15 })]) // mardi 18 août
+    const r = construireInsights({
+      ...base,
+      seances: [] as SeancePlanifiee[],
+      weeks: [w1, w2],
+      now: '2026-08-18',
+    })
+    expect(r.km7).toBe(21)
+  })
+
+  it('ignore les activités Strava : seul le plan compte désormais', () => {
+    const w = semaineAvec(1, LUNDI, [seance({ day: 3, type: 'ef', dist: 7 })])
+    const r = construireInsights({
+      ...base,
+      seances: [] as SeancePlanifiee[],
+      weeks: [w],
+      activities: [activite('2026-08-13', 'Run', 40)],
+    })
+    expect(r.km7).toBe(7)
   })
 })
 

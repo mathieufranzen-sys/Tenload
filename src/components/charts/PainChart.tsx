@@ -7,6 +7,7 @@
  * que tout va bien.
  */
 import { formatDay } from '../../lib/dates'
+import { indicesEtiquettes } from './etiquettes'
 
 const W = 320
 const H = 182
@@ -52,7 +53,7 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
 
   const x = (i: number) => P.l + (n === 1 ? IW / 2 : (i * IW) / (n - 1))
   const y = (v: number) => P.t + IH - (Math.max(0, Math.min(max, v)) / max) * IH
-  const stepX = Math.max(1, Math.ceil(n / 5))
+  const etiquettes = indicesEtiquettes(n, x)
   const graduations = cumulee ? [0, 6, 12, 18, 24, 30] : [0, 2, 4, 6, 8, 10]
 
   const trace = (points: Array<readonly [number, number]>) => {
@@ -156,7 +157,7 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
       )}
 
       {rows.map((r, i) =>
-        i % stepX === 0 || i === n - 1 ? (
+        etiquettes.has(i) ? (
           <text key={i} x={x(i)} y={H - 6} textAnchor="middle" fontSize={10} fill="var(--chart-texte)">
             {formatDay(r.day)}
           </text>

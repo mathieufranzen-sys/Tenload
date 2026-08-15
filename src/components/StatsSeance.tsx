@@ -14,9 +14,16 @@ import { familleDe } from '../lib/insights'
 export function StatsSeance({
   session: s,
   marathonPace,
+  distanceNotee = null,
 }: {
   session: Session
   marathonPace: number
+  /**
+   * Distance notée dans le ressenti, quand le plan n'en fixe aucune : le vélo,
+   * dont ce n'est jamais le cas, ou une séance qu'un écart a convertie en
+   * course sans distance de remplacement (`s.dist` reste alors vide aussi).
+   */
+  distanceNotee?: number | null
 }) {
   const estCourse = familleDe(s.type) === 'course'
   const [dmin, dmax] = estimateDuration(s, marathonPace)
@@ -54,7 +61,14 @@ export function StatsSeance({
           {dmin > 0 && <Chiffre valeur={duree} unite="min" taille="appui" />}
         </>
       ) : (
-        <Chiffre valeur={duree} unite="min" taille="cle" />
+        <>
+          <Chiffre valeur={duree} unite="min" taille="cle" />
+          {/* Même disposition que la course, rôles inversés : la durée reste
+              le chiffre clé, la distance notée l'accompagne. */}
+          {distanceNotee != null && (
+            <Chiffre valeur={formatNumber(distanceNotee)} unite="km" taille="appui" />
+          )}
+        </>
       )}
       {allureCible != null && (
         <Chiffre valeur={formatPace(allureCible)} unite="/km" taille="appui" />

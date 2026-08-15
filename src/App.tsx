@@ -7,7 +7,7 @@ import planJson from './data/plan.json'
 import notionSeed from './data/notion-seed.json'
 import stravaSeed from './data/strava-seed.json'
 import type { Plan, Week } from './data/types'
-import { buildLoad, type ActivityRow } from './lib/load'
+import { buildLoad, buildLoadParDiscipline, type ActivityRow } from './lib/load'
 import { HR_MAX } from './lib/paces'
 import { buildPain, type DailyLogRow, type FeedbackRow } from './lib/buildPain'
 import { indexerEcarts, type EcartPatch, type EcartRow } from './lib/overrides'
@@ -240,6 +240,22 @@ function Coquille({
     [data.activities, completed, now, ecarts],
   )
 
+  // Même modèle que l'indice, réparti par discipline : le graphique « Charge
+  // d'entraînement par semaine » de Suivi ne doit pas lire l'effort relatif de
+  // Strava, un chiffre que Strava calcule à sa façon et sans rapport avec le
+  // coût que l'app donne à chaque séance.
+  const loadParDiscipline = useMemo(
+    () =>
+      buildLoadParDiscipline({
+        weeks: plan.weeks,
+        activities: data.activities,
+        completed,
+        today: now,
+        ecarts,
+      }),
+    [data.activities, completed, now, ecarts],
+  )
+
   const [onglet, setOnglet] = useState<Onglet>('today')
   const [seance, setSeance] = useState<SeanceOuverte | null>(null)
   const [numeroSemaine, setNumeroSemaine] = useState(
@@ -313,6 +329,7 @@ function Coquille({
       {onglet === 'track' && (
         <Track
           load={load}
+          loadParDiscipline={loadParDiscipline}
           pain={data.pain}
           activities={data.activities}
           feedback={feedback}

@@ -12,6 +12,7 @@
 import { useState } from 'react'
 import type { Session, SessionType } from '../data/types'
 import { DAYS_LONG } from '../lib/dates'
+import { familleDe } from '../lib/insights'
 import {
   alertesAjoutees,
   TYPES_REMPLACEMENT,
@@ -126,14 +127,19 @@ export function EcartEditor({
         </select>
       </Champ>
 
-      {origine.dist != null && (
+      {/* Le plan fixe une distance à toute séance de course, mais un écart qui
+          CONVERTIT une autre discipline en course (vélo ou muscu remplacés par
+          « Course facile », par exemple) n'en hérite d'aucune : `versType`
+          efface `dist` avec le reste de l'ancienne séance. Sans ce second cas,
+          la distance réellement courue n'aurait nulle part où se saisir. */}
+      {(origine.dist != null || (patch.type != null && familleDe(patch.type) === 'course')) && (
         <Champ label="Distance réelle">
           <input
             type="number"
             inputMode="decimal"
             step="0.5"
             min="0"
-            placeholder={`${origine.dist} km`}
+            placeholder={origine.dist != null ? `${origine.dist} km` : 'km parcourus'}
             value={patch.dist ?? ''}
             onChange={(e) => maj({ dist: e.target.value === '' ? undefined : Number(e.target.value) })}
             style={styleChamp}

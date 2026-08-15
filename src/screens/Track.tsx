@@ -13,7 +13,7 @@ import type { Plan } from '../data/types'
 import { addDays, formatDay, formatNumber, mondayOf, today as todayISO } from '../lib/dates'
 import { adapt } from '../lib/adapt'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
-import type { ActivityRow } from '../lib/load'
+import type { ActivityRow, LoadParDiscipline } from '../lib/load'
 import type { FeedbackRow } from '../lib/buildPain'
 import { IndexChart } from '../components/charts/IndexChart'
 import { PainChart, type PainRow, type VuePain } from '../components/charts/PainChart'
@@ -27,6 +27,8 @@ const plan = planJson as unknown as Plan
 
 interface Props {
   load: LoadMap
+  /** Le même coût que `load`, réparti par discipline plutôt que sommé. */
+  loadParDiscipline: Record<string, LoadParDiscipline>
   pain: PainMap
   activities: ActivityRow[]
   feedback: FeedbackRow[]
@@ -52,7 +54,7 @@ function santeDuTendon(reveil: number | null, soir: number | null): { label: str
   return { label: 'Mauvaise', couleur: 'var(--critical)' }
 }
 
-export function Track({ load, pain, activities, feedback, onOuvrirProfil }: Props) {
+export function Track({ load, loadParDiscipline, pain, activities, feedback, onOuvrirProfil }: Props) {
   const now = todayISO()
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
 
@@ -154,15 +156,17 @@ export function Track({ load, pain, activities, feedback, onOuvrirProfil }: Prop
       }))
   }, [activities, feedback])
 
+  // Le même coût que l'indice de charge, réparti par discipline et regroupé
+  // par semaine — pas l'effort relatif de Strava, que Strava calcule à sa
+  // façon et sans rapport avec le modèle de l'app.
   const loadRows: StackRow[] = useMemo(() => {
     const parSemaine = new Map<string, { course: number; velo: number; autre: number }>()
-    for (const a of activities) {
-      const lundi = mondayOf(a.day)
-      const eff = a.relative_effort ?? 0
+    for (const [day, v] of Object.entries(loadParDiscipline)) {
+      const lundi = mondayOf(day)
       const cur = parSemaine.get(lundi) ?? { course: 0, velo: 0, autre: 0 }
-      if (a.sport === 'Run') cur.course += eff
-      else if (a.sport === 'Ride') cur.velo += eff
-      else cur.autre += eff
+      cur.course += v.course
+      cur.velo += v.velo
+      cur.autre += v.autre
       parSemaine.set(lundi, cur)
     }
     return [...parSemaine.entries()]
@@ -173,7 +177,7 @@ export function Track({ load, pain, activities, feedback, onOuvrirProfil }: Prop
         velo: Math.round(v.velo),
         autre: Math.round(v.autre),
       }))
-  }, [activities])
+  }, [loadParDiscipline])
 
   const volumeAffiche =
     vueVolume === 'cumul'
@@ -298,7 +302,7 @@ export function Track({ load, pain, activities, feedback, onOuvrirProfil }: Prop
 
         <Viz
           titre="Charge d'entraînement par semaine"
-          legende="L'effort relatif Strava, séparé par discipline. Le vélo et le reste sont ce qui te permet de garder du volume aérobie pendant que le tendon récupère."
+          legende="Le même coût que l'indice de charge du tendon, séparé par discipline. Le vélo et le reste sont ce qui te permet de garder du volume aérobie pendant que le tendon récupère."
           legendeCouleurs={[
             { label: 'Course', couleur: 'var(--chart-1)' },
             { label: 'Vélo', couleur: 'var(--chart-2)' },

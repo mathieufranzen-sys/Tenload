@@ -138,8 +138,10 @@ export function Today({
         feedback,
         activities,
         byDate: A.byDate,
+        weeks: plan.weeks,
+        ecarts,
       }),
-    [semaineCourante, seancesCourantes, now, feedback, activities, A.byDate],
+    [semaineCourante, seancesCourantes, now, feedback, activities, A.byDate, ecarts],
   )
 
   const mot = useMemo(

@@ -12,6 +12,7 @@ import type { ActivityRow } from './load'
 import type { FeedbackRow } from './buildPain'
 import type { SeancePlanifiee } from './adapt'
 import { addDays } from './dates'
+import { seancesAvecEcarts, type EcartRow } from './overrides'
 
 export type Famille = 'course' | 'velo' | 'renfo'
 
@@ -67,6 +68,11 @@ export interface EntreeInsights {
   activities: ActivityRow[]
   /** Indice par jour, tel que renvoyé par `adapt`. */
   byDate: Record<string, { idx: number }>
+  /** Le plan complet : nécessaire pour le kilométrage des sept derniers
+   *  jours, qui peut chevaucher deux semaines. */
+  weeks: Week[]
+  /** Écarts volontaires, indexés par `cleEcart`. */
+  ecarts?: Map<string, EcartRow>
 }
 
 export function construireInsights({
@@ -76,6 +82,8 @@ export function construireInsights({
   feedback,
   activities,
   byDate,
+  weeks,
+  ecarts,
 }: EntreeInsights): Insights {
   const vide = (): Compteur => ({ prevu: 0, realise: 0 })
   const compteurs: Record<Famille, Compteur> = { course: vide(), velo: vide(), renfo: vide() }
@@ -112,26 +120,24 @@ export function construireInsights({
     realise: compteurs.course.realise + compteurs.velo.realise + compteurs.renfo.realise,
   }
 
-  // Sept derniers jours glissants, aujourd'hui inclus. Le kilométrage réel,
-  // pas celui du plan : Strava fait foi quand il y a une activité importée
-  // ce jour-là, et à défaut le ressenti de séance donne la distance réellement
-  // parcourue — celle-ci porte déjà l'écart volontaire s'il y en a un, puisque
-  // SessionSheet enregistre `s.dist` après application de l'écart. Sans ce
-  // repli, une course notée à la main sans Strava ne comptait pour rien.
-  const feedbackCourseParJour = new Map<string, number>()
-  for (const f of feedback) {
-    if (familleDe(f.session_type as SessionType) !== 'course' || f.distance_km == null) continue
-    feedbackCourseParJour.set(f.day, (feedbackCourseParJour.get(f.day) ?? 0) + f.distance_km)
+  // Sept derniers jours glissants, aujourd'hui inclus. Le kilométrage vient du
+  // plan, ajusté par l'écart volontaire s'il y en a un — jamais de Strava ici :
+  // c'est ce que le plan dit avoir été couru, pas ce qu'un capteur a mesuré.
+  // Course à pied uniquement, jamais le vélo.
+  const kmCourseParJour = new Map<string, number>()
+  for (const w of weeks) {
+    const seancesSemaine = ecarts ? seancesAvecEcarts(w, ecarts) : w.sessions
+    for (const s of seancesSemaine) {
+      if (s.saute || familleDe(s.type) !== 'course' || s.dist == null) continue
+      const jour = addDays(w.monday, s.day)
+      kmCourseParJour.set(jour, (kmCourseParJour.get(jour) ?? 0) + s.dist)
+    }
   }
 
   const km7Jours: number[] = []
   for (let k = 6; k >= 0; k--) {
     const jour = addDays(now, -k)
-    const activitesJour = activities.filter((a) => a.day === jour && a.sport === 'Run')
-    const km = activitesJour.length
-      ? activitesJour.reduce((total, a) => total + a.distance_m / 1000, 0)
-      : (feedbackCourseParJour.get(jour) ?? 0)
-    km7Jours.push(Math.round(km * 10) / 10)
+    km7Jours.push(Math.round((kmCourseParJour.get(jour) ?? 0) * 10) / 10)
   }
   const km7 = Math.round(km7Jours.reduce((a, b) => a + b, 0) * 10) / 10
 

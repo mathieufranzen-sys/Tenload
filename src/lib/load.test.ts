@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import planJson from '../data/plan.json'
 import type { Plan } from '../data/types'
-import { buildLoad, sessionLoad } from './load'
+import { activityLoad, buildLoad, buildLoadParDiscipline, sessionLoad, type ActivityRow } from './load'
 import { cleEcart, indexerEcarts, slotsParJour, type EcartRow } from './overrides'
 
 const plan = planJson as unknown as Plan
@@ -106,5 +106,69 @@ describe('buildLoad — écarts volontaires', () => {
 
   it('la clé d’un écart reste celle du jour d’origine après déplacement', () => {
     expect(cleEcart(semaine.n, 5, 0)).toBe(`${semaine.n}-5-0`)
+  })
+})
+
+describe('buildLoadParDiscipline', () => {
+  const toutFait = new Set<string>()
+  slotsParJour(semaine.sessions).forEach((slot, i) =>
+    toutFait.add(`${semaine.n}-${semaine.sessions[i].day}-${slot}`),
+  )
+
+  it('sépare course, vélo et autre sans changer le total', () => {
+    const total = buildLoad({ weeks: [semaine], activities: [], completed: toutFait, today: jour(6) })
+    const detail = buildLoadParDiscipline({
+      weeks: [semaine],
+      activities: [],
+      completed: toutFait,
+      today: jour(6),
+    })
+    for (const [day, v] of Object.entries(detail)) {
+      expect(v.course + v.velo + v.autre).toBeCloseTo(total[day] ?? 0, 6)
+    }
+  })
+
+  it('range une activité Strava vélo dans la bonne discipline', () => {
+    const ride: ActivityRow = { day: jour(-1), sport: 'Ride', name: null, distance_m: 0, moving_s: 1800 }
+    const detail = buildLoadParDiscipline({
+      weeks: [semaine],
+      activities: [ride],
+      completed: new Set(),
+      today: jour(6),
+    })
+    expect(detail[jour(-1)]).toEqual({ course: 0, velo: activityLoad(ride), autre: 0 })
+  })
+
+  it('range le renfo bas noté dans « autre », pas dans la course', () => {
+    const i = semaine.sessions.findIndex((s) => s.day === 3 && s.type === 'muscu-bas')
+    const slot = slotsParJour(semaine.sessions)[i]
+    const detail = buildLoadParDiscipline({
+      weeks: [semaine],
+      activities: [],
+      completed: new Set([`${semaine.n}-3-${slot}`]),
+      today: jour(6),
+    })
+    const jourRenfo = detail[jour(3)]
+    expect(jourRenfo.autre).toBeCloseTo(sessionLoad(semaine.sessions[i]), 6)
+    expect(jourRenfo.course).toBe(0)
+  })
+
+  it('n’instancie aucun jour pour une activité de coût nul', () => {
+    // Un renfo haut noté sans mot-clé « jambe » vaut zéro : ni Strava ni le
+    // plan ne doivent faire apparaître ce jour dans le détail par discipline.
+    const musculation: ActivityRow = {
+      day: jour(-1),
+      sport: 'Weight',
+      name: 'Haut du corps',
+      distance_m: 0,
+      moving_s: 2400,
+    }
+    const detail = buildLoadParDiscipline({
+      weeks: [semaine],
+      activities: [musculation],
+      completed: new Set(),
+      today: jour(6),
+    })
+    expect(detail[jour(-1)]).toBeUndefined()
   })
 })
