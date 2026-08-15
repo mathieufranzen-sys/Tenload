@@ -19,10 +19,13 @@ const RETRAIT = '15px 16px 15px 20px'
 export function SessionHero({
   session: s,
   marathonPace,
+  /** Le jour affiché, quand ce n'est pas aujourd'hui. Sert l'étiquette du haut. */
+  quand = "Aujourd'hui",
   onClick,
 }: {
   session: Session
   marathonPace: number
+  quand?: string
   onClick?: () => void
 }) {
   const Balise = onClick ? 'button' : 'div'
@@ -61,7 +64,7 @@ export function SessionHero({
       />
 
       <div style={{ padding: RETRAIT }}>
-        <div style={etiquette}>Aujourd'hui · {s.cat}</div>
+        <div style={etiquette}>{quand} · {s.cat}</div>
         <h2
           style={{
             fontSize: 17,

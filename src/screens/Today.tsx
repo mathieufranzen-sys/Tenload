@@ -7,14 +7,22 @@
  * scroll. Le reste (règles d'adaptation, carnet, suite de la semaine) suit
  * en dessous, sur le fond sombre habituel.
  */
-import { useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan, Week } from '../data/types'
-import { addDays, daysBetween, formatDayLong, today as todayISO } from '../lib/dates'
+import {
+  DAYS_LONG,
+  addDays,
+  daysBetween,
+  formatDay,
+  formatDayLong,
+  today as todayISO,
+  weekdayIndex,
+} from '../lib/dates'
 import { adapt, weekSessions, type SeancePlanifiee } from '../lib/adapt'
 import { construireInsights } from '../lib/insights'
 import { motDuCoach, type MotCoach } from '../lib/coach'
-import type { LoadMap, PainMap } from '../lib/tendonIndex'
+import { bandOf, type LoadMap, type PainMap } from '../lib/tendonIndex'
 import type { ActivityRow } from '../lib/load'
 import type { FeedbackRow } from '../lib/buildPain'
 import type { EcartRow } from '../lib/overrides'
@@ -64,23 +72,74 @@ export function Today({
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
   const [calculOuvert, setCalculOuvert] = useState(false)
 
-  const debutPlan = plan.meta.start
-  const avantPlan = now < debutPlan
-  const semaine: Week = useMemo(() => {
-    const courante = plan.weeks.find((w) => now >= w.monday && now <= addDays(w.monday, 6))
-    return courante ?? plan.weeks[avantPlan ? 0 : plan.weeks.length - 1]
-  }, [now, avantPlan])
+  // Le jour consulté. Il recule jusqu'à 28 jours, la fenêtre du modèle, et ne
+  // dépasse jamais aujourd'hui : on ne saisit pas la raideur d'un réveil qui
+  // n'a pas eu lieu, et le programme à venir se lit dans l'onglet Programme.
+  const [jour, setJour] = useState(now)
+  const estAujourdhui = jour === now
+  const plusAncien = addDays(now, -27)
 
+  /**
+   * Décale d'un jour, bornes comprises dans la mise à jour elle-même.
+   *
+   * La forme fonctionnelle n'est pas un détail de style : deux appuis rapides
+   * sur la flèche partent du même rendu, donc d'un `jour` identique, et le
+   * second écrasait le premier au lieu de s'y ajouter. On ne reculait que
+   * d'une journée quelle que soit la vitesse d'appui.
+   */
+  const decaler = useCallback(
+    (n: number) =>
+      setJour((j) => {
+        const cible = addDays(j, n)
+        if (cible > now) return now
+        if (cible < plusAncien) return plusAncien
+        return cible
+      }),
+    [now, plusAncien],
+  )
+
+  const debutPlan = plan.meta.start
+  const avantPlan = jour < debutPlan
+
+  /** La semaine du jour consulté : le contenu affiché la suit. */
+  const semaine: Week = useMemo(() => {
+    const w = plan.weeks.find((x) => jour >= x.monday && jour <= addDays(x.monday, 6))
+    return w ?? plan.weeks[jour < debutPlan ? 0 : plan.weeks.length - 1]
+  }, [jour, debutPlan])
+
+  // L'adaptation reste ancrée sur AUJOURD'HUI, même en consultant une autre
+  // date : `fxForDate` ne s'applique que dans la fenêtre de dix jours à partir
+  // du présent, et remonter le temps ne doit pas réécrire le passé.
   const seances = useMemo(
     () => weekSessions(semaine, now, A.byDate, ecarts),
     [semaine, now, A.byDate, ecarts],
   )
-  const duJour = avantPlan ? [] : seances.filter((x) => x.day === now)
-  const suite = seances.filter((x) => x.day > now).slice(0, 4)
+  const duJour = avantPlan ? [] : seances.filter((x) => x.day === jour)
+  const suite = seances.filter((x) => x.day > jour).slice(0, 4)
+
+  /** La semaine en cours, pour les compteurs et le coach : eux parlent du
+   *  présent, pas du jour qu'on est en train de relire. */
+  const semaineCourante: Week = useMemo(() => {
+    const w = plan.weeks.find((x) => now >= x.monday && now <= addDays(x.monday, 6))
+    return w ?? plan.weeks[now < debutPlan ? 0 : plan.weeks.length - 1]
+  }, [now, debutPlan])
+
+  const seancesCourantes = useMemo(
+    () => weekSessions(semaineCourante, now, A.byDate, ecarts),
+    [semaineCourante, now, A.byDate, ecarts],
+  )
 
   const insights = useMemo(
-    () => construireInsights({ semaine, seances, now, feedback, activities, byDate: A.byDate }),
-    [semaine, seances, now, feedback, activities, A.byDate],
+    () =>
+      construireInsights({
+        semaine: semaineCourante,
+        seances: seancesCourantes,
+        now,
+        feedback,
+        activities,
+        byDate: A.byDate,
+      }),
+    [semaineCourante, seancesCourantes, now, feedback, activities, A.byDate],
   )
 
   const mot = useMemo(
@@ -88,9 +147,13 @@ export function Today({
     [pain, A.byDate, now, insights.seancesTotal],
   )
 
+  /** L'indice du jour consulté. `A.detail` ne vaut que pour aujourd'hui. */
+  const detail = A.byDate[jour] ?? A.detail
+  const bande = bandOf(detail.idx)
+
   const jRace = daysBetween(now, plan.meta.raceDate)
   const jDebut = daysBetween(now, debutPlan)
-  const sousTitre = formatDayLong(now)
+  const sousTitre = formatDayLong(jour)
 
   const feedbackDe = ({ jourOrigine, slot }: SeancePlanifiee) =>
     feedback.find((f) => f.week === semaine.n && f.day_index === jourOrigine && f.slot === slot) ?? null
@@ -99,7 +162,7 @@ export function Today({
     // Le dégradé court sur toute la page, pas seulement sur le premier écran :
     // c'est ce qui donne au verre dépoli quelque chose à flouter jusqu'en bas.
     <div style={{ position: 'relative', maxWidth: 'var(--shell-max)', margin: '0 auto', paddingBottom: 90 }}>
-      <MeshBackground band={A.band.key} />
+      <MeshBackground band={bande.key} />
 
       {/* ─── premier écran : insights, indice, séance ──────────────────── */}
       <section
@@ -116,7 +179,7 @@ export function Today({
           <header style={{ padding: '22px 2px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
             <div>
               <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>
-                {avantPlan ? 'Bientôt' : "Aujourd'hui"}
+                {avantPlan ? 'Bientôt' : estAujourdhui ? "Aujourd'hui" : titreJour(jour, now)}
               </h1>
               <p style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500, margin: '3px 0 0' }}>
                 {sousTitre[0].toUpperCase() + sousTitre.slice(1)} ·{' '}
@@ -126,9 +189,21 @@ export function Today({
             <ProfileButton onClick={onOuvrirProfil} />
           </header>
 
-          <div style={{ marginTop: 16 }}>
-            <InsightTiles insights={insights} />
-          </div>
+          <NavigationJour
+            jour={jour}
+            now={now}
+            plusAncien={plusAncien}
+            onDecaler={decaler}
+            onAujourdhui={() => setJour(now)}
+          />
+
+          {/* Les compteurs parlent de la semaine en cours : les afficher en
+              relisant un jour passé laisserait croire qu'ils le concernent. */}
+          {estAujourdhui && (
+            <div style={{ marginTop: 16 }}>
+              <InsightTiles insights={insights} />
+            </div>
+          )}
 
           <div
             style={{
@@ -140,7 +215,7 @@ export function Today({
               margin: '26px 0',
             }}
           >
-            <TendonArc value={A.detail.idx} />
+            <TendonArc value={detail.idx} />
 
             {/* Le chiffre remonte dans la courbe : c'est ce qui fait tenir
                 l'arc et la valeur comme un seul objet plutôt que deux. */}
@@ -166,10 +241,10 @@ export function Today({
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
-                {A.detail.idx}
+                {detail.idx}
               </div>
               <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-.3px', marginTop: 6 }}>
-                {A.band.headline}
+                {bande.headline}
               </div>
               <p
                 style={{
@@ -181,7 +256,7 @@ export function Today({
                   maxWidth: '34ch',
                 }}
               >
-                {A.band.detail}
+                {bande.detail}
               </p>
             </div>
 
@@ -207,7 +282,7 @@ export function Today({
               <Icon name="chevronRight" size={13} style={{ opacity: 0.7 }} />
             </button>
 
-            {A.detail.stale && <Note>Aucune douleur saisie depuis 24 h : l'indice tourne sur une estimation.</Note>}
+            {detail.stale && <Note>Aucune douleur saisie depuis 24 h : l'indice tourne sur une estimation.</Note>}
           </div>
 
           <div style={{ paddingBottom: 18 }}>
@@ -215,6 +290,7 @@ export function Today({
               <SessionHero
                 session={duJour[0].s}
                 marathonPace={marathonPace}
+                quand={estAujourdhui ? "Aujourd'hui" : formatDay(jour)}
                 onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, duJour[0]))}
               />
             ) : (
@@ -243,10 +319,18 @@ export function Today({
                 </span>
                 <div>
                   <b style={{ fontSize: 16, fontWeight: 600 }}>
-                    {avantPlan ? 'Le plan commence le 10 août' : "Rien au programme aujourd'hui"}
+                    {avantPlan
+                      ? 'Le plan commence le 10 août'
+                      : estAujourdhui
+                        ? "Rien au programme aujourd'hui"
+                        : 'Rien au programme ce jour-là'}
                   </b>
                   <div style={{ color: 'var(--sur-ink-2)', fontSize: 13 }}>
-                    {avantPlan ? 'Semaine 1 : amorce, sans sortie longue.' : "Profites-en pour glacer et t'étirer."}
+                    {avantPlan
+                      ? 'Semaine 1 : amorce, sans sortie longue.'
+                      : estAujourdhui
+                        ? "Profites-en pour glacer et t'étirer."
+                        : 'Journée de repos jambes.'}
                   </div>
                 </div>
               </div>
@@ -257,26 +341,26 @@ export function Today({
 
       {/* ─── au scroll : le reste de la journée et de la semaine ────────── */}
       <div style={{ position: 'relative', zIndex: 5, padding: '24px var(--page-x) 0' }}>
-        <AlertBox adapt={A} />
+        {estAujourdhui && <AlertBox adapt={A} />}
 
         {duJour.slice(1).map((x, i) => (
           <SessionCard
             key={i}
             session={x.s}
-            day={now}
+            day={jour}
             marathonPace={marathonPace}
             feedback={feedbackDe(x)}
             onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, x))}
           />
         ))}
 
-        {journalActif && <JournalDuJour day={now} />}
+        {journalActif && <JournalDuJour day={jour} />}
 
-        <MotCoachCard mot={mot} />
+        {estAujourdhui && <MotCoachCard mot={mot} />}
 
         {suite.length > 0 && (
           <>
-            <Pretitle>La suite de la semaine</Pretitle>
+            <Pretitle>{estAujourdhui ? 'La suite de la semaine' : 'La suite de cette semaine-là'}</Pretitle>
             {suite.map((x, i) => (
               <SessionCard
                 key={i}
@@ -293,8 +377,8 @@ export function Today({
 
       {calculOuvert && (
         <ChargeSheet
-          breakdown={A.detail}
-          band={A.band}
+          breakdown={detail}
+          band={bande}
           onVoirSuivi={onVoirSuivi}
           onClose={() => setCalculOuvert(false)}
         />
@@ -385,5 +469,115 @@ function MotCoachCard({ mot }: { mot: MotCoach }) {
         <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.55, color: '#D6D9DE' }}>{mot.texte}</p>
       </div>
     </div>
+  )
+}
+
+/** « Hier », « Avant-hier », puis le nom du jour. Un libellé relatif reste plus
+ *  rapide à lire qu'une date, mais il ne tient que sur deux jours. */
+function titreJour(jour: string, now: string): string {
+  const ecart = daysBetween(jour, now)
+  if (ecart === 1) return 'Hier'
+  if (ecart === 2) return 'Avant-hier'
+  // formatDayLong abrège (« mer. ») : correct dans une ligne de contexte,
+  // pas comme titre de page. On reprend le nom entier.
+  const j = DAYS_LONG[weekdayIndex(jour)]
+  return j[0].toUpperCase() + j.slice(1)
+}
+
+/**
+ * Navigation de jour en jour, bornée au passé.
+ *
+ * On ne va pas au-delà d'aujourd'hui : la raideur d'un réveil qui n'a pas eu
+ * lieu ne se saisit pas, et le programme à venir se lit dans l'onglet
+ * Programme, qui est fait pour ça.
+ */
+function NavigationJour({
+  jour,
+  now,
+  plusAncien,
+  onDecaler,
+  onAujourdhui,
+}: {
+  jour: string
+  now: string
+  plusAncien: string
+  onDecaler: (n: number) => void
+  onAujourdhui: () => void
+}) {
+  const peutReculer = jour > plusAncien
+  const peutAvancer = jour < now
+  const estAujourdhui = jour === now
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        marginTop: 14,
+      }}
+    >
+      <Fleche
+        sens="gauche"
+        actif={peutReculer}
+        label="Jour précédent"
+        onClick={() => onDecaler(-1)}
+      />
+      <Fleche
+        sens="droite"
+        actif={peutAvancer}
+        label="Jour suivant"
+        onClick={() => onDecaler(1)}
+      />
+      {!estAujourdhui && (
+        <button
+          onClick={onAujourdhui}
+          className="glass"
+          style={{
+            marginLeft: 2,
+            padding: '7px 14px',
+            borderRadius: 'var(--pill)',
+            fontSize: 12.5,
+            fontWeight: 600,
+            color: 'var(--ink)',
+          }}
+        >
+          Revenir à aujourd&apos;hui
+        </button>
+      )}
+    </div>
+  )
+}
+
+function Fleche({
+  sens,
+  actif,
+  label,
+  onClick,
+}: {
+  sens: 'gauche' | 'droite'
+  actif: boolean
+  label: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={!actif}
+      aria-label={label}
+      className="glass"
+      style={{
+        width: 38,
+        height: 38,
+        borderRadius: '50%',
+        display: 'grid',
+        placeItems: 'center',
+        opacity: actif ? 1 : 0.3,
+        cursor: actif ? 'pointer' : 'default',
+        transform: sens === 'gauche' ? 'scaleX(-1)' : undefined,
+      }}
+    >
+      <Icon name="chevronRight" size={16} />
+    </button>
   )
 }
