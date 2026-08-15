@@ -15,6 +15,24 @@ export function Login({ auth }: { auth: Auth }) {
   const [email, setEmail] = useState('')
   const [statut, setStatut] = useState<'saisie' | 'envoi' | 'envoyé'>('saisie')
   const [erreur, setErreur] = useState<string | null>(null)
+  const [code, setCode] = useState('')
+  const [verif, setVerif] = useState(false)
+
+  async function validerCode(e: FormEvent) {
+    e.preventDefault()
+    const propre = code.replace(/\D/g, '')
+    if (propre.length !== 6) {
+      setErreur('Le code fait six chiffres.')
+      return
+    }
+    setVerif(true)
+    setErreur(null)
+    const err = await auth.verifierCode(email, propre)
+    setVerif(false)
+    // Pas de setStatut en cas de succès : `onAuthStateChange` bascule l'app
+    // toute seule, cet écran disparaît avec.
+    if (err) setErreur(err)
+  }
 
   async function soumettre(e: FormEvent) {
     e.preventDefault()
@@ -98,18 +116,85 @@ export function Login({ auth }: { auth: Auth }) {
               <span style={{ color: '#6ee7b7', display: 'flex' }}>
                 <Icon name="check" size={20} />
               </span>
-              <b style={{ fontSize: 16.5, fontWeight: 700 }}>Lien envoyé</b>
+              <b style={{ fontSize: 16.5, fontWeight: 700 }}>Code envoyé</b>
             </div>
             <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.55, color: '#D6D9DE' }}>
-              Ouvre le mail reçu sur {email} depuis cet appareil. Le lien expire au bout d'une
-              heure.
+              Va chercher le mail envoyé à {email}, puis recopie ici le code à six chiffres.
             </p>
+
+            {/* Le code plutôt que le lien, et ce n'est pas une commodité : sur
+                iOS, une app installée sur l'écran d'accueil a un stockage
+                séparé de Safari. Un lien ouvre un navigateur, donc il connecte
+                tout sauf l'app d'où part la demande. Le code ne sort jamais
+                d'ici. */}
+            <form onSubmit={validerCode} style={{ marginTop: 15 }}>
+              <input
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]*"
+                maxLength={6}
+                autoFocus
+                placeholder="000000"
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                style={{
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  background: 'rgba(8,9,11,.34)',
+                  border: `1px solid ${erreur ? 'var(--c-inter)' : 'var(--glass-border)'}`,
+                  borderRadius: 14,
+                  padding: '14px 15px',
+                  color: 'var(--ink)',
+                  font: 'inherit',
+                  fontSize: 26,
+                  fontWeight: 600,
+                  letterSpacing: '10px',
+                  textAlign: 'center',
+                  fontVariantNumeric: 'tabular-nums',
+                  outline: 'none',
+                }}
+              />
+              {erreur && (
+                <p style={{ color: '#FF9A9D', fontSize: 12.5, fontWeight: 600, margin: '9px 2px 0' }}>
+                  {erreur}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={verif || code.length !== 6}
+                style={{
+                  width: '100%',
+                  marginTop: 14,
+                  background: '#fff',
+                  color: '#08090b',
+                  borderRadius: 'var(--pill)',
+                  padding: 15,
+                  font: 'inherit',
+                  fontSize: 16,
+                  fontWeight: 700,
+                  opacity: verif || code.length !== 6 ? 0.55 : 1,
+                }}
+              >
+                {verif ? 'Vérification…' : 'Me connecter'}
+              </button>
+            </form>
+
+            <p style={{ color: 'var(--sur-ink-3)', fontSize: 12, lineHeight: 1.5, margin: '13px 2px 0' }}>
+              Le mail contient aussi un lien, mais si tu as installé Tenload sur ton écran
+              d'accueil, c'est le code qu'il faut : le lien ouvrirait Safari, qui est un espace
+              séparé de l'app.
+            </p>
+
             <button
               type="button"
-              onClick={() => setStatut('saisie')}
+              onClick={() => {
+                setStatut('saisie')
+                setCode('')
+                setErreur(null)
+              }}
               style={{
                 width: '100%',
-                marginTop: 16,
+                marginTop: 12,
                 padding: 14,
                 borderRadius: 'var(--pill)',
                 fontSize: 15.5,

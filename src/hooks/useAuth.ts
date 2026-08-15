@@ -1,9 +1,15 @@
 /**
- * Authentification par lien magique.
+ * Authentification : lien magique, ou code à six chiffres.
  *
  * Trois états seulement, parce que ce sont les trois qui existent vraiment :
  * l'app tourne sans configuration Supabase (mode instantanés), elle est
  * configurée mais personne n'est connecté, ou une session est ouverte.
+ *
+ * Le code existe pour une raison précise : sur iOS, une PWA installée sur
+ * l'écran d'accueil a son propre stockage, séparé de Safari. Un lien magique
+ * ouvre forcément un navigateur, donc il ouvre une session PARTOUT sauf dans
+ * l'app installée, qui reste sur l'écran de connexion. Le code, lui, se saisit
+ * sans jamais quitter l'app.
  */
 import { useCallback, useEffect, useState } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
@@ -15,8 +21,10 @@ export interface Auth {
   state: AuthState
   user: User | null
   session: Session | null
-  /** Envoie le lien de connexion. Renvoie un message d'erreur, ou null si c'est parti. */
+  /** Envoie le lien et le code. Renvoie un message d'erreur, ou null si c'est parti. */
   envoyerLien: (email: string) => Promise<string | null>
+  /** Valide le code à six chiffres reçu par mail. Même retour. */
+  verifierCode: (email: string, code: string) => Promise<string | null>
   deconnexion: () => Promise<void>
 }
 
@@ -43,6 +51,9 @@ export function messageErreur(brut: string): string {
   if (/rate limit|too many|429/i.test(brut)) {
     return 'Trop de tentatives rapprochées. Laisse passer une minute.'
   }
+  if (/expired/i.test(brut)) return 'Ce code a expiré. Demande-en un nouveau.'
+  if (/invalid.*(token|otp)|otp.*invalid/i.test(brut))
+    return 'Code incorrect. Vérifie les six chiffres du dernier mail reçu.'
   if (/invalid|malformed/i.test(brut)) return "Cette adresse n'est pas valide."
   return "L'envoi a échoué. Vérifie l'adresse et réessaie."
 }
@@ -85,9 +96,19 @@ export function useAuth(): Auth {
     return messageErreur(error.message)
   }, [])
 
+  const verifierCode = useCallback(async (email: string, code: string): Promise<string | null> => {
+    if (!supabase) return "Supabase n'est pas configuré."
+    const { error } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token: code.replace(/\s/g, ''),
+      type: 'email',
+    })
+    return error ? messageErreur(error.message) : null
+  }, [])
+
   const deconnexion = useCallback(async () => {
     await supabase?.auth.signOut()
   }, [])
 
-  return { state, user: session?.user ?? null, session, envoyerLien, deconnexion }
+  return { state, user: session?.user ?? null, session, envoyerLien, verifierCode, deconnexion }
 }
