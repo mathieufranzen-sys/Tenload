@@ -177,25 +177,67 @@ export function Today({
       >
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           <header style={{ padding: '22px 2px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-            <div>
-              <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>
-                {avantPlan ? 'Bientôt' : estAujourdhui ? "Aujourd'hui" : titreJour(jour, now)}
-              </h1>
-              <p style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500, margin: '3px 0 0' }}>
-                {sousTitre[0].toUpperCase() + sousTitre.slice(1)} ·{' '}
-                {avantPlan ? `J-${jDebut} avant la semaine 1` : `J-${jRace} avant Paris`}
+            <div style={{ minWidth: 0 }}>
+              {/* Les flèches sont collées au titre : c'est lui qu'elles font
+                  changer, et la relation se perd dès qu'on les met sur une
+                  ligne à part. */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>
+                  {avantPlan ? 'Bientôt' : estAujourdhui ? "Aujourd'hui" : titreJour(jour, now)}
+                </h1>
+                <Fleche
+                  sens="gauche"
+                  actif={jour > plusAncien}
+                  label="Jour précédent"
+                  onClick={() => decaler(-1)}
+                />
+                <Fleche
+                  sens="droite"
+                  actif={jour < now}
+                  label="Jour suivant"
+                  onClick={() => decaler(1)}
+                />
+              </div>
+              <p
+                style={{
+                  color: 'var(--sur-ink-2)',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  margin: '4px 0 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: 8,
+                }}
+              >
+                {/* Le décompte avant Paris ne parle que du présent : en
+                    relisant une date passée il allonge la ligne pour rien et
+                    repousse le retour à aujourd'hui sur un troisième rang. */}
+                <span>
+                  {sousTitre[0].toUpperCase() + sousTitre.slice(1)}
+                  {estAujourdhui &&
+                    ` · ${avantPlan ? `J-${jDebut} avant la semaine 1` : `J-${jRace} avant Paris`}`}
+                </span>
+                {!estAujourdhui && (
+                  <button
+                    onClick={() => setJour(now)}
+                    style={{
+                      padding: '3px 10px',
+                      borderRadius: 'var(--pill)',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: 'var(--ink)',
+                      background: 'rgba(255,255,255,.14)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    Revenir à aujourd&apos;hui
+                  </button>
+                )}
               </p>
             </div>
             <ProfileButton onClick={onOuvrirProfil} />
           </header>
-
-          <NavigationJour
-            jour={jour}
-            now={now}
-            plusAncien={plusAncien}
-            onDecaler={decaler}
-            onAujourdhui={() => setJour(now)}
-          />
 
           {/* Les compteurs parlent de la semaine en cours : les afficher en
               relisant un jour passé laisserait croire qu'ils le concernent. */}
@@ -484,70 +526,6 @@ function titreJour(jour: string, now: string): string {
   return j[0].toUpperCase() + j.slice(1)
 }
 
-/**
- * Navigation de jour en jour, bornée au passé.
- *
- * On ne va pas au-delà d'aujourd'hui : la raideur d'un réveil qui n'a pas eu
- * lieu ne se saisit pas, et le programme à venir se lit dans l'onglet
- * Programme, qui est fait pour ça.
- */
-function NavigationJour({
-  jour,
-  now,
-  plusAncien,
-  onDecaler,
-  onAujourdhui,
-}: {
-  jour: string
-  now: string
-  plusAncien: string
-  onDecaler: (n: number) => void
-  onAujourdhui: () => void
-}) {
-  const peutReculer = jour > plusAncien
-  const peutAvancer = jour < now
-  const estAujourdhui = jour === now
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        marginTop: 14,
-      }}
-    >
-      <Fleche
-        sens="gauche"
-        actif={peutReculer}
-        label="Jour précédent"
-        onClick={() => onDecaler(-1)}
-      />
-      <Fleche
-        sens="droite"
-        actif={peutAvancer}
-        label="Jour suivant"
-        onClick={() => onDecaler(1)}
-      />
-      {!estAujourdhui && (
-        <button
-          onClick={onAujourdhui}
-          className="glass"
-          style={{
-            marginLeft: 2,
-            padding: '7px 14px',
-            borderRadius: 'var(--pill)',
-            fontSize: 12.5,
-            fontWeight: 600,
-            color: 'var(--ink)',
-          }}
-        >
-          Revenir à aujourd&apos;hui
-        </button>
-      )}
-    </div>
-  )
-}
 
 function Fleche({
   sens,
@@ -567,9 +545,10 @@ function Fleche({
       aria-label={label}
       className="glass"
       style={{
-        width: 38,
-        height: 38,
+        width: 30,
+        height: 30,
         borderRadius: '50%',
+        flex: 'none',
         display: 'grid',
         placeItems: 'center',
         opacity: actif ? 1 : 0.3,
@@ -577,7 +556,7 @@ function Fleche({
         transform: sens === 'gauche' ? 'scaleX(-1)' : undefined,
       }}
     >
-      <Icon name="chevronRight" size={16} />
+      <Icon name="chevronRight" size={14} />
     </button>
   )
 }
