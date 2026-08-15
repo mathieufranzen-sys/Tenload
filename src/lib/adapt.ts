@@ -18,6 +18,7 @@ import {
   type PainMap,
 } from './tendonIndex'
 import type { Session, SessionType, Week } from '../data/types'
+import { cleEcart, seancesAvecEcarts, slotsParJour, type EcartRow } from './overrides'
 
 export interface Fx {
   slCut: number
@@ -190,24 +191,50 @@ export function applyFx(s: Session, fx: Fx): Session {
 }
 
 /**
- * Position d'une séance parmi celles du même jour, dans un tableau de séances
- * de semaine — la clé `slot` du schéma Supabase. `seances` doit être le
- * tableau (adapté ou non) dont `session` provient réellement : la comparaison
- * se fait par référence, pas par valeur.
+ * Une séance telle qu'elle sera vécue, avec son identité dans le plan de
+ * référence. L'identité ne se déduit plus de la séance affichée : un écart
+ * peut la déplacer d'un jour à l'autre, et c'est le couple (jour d'origine,
+ * slot) qui relie ressenti et écart à la ligne Supabase.
  */
-export function slotOf(seances: Session[], session: Session): number {
-  return seances.filter((s) => s.day === session.day).indexOf(session)
+export interface SeancePlanifiee {
+  /** Écart volontaire appliqué, puis adaptation automatique par-dessus. */
+  s: Session
+  /** Jour d'ORIGINE dans le plan, 0-6. Avec `slot`, la clé Supabase. */
+  jourOrigine: number
+  slot: number
+  /** Date ISO du jour effectif, déplacement compris. */
+  day: string
+  ecart: EcartRow | null
 }
 
-/** Les séances de la semaine, adaptées d'après l'indice projeté de chaque jour. */
+/**
+ * Les séances de la semaine : écart volontaire d'abord, puis adaptation
+ * d'après l'indice projeté du jour où la séance atterrit réellement.
+ */
 export function weekSessions(
   week: Week,
   now: string,
   byDate: Record<string, IndexBreakdown>,
-): Session[] {
-  return week.sessions.map((s) =>
-    applyFx(s, fxForDate(addDays(week.monday, s.day), now, byDate)),
-  )
+  ecarts?: Map<string, EcartRow>,
+): SeancePlanifiee[] {
+  const slots = slotsParJour(week.sessions)
+  const avecEcarts = ecarts ? seancesAvecEcarts(week, ecarts) : week.sessions
+
+  return avecEcarts.map((s, i) => {
+    const jourOrigine = week.sessions[i].day
+    const slot = slots[i]
+    const day = addDays(week.monday, s.day)
+    return {
+      // Une séance déclarée non faite ne reçoit pas d'adaptation : il n'y a
+      // plus rien à protéger, et la barrer en la transformant en vélo serait
+      // illisible.
+      s: s.saute ? s : applyFx(s, fxForDate(day, now, byDate)),
+      jourOrigine,
+      slot,
+      day,
+      ecart: ecarts?.get(cleEcart(week.n, jourOrigine, slot)) ?? null,
+    }
+  })
 }
 
 export interface Rule {
@@ -258,20 +285,14 @@ export function adapt(load: LoadMap, pain: PainMap, feedback: FeedbackRow[], now
 
   const rules: Rule[] = []
   if (level > 0) {
+    // Une seule règle ici : ce que le plan devient. Le détail de ce qui pèse
+    // le plus dans l'indice vit dans la feuille « Calcul de la charge », qui
+    // le montre terme par terme — le répéter en alerte n'ajoutait rien.
     rules.push({
       id: 'IDX',
       title: `Indice de charge du tendon à ${detail.idx} sur 100`,
       action: TEXTE_BANDE[band.key] ?? '',
     })
-
-    const parts: string[] = []
-    if (detail.pain >= 20) parts.push(`la douleur déclarée (${detail.pain} points)`)
-    if (detail.ratio >= 12) parts.push(`l’emballement de la charge récente (ratio ${detail.acr.toFixed(2)})`)
-    if (detail.freshness >= 12) parts.push('le manque de fraîcheur des 48 dernières heures')
-    if (detail.trend >= 3) parts.push('la raideur matinale qui monte depuis plusieurs jours')
-    if (detail.monotony >= 4) parts.push('une semaine trop monotone, sans jour vraiment léger')
-    if (parts.length)
-      rules.push({ id: 'POURQUOI', title: 'Ce qui pèse le plus', action: parts.join(', ') + '.' })
   }
 
   // Allures trop rapides : deux séances de qualité d'affilée à 9/10 ou plus, sans douleur.

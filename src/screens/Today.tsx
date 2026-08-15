@@ -9,13 +9,15 @@
  */
 import { useMemo, useState, type ReactNode } from 'react'
 import planJson from '../data/plan.json'
-import type { Plan, Session, Week } from '../data/types'
-import { addDays, daysBetween, formatDayLong, formatNumber, today as todayISO } from '../lib/dates'
-import { adapt, slotOf, weekSessions } from '../lib/adapt'
+import type { Plan, Week } from '../data/types'
+import { addDays, daysBetween, formatDayLong, today as todayISO } from '../lib/dates'
+import { adapt, weekSessions, type SeancePlanifiee } from '../lib/adapt'
 import { construireInsights } from '../lib/insights'
+import { motDuCoach, type MotCoach } from '../lib/coach'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { ActivityRow } from '../lib/load'
 import type { FeedbackRow } from '../lib/buildPain'
+import type { EcartRow } from '../lib/overrides'
 import { SessionCard } from '../components/SessionCard'
 import { AlertBox } from '../components/AlertBox'
 import { JournalDuJour } from '../components/JournalDuJour'
@@ -34,13 +36,15 @@ interface Props {
   pain: PainMap
   feedback: FeedbackRow[]
   activities: ActivityRow[]
+  /** Écarts volontaires, indexés par `cleEcart`. */
+  ecarts?: Map<string, EcartRow>
   /** Ancre les six zones — vient du profil, `plan.meta` en repli seulement. */
   marathonPace: number
   /** Le carnet du jour n'existe qu'avec Supabase branché. */
   journalActif: boolean
   onVoirSuivi: () => void
   /** Absent en mode instantanés : les séances ne s'ouvrent alors pas au clic. */
-  onOuvrirSeance?: (semaine: Week, session: Session, slot: number) => void
+  onOuvrirSeance?: (semaine: Week, seance: SeancePlanifiee) => void
   onOuvrirProfil: () => void
 }
 
@@ -49,6 +53,7 @@ export function Today({
   pain,
   feedback,
   activities,
+  ecarts,
   marathonPace,
   journalActif,
   onVoirSuivi,
@@ -66,23 +71,29 @@ export function Today({
     return courante ?? plan.weeks[avantPlan ? 0 : plan.weeks.length - 1]
   }, [now, avantPlan])
 
-  const seances = useMemo(() => weekSessions(semaine, now, A.byDate), [semaine, now, A.byDate])
-  const duJour = avantPlan ? [] : seances.filter((s) => addDays(semaine.monday, s.day) === now)
-  const suite = seances.filter((s) => addDays(semaine.monday, s.day) > now).slice(0, 4)
+  const seances = useMemo(
+    () => weekSessions(semaine, now, A.byDate, ecarts),
+    [semaine, now, A.byDate, ecarts],
+  )
+  const duJour = avantPlan ? [] : seances.filter((x) => x.day === now)
+  const suite = seances.filter((x) => x.day > now).slice(0, 4)
 
   const insights = useMemo(
     () => construireInsights({ semaine, seances, now, feedback, activities, byDate: A.byDate }),
     [semaine, seances, now, feedback, activities, A.byDate],
   )
 
+  const mot = useMemo(
+    () => motDuCoach({ pain, byDate: A.byDate, now, seancesTotal: insights.seancesTotal }),
+    [pain, A.byDate, now, insights.seancesTotal],
+  )
+
   const jRace = daysBetween(now, plan.meta.raceDate)
   const jDebut = daysBetween(now, debutPlan)
   const sousTitre = formatDayLong(now)
 
-  const feedbackDe = (s: Session) => {
-    const slot = slotOf(seances, s)
-    return feedback.find((f) => f.week === semaine.n && f.day_index === s.day && f.slot === slot) ?? null
-  }
+  const feedbackDe = ({ jourOrigine, slot }: SeancePlanifiee) =>
+    feedback.find((f) => f.week === semaine.n && f.day_index === jourOrigine && f.slot === slot) ?? null
 
   return (
     // Le dégradé court sur toute la page, pas seulement sur le premier écran :
@@ -202,9 +213,9 @@ export function Today({
           <div style={{ paddingBottom: 18 }}>
             {duJour.length ? (
               <SessionHero
-                session={duJour[0]}
+                session={duJour[0].s}
                 marathonPace={marathonPace}
-                onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, duJour[0], slotOf(seances, duJour[0])))}
+                onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, duJour[0]))}
               />
             ) : (
               <div
@@ -248,40 +259,32 @@ export function Today({
       <div style={{ position: 'relative', zIndex: 5, padding: '24px var(--page-x) 0' }}>
         <AlertBox adapt={A} />
 
-        {duJour.slice(1).map((s, i) => (
+        {duJour.slice(1).map((x, i) => (
           <SessionCard
             key={i}
-            session={s}
+            session={x.s}
             day={now}
             marathonPace={marathonPace}
-            feedback={feedbackDe(s)}
-            onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, s, slotOf(seances, s)))}
+            feedback={feedbackDe(x)}
+            onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, x))}
           />
         ))}
 
         {journalActif && <JournalDuJour day={now} />}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
-          <Kpi label="Semaine" value={`${semaine.n}`} suffix=" / 35" detail={semaine.blocName} />
-          <Kpi
-            label="Sortie longue"
-            value={formatNumber(semaine.sl)}
-            suffix=" km"
-            detail={semaine.deload ? 'semaine de décharge' : 'en progression'}
-          />
-        </div>
+        <MotCoachCard mot={mot} />
 
         {suite.length > 0 && (
           <>
             <Pretitle>La suite de la semaine</Pretitle>
-            {suite.map((s, i) => (
+            {suite.map((x, i) => (
               <SessionCard
                 key={i}
-                session={s}
-                day={addDays(semaine.monday, s.day)}
+                session={x.s}
+                day={x.day}
                 marathonPace={marathonPace}
-                feedback={feedbackDe(s)}
-                onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, s, slotOf(seances, s)))}
+                feedback={feedbackDe(x)}
+                onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, x))}
               />
             ))}
           </>
@@ -319,49 +322,6 @@ function Note({ children }: { children: ReactNode }) {
 
 /** Même grammaire que les tuiles d'insights : micro-label en capitales,
  *  valeur en chiffres tabulaires, précision en dessous. */
-function Kpi({
-  label,
-  value,
-  suffix,
-  detail,
-}: {
-  label: string
-  value: string
-  suffix: string
-  detail: string
-}) {
-  return (
-    <div className="glass" style={{ borderRadius: 17, padding: '11px 12px 10px' }}>
-      <div
-        style={{
-          fontSize: 8.5,
-          fontWeight: 700,
-          letterSpacing: '.7px',
-          textTransform: 'uppercase',
-          color: 'var(--sur-ink-2)',
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          fontSize: 19,
-          fontWeight: 650,
-          letterSpacing: '-.5px',
-          marginTop: 5,
-          lineHeight: 1,
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
-        {value}
-        <small style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--sur-ink-2)' }}>{suffix}</small>
-      </div>
-      <div style={{ fontSize: 9, fontWeight: 500, marginTop: 5, color: 'var(--sur-ink-3)', lineHeight: 1.35 }}>
-        {detail}
-      </div>
-    </div>
-  )
-}
 
 function Pretitle({ children }: { children: ReactNode }) {
   return (
@@ -377,5 +337,53 @@ function Pretitle({ children }: { children: ReactNode }) {
     >
       {children}
     </h2>
+  )
+}
+
+/**
+ * Le mot du coach. Il n'affirme que ce que les saisies portent réellement :
+ * la construction du texte, et surtout ses conditions de silence, vivent dans
+ * lib/coach.ts avec leurs tests.
+ */
+function MotCoachCard({ mot }: { mot: MotCoach }) {
+  const teinte =
+    mot.ton === 'bravo'
+      ? { fond: 'rgba(52,211,153,.12)', bord: 'rgba(52,211,153,.28)', encre: '#6ee7b7' }
+      : mot.ton === 'vigilance'
+        ? { fond: 'rgba(250,178,25,.11)', bord: 'rgba(250,178,25,.3)', encre: '#FFD166' }
+        : { fond: 'rgba(255,255,255,.05)', bord: 'var(--border-2)', encre: 'var(--sur-ink-2)' }
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: 12,
+        alignItems: 'flex-start',
+        background: teinte.fond,
+        border: `1px solid ${teinte.bord}`,
+        borderRadius: 'var(--radius)',
+        padding: '15px 16px',
+        marginBottom: 14,
+      }}
+    >
+      <span style={{ color: teinte.encre, flex: 'none', marginTop: 1 }}>
+        <Icon name={mot.ton === 'vigilance' ? 'alert' : 'heart'} size={19} />
+      </span>
+      <div>
+        <div
+          style={{
+            fontSize: 10.5,
+            fontWeight: 700,
+            letterSpacing: '1.3px',
+            textTransform: 'uppercase',
+            color: teinte.encre,
+            marginBottom: 5,
+          }}
+        >
+          Le mot du coach
+        </div>
+        <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.55, color: '#D6D9DE' }}>{mot.texte}</p>
+      </div>
+    </div>
   )
 }

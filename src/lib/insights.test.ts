@@ -3,6 +3,9 @@ import { construireInsights, familleDe } from './insights'
 import type { Session, Week } from '../data/types'
 import type { ActivityRow } from './load'
 import type { FeedbackRow } from './buildPain'
+import type { SeancePlanifiee } from './adapt'
+import { slotsParJour } from './overrides'
+import { addDays } from './dates'
 
 const LUNDI = '2026-08-10'
 
@@ -44,6 +47,22 @@ const ressenti = (dayIndex: number, slot = 0): FeedbackRow => ({
   rpe: 5,
 })
 
+/**
+ * Emballe des séances brutes comme le fait `weekSessions` : jour d'origine et
+ * slot du jour, date effective. Les tests décrivent une semaine, pas la
+ * plomberie d'identité.
+ */
+const planifiees = (sessions: Session[]): SeancePlanifiee[] => {
+  const slots = slotsParJour(sessions)
+  return sessions.map((s, i) => ({
+    s,
+    jourOrigine: s.day,
+    slot: slots[i],
+    day: addDays(LUNDI, s.day),
+    ecart: null,
+  }))
+}
+
 const base = { semaine, now: '2026-08-13', feedback: [], activities: [], byDate: {} }
 
 describe('familleDe', () => {
@@ -68,13 +87,13 @@ describe('compteur de séances', () => {
   it('compte le prévu par famille', () => {
     const r = construireInsights({
       ...base,
-      seances: [
+      seances: planifiees([
         seance({ day: 0, type: 'long' }),
         seance({ day: 1, type: 'ef' }),
         seance({ day: 1, type: 'muscu-haut' }),
         seance({ day: 3, type: 'velo' }),
         seance({ day: 2, type: 'escalade' }),
-      ],
+      ]),
     })
     expect(r.seances.course.prevu).toBe(2)
     expect(r.seances.renfo.prevu).toBe(1)
@@ -85,7 +104,7 @@ describe('compteur de séances', () => {
   it('compte réalisée une séance qui porte un ressenti', () => {
     const r = construireInsights({
       ...base,
-      seances: [seance({ day: 0, type: 'long' })],
+      seances: planifiees([seance({ day: 0, type: 'long' })]),
       feedback: [ressenti(0)],
     })
     expect(r.seances.course.realise).toBe(1)
@@ -94,7 +113,7 @@ describe('compteur de séances', () => {
   it('compte réalisée une séance couverte par une activité importée', () => {
     const r = construireInsights({
       ...base,
-      seances: [seance({ day: 0, type: 'long' })],
+      seances: planifiees([seance({ day: 0, type: 'long' })]),
       activities: [activite(LUNDI, 'Run')],
     })
     expect(r.seances.course.realise).toBe(1)
@@ -103,7 +122,7 @@ describe('compteur de séances', () => {
   it('ne compte pas une activité d’une autre famille', () => {
     const r = construireInsights({
       ...base,
-      seances: [seance({ day: 0, type: 'long' })],
+      seances: planifiees([seance({ day: 0, type: 'long' })]),
       activities: [activite(LUNDI, 'Ride')],
     })
     expect(r.seances.course.realise).toBe(0)
@@ -114,7 +133,7 @@ describe('compteur de séances', () => {
     const r = construireInsights({
       ...base,
       // dimanche 16, alors qu'on est le jeudi 13
-      seances: [seance({ day: 6, type: 'long' })],
+      seances: planifiees([seance({ day: 6, type: 'long' })]),
       feedback: [ressenti(6)],
     })
     expect(r.seances.course.prevu).toBe(1)
@@ -122,7 +141,7 @@ describe('compteur de séances', () => {
   })
 
   it('distingue deux séances du même jour par leur position', () => {
-    const seances = [seance({ day: 1, type: 'ef' }), seance({ day: 1, type: 'muscu-haut' })]
+    const seances = planifiees([seance({ day: 1, type: 'ef' }), seance({ day: 1, type: 'muscu-haut' })])
     const r = construireInsights({ ...base, seances, feedback: [ressenti(1, 1)] })
     expect(r.seances.course.realise).toBe(0)
     expect(r.seances.renfo.realise).toBe(1)
@@ -133,7 +152,7 @@ describe('volume de course', () => {
   it('additionne les sept derniers jours, course uniquement', () => {
     const r = construireInsights({
       ...base,
-      seances: [],
+      seances: [] as SeancePlanifiee[],
       activities: [
         activite('2026-08-13', 'Run', 10),
         activite('2026-08-11', 'Run', 7),
@@ -152,7 +171,7 @@ describe('charge de la veille', () => {
   it('lit l’indice de la veille et l’écart avec l’avant-veille', () => {
     const r = construireInsights({
       ...base,
-      seances: [],
+      seances: [] as SeancePlanifiee[],
       byDate: { '2026-08-12': { idx: 51 }, '2026-08-11': { idx: 44 } },
     })
     expect(r.chargeVeille).toBe(51)
@@ -160,7 +179,7 @@ describe('charge de la veille', () => {
   })
 
   it('reste nul quand l’historique manque', () => {
-    const r = construireInsights({ ...base, seances: [] })
+    const r = construireInsights({ ...base, seances: [] as SeancePlanifiee[] })
     expect(r.chargeVeille).toBeNull()
     expect(r.chargeEcart).toBeNull()
   })

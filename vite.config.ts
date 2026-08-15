@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
-        name: 'Tendo — Marathon de Paris 2027',
-        short_name: 'Tendo',
+        name: 'Tenload, Marathon de Paris 2027',
+        short_name: 'Tenload',
         description:
           "Plan marathon adaptatif piloté par un indice de charge du tendon d'Achille",
         lang: 'fr',

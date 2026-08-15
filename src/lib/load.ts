@@ -12,6 +12,7 @@
 import type { Session, Week } from '../data/types'
 import { KM_COST, MIN_COST, RUN_COST, type LoadMap } from './tendonIndex'
 import { addDays } from './dates'
+import { seancesAvecEcarts, slotsParJour, type EcartRow } from './overrides'
 
 export interface ActivityRow {
   day: string
@@ -72,6 +73,8 @@ export interface BuildLoadInput {
   today: string
   /** Horizon de projection, en jours. */
   horizon?: number
+  /** Écarts volontaires, indexés par `cleEcart`. Absent = plan nominal. */
+  ecarts?: Map<string, EcartRow>
 }
 
 export function buildLoad({
@@ -80,6 +83,7 @@ export function buildLoad({
   completed,
   today,
   horizon = 21,
+  ecarts,
 }: BuildLoadInput): LoadMap {
   const load: LoadMap = {}
   const daysWithActivity = new Set<string>()
@@ -91,7 +95,16 @@ export function buildLoad({
 
   const limit = addDays(today, horizon)
   for (const w of weeks) {
-    w.sessions.forEach((s, slot) => {
+    // Le slot est le rang dans la JOURNÉE, pas l'index dans la semaine : c'est
+    // la clé sous laquelle les ressentis et les écarts sont enregistrés.
+    const slots = slotsParJour(w.sessions)
+    const seances = ecarts ? seancesAvecEcarts(w, ecarts) : w.sessions
+
+    seances.forEach((s, i) => {
+      // Une séance déclarée non faite ne charge rien : le tendon n'a rien
+      // encaissé, exactement comme une journée sans activité importée.
+      if (s.saute) return
+
       const day = addDays(w.monday, s.day)
       if (day > limit) return
       if (day <= today) {
@@ -99,7 +112,9 @@ export function buildLoad({
         // plan que pour une journée sans aucune activité ET dont la séance a été
         // notée à la main (typiquement la muscu ou l'escalade, absentes de Strava).
         if (daysWithActivity.has(day)) return
-        if (!completed.has(`${w.n}-${s.day}-${slot}`)) return
+        // La clé garde le jour d'ORIGINE : déplacer une séance ne doit pas
+        // détacher le ressenti qui lui était déjà rattaché.
+        if (!completed.has(`${w.n}-${w.sessions[i].day}-${slots[i]}`)) return
       }
       load[day] = (load[day] ?? 0) + sessionLoad(s)
     })

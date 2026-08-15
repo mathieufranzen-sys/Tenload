@@ -45,10 +45,12 @@ interface Props {
   marathonPace: number
   fitnessPace: number
   goalLabel: string
+  /** FC max en vigueur : c'est elle qui borne les zones cardiaques. */
+  hrMax: number
   onOuvrirProfil: () => void
 }
 
-export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLabel, onOuvrirProfil }: Props) {
+export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLabel, hrMax, onOuvrirProfil }: Props) {
   const now = todayISO()
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
   const [vueZone, setVueZone] = useState<VueZone>('allure')
@@ -101,12 +103,8 @@ export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLab
           <p style={{ color: 'var(--sur-ink-2)', fontSize: 14.5, fontWeight: 500, margin: 0 }}>
             soit {formatPace(marathonPace)}/km sur 42,195 km, le 11 avril 2027
           </p>
-          <div style={{ display: 'flex', gap: 22, marginTop: 18 }}>
-            <HeroStat value={`${formatPace(marathonPace)}`} label="allure marathon" />
-            <HeroStat value={`${formatPace(zonePace(marathonPace, 'seuil'))}`} label="seuil" />
-            <HeroStat value={`${formatPace(zonePace(marathonPace, 'vo2'))}`} label="intervalles" />
-          </div>
-
+          {/* Les trois allures qui figuraient ici doublonnaient le tableau des
+              zones, juste en dessous. */}
           <div style={{ height: 1, background: 'rgba(255,255,255,.14)', margin: '20px 0' }} />
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
@@ -150,7 +148,7 @@ export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLab
           />
           <div style={{ marginTop: 4 }}>
             {(Object.entries(plan.zones) as Array<[ZoneKey, (typeof plan.zones)[ZoneKey]]>).map(([k, z]) => {
-              const [lo, hi] = zoneHrRange(k, vueZone === 'velo' ? 'velo' : 'course')
+              const [lo, hi] = zoneHrRange(k, vueZone === 'velo' ? 'velo' : 'course', hrMax)
               return (
                 <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 0', borderBottom: '1px solid var(--glass-border)' }}>
                   <div style={{ width: 4.5, height: 34, borderRadius: 3, flex: 'none', background: `var(--g-${z.color})` }} />
@@ -189,11 +187,3 @@ export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLab
   )
 }
 
-function HeroStat({ value, label }: { value: string; label: string }) {
-  return (
-    <div>
-      <b style={{ display: 'block', fontSize: 22, fontWeight: 800, letterSpacing: '-.5px' }}>{value}</b>
-      <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,.7)', fontWeight: 600 }}>{label}</span>
-    </div>
-  )
-}

@@ -22,6 +22,7 @@ import {
 } from 'react'
 import { supabase } from '../lib/supabase'
 import type { DailyLogRow, FeedbackRow } from '../lib/buildPain'
+import type { EcartPatch, EcartRow } from '../lib/overrides'
 import { cleJour, cleSeance, empiler, vider, type Ecriture, type TableEcrivable } from '../lib/offlineQueue'
 
 export interface ProfilRow {
@@ -53,6 +54,7 @@ interface DonneesDistantes {
   logs: DailyLogRow[]
   feedback: FeedbackRow[]
   activites: ActiviteRow[]
+  ecarts: EcartRow[]
 }
 
 interface EtatProvider extends DonneesDistantes {
@@ -63,10 +65,19 @@ interface EtatProvider extends DonneesDistantes {
   enregistrerLog: (day: string, patch: Partial<Omit<DailyLogRow, 'day'>>) => void
   enregistrerFeedback: (ligne: FeedbackRow) => void
   enregistrerProfil: (patch: Partial<Omit<ProfilRow, 'id'>>) => void
+  enregistrerEcart: (
+    week: number,
+    dayIndex: number,
+    slot: number,
+    patch: EcartPatch,
+    reason?: string | null,
+  ) => void
 }
 
-const VIDE: DonneesDistantes = { profil: null, logs: [], feedback: [], activites: [] }
-const CLE_CACHE = 'tendo.cache-distant.v1'
+const VIDE: DonneesDistantes = { profil: null, logs: [], feedback: [], activites: [], ecarts: [] }
+// v2 : `ecarts` s'ajoute aux quatre tables. Changer la clé plutôt que migrer —
+// le cache se reconstruit au premier chargement en ligne.
+const CLE_CACHE = 'tendo.cache-distant.v2'
 
 /** Repli si le profil n'a pas encore été chargé — mêmes valeurs par défaut que schema.sql. */
 const PROFIL_VIDE = (id: string): ProfilRow => ({
@@ -142,18 +153,19 @@ export function DataProvider({ userId, children }: { userId: string; children: R
     let vivant = true
 
     async function charger() {
-      const [profil, logs, feedback, activites] = await Promise.all([
+      const [profil, logs, feedback, activites, ecarts] = await Promise.all([
         supabase!.from('profiles').select('*').eq('id', userId).single(),
         supabase!.from('daily_logs').select('*').eq('user_id', userId).order('day'),
         supabase!.from('session_feedback').select('*').eq('user_id', userId).order('day'),
         supabase!.from('activities').select('*').eq('user_id', userId).order('day'),
+        supabase!.from('plan_overrides').select('*').eq('user_id', userId).order('week'),
       ])
 
       if (!vivant) return
 
-      // Une seule des quatre en échec ne doit pas priver l'app des trois autres :
+      // Une seule des cinq en échec ne doit pas priver l'app des quatre autres :
       // mieux vaut un indice calculé sur des données partielles qu'un écran vide.
-      const premierEchec = [profil, logs, feedback, activites].find((r) => r.error)
+      const premierEchec = [profil, logs, feedback, activites, ecarts].find((r) => r.error)
       if (premierEchec?.error) setErreur(premierEchec.error.message)
       else setErreur(null)
 
@@ -162,6 +174,7 @@ export function DataProvider({ userId, children }: { userId: string; children: R
         logs: (logs.data as DailyLogRow[] | null) ?? donnees.logs,
         feedback: (feedback.data as FeedbackRow[] | null) ?? donnees.feedback,
         activites: (activites.data as ActiviteRow[] | null) ?? donnees.activites,
+        ecarts: (ecarts.data as EcartRow[] | null) ?? donnees.ecarts,
       }
       setDonnees(suivant)
       ecrireCache(suivant)
@@ -274,9 +287,58 @@ export function DataProvider({ userId, children }: { userId: string; children: R
     [userId, viderFile],
   )
 
+  /**
+   * Écriture optimiste d'un écart volontaire.
+   *
+   * Un patch vide vaut « retour au plan » : la ligne reste en base avec un
+   * patch neutre plutôt que d'être supprimée. C'est ce qui garde toutes les
+   * écritures idempotentes, donc rejouables telles quelles par la file
+   * d'attente — une suppression ne se rejoue pas sans risque.
+   */
+  const enregistrerEcart = useCallback(
+    (week: number, dayIndex: number, slot: number, patch: EcartPatch, reason: string | null = null) => {
+      const ligne: EcartRow = { week, day_index: dayIndex, slot, patch, reason }
+      setDonnees((d) => {
+        const i = d.ecarts.findIndex(
+          (e) => e.week === week && e.day_index === dayIndex && e.slot === slot,
+        )
+        const ecarts = i === -1 ? [...d.ecarts, ligne] : d.ecarts.map((e, idx) => (idx === i ? ligne : e))
+        const suivant = { ...d, ecarts }
+        ecrireCache(suivant)
+        return suivant
+      })
+      empiler({
+        table: 'plan_overrides',
+        cle: cleSeance(week, dayIndex, slot),
+        valeurs: { user_id: userId, week, day_index: dayIndex, slot, patch, reason },
+        maj: Date.now(),
+      })
+      viderFile()
+    },
+    [userId, viderFile],
+  )
+
   const valeur = useMemo<EtatProvider>(
-    () => ({ ...donnees, chargement, erreur, actualiser, enregistrerLog, enregistrerFeedback, enregistrerProfil }),
-    [donnees, chargement, erreur, actualiser, enregistrerLog, enregistrerFeedback, enregistrerProfil],
+    () => ({
+      ...donnees,
+      chargement,
+      erreur,
+      actualiser,
+      enregistrerLog,
+      enregistrerFeedback,
+      enregistrerProfil,
+      enregistrerEcart,
+    }),
+    [
+      donnees,
+      chargement,
+      erreur,
+      actualiser,
+      enregistrerLog,
+      enregistrerFeedback,
+      enregistrerProfil,
+      enregistrerEcart,
+    ],
   )
 
   return <Contexte.Provider value={valeur}>{children}</Contexte.Provider>
@@ -327,4 +389,10 @@ export function useSeanceFeedback() {
 export function useActivities() {
   const { activites, chargement, erreur, actualiser } = useDonnees()
   return { activites, chargement, erreur, actualiser }
+}
+
+/** Lecture et écriture des écarts volontaires au plan. */
+export function useEcarts() {
+  const { ecarts, enregistrerEcart } = useDonnees()
+  return { ecarts, enregistrerEcart }
 }

@@ -6,9 +6,12 @@ import { useEffect, useMemo, useState } from 'react'
 import planJson from './data/plan.json'
 import notionSeed from './data/notion-seed.json'
 import stravaSeed from './data/strava-seed.json'
-import type { Plan, Session, Week } from './data/types'
+import type { Plan, Week } from './data/types'
 import { buildLoad, type ActivityRow } from './lib/load'
+import { HR_MAX } from './lib/paces'
 import { buildPain, type DailyLogRow, type FeedbackRow } from './lib/buildPain'
+import { indexerEcarts, type EcartPatch, type EcartRow } from './lib/overrides'
+import type { SeancePlanifiee } from './lib/adapt'
 import type { PainMap } from './lib/tendonIndex'
 import { addDays, today } from './lib/dates'
 import { isConfigured } from './lib/supabase'
@@ -27,6 +30,7 @@ import {
   useActivities,
   useFeedback,
   useLogs,
+  useEcarts,
   useProfile,
   useSeanceFeedback,
   type ActiviteRow,
@@ -67,6 +71,7 @@ function CoquilleConnectee({ onDeconnexion }: { onDeconnexion: () => void }) {
   const { activites, chargement: chargeActivites } = useActivities()
   const { profil, enregistrerProfil } = useProfile()
   const { enregistrerFeedback } = useSeanceFeedback()
+  const { ecarts, enregistrerEcart } = useEcarts()
 
   const activities: ActivityRow[] = useMemo(
     () =>
@@ -92,10 +97,12 @@ function CoquilleConnectee({ onDeconnexion }: { onDeconnexion: () => void }) {
       logs={logs}
       feedback={feedback}
       profil={profil}
+      ecarts={ecarts}
       journalActif
       erreurSync={erreur}
       onSaveFeedback={enregistrerFeedback}
       onSaveProfil={enregistrerProfil}
+      onSaveEcart={enregistrerEcart}
       onDeconnexion={onDeconnexion}
     />
   )
@@ -154,8 +161,7 @@ function seedData() {
 
 interface SeanceOuverte {
   semaine: Week
-  session: Session
-  slot: number
+  seance: SeancePlanifiee
 }
 
 function Coquille({
@@ -164,10 +170,12 @@ function Coquille({
   logs,
   feedback = [],
   profil = null,
+  ecarts: ecartsRows = [],
   journalActif = false,
   erreurSync,
   onSaveFeedback,
   onSaveProfil,
+  onSaveEcart,
   onDeconnexion,
 }: {
   activities?: ActivityRow[]
@@ -175,6 +183,7 @@ function Coquille({
   logs?: DailyLogRow[]
   feedback?: FeedbackRow[]
   profil?: ProfilRow | null
+  ecarts?: EcartRow[]
   journalActif?: boolean
   erreurSync?: string | null
   /** Absent en mode instantanés : il n'y a alors pas de session à fermer. */
@@ -183,6 +192,14 @@ function Coquille({
   onSaveFeedback?: (ligne: FeedbackRow) => void
   /** Absent en mode instantanés : les réglages d'allure restent alors en lecture seule. */
   onSaveProfil?: (patch: Partial<Omit<ProfilRow, 'id'>>) => void
+  /** Absent en mode instantanés : le plan n'est alors pas modifiable. */
+  onSaveEcart?: (
+    week: number,
+    dayIndex: number,
+    slot: number,
+    patch: EcartPatch,
+    reason?: string | null,
+  ) => void
 }) {
   const seed = useMemo(seedData, [])
   const data = activities && pain && logs ? { activities, pain, logs } : seed
@@ -194,6 +211,8 @@ function Coquille({
   const fitnessPace = profil?.fitness_pace_s ?? plan.meta.fitnessPace
   const test3k = profil?.test_3k_s ?? plan.meta.test3k
   const goalLabel = profil?.goal_label ?? plan.meta.goalLabel
+  // Repli sur la valeur mesurée du 9 août 2026, pas sur les 193 supposés par Strava.
+  const hrMax = profil?.hr_max ?? HR_MAX
 
   const now = today()
 
@@ -205,6 +224,10 @@ function Coquille({
     () => new Set(feedback.map((f) => `${f.week}-${f.day_index}-${f.slot}`)),
     [feedback],
   )
+  // Les écarts entrent dans la charge : une séance sautée ne pèse rien, une
+  // séance déplacée pèse sur son nouveau jour. L'indice projeté suit.
+  const ecarts = useMemo(() => indexerEcarts(ecartsRows), [ecartsRows])
+
   const load = useMemo(
     () =>
       buildLoad({
@@ -212,8 +235,9 @@ function Coquille({
         activities: data.activities,
         completed,
         today: now,
+        ecarts,
       }),
-    [data.activities, completed, now],
+    [data.activities, completed, now, ecarts],
   )
 
   const [onglet, setOnglet] = useState<Onglet>('today')
@@ -246,7 +270,10 @@ function Coquille({
 
   const feedbackOuvert = seance
     ? (feedback.find(
-        (f) => f.week === seance.semaine.n && f.day_index === seance.session.day && f.slot === seance.slot,
+        (f) =>
+          f.week === seance.semaine.n &&
+          f.day_index === seance.seance.jourOrigine &&
+          f.slot === seance.seance.slot,
       ) ?? null)
     : null
 
@@ -262,10 +289,11 @@ function Coquille({
           pain={data.pain}
           feedback={feedback}
           activities={data.activities}
+          ecarts={ecarts}
           marathonPace={marathonPace}
           journalActif={journalActif}
           onVoirSuivi={() => setOnglet('track')}
-          onOuvrirSeance={(semaine, session, slot) => setSeance({ semaine, session, slot })}
+          onOuvrirSeance={(semaine, seance) => setSeance({ semaine, seance })}
           onOuvrirProfil={() => setOnglet('profile')}
         />
       )}
@@ -274,10 +302,11 @@ function Coquille({
           load={load}
           pain={data.pain}
           feedback={feedback}
+          ecarts={ecarts}
           marathonPace={marathonPace}
           numeroSemaine={numeroSemaine}
           onChangerSemaine={(n) => setNumeroSemaine(Math.max(1, Math.min(35, n)))}
-          onOuvrirSeance={(semaine, session, slot) => setSeance({ semaine, session, slot })}
+          onOuvrirSeance={(semaine, seance) => setSeance({ semaine, seance })}
           onOuvrirProfil={() => setOnglet('profile')}
         />
       )}
@@ -298,6 +327,7 @@ function Coquille({
           marathonPace={marathonPace}
           fitnessPace={fitnessPace}
           goalLabel={goalLabel}
+          hrMax={hrMax}
           onOuvrirProfil={() => setOnglet('profile')}
         />
       )}
@@ -308,6 +338,7 @@ function Coquille({
           feedback={feedback}
           marathonPace={marathonPace}
           test3k={test3k}
+          hrMax={hrMax}
           onSaveProfil={onSaveProfil}
           onDeconnexion={onDeconnexion}
         />
@@ -318,12 +349,12 @@ function Coquille({
       {seance && (
         <SessionSheet
           week={seance.semaine}
-          session={seance.session}
-          slot={seance.slot}
-          day={addDays(seance.semaine.monday, seance.session.day)}
+          seance={seance.seance}
+          ecarts={ecarts}
           feedback={feedbackOuvert}
           marathonPace={marathonPace}
           onSave={onSaveFeedback}
+          onSaveEcart={onSaveEcart}
           onClose={() => setSeance(null)}
         />
       )}

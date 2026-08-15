@@ -45,7 +45,7 @@ const GROUPES: Array<{ titre: string; rubriques: Rubrique[] }> = [
     titre: 'Ton corps',
     rubriques: [
       { key: 'indice', titre: 'Indice de charge du tendon', description: 'Les bandes et le détail du calcul', icone: 'chart' },
-      { key: 'coeur', titre: 'Zones cardiaques', description: 'Corrigées sur ta FC max réelle', icone: 'heart' },
+      { key: 'coeur', titre: 'Fréquence cardiaque', description: 'Recalibre ta FC max et tes zones', icone: 'heart' },
     ],
   },
   {
@@ -65,6 +65,7 @@ interface ProfilPatch {
   test_3k_date?: string
   marathon_pace_s?: number
   goal_label?: string
+  hr_max?: number
 }
 
 interface Props {
@@ -73,13 +74,15 @@ interface Props {
   feedback: FeedbackRow[]
   marathonPace: number
   test3k: number | null
+  /** FC max en vigueur, venue du profil. */
+  hrMax: number
   /** Absent en mode instantanés : les réglages d'allure restent alors en lecture seule. */
   onSaveProfil?: (patch: ProfilPatch) => void
   /** Absent en mode instantanés : il n'y a alors pas de session à fermer. */
   onDeconnexion?: () => void
 }
 
-export function Profile({ load, pain, feedback, marathonPace, test3k, onSaveProfil, onDeconnexion }: Props) {
+export function Profile({ load, pain, feedback, marathonPace, test3k, hrMax, onSaveProfil, onDeconnexion }: Props) {
   const [section, setSection] = useState<SectionKey | null>(null)
   const now = todayISO()
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
@@ -189,7 +192,7 @@ export function Profile({ load, pain, feedback, marathonPace, test3k, onSaveProf
         {section === 'contraintes' && <Constraints />}
         {section === 'indice' && <TendonIndexInfo idx={A.detail.idx} band={A.band} />}
         {section === 'allure' && <PaceSettings marathonPace={marathonPace} test3k={test3k} onSave={onSaveProfil} />}
-        {section === 'coeur' && <HeartRateZones />}
+        {section === 'coeur' && <HeartRateZones hrMax={hrMax} onSave={onSaveProfil} />}
         {section === 'strava' && <StravaStatus />}
         {section === 'structure' && <PlanStructure />}
       </SubPage>

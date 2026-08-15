@@ -116,9 +116,15 @@ Conséquences à garder en tête :
 Zones retenues (`HR_ZONES` dans `src/lib/paces.ts`) : Z1 < 123, Z2 123-150,
 Z3 150-161, Z4 161-170, Z5 > 170.
 
+**181 est désormais une valeur par défaut, pas une constante.** Elle vit dans
+`profiles.hr_max` et se recalibre depuis Profil → Fréquence cardiaque, qui
+prévisualise les zones avant d'enregistrer. `HR_MAX` dans `paces.ts` ne sert
+plus que de repli quand le profil n'est pas chargé. Le tableau de l'écran
+Allures lit la valeur du profil.
+
 ## L'indice de charge du tendon
 
-Le cœur du produit. `src/lib/tendonIndex.ts`, verrouillé par 20 tests dans
+Le cœur du produit. `src/lib/tendonIndex.ts`, verrouillé par 22 tests dans
 `src/lib/tendonIndex.test.ts`. **Si tu changes une constante et qu'un test casse,
 c'est probablement le modèle qui a tort, pas le test.**
 
@@ -184,14 +190,28 @@ entorses, mais il avait vu que la journée arrivait sur un tendon chargé.
 ```
 src/
   data/         plan.json (référence), types.ts, instantanés de seed
-  lib/          tendonIndex.ts (+ tests), paces.ts, load.ts, dates.ts, supabase.ts
-  components/   TendonGauge, SessionCard, charts/…
-  screens/      Today, Program, Track, Paces, Coach
+  lib/          tendonIndex, adapt, load, buildPain, paces, repartition,
+                insights, offlineQueue, dates, strava, supabase (+ tests)
+  hooks/        useAuth, DataProvider (source unique), useFileAttente
+  components/   TendonGauge, TendonArc, SessionCard, SessionSheet, charts/…
+  screens/      Today, Plan, Track, Paces, Profile (+ profile/…)
   styles/       tokens.css (design system), global.css
 supabase/       schema.sql (RLS testé), seed.sql (généré)
 netlify/functions/  strava-callback.ts, strava-sync.ts
-reference/      tendo-v3.html (la version à porter), scripts Python d'origine
+reference/      tendo-v3.html (la version portée), scripts Python d'origine
 ```
+
+- **L'onglet Coach de la référence HTML n'existe plus.** Son contenu utile
+  (allures, zones cardiaques, contraintes, structure du plan, statut Strava) est
+  devenu l'écran Profil et ses sous-pages ; le reste décrivait une mécanique de
+  chat propre au prototype.
+- **`DataProvider` est la seule source des données distantes.** Les cinq écrans
+  lisent les mêmes lignes au même moment, l'indice croisant journal, activités et
+  ressentis : un seul chargement partagé, et `useProfile` / `useLogs` /
+  `useFeedback` / `useActivities` ne sont que des sélecteurs dessus.
+- **Toutes les écritures sont des upserts sur clé naturelle**, donc idempotentes,
+  donc rejouables. C'est ce qui rend `offlineQueue` simple : l'état local change
+  tout de suite, la ligne part derrière, un échec réseau reste en file.
 
 - **Vite + React + TypeScript strict.** Styles en variables CSS, pas de Tailwind :
   le design system existe déjà et Mathieu le lit directement.
@@ -223,39 +243,79 @@ reference/      tendo-v3.html (la version à porter), scripts Python d'origine
 
 ## Feuille de route
 
+**Le portage est terminé.** Les cinq étapes prévues sont livrées, plus les
+écarts volontaires au plan : `npm test` donne 138 tests verts sur 10 fichiers,
+`npm run build` passe. Le dépôt est entré dans sa phase de retours design.
+
 Fait :
 
 - [x] Socle Vite + React + TS + PWA, build qui passe
-- [x] `tendonIndex.ts` porté et couvert par 20 tests
-- [x] `paces.ts`, `load.ts`, `dates.ts`
+- [x] `tendonIndex.ts` porté, 22 tests qui verrouillent seuils et planchers
+- [x] `paces.ts`, `load.ts`, `dates.ts`, `repartition.ts`, `insights.ts`
 - [x] Schéma Supabase avec RLS, testé sur PostgreSQL 16 (idempotent)
 - [x] Seed généré depuis le carnet et Strava, rejouable
-- [x] Fonctions Netlify Strava écrites (inactives jusqu'à l'étape 5)
-- [x] Design tokens, `TendonGauge`, `SessionCard`
-- [x] Icônes PWA
+- [x] **Supabase branché** : `useAuth` (lien magique), `DataProvider` en source
+      unique, cache `localStorage` hydraté au montage, écritures optimistes,
+      file d'attente hors ligne (`offlineQueue`, 12 tests)
+- [x] **Les cinq écrans** : Aujourd'hui, Programme, Suivi, Allures, Profil
+- [x] **Les quatre graphiques** : indice, douleur, volume, charge empilée
+- [x] **Détail de séance** en feuille modale, avec les curseurs de ressenti
+- [x] **Moteur d'adaptation** `adapt.ts`, 24 tests
+- [x] **Strava OAuth** : connexion, retour, synchro manuelle
+- [x] **Écarts volontaires** `overrides.ts` (23 tests) et `EcartEditor`
+- [x] **Mot du coach** `coach.ts` (11 tests), en bas de l'écran Aujourd'hui
+- [x] Design tokens, icônes PWA
 
 À faire, dans cet ordre :
 
-1. **Brancher Supabase** : `useAuth` (magic link), `useProfile`, `useLogs`,
-   `useActivities`. Écriture optimiste avec file d'attente hors ligne.
-2. **Porter les cinq écrans** depuis `reference/tendo-v3.html`, qui est la
-   référence fonctionnelle et visuelle : Aujourd'hui, Programme, Suivi (avec les
-   quatre graphiques), Allures, Coach. Un composant par écran, pas de fichier de
-   mille lignes.
-3. **Les graphiques** : indice avec bandes de fond et projection en pointillés,
-   douleur trois séries, volume hebdomadaire, charge empilée course/autres.
-   Palette validée dans `tokens.css`, trois séries maximum par graphique.
-4. **Le détail de séance** en feuille modale, avec les deux curseurs de ressenti.
-5. **Strava OAuth** : bouton de connexion, retour, synchro, puis webhook si
-   Mathieu le souhaite.
-6. **Retours design de Mathieu** — la vraie raison de ce dépôt.
+1. **Retours design de Mathieu** — la vraie raison de ce dépôt.
+2. **Webhook Strava**, si Mathieu veut se passer de la synchro manuelle.
+
+### Les écarts volontaires
+
+`src/lib/overrides.ts` (+ 23 tests), édités depuis `EcartEditor` en bas de la
+feuille de séance. Un écart peut sauter une séance, la remplacer par une autre
+discipline, la déplacer d'un jour, corriger sa distance ou sa durée.
+
+- **Rien n'est jamais réécrit dans `plan.json`.** Un écart est une ligne de
+  `plan_overrides` appliquée au rendu. Réécrire le plan ferait valider par
+  `check_plan.py` un fichier qui n'est plus la référence de personne.
+- **Ordre d'application : plan → écart volontaire → `applyFx`.** La décision de
+  Mathieu passe d'abord, la protection du tendon s'applique par-dessus. Une
+  séance sautée ne reçoit aucune adaptation : il n'y a plus rien à protéger.
+- **Une séance sautée vaut zéro dans la charge**, comme une journée sans
+  activité importée.
+- **Le contrôle des contraintes avertit, il ne bloque pas.** `verifierContraintes`
+  lit les contraintes 2, 3, 4 et 6 sur la disposition de la semaine ; les 1 et 5
+  portent sur la progression du plan de référence, que les écarts ne touchent
+  pas. `alertesAjoutees` ne remonte que ce que le changement en cours introduit,
+  sinon une semaine déjà limite crierait à chaque modification.
+- **`slot` est le rang dans la JOURNÉE, jamais l'index dans la semaine.**
+  `slotsParJour` est la seule façon correcte de le calculer. La confusion entre
+  les deux était un vrai bug de `buildLoad` : les séances passées notées à la
+  main ne comptaient pas dans la charge, silencieusement.
+- **Un patch vide vaut « retour au plan ».** La ligne reste en base plutôt que
+  d'être supprimée : c'est ce qui garde toutes les écritures idempotentes, donc
+  rejouables telles quelles par la file d'attente.
+
+### Le mot du coach
+
+`src/lib/coach.ts` produit l'encouragement du bas de l'écran Aujourd'hui.
+**Règle unique : ne jamais affirmer un chiffre absent des données.** Chaque
+message exige un minimum de saisies (quatre raideurs matinales de chaque côté
+de la fenêtre, par exemple) et se tait sinon. Un encouragement inventé se
+repère en une semaine et discrédite l'indice avec lui. L'ordre des règles est
+un ordre de valeur : raideur au réveil, puis observance de l'excentrique, puis
+régularité, puis l'indice — qui vient en dernier parce que c'est un agrégat et
+non une observation.
 
 ## Pistes connues
 
 - Quand aucune douleur n'est saisie depuis plus de quatre jours, la composante
-  douleur retombe à zéro et l'indice peut paraître trop optimiste. Le drapeau
-  `stale` existe et est affiché ; envisager un plancher de prudence.
-- Le graphique de charge empile la course au-dessus des autres disciplines. La
-  série principale gagnerait à être en bas.
-- La version HTML de référence garde ses saisies en mémoire uniquement : c'est
-  précisément ce que Supabase vient corriger.
+  douleur retombe à zéro et l'indice peut paraître trop optimiste. Le report
+  décroissant (`painScore`) et le drapeau `stale` couvrent les quatre premiers
+  jours et sont affichés sur la jauge, la feuille de charge et l'écran
+  Aujourd'hui ; au-delà, rien ne retient l'indice. Un plancher de prudence
+  reste à trancher.
+- Le bundle passe 600 Ko, essentiellement `plan.json` embarqué. Sans
+  conséquence tant que la PWA précharge tout, à revoir si le plan grossit.

@@ -41,7 +41,9 @@ export function SessionCard({ session: s, day, marathonPace, feedback, onClick }
         padding: '16px 14px 16px 24px',
         marginBottom: 11,
         overflow: 'hidden',
-        opacity: feedback ? 0.55 : 1,
+        // Une séance sautée s'efface plus qu'une séance notée : elle reste
+        // lisible dans la semaine, mais elle ne réclame plus rien.
+        opacity: s.saute ? 0.38 : feedback ? 0.55 : 1,
         transition: 'transform var(--dur-fast), background var(--dur-fast)',
       }}
     >
@@ -67,7 +69,7 @@ export function SessionCard({ session: s, day, marathonPace, feedback, onClick }
             lineHeight: 1.2,
           }}
         >
-          {s.title}
+          <span style={s.saute ? { textDecoration: 'line-through' } : undefined}>{s.title}</span>
         </h3>
         <div style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500 }}>
           {formatDayLong(day)}
@@ -107,22 +109,12 @@ export function SessionCard({ session: s, day, marathonPace, feedback, onClick }
           )}
         </div>
 
-        {s.adapted && (
-          <div style={{ marginTop: 9 }}>
-            <span
-              style={{
-                display: 'inline-block',
-                fontSize: 11,
-                fontWeight: 600,
-                padding: '3.5px 9px',
-                borderRadius: 'var(--pill)',
-                background: 'rgba(250,178,25,.18)',
-                color: '#FFD166',
-                border: '1px solid rgba(250,178,25,.26)',
-              }}
-            >
-              {s.adapted}
-            </span>
+        {(s.adapted || s.ecart) && (
+          <div style={{ marginTop: 9, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {/* Bleu pour une décision de Mathieu, ambre pour le moteur
+                d'adaptation : la couleur dit d'où vient le changement. */}
+            {s.ecart && <Etiquette teinte="78,140,255" encre="#9DC1FF">{s.ecart}</Etiquette>}
+            {s.adapted && <Etiquette teinte="250,178,25" encre="#FFD166">{s.adapted}</Etiquette>}
           </div>
         )}
 
@@ -141,5 +133,32 @@ export function SessionCard({ session: s, day, marathonPace, feedback, onClick }
         />
       )}
     </button>
+  )
+}
+
+function Etiquette({
+  teinte,
+  encre,
+  children,
+}: {
+  teinte: string
+  encre: string
+  children: string
+}) {
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        fontSize: 11,
+        fontWeight: 600,
+        padding: '3.5px 9px',
+        borderRadius: 'var(--pill)',
+        background: `rgba(${teinte},.18)`,
+        color: encre,
+        border: `1px solid rgba(${teinte},.26)`,
+      }}
+    >
+      {children}
+    </span>
   )
 }

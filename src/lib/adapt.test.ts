@@ -4,6 +4,7 @@ import { adapt, applyFx, fxForDate, weekSessions, type Fx } from './adapt'
 import type { LoadMap, PainMap } from './tendonIndex'
 import type { Session, Week } from '../data/types'
 import type { FeedbackRow } from './buildPain'
+import { indexerEcarts } from './overrides'
 
 const NOW = '2026-09-01'
 
@@ -184,8 +185,74 @@ describe('weekSessions', () => {
       [addDays(NOW, 3)]: { idx: 10 } as never,
     }
     const [lundi, jeudi] = weekSessions(week, NOW, byDate)
-    expect(lundi.dist).toBe(20) // orange
-    expect(jeudi.type).toBe('tempo') // vert, inchangé
+    expect(lundi.s.dist).toBe(20) // orange
+    expect(jeudi.s.type).toBe('tempo') // vert, inchangé
+  })
+
+  it('porte le slot du jour et le jour d’origine, pas l’index de semaine', () => {
+    const week: Week = {
+      n: 1,
+      bloc: 'A',
+      blocName: '',
+      monday: NOW,
+      deload: false,
+      sl: 0,
+      efKm: 0,
+      sessions: [
+        seance({ day: 1, type: 'ef' }),
+        seance({ day: 1, type: 'muscu-haut' }),
+        seance({ day: 3, type: 'muscu-bas' }),
+      ],
+    }
+    const out = weekSessions(week, NOW, {})
+    expect(out.map((x) => x.slot)).toEqual([0, 1, 0])
+    expect(out.map((x) => x.jourOrigine)).toEqual([1, 1, 3])
+  })
+
+  it('un écart déplace la séance mais garde son identité d’origine', () => {
+    const week: Week = {
+      n: 4,
+      bloc: 'A',
+      blocName: '',
+      monday: NOW,
+      deload: false,
+      sl: 0,
+      efKm: 0,
+      sessions: [seance({ day: 5, type: 'tempo' })],
+    }
+    const [x] = weekSessions(
+      week,
+      NOW,
+      {},
+      indexerEcarts([{ week: 4, day_index: 5, slot: 0, patch: { day: 4 }, reason: null }]),
+    )
+    expect(x.s.day).toBe(4)
+    expect(x.day).toBe(addDays(NOW, 4))
+    // L'identité ne bouge pas : c'est elle qui relie le ressenti déjà saisi.
+    expect(x.jourOrigine).toBe(5)
+    expect(x.slot).toBe(0)
+    expect(x.ecart).not.toBeNull()
+  })
+
+  it('une séance sautée ne reçoit aucune adaptation', () => {
+    const week: Week = {
+      n: 2,
+      bloc: 'A',
+      blocName: '',
+      monday: NOW,
+      deload: false,
+      sl: 25,
+      efKm: 0,
+      sessions: [seance({ day: 0, type: 'long', dist: 25 })],
+    }
+    const [x] = weekSessions(
+      week,
+      NOW,
+      { [NOW]: { idx: 55 } as never },
+      indexerEcarts([{ week: 2, day_index: 0, slot: 0, patch: { skipped: true }, reason: null }]),
+    )
+    expect(x.s.saute).toBe(true)
+    expect(x.s.dist).toBe(25) // pas réduite de 20 % : elle n'aura pas lieu
   })
 })
 

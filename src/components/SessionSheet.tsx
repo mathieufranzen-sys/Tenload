@@ -2,9 +2,18 @@
  * Feuille modale de détail de séance, portée depuis reference/tendo-v3.html
  * (`openSheet`, `segs`, `step`, `fbForm`).
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan, Session, Step as StepTuple, Week, ZoneKey } from '../data/types'
+import type { SeancePlanifiee } from '../lib/adapt'
+import {
+  cleEcart,
+  seancesAvecEcarts,
+  slotsParJour,
+  type EcartPatch,
+  type EcartRow,
+} from '../lib/overrides'
+import { EcartEditor } from './EcartEditor'
 import { formatDayLong, formatNumber } from '../lib/dates'
 import { formatPace, zonePace } from '../lib/paces'
 import type { FeedbackRow } from '../lib/buildPain'
@@ -23,29 +32,56 @@ const TYPES_COURSE_SANS_MUR: Session['type'][] = [
 
 interface Props {
   week: Week
-  session: Session
-  slot: number
-  day: string
+  /** La séance telle qu'elle sera vécue, avec son identité dans le plan. */
+  seance: SeancePlanifiee
+  /** Tous les écarts de la semaine : nécessaires pour vérifier les contraintes. */
+  ecarts?: Map<string, EcartRow>
   feedback: FeedbackRow | null
   /** Ancre les six zones — vient du profil, `plan.meta` en repli seulement. */
   marathonPace: number
   /** Absent en mode instantanés : la feuille reste alors en lecture seule. */
   onSave?: (ligne: FeedbackRow) => void
+  /** Absent en mode instantanés : le plan n'est alors pas modifiable. */
+  onSaveEcart?: (
+    week: number,
+    dayIndex: number,
+    slot: number,
+    patch: EcartPatch,
+    reason?: string | null,
+  ) => void
   onClose: () => void
 }
 
 export function SessionSheet({
   week,
-  session: s,
-  slot,
-  day,
+  seance,
+  ecarts,
   feedback,
   marathonPace,
   onSave,
+  onSaveEcart,
   onClose,
 }: Props) {
+  const { s, jourOrigine, slot, day } = seance
   const [surface, setSurface] = useState<'out' | 'mill'>('out')
   const [modifie, setModifie] = useState(false)
+
+  // L'éditeur compare toujours au plan de référence, pas à la séance affichée :
+  // rouvrir la feuille après un écart doit repartir de la séance d'origine,
+  // sinon chaque passage empilerait un écart sur le précédent.
+  const cle = cleEcart(week.n, jourOrigine, slot)
+  const origine = useMemo(() => {
+    const slots = slotsParJour(week.sessions)
+    return week.sessions.find((x, i) => x.day === jourOrigine && slots[i] === slot) ?? s
+  }, [week, jourOrigine, slot, s])
+  // La semaine sans l'écart en cours d'édition : c'est la base de comparaison
+  // pour ne signaler que les contraintes que CE changement ferait tomber.
+  const ecartsBase = useMemo(() => {
+    const m = new Map(ecarts ?? [])
+    m.delete(cle)
+    return m
+  }, [ecarts, cle])
+  const semaineAvant = useMemo(() => seancesAvecEcarts(week, ecartsBase), [week, ecartsBase])
 
   // Ferme au clavier, et bloque le scroll du fond pendant que la feuille est ouverte.
   useEffect(() => {
@@ -153,23 +189,12 @@ export function SessionSheet({
             {s.title}
           </h2>
 
-          {s.adapted && (
-            <div style={{ margin: '10px 0 0' }}>
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 5,
-                  fontSize: 11.5,
-                  fontWeight: 700,
-                  padding: '3.5px 9px',
-                  borderRadius: 'var(--pill)',
-                  background: 'rgba(250,178,25,.16)',
-                  color: '#FFD166',
-                }}
-              >
-                {s.adapted}
-              </span>
+          {(s.adapted || s.ecart) && (
+            <div style={{ margin: '10px 0 0', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {/* Deux origines distinctes, deux couleurs : l'ambre vient du
+                  moteur d'adaptation, le bleu d'une décision de Mathieu. */}
+              {s.ecart && <Badge fond="rgba(78,140,255,.18)" encre="#9DC1FF">{s.ecart}</Badge>}
+              {s.adapted && <Badge fond="rgba(250,178,25,.16)" encre="#FFD166">{s.adapted}</Badge>}
             </div>
           )}
 
@@ -400,7 +425,7 @@ export function SessionSheet({
               onSave={(pain, rpe, note) => {
                 onSave?.({
                   week: week.n,
-                  day_index: s.day,
+                  day_index: jourOrigine,
                   slot,
                   day,
                   session_type: s.type,
@@ -413,9 +438,58 @@ export function SessionSheet({
               }}
             />
           )}
+
+          {onSaveEcart && (
+            <>
+              <div
+                style={{
+                  height: 1,
+                  margin: '22px 0 4px',
+                  background:
+                    'repeating-linear-gradient(90deg, var(--border-2) 0 4px, transparent 4px 9px)',
+                }}
+              />
+              <EcartEditor
+                origine={origine}
+                actuel={seance.ecart?.patch ?? null}
+                actuelRaison={seance.ecart?.reason ?? null}
+                semaineAvant={semaineAvant}
+                simuler={(patch) =>
+                  seancesAvecEcarts(week, new Map(ecartsBase).set(cle, {
+                    week: week.n,
+                    day_index: jourOrigine,
+                    slot,
+                    patch,
+                    reason: null,
+                  }))
+                }
+                onSave={(patch, reason) => onSaveEcart(week.n, jourOrigine, slot, patch, reason)}
+              />
+            </>
+          )}
         </div>
       </div>
     </div>
+  )
+}
+
+function Badge({ fond, encre, children }: { fond: string; encre: string; children: string }) {
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        fontSize: 11.5,
+        fontWeight: 700,
+        padding: '3.5px 9px',
+        borderRadius: 'var(--pill)',
+        background: fond,
+        color: encre,
+      }}
+    >
+      {children}
+    </span>
   )
 }
 

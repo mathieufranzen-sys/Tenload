@@ -7,9 +7,10 @@
  * affiché qui ne correspondrait pas à ce que le modèle prend en compte serait
  * pire que pas de chiffre du tout.
  */
-import type { Session, SessionType, Week } from '../data/types'
+import type { SessionType, Week } from '../data/types'
 import type { ActivityRow } from './load'
 import type { FeedbackRow } from './buildPain'
+import type { SeancePlanifiee } from './adapt'
 import { addDays } from './dates'
 
 export type Famille = 'course' | 'velo' | 'renfo'
@@ -59,8 +60,8 @@ export interface Insights {
 
 export interface EntreeInsights {
   semaine: Week
-  /** Les séances de la semaine, déjà adaptées. */
-  seances: Session[]
+  /** Les séances de la semaine, écarts et adaptation déjà appliqués. */
+  seances: SeancePlanifiee[]
   now: string
   feedback: FeedbackRow[]
   activities: ActivityRow[]
@@ -91,17 +92,18 @@ export function construireInsights({
 
   const notees = new Set(feedback.map((f) => `${f.week}-${f.day_index}-${f.slot}`))
 
-  seances.forEach((s) => {
+  seances.forEach(({ s, jourOrigine, slot, day }) => {
+    // Une séance déclarée non faite n'est ni prévue ni réalisée : la compter
+    // au dénominateur donnerait une semaine perpétuellement en retard.
+    if (s.saute) return
     const f = familleDe(s.type)
     if (!f) return
     compteurs[f].prevu++
 
-    const jour = addDays(semaine.monday, s.day)
-    if (jour > now) return
+    if (day > now) return
 
-    const slot = seances.filter((x) => x.day === s.day).indexOf(s)
-    const aUnRessenti = notees.has(`${semaine.n}-${s.day}-${slot}`)
-    const aUneActivite = importeesParJour.get(jour)?.has(f) ?? false
+    const aUnRessenti = notees.has(`${semaine.n}-${jourOrigine}-${slot}`)
+    const aUneActivite = importeesParJour.get(day)?.has(f) ?? false
     if (aUnRessenti || aUneActivite) compteurs[f].realise++
   })
 

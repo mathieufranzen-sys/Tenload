@@ -1,14 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#08090B"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="#282D37" stroke-width="8"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="g" x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0" stop-color="#0ca30c"/>
-      <stop offset="0.45" stop-color="#fab219"/>
-      <stop offset="1" stop-color="#ec835a"/>
+    <linearGradient id="fond" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#122019"/>
+      <stop offset="1" stop-color="#04100c"/>
     </linearGradient>
+    <linearGradient id="barre" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dcf7e8"/>
+    </linearGradient>
+    <!-- Le fût finit sur le jaune-vert : c'est le dégradé qui fait le talon,
+         pas une masse rapportée. Une ellipse plus large que le tracé
+         dépasserait forcément du pied de la lettre. -->
+    <linearGradient id="fut" x1="0.6" y1="0" x2="0.2" y2="1">
+      <stop offset="0" stop-color="#bef264"/>
+      <stop offset="0.52" stop-color="#34d399"/>
+      <stop offset="1" stop-color="#bef264"/>
+    </linearGradient>
+    <radialGradient id="lueur" cx="0.3" cy="0.22" r="0.8">
+      <stop offset="0" stop-color="#34d399" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#34d399" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="url(#g)" stroke-width="8"
-    stroke-linecap="round" stroke-dasharray="125.7" stroke-dashoffset="47.8"
-    transform="rotate(-90 32 32)"/>
+
+  <rect width="512" height="512" fill="url(#fond)"/>
+  <rect width="512" height="512" fill="url(#lueur)"/>
+
+  <!-- Décalé vers le haut et la droite : le fût part à gauche, donc le centre
+       géométrique de la lettre n'est pas son centre optique. -->
+  <g transform="translate(14, -10)">
+    <rect x="110" y="152" width="276" height="48" rx="24" fill="url(#barre)"/>
+    <path d="M 248 200 L 248 286 C 248 348 232 372 206 396"
+          fill="none" stroke="url(#fut)" stroke-width="48" stroke-linecap="round"/>
+  </g>
 </svg>

@@ -4,10 +4,11 @@
 import { useMemo, type CSSProperties } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan as PlanType, Session, Week } from '../data/types'
-import { DAYS_LONG, addDays, formatDay, today as todayISO } from '../lib/dates'
-import { adapt, slotOf, weekSessions } from '../lib/adapt'
+import { DAYS_LONG, addDays, formatDay, formatNumber, today as todayISO } from '../lib/dates'
+import { adapt, weekSessions, type SeancePlanifiee } from '../lib/adapt'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { FeedbackRow } from '../lib/buildPain'
+import type { EcartRow } from '../lib/overrides'
 import { SessionCard } from '../components/SessionCard'
 import { Icon } from '../components/Icon'
 import { ProfileButton } from '../components/ProfileButton'
@@ -21,10 +22,12 @@ interface Props {
   load: LoadMap
   pain: PainMap
   feedback: FeedbackRow[]
+  /** Écarts volontaires, indexés par `cleEcart`. */
+  ecarts?: Map<string, EcartRow>
   marathonPace: number
   numeroSemaine: number
   onChangerSemaine: (n: number) => void
-  onOuvrirSeance?: (semaine: Week, session: Session, slot: number) => void
+  onOuvrirSeance?: (semaine: Week, seance: SeancePlanifiee) => void
   onOuvrirProfil: () => void
 }
 
@@ -32,6 +35,7 @@ export function Plan({
   load,
   pain,
   feedback,
+  ecarts,
   marathonPace,
   numeroSemaine,
   onChangerSemaine,
@@ -46,14 +50,20 @@ export function Plan({
   // `adapt` a besoin d'une fenêtre autour d'aujourd'hui, pas de la semaine affichée :
   // consulter le programme d'une semaine passée ou future ne doit pas la recalculer.
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
-  const seances = useMemo(() => weekSessions(semaine, now, A.byDate), [semaine, now, A.byDate])
+  const seances = useMemo(
+    () => weekSessions(semaine, now, A.byDate, ecarts),
+    [semaine, now, A.byDate, ecarts],
+  )
 
-  const nbCourses = seances.filter((s) => TYPES_COURSE.includes(s.type)).length
+  // Une séance déclarée non faite ne compte plus dans le décompte de la semaine.
+  const courses = seances.filter((x) => !x.s.saute && TYPES_COURSE.includes(x.s.type))
+  const nbCourses = courses.length
+  // Tout le kilométrage à pied de la semaine, sortie longue comprise : c'est le
+  // volume qui parle au tendon, pas la seule ligne d'endurance facile.
+  const kmCourse = courses.reduce((total, x) => total + (x.s.dist ?? 0), 0)
 
-  const feedbackDe = (s: Session) => {
-    const slot = slotOf(seances, s)
-    return feedback.find((f) => f.week === semaine.n && f.day_index === s.day && f.slot === slot) ?? null
-  }
+  const feedbackDe = ({ jourOrigine, slot }: SeancePlanifiee) =>
+    feedback.find((f) => f.week === semaine.n && f.day_index === jourOrigine && f.slot === slot) ?? null
 
   const [premiere, derniere] = bloc.weeks
   const rangDansBloc = semaine.n - premiere + 1
@@ -173,12 +183,12 @@ export function Plan({
           <div style={{ display: 'flex', gap: 22, marginTop: 15 }}>
             <BlocStat value={semaine.sl ? `${semaine.sl} km` : '—'} label="sortie longue" />
             <BlocStat value={`${nbCourses}`} label={nbCourses > 1 ? 'courses' : 'course'} />
-            <BlocStat value={`${semaine.efKm} km`} label="endurance" />
+            <BlocStat value={`${formatNumber(kmCourse)} km`} label="de course" />
           </div>
         </div>
 
         {Array.from({ length: 7 }, (_, d) => d).map((d) => {
-          const duJour = seances.map((s, i) => [s, i] as const).filter(([s]) => s.day === d)
+          const duJour = seances.filter((x) => x.s.day === d)
           if (!duJour.length) return null
           const estAujourdhui = addDays(semaine.monday, d) === now
           return (
@@ -215,14 +225,14 @@ export function Plan({
                   </span>
                 )}
               </div>
-              {duJour.map(([s]) => (
+              {duJour.map((x) => (
                 <SessionCard
-                  key={`${d}-${s.title}`}
-                  session={s}
+                  key={`${x.jourOrigine}-${x.slot}`}
+                  session={x.s}
                   day={addDays(semaine.monday, d)}
                   marathonPace={marathonPace}
-                  feedback={feedbackDe(s)}
-                  onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, s, slotOf(seances, s)))}
+                  feedback={feedbackDe(x)}
+                  onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, x))}
                 />
               ))}
             </div>

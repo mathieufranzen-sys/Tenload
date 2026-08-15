@@ -78,6 +78,10 @@ export interface Session {
   swap?: { title: string; reason: string }
   /** Rempli à l'exécution quand le moteur d'adaptation modifie la séance. */
   adapted?: string
+  /** Rempli à l'exécution quand un écart volontaire modifie la séance. */
+  ecart?: string
+  /** Rempli à l'exécution : séance déclarée non faite. Vaut zéro dans la charge. */
+  saute?: boolean
 }
 
 export interface Week {

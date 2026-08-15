@@ -141,6 +141,10 @@ export function purger(): void {
 /** Clé de ligne pour le journal quotidien. */
 export const cleJour = (day: string): string => day
 
-/** Clé de ligne pour un ressenti de séance. */
+/**
+ * Clé de ligne pour tout ce qui vise une séance : ressenti, écart volontaire.
+ * La déduplication porte sur le couple (table, clé), donc les deux tables
+ * peuvent partager la même forme de clé sans se marcher dessus.
+ */
 export const cleSeance = (week: number, dayIndex: number, slot = 0): string =>
   `${week}/${dayIndex}/${slot}`

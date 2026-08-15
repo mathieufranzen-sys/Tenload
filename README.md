@@ -42,7 +42,7 @@ c'est là que Claude Code prend le relais.
 ```
 npm install
 npm run dev        # http://localhost:5173
-npm test           # 20 tests sur le modèle d'indice
+npm test           # 138 tests, dont 22 sur le modèle d'indice
 npm run build      # typage puis build de production
 ```
 
@@ -120,13 +120,15 @@ inaccessible depuis le navigateur.
    directement.
 2. **Authentication → URL Configuration** : mets `http://localhost:5173` dans
    **Site URL** pour l'instant. Tu ajouteras l'adresse Netlify à l'étape 4.
-3. Connecte-toi une première fois depuis l'app. Un profil est créé
-   automatiquement par un déclencheur SQL.
+3. Connecte-toi une première fois depuis l'app, **avec l'adresse
+   `mathieu.franzen1@gmail.com`**. Un profil est créé automatiquement par un
+   déclencheur SQL.
 4. Reviens dans **SQL Editor** et lance le contenu de `supabase/seed.sql`. Il
-   importe ton carnet et ton historique Strava dans le premier compte créé,
-   donc le tien. Aucun identifiant à recopier.
+   importe ton carnet et ton historique Strava dans le compte de cette adresse,
+   qu'il cible nommément : si un autre compte a été créé entre-temps,
+   l'historique ne peut pas atterrir dessus.
 
-   Tu dois lire `NOTICE: Import terminé : 16 jours de carnet, 83 activités.`
+   Tu dois lire `NOTICE: Import terminé : 23 jours de carnet, 83 activités.`
 
 ---
 
@@ -220,7 +222,7 @@ bleu pour le renforcement.
 |---|---|
 | `CLAUDE.md` | Le contexte complet : contraintes, décisions, calibration. Claude Code le lit tout seul. |
 | `src/lib/tendonIndex.ts` | Le modèle d'indice. Le cœur du produit. |
-| `src/lib/tendonIndex.test.ts` | 20 tests qui verrouillent les seuils. |
+| `src/lib/tendonIndex.test.ts` | 22 tests qui verrouillent les seuils. |
 | `src/data/plan.json` | Les 35 semaines, 315 séances. |
 | `src/styles/tokens.css` | Le design system. |
 | `supabase/schema.sql` | Les tables et la sécurité. |
@@ -238,8 +240,9 @@ ne contiennent pas ton adresse Netlify. Étape 4, point 5.
 relit les variables d'environnement qu'au démarrage : arrête et relance
 `npm run dev`.
 
-**Le seed dit « Aucun utilisateur trouvé ».** Connecte-toi une fois à l'app
-avant de le lancer : il cible le premier compte créé.
+**Le seed dit « Aucun compte mathieu.franzen1@gmail.com ».** Connecte-toi une
+fois à l'app avec cette adresse précise avant de le lancer : le script cible ce
+compte nommément et refuse d'importer ailleurs.
 
 **La PWA ne se met pas à jour sur mon téléphone.** Le service worker est en
 `autoUpdate`, mais iOS peut garder l'ancienne version un moment. Ferme
