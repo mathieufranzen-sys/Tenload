@@ -35,7 +35,7 @@ export function SubPage({
         transition: 'transform .3s cubic-bezier(.32,.72,0,1)',
       }}
     >
-      <div style={{ padding: '14px var(--page-x) 40px' }}>
+      <div style={{ padding: 'calc(14px + env(safe-area-inset-top)) var(--page-x) 40px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
           <button
             onClick={onBack}

@@ -87,11 +87,18 @@ input[type='range']::-moz-range-thumb {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* Zone sûre iOS en haut : en PWA plein écran, rien ne doit passer sous
+   l'horloge ni la Dynamic Island. `env()` vaut 0 sur un navigateur normal,
+   donc cette règle ne change rien hors installation sur l'écran d'accueil. */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    Champ de formes de l'écran Aujourd'hui
 
    Sept masses colorées, aux rayons volontairement asymétriques et inclinées :
-   floutées à 38 px elles se lisent comme un dégradé organique, pas comme des
+   floutées à 72 px elles se lisent comme un dégradé organique, pas comme des
    cercles empilés. Les couleurs viennent du camaïeu de la bande (tokens.css).
    ══════════════════════════════════════════════════════════════════════════ */
 .mesh {
@@ -99,7 +106,7 @@ input[type='range']::-moz-range-thumb {
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  filter: blur(48px) saturate(1.3);
+  filter: blur(72px) saturate(1.3);
   pointer-events: none;
 }
 .mesh i {
@@ -213,7 +220,7 @@ input[type='range']::-moz-range-thumb {
    quand l'utilisateur demande moins d'animation, la carte reste lisible. */
 @media (prefers-reduced-motion: reduce) {
   .mesh {
-    filter: blur(40px);
+    filter: blur(56px);
   }
 }
 

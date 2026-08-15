@@ -112,13 +112,25 @@ export function construireInsights({
     realise: compteurs.course.realise + compteurs.velo.realise + compteurs.renfo.realise,
   }
 
-  // Sept derniers jours glissants, aujourd'hui inclus.
+  // Sept derniers jours glissants, aujourd'hui inclus. Le kilométrage réel,
+  // pas celui du plan : Strava fait foi quand il y a une activité importée
+  // ce jour-là, et à défaut le ressenti de séance donne la distance réellement
+  // parcourue — celle-ci porte déjà l'écart volontaire s'il y en a un, puisque
+  // SessionSheet enregistre `s.dist` après application de l'écart. Sans ce
+  // repli, une course notée à la main sans Strava ne comptait pour rien.
+  const feedbackCourseParJour = new Map<string, number>()
+  for (const f of feedback) {
+    if (familleDe(f.session_type as SessionType) !== 'course' || f.distance_km == null) continue
+    feedbackCourseParJour.set(f.day, (feedbackCourseParJour.get(f.day) ?? 0) + f.distance_km)
+  }
+
   const km7Jours: number[] = []
   for (let k = 6; k >= 0; k--) {
     const jour = addDays(now, -k)
-    const km = activities
-      .filter((a) => a.day === jour && a.sport === 'Run')
-      .reduce((total, a) => total + a.distance_m / 1000, 0)
+    const activitesJour = activities.filter((a) => a.day === jour && a.sport === 'Run')
+    const km = activitesJour.length
+      ? activitesJour.reduce((total, a) => total + a.distance_m / 1000, 0)
+      : (feedbackCourseParJour.get(jour) ?? 0)
     km7Jours.push(Math.round(km * 10) / 10)
   }
   const km7 = Math.round(km7Jours.reduce((a, b) => a + b, 0) * 10) / 10

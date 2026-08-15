@@ -143,7 +143,7 @@ export function SessionSheet({
         }}
       />
 
-      <div style={{ position: 'relative', padding: '14px var(--page-x) 40px' }}>
+      <div style={{ position: 'relative', padding: 'calc(14px + env(safe-area-inset-top)) var(--page-x) 40px' }}>
         <div style={{ position: 'relative' }}>
           <button
             onClick={onClose}
@@ -212,9 +212,9 @@ export function SessionSheet({
               <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-.6px' }}>Détails</div>
               {afficherToggleSurface && (
                 <div
+                  className="glass"
                   style={{
                     display: 'flex',
-                    background: 'var(--surface-2)',
                     borderRadius: 'var(--pill)',
                     padding: 3,
                     gap: 2,
@@ -233,8 +233,9 @@ export function SessionSheet({
                         borderRadius: 'var(--pill)',
                         fontSize: 13,
                         fontWeight: 700,
-                        background: surface === v ? 'var(--surface)' : 'transparent',
-                        color: surface === v ? 'var(--ink)' : 'var(--ink-2)',
+                        background: surface === v ? 'rgba(255,255,255,.92)' : 'transparent',
+                        color: surface === v ? '#0b0c0e' : 'var(--sur-ink-2)',
+                        transition: 'background var(--dur-fast) var(--ease-out), color var(--dur-fast)',
                       }}
                     >
                       {v === 'out' ? 'Extérieur' : 'Tapis'}
@@ -422,7 +423,12 @@ export function SessionSheet({
             <FormulaireRessenti
               feedback={feedback}
               disabled={!onSave}
-              onSave={(pain, rpe, note) => {
+              // Le plan ne fixe jamais de distance pour le vélo, seulement une
+              // durée : sans ce champ, un home trainer ou une sortie non
+              // synchronisée avec Strava ne comptait pour rien dans le volume
+              // hebdomadaire de l'écran Suivi.
+              demanderDistanceVelo={s.type === 'velo'}
+              onSave={(pain, rpe, note, distanceVelo) => {
                 onSave?.({
                   week: week.n,
                   day_index: jourOrigine,
@@ -431,7 +437,7 @@ export function SessionSheet({
                   session_type: s.type,
                   pain,
                   rpe,
-                  distance_km: s.dist ?? null,
+                  distance_km: s.type === 'velo' ? distanceVelo : (s.dist ?? null),
                   note: note || null,
                 })
                 setModifie(false)
@@ -613,14 +619,20 @@ const RPE_COURT = [
 function FormulaireRessenti({
   feedback,
   disabled,
+  demanderDistanceVelo = false,
   onSave,
 }: {
   feedback: FeedbackRow | null
   disabled: boolean
-  onSave: (pain: number, rpe: number, note: string) => void
+  /** Le plan ne porte aucune distance pour le vélo : un champ dédié la recueille. */
+  demanderDistanceVelo?: boolean
+  onSave: (pain: number, rpe: number, note: string, distanceVelo: number | null) => void
 }) {
   const [pain, setPain] = useState(feedback?.pain ?? 0)
   const [rpe, setRpe] = useState(feedback?.rpe ?? 5)
+  const [distanceVelo, setDistanceVelo] = useState(
+    feedback?.distance_km != null ? String(feedback.distance_km) : '',
+  )
 
   const idx = (v: number) => Math.max(0, Math.min(10, Math.round(v)))
 
@@ -655,8 +667,59 @@ function FormulaireRessenti({
         />
       </div>
 
+      {demanderDistanceVelo && (
+        <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px', marginBottom: 12 }}>
+          <label
+            htmlFor="distance-velo"
+            style={{
+              display: 'block',
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '1.1px',
+              textTransform: 'uppercase',
+              color: 'var(--sur-ink-3)',
+              marginBottom: 8,
+            }}
+          >
+            Distance parcourue
+          </label>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+            <input
+              id="distance-velo"
+              type="number"
+              inputMode="decimal"
+              step="0.5"
+              min="0"
+              placeholder="0"
+              disabled={disabled}
+              value={distanceVelo}
+              onChange={(e) => setDistanceVelo(e.target.value)}
+              style={{
+                width: 90,
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border-2)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '10px 12px',
+                fontSize: 20,
+                fontWeight: 700,
+                color: 'var(--ink)',
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            />
+            <span style={{ color: 'var(--sur-ink-2)', fontSize: 14, fontWeight: 600 }}>km</span>
+          </div>
+          <p style={{ color: 'var(--sur-ink-3)', fontSize: 12, lineHeight: 1.5, margin: '10px 0 0' }}>
+            Le plan ne fixe pas de distance pour le vélo. Celle-ci alimente le volume hebdomadaire
+            de l'écran Suivi ; la charge du tendon, elle, reste calculée sur la durée.
+          </p>
+        </div>
+      )}
+
       <button
-        onClick={() => onSave(pain, rpe, '')}
+        onClick={() => {
+          const d = distanceVelo.trim() === '' ? null : Number(distanceVelo.replace(',', '.'))
+          onSave(pain, rpe, '', d != null && Number.isFinite(d) && d >= 0 ? d : null)
+        }}
         disabled={disabled}
         style={{
           display: 'block',

@@ -176,7 +176,15 @@ export function Today({
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <header style={{ padding: '22px 2px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+          <header
+            style={{
+              padding: 'calc(22px + env(safe-area-inset-top)) 2px 0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              gap: 10,
+            }}
+          >
             <div>
               <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>
                 {avantPlan ? 'Bientôt' : estAujourdhui ? "Aujourd'hui" : titreJour(jour, now)}

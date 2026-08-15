@@ -123,12 +123,26 @@ export function Track({ load, pain, activities, feedback, onOuvrirProfil }: Prop
 
   const volumeRows: BarRow[] = useMemo(() => {
     const parSemaine = new Map<string, { course: number; velo: number }>()
+    // Les jours où Strava a une sortie vélo : au-delà, une séance de home
+    // trainer ou une sortie non synchronisée ne remonte que par le ressenti,
+    // via son champ « Distance parcourue ».
+    const veloImporte = new Set<string>()
     for (const a of activities) {
       if (a.sport !== 'Run' && a.sport !== 'Ride') continue
       const lundi = mondayOf(a.day)
       const cur = parSemaine.get(lundi) ?? { course: 0, velo: 0 }
       if (a.sport === 'Run') cur.course += a.distance_m / 1000
-      else cur.velo += a.distance_m / 1000
+      else {
+        cur.velo += a.distance_m / 1000
+        veloImporte.add(a.day)
+      }
+      parSemaine.set(lundi, cur)
+    }
+    for (const f of feedback) {
+      if (f.session_type !== 'velo' || f.distance_km == null || veloImporte.has(f.day)) continue
+      const lundi = mondayOf(f.day)
+      const cur = parSemaine.get(lundi) ?? { course: 0, velo: 0 }
+      cur.velo += f.distance_km
       parSemaine.set(lundi, cur)
     }
     return [...parSemaine.entries()]
@@ -138,7 +152,7 @@ export function Track({ load, pain, activities, feedback, onOuvrirProfil }: Prop
         course: Math.round(v.course * 10) / 10,
         velo: Math.round(v.velo * 10) / 10,
       }))
-  }, [activities])
+  }, [activities, feedback])
 
   const loadRows: StackRow[] = useMemo(() => {
     const parSemaine = new Map<string, { course: number; velo: number; autre: number }>()
@@ -170,7 +184,11 @@ export function Track({ load, pain, activities, feedback, onOuvrirProfil }: Prop
     <div style={{ position: 'relative', maxWidth: 'var(--shell-max)', margin: '0 auto', paddingBottom: 90 }}>
       <MeshBackground band={A.band.key} />
 
-      <div style={{ position: 'relative', zIndex: 5, padding: '22px var(--page-x) 0' }}>
+      <div style={{
+        position: 'relative',
+        zIndex: 5,
+        padding: 'calc(22px + env(safe-area-inset-top)) var(--page-x) 0',
+      }}>
         <header style={{ marginBottom: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>Suivi</h1>
@@ -223,7 +241,7 @@ export function Track({ load, pain, activities, feedback, onOuvrirProfil }: Prop
           legende={
             vuePain === 'separee'
               ? "Trois moments de mesure. La courbe qui compte le plus est celle de fin de journée : sur une tendinopathie, la réaction est retardée de plusieurs heures."
-              : "La somme des trois mesures du jour, sur 30. Utile pour voir la charge douloureuse totale d'une journée, même quand aucune des trois ne semble alarmante isolément."
+              : "Les trois mesures empilées, sur 30. Utile pour voir la charge douloureuse totale d'une journée, même quand aucune des trois ne semble alarmante isolément."
           }
           controle={
             <Segmented
@@ -236,15 +254,13 @@ export function Track({ load, pain, activities, feedback, onOuvrirProfil }: Prop
               ]}
             />
           }
-          legendeCouleurs={
-            vuePain === 'separee'
-              ? [
-                  { label: 'Réveil', couleur: 'var(--chart-1)' },
-                  { label: "Pendant l'effort", couleur: 'var(--chart-2)' },
-                  { label: 'Fin de journée', couleur: 'var(--chart-3)' },
-                ]
-              : [{ label: 'Somme des trois mesures', couleur: 'var(--chart-2)' }]
-          }
+          // Mêmes trois entrées dans les deux vues : empilées ou séparées, une
+          // couleur ne désigne toujours qu'une seule mesure.
+          legendeCouleurs={[
+            { label: 'Réveil', couleur: 'var(--chart-1)' },
+            { label: "Pendant l'effort", couleur: 'var(--chart-2)' },
+            { label: 'Fin de journée', couleur: 'var(--chart-3)' },
+          ]}
         >
           <PainChart rows={painRows} vue={vuePain} />
         </Viz>

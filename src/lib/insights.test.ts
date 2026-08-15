@@ -165,6 +165,45 @@ describe('volume de course', () => {
     expect(r.km7Jours).toHaveLength(7)
     expect(r.km7Jours[6]).toBe(10)
   })
+
+  it('compte la distance du ressenti quand aucune activité Strava n’a été importée', () => {
+    // Une course notée à la main — sans Strava — ne doit pas compter pour zéro.
+    const r = construireInsights({
+      ...base,
+      seances: [] as SeancePlanifiee[],
+      activities: [],
+      feedback: [
+        { week: 1, day_index: 2, slot: 0, day: '2026-08-12', session_type: 'ef', pain: 1, rpe: 5, distance_km: 8 },
+      ],
+    })
+    expect(r.km7).toBe(8)
+  })
+
+  it('donne la priorité à Strava sur le ressenti le même jour, sans additionner les deux', () => {
+    const r = construireInsights({
+      ...base,
+      seances: [] as SeancePlanifiee[],
+      activities: [activite('2026-08-12', 'Run', 8)],
+      feedback: [
+        // La distance réellement parcourue, saisie après un écart : Strava
+        // reste la source de vérité quand les deux coexistent.
+        { week: 1, day_index: 2, slot: 0, day: '2026-08-12', session_type: 'ef', pain: 1, rpe: 5, distance_km: 6 },
+      ],
+    })
+    expect(r.km7).toBe(8)
+  })
+
+  it('ignore le ressenti d’une séance qui n’est pas de la course', () => {
+    const r = construireInsights({
+      ...base,
+      seances: [] as SeancePlanifiee[],
+      activities: [],
+      feedback: [
+        { week: 1, day_index: 2, slot: 0, day: '2026-08-12', session_type: 'muscu-bas', pain: 1, rpe: 5, distance_km: 8 },
+      ],
+    })
+    expect(r.km7).toBe(0)
+  })
 })
 
 describe('charge de la veille', () => {

@@ -31,6 +31,17 @@ const SERIES: Array<{ cle: keyof Omit<PainRow, 'day'>; couleur: string; epaisseu
   { cle: 'evening', couleur: 'var(--chart-3)', epaisseur: 2.8 },
 ]
 
+/**
+ * Ordre d'empilement en cumulé, du bas vers le haut. Même couleur qu'en vue
+ * séparée pour chaque mesure : basculer d'une vue à l'autre ne doit pas faire
+ * changer la teinte de la douleur au réveil.
+ */
+const EMPILEMENT: Array<{ cle: keyof Omit<PainRow, 'day'>; couleur: string }> = [
+  { cle: 'wake', couleur: 'var(--chart-1)' },
+  { cle: 'effort', couleur: 'var(--chart-2)' },
+  { cle: 'evening', couleur: 'var(--chart-3)' },
+]
+
 export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
   const n = rows.length
   if (!n) return null
@@ -44,12 +55,6 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
   const stepX = Math.max(1, Math.ceil(n / 5))
   const graduations = cumulee ? [0, 6, 12, 18, 24, 30] : [0, 2, 4, 6, 8, 10]
 
-  /** Somme des trois mesures du jour, null si aucune n'est saisie. */
-  const somme = (r: PainRow): number | null => {
-    const vs = [r.wake, r.effort, r.evening].filter((v): v is number => v != null)
-    return vs.length ? vs.reduce((a, b) => a + b, 0) : null
-  }
-
   const trace = (points: Array<readonly [number, number]>) => {
     let d = ''
     let prec: number | null = null
@@ -58,6 +63,18 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
       prec = i
     }
     return d
+  }
+
+  /**
+   * Surface empilée, du bas `basValeurs[i]` au haut `hautValeurs[i]`. Un
+   * polygone fermé plutôt que trois lignes : c'est ce qui donne l'empilement
+   * plein, comme la référence, plutôt qu'un simple faisceau de courbes.
+   */
+  const surface = (basValeurs: number[], hautValeurs: number[]): string => {
+    let d = `M${x(0)} ${y(hautValeurs[0])} `
+    for (let i = 1; i < n; i++) d += `L${x(i)} ${y(hautValeurs[i])} `
+    for (let i = n - 1; i >= 0; i--) d += `L${x(i)} ${y(basValeurs[i])} `
+    return d + 'Z'
   }
 
   return (
@@ -76,34 +93,41 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
         x2={W - P.r}
         y1={y(seuil)}
         y2={y(seuil)}
-        stroke="var(--chart-3)"
+        // Un trait neutre : en cumulé, chart-3 sert déjà de couleur de remplissage
+        // à une des trois couches, un seuil de la même teinte s'y serait fondu.
+        stroke={cumulee ? 'rgba(255,255,255,.55)' : 'var(--chart-3)'}
         strokeWidth={1}
         strokeDasharray="3 4"
-        opacity={0.5}
+        opacity={cumulee ? 1 : 0.5}
       />
-      <text x={W - P.r} y={y(seuil) - 6} textAnchor="end" fontSize={10} fill="var(--chart-3)" opacity={0.85}>
+      <text
+        x={W - P.r}
+        y={y(seuil) - 6}
+        textAnchor="end"
+        fontSize={10}
+        fill={cumulee ? 'var(--chart-texte)' : 'var(--chart-3)'}
+        opacity={0.85}
+      >
         seuil {seuil}
       </text>
 
       {cumulee ? (
         (() => {
-          const pts = rows
-            .map((r, i) => [i, somme(r)] as const)
-            .filter((p): p is readonly [number, number] => p[1] != null)
-          if (!pts.length) return null
+          // Chaque jour sans aucune saisie ne contribue à aucune couche : un
+          // zéro forcé aurait affiché un creux au sol, comme si le tendon
+          // n'avait rien senti ce jour-là plutôt que rien mesuré.
+          let cumul = new Array(n).fill(0)
           return (
             <g>
-              <path
-                d={trace(pts)}
-                fill="none"
-                stroke="var(--chart-2)"
-                strokeWidth={2.8}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              {pts.map(([i, v]) => (
-                <circle key={i} cx={x(i)} cy={y(v)} r={3} fill="var(--chart-2)" stroke="var(--bg)" strokeWidth={2} />
-              ))}
+              {EMPILEMENT.map(({ cle, couleur }) => {
+                const precedent = [...cumul]
+                cumul = rows.map((r, i) => precedent[i] + (r[cle] ?? 0))
+                const d = surface(precedent, cumul)
+                // Le contour reprend la couleur de sa propre couche : un liseré
+                // blanc débordait visiblement des pics, y compris hors du
+                // cadre du graphique sur les points d'extrémité.
+                return <path key={cle} d={d} fill={couleur} stroke={couleur} strokeWidth={1} opacity={0.82} />
+              })}
             </g>
           )
         })()

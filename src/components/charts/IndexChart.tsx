@@ -2,7 +2,7 @@
  * Indice de charge du tendon avec bandes de fond et projection en pointillés.
  * Porté depuis reference/tendo-v3.html (`idxChart`).
  */
-import { BANDS, bandOf } from '../../lib/tendonIndex'
+import { bandOf } from '../../lib/tendonIndex'
 import { formatDay } from '../../lib/dates'
 
 const W = 320
@@ -28,27 +28,14 @@ export function IndexChart({ series, now }: { series: Array<{ day: string; idx: 
     return d
   }
 
-  let prevMax = 0
   const stepX = Math.max(1, Math.ceil(n / 5))
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Indice de charge du tendon">
-      {BANDS.map((b) => {
-        const rect = (
-          <rect
-            key={b.key}
-            x={P.l}
-            y={y(b.max)}
-            width={IW}
-            height={Math.max(0, y(prevMax) - y(b.max))}
-            fill={b.color}
-            opacity={0.13}
-          />
-        )
-        prevMax = b.max
-        return rect
-      })}
-
+      {/* Le fond reste celui de la carte, comme sur « Douleur au fil des
+          jours » : les bandes teintées derrière la courbe la rendaient plus
+          dure à lire qu'à informer. La couleur des points suffit à situer
+          chaque jour dans sa bande. */}
       {[0, 25, 50, 75, 100].map((v) => (
         <g key={v}>
           <line x1={P.l} x2={W - P.r} y1={y(v)} y2={y(v)} stroke="var(--chart-grille)" strokeWidth={1} />

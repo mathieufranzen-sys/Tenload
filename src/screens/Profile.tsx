@@ -93,7 +93,11 @@ export function Profile({ load, pain, feedback, marathonPace, test3k, hrMax, onS
       <div style={{ position: 'relative', maxWidth: 'var(--shell-max)', margin: '0 auto', paddingBottom: 90 }}>
         <MeshBackground band={A.band.key} formes={false} />
 
-        <div style={{ position: 'relative', zIndex: 5, padding: '22px var(--page-x) 0' }}>
+        <div style={{
+        position: 'relative',
+        zIndex: 5,
+        padding: 'calc(22px + env(safe-area-inset-top)) var(--page-x) 0',
+      }}>
           <header style={{ marginBottom: 22 }}>
             <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>Profil</h1>
             <p style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500, margin: '3px 0 0' }}>

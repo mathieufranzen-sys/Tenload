@@ -73,7 +73,11 @@ export function Plan({
     <div style={{ position: 'relative', maxWidth: 'var(--shell-max)', margin: '0 auto', paddingBottom: 90 }}>
       <MeshBackground band={A.band.key} formes={false} />
 
-      <div style={{ position: 'relative', zIndex: 5, padding: '22px var(--page-x) 0' }}>
+      <div style={{
+        position: 'relative',
+        zIndex: 5,
+        padding: 'calc(22px + env(safe-area-inset-top)) var(--page-x) 0',
+      }}>
         <header style={{ marginBottom: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>Programme</h1>
