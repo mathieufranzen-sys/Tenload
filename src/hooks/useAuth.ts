@@ -39,6 +39,14 @@ export interface Auth {
  *    attente d'une minute n'y change quoi que ce soit. Le dire évite de
  *    marteler le bouton pour rien.
  */
+/**
+ * Supabase stocke les adresses en minuscules. Une majuscule à la saisie passe
+ * à l'envoi, mais la vérification du code compare l'adresse telle qu'elle est
+ * fournie : le code est alors rejeté avec la même erreur ambiguë qu'un code
+ * périmé. Normaliser des deux côtés supprime le cas.
+ */
+export const normaliserEmail = (v: string): string => v.trim().toLowerCase()
+
 export function messageErreur(brut: string): string {
   const secondes = brut.match(/after (\d+) seconds?/i)
   if (secondes) {
@@ -96,7 +104,7 @@ export function useAuth(): Auth {
   const envoyerLien = useCallback(async (email: string): Promise<string | null> => {
     if (!supabase) return "Supabase n'est pas configuré."
     const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
+      email: normaliserEmail(email),
       options: { emailRedirectTo: window.location.origin },
     })
     if (!error) return null
@@ -115,7 +123,7 @@ export function useAuth(): Auth {
    */
   const verifierCode = useCallback(async (email: string, code: string): Promise<string | null> => {
     if (!supabase) return "Supabase n'est pas configuré."
-    const adresse = email.trim()
+    const adresse = normaliserEmail(email)
     const token = code.replace(/\D/g, '')
 
     const types = ['email', 'magiclink'] as const
