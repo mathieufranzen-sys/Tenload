@@ -15,6 +15,7 @@ import {
   addDays,
   daysBetween,
   formatDay,
+  formatDayLong,
   today as todayISO,
   weekdayIndex,
 } from '../lib/dates'
@@ -152,6 +153,7 @@ export function Today({
 
   const jRace = daysBetween(now, plan.meta.raceDate)
   const jDebut = daysBetween(now, debutPlan)
+  const sousTitre = formatDayLong(jour)
 
   const feedbackDe = ({ jourOrigine, slot }: SeancePlanifiee) =>
     feedback.find((f) => f.week === semaine.n && f.day_index === jourOrigine && f.slot === slot) ?? null
@@ -175,19 +177,25 @@ export function Today({
       >
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           <header style={{ padding: '22px 2px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-            <div style={{ minWidth: 0 }}>
+            <div>
               <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>
                 {avantPlan ? 'Bientôt' : estAujourdhui ? "Aujourd'hui" : titreJour(jour, now)}
               </h1>
-              {/* La date est descendue dans le sélecteur, au-dessus de l'arc :
-                  la répéter ici ferait deux fois la même information à trois
-                  centimètres d'écart. */}
               <p style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500, margin: '3px 0 0' }}>
+                {sousTitre[0].toUpperCase() + sousTitre.slice(1)} ·{' '}
                 {avantPlan ? `J-${jDebut} avant la semaine 1` : `J-${jRace} avant Paris`}
               </p>
             </div>
             <ProfileButton onClick={onOuvrirProfil} />
           </header>
+
+          <NavigationJour
+            jour={jour}
+            now={now}
+            plusAncien={plusAncien}
+            onDecaler={decaler}
+            onAujourdhui={() => setJour(now)}
+          />
 
           {/* Les compteurs parlent de la semaine en cours : les afficher en
               relisant un jour passé laisserait croire qu'ils le concernent. */}
@@ -207,54 +215,6 @@ export function Today({
               margin: '26px 0',
             }}
           >
-            {/* Le sélecteur commande l'arc, il est donc posé juste dessus, la
-                date entre les deux flèches. C'est le geste habituel d'un
-                calendrier, et il n'a plus besoin de titre pour se faire
-                comprendre. */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
-              <Fleche
-                sens="gauche"
-                actif={jour > plusAncien}
-                label="Jour précédent"
-                onClick={() => decaler(-1)}
-              />
-              <div
-                style={{
-                  minWidth: 108,
-                  textAlign: 'center',
-                  fontSize: 15,
-                  fontWeight: 600,
-                  letterSpacing: '-.2px',
-                  fontVariantNumeric: 'tabular-nums',
-                }}
-              >
-                {formatDay(jour)}
-              </div>
-              <Fleche
-                sens="droite"
-                actif={jour < now}
-                label="Jour suivant"
-                onClick={() => decaler(1)}
-              />
-            </div>
-
-            {!estAujourdhui && (
-              <button
-                onClick={() => setJour(now)}
-                style={{
-                  marginBottom: 10,
-                  padding: '4px 12px',
-                  borderRadius: 'var(--pill)',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: 'var(--sur-ink-2)',
-                  background: 'rgba(255,255,255,.12)',
-                }}
-              >
-                Revenir à aujourd&apos;hui
-              </button>
-            )}
-
             <TendonArc value={detail.idx} />
 
             {/* Le chiffre remonte dans la courbe : c'est ce qui fait tenir
@@ -518,11 +478,76 @@ function titreJour(jour: string, now: string): string {
   const ecart = daysBetween(jour, now)
   if (ecart === 1) return 'Hier'
   if (ecart === 2) return 'Avant-hier'
-  // Le nom entier, pas l'abrégé de formatDay : c'est un titre de page.
+  // formatDayLong abrège (« mer. ») : correct dans une ligne de contexte,
+  // pas comme titre de page. On reprend le nom entier.
   const j = DAYS_LONG[weekdayIndex(jour)]
   return j[0].toUpperCase() + j.slice(1)
 }
 
+/**
+ * Navigation de jour en jour, bornée au passé.
+ *
+ * On ne va pas au-delà d'aujourd'hui : la raideur d'un réveil qui n'a pas eu
+ * lieu ne se saisit pas, et le programme à venir se lit dans l'onglet
+ * Programme, qui est fait pour ça.
+ */
+function NavigationJour({
+  jour,
+  now,
+  plusAncien,
+  onDecaler,
+  onAujourdhui,
+}: {
+  jour: string
+  now: string
+  plusAncien: string
+  onDecaler: (n: number) => void
+  onAujourdhui: () => void
+}) {
+  const peutReculer = jour > plusAncien
+  const peutAvancer = jour < now
+  const estAujourdhui = jour === now
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        marginTop: 14,
+      }}
+    >
+      <Fleche
+        sens="gauche"
+        actif={peutReculer}
+        label="Jour précédent"
+        onClick={() => onDecaler(-1)}
+      />
+      <Fleche
+        sens="droite"
+        actif={peutAvancer}
+        label="Jour suivant"
+        onClick={() => onDecaler(1)}
+      />
+      {!estAujourdhui && (
+        <button
+          onClick={onAujourdhui}
+          className="glass"
+          style={{
+            marginLeft: 2,
+            padding: '7px 14px',
+            borderRadius: 'var(--pill)',
+            fontSize: 12.5,
+            fontWeight: 600,
+            color: 'var(--ink)',
+          }}
+        >
+          Revenir à aujourd&apos;hui
+        </button>
+      )}
+    </div>
+  )
+}
 
 function Fleche({
   sens,
@@ -542,10 +567,9 @@ function Fleche({
       aria-label={label}
       className="glass"
       style={{
-        width: 30,
-        height: 30,
+        width: 38,
+        height: 38,
         borderRadius: '50%',
-        flex: 'none',
         display: 'grid',
         placeItems: 'center',
         opacity: actif ? 1 : 0.3,
@@ -553,7 +577,7 @@ function Fleche({
         transform: sens === 'gauche' ? 'scaleX(-1)' : undefined,
       }}
     >
-      <Icon name="chevronRight" size={14} />
+      <Icon name="chevronRight" size={16} />
     </button>
   )
 }
