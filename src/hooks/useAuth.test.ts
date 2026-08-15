@@ -28,6 +28,16 @@ describe('messageErreur', () => {
     expect(messageErreur('Unable to validate email address: invalid format')).toContain('valide')
   })
 
+  it('ne présente pas l’erreur ambiguë de Supabase comme une expiration', () => {
+    // Supabase renvoie ce message pour un code faux, un code déjà consommé ET
+    // un code périmé. Annoncer « expiré » envoyait chercher un problème
+    // d'horloge alors que la cause la plus fréquente est le clic sur le lien
+    // du même mail, qui consomme le code.
+    const m = messageErreur('Token has expired or is invalid')
+    expect(m).toContain('invalide ou expiré')
+    expect(m).toContain('lien')
+  })
+
   it('a un repli pour tout le reste', () => {
     expect(messageErreur('boom')).toContain("L'envoi a échoué")
   })

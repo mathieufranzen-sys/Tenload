@@ -51,6 +51,13 @@ export function messageErreur(brut: string): string {
   if (/rate limit|too many|429/i.test(brut)) {
     return 'Trop de tentatives rapprochées. Laisse passer une minute.'
   }
+  // Supabase répond « Token has expired or is invalid » pour les deux cas à la
+  // fois. Annoncer « expiré » tout court envoie chercher un problème d'horloge
+  // alors que la cause la plus fréquente est un code déjà consommé, par un clic
+  // sur le lien du même mail.
+  if (/expired or is invalid|expired_token|otp_expired/i.test(brut)) {
+    return 'Code invalide ou expiré. Si tu as cliqué le lien du mail, le code du même mail est consommé : redemande-en un.'
+  }
   if (/expired/i.test(brut)) return 'Ce code a expiré. Demande-en un nouveau.'
   if (/invalid.*(token|otp)|otp.*invalid/i.test(brut))
     return 'Code incorrect. Vérifie les six chiffres du dernier mail reçu.'
@@ -96,14 +103,32 @@ export function useAuth(): Auth {
     return messageErreur(error.message)
   }, [])
 
+  /**
+   * Deux types essayés dans l'ordre.
+   *
+   * `signInWithOtp` émet un jeton de type `magiclink` pour un compte existant
+   * et `signup` pour un compte neuf ; `email` couvre les deux selon les
+   * versions. Vérifier avec le mauvais type renvoie exactement la même erreur
+   * qu'un code périmé, « Token has expired or is invalid », ce qui rend le
+   * diagnostic impossible depuis l'écran. Essayer les deux coûte un aller-retour
+   * et supprime toute une classe de faux « code expiré ».
+   */
   const verifierCode = useCallback(async (email: string, code: string): Promise<string | null> => {
     if (!supabase) return "Supabase n'est pas configuré."
-    const { error } = await supabase.auth.verifyOtp({
-      email: email.trim(),
-      token: code.replace(/\s/g, ''),
-      type: 'email',
-    })
-    return error ? messageErreur(error.message) : null
+    const adresse = email.trim()
+    const token = code.replace(/\D/g, '')
+
+    const types = ['email', 'magiclink'] as const
+    let derniere = ''
+    for (const type of types) {
+      const { error } = await supabase.auth.verifyOtp({ email: adresse, token, type })
+      if (!error) return null
+      derniere = error.message
+      // Un code réellement faux ou déjà consommé le sera pour les deux types :
+      // seule l'erreur ambiguë vaut la peine d'être retentée.
+      if (!/expired or is invalid/i.test(derniere)) break
+    }
+    return messageErreur(derniere)
   }, [])
 
   const deconnexion = useCallback(async () => {
