@@ -15,7 +15,6 @@ import {
   addDays,
   daysBetween,
   formatDay,
-  formatDayLong,
   today as todayISO,
   weekdayIndex,
 } from '../lib/dates'
@@ -153,7 +152,6 @@ export function Today({
 
   const jRace = daysBetween(now, plan.meta.raceDate)
   const jDebut = daysBetween(now, debutPlan)
-  const sousTitre = formatDayLong(jour)
 
   const feedbackDe = ({ jourOrigine, slot }: SeancePlanifiee) =>
     feedback.find((f) => f.week === semaine.n && f.day_index === jourOrigine && f.slot === slot) ?? null
@@ -178,62 +176,14 @@ export function Today({
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           <header style={{ padding: '22px 2px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
             <div style={{ minWidth: 0 }}>
-              {/* Les flèches sont collées au titre : c'est lui qu'elles font
-                  changer, et la relation se perd dès qu'on les met sur une
-                  ligne à part. */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>
-                  {avantPlan ? 'Bientôt' : estAujourdhui ? "Aujourd'hui" : titreJour(jour, now)}
-                </h1>
-                <Fleche
-                  sens="gauche"
-                  actif={jour > plusAncien}
-                  label="Jour précédent"
-                  onClick={() => decaler(-1)}
-                />
-                <Fleche
-                  sens="droite"
-                  actif={jour < now}
-                  label="Jour suivant"
-                  onClick={() => decaler(1)}
-                />
-              </div>
-              <p
-                style={{
-                  color: 'var(--sur-ink-2)',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  margin: '4px 0 0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: 8,
-                }}
-              >
-                {/* Le décompte avant Paris ne parle que du présent : en
-                    relisant une date passée il allonge la ligne pour rien et
-                    repousse le retour à aujourd'hui sur un troisième rang. */}
-                <span>
-                  {sousTitre[0].toUpperCase() + sousTitre.slice(1)}
-                  {estAujourdhui &&
-                    ` · ${avantPlan ? `J-${jDebut} avant la semaine 1` : `J-${jRace} avant Paris`}`}
-                </span>
-                {!estAujourdhui && (
-                  <button
-                    onClick={() => setJour(now)}
-                    style={{
-                      padding: '3px 10px',
-                      borderRadius: 'var(--pill)',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: 'var(--ink)',
-                      background: 'rgba(255,255,255,.14)',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    Revenir à aujourd&apos;hui
-                  </button>
-                )}
+              <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>
+                {avantPlan ? 'Bientôt' : estAujourdhui ? "Aujourd'hui" : titreJour(jour, now)}
+              </h1>
+              {/* La date est descendue dans le sélecteur, au-dessus de l'arc :
+                  la répéter ici ferait deux fois la même information à trois
+                  centimètres d'écart. */}
+              <p style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500, margin: '3px 0 0' }}>
+                {avantPlan ? `J-${jDebut} avant la semaine 1` : `J-${jRace} avant Paris`}
               </p>
             </div>
             <ProfileButton onClick={onOuvrirProfil} />
@@ -257,6 +207,54 @@ export function Today({
               margin: '26px 0',
             }}
           >
+            {/* Le sélecteur commande l'arc, il est donc posé juste dessus, la
+                date entre les deux flèches. C'est le geste habituel d'un
+                calendrier, et il n'a plus besoin de titre pour se faire
+                comprendre. */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+              <Fleche
+                sens="gauche"
+                actif={jour > plusAncien}
+                label="Jour précédent"
+                onClick={() => decaler(-1)}
+              />
+              <div
+                style={{
+                  minWidth: 108,
+                  textAlign: 'center',
+                  fontSize: 15,
+                  fontWeight: 600,
+                  letterSpacing: '-.2px',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {formatDay(jour)}
+              </div>
+              <Fleche
+                sens="droite"
+                actif={jour < now}
+                label="Jour suivant"
+                onClick={() => decaler(1)}
+              />
+            </div>
+
+            {!estAujourdhui && (
+              <button
+                onClick={() => setJour(now)}
+                style={{
+                  marginBottom: 10,
+                  padding: '4px 12px',
+                  borderRadius: 'var(--pill)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: 'var(--sur-ink-2)',
+                  background: 'rgba(255,255,255,.12)',
+                }}
+              >
+                Revenir à aujourd&apos;hui
+              </button>
+            )}
+
             <TendonArc value={detail.idx} />
 
             {/* Le chiffre remonte dans la courbe : c'est ce qui fait tenir
@@ -520,8 +518,7 @@ function titreJour(jour: string, now: string): string {
   const ecart = daysBetween(jour, now)
   if (ecart === 1) return 'Hier'
   if (ecart === 2) return 'Avant-hier'
-  // formatDayLong abrège (« mer. ») : correct dans une ligne de contexte,
-  // pas comme titre de page. On reprend le nom entier.
+  // Le nom entier, pas l'abrégé de formatDay : c'est un titre de page.
   const j = DAYS_LONG[weekdayIndex(jour)]
   return j[0].toUpperCase() + j.slice(1)
 }
