@@ -20,6 +20,33 @@ export interface Auth {
   deconnexion: () => Promise<void>
 }
 
+/**
+ * Traduit l'erreur d'envoi. Supabase répond en anglais et distingue deux
+ * limites que l'ancien message confondait sous un vague « attends une minute » :
+ *
+ *  - un délai de sécurité par adresse, de l'ordre d'une minute, dont Supabase
+ *    donne le nombre de secondes restantes ;
+ *  - un quota horaire d'e-mails, qui est celui du serveur SMTP intégré. Sur le
+ *    SMTP partagé de Supabase il tombe à quelques envois par heure, et aucune
+ *    attente d'une minute n'y change quoi que ce soit. Le dire évite de
+ *    marteler le bouton pour rien.
+ */
+export function messageErreur(brut: string): string {
+  const secondes = brut.match(/after (\d+) seconds?/i)
+  if (secondes) {
+    const n = Number(secondes[1])
+    return `Encore ${n} seconde${n > 1 ? 's' : ''} avant de pouvoir redemander un lien.`
+  }
+  if (/email rate limit|over_email_send_rate_limit/i.test(brut)) {
+    return "Quota d'e-mails atteint pour cette heure. C'est la limite du serveur d'envoi, pas ton adresse : attendre une minute n'y suffira pas."
+  }
+  if (/rate limit|too many|429/i.test(brut)) {
+    return 'Trop de tentatives rapprochées. Laisse passer une minute.'
+  }
+  if (/invalid|malformed/i.test(brut)) return "Cette adresse n'est pas valide."
+  return "L'envoi a échoué. Vérifie l'adresse et réessaie."
+}
+
 export function useAuth(): Auth {
   const [session, setSession] = useState<Session | null>(null)
   // On démarre en `loading` : Supabase relit la session persistée de façon
@@ -55,10 +82,7 @@ export function useAuth(): Auth {
       options: { emailRedirectTo: window.location.origin },
     })
     if (!error) return null
-    // Le message brut de Supabase est en anglais et parle de « OTP ».
-    return /rate limit|too many/i.test(error.message)
-      ? 'Trop de tentatives. Attends une minute avant de redemander un lien.'
-      : "L'envoi a échoué. Vérifie l'adresse et réessaie."
+    return messageErreur(error.message)
   }, [])
 
   const deconnexion = useCallback(async () => {
