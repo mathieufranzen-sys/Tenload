@@ -307,3 +307,33 @@ describe('adapt', () => {
     expect(adapt(load, pain, feedback, NOW).n).toBe(1)
   })
 })
+
+describe('feu vert', () => {
+  /**
+   * Charge légère et régulière sur soixante-dix jours. La fenêtre doit largement
+   * dépasser les 56 jours que lit `indexSeries` : sinon la charge chronique est
+   * tirée vers le bas par les zéros du début, le rapport aigu/chronique décroche
+   * et l'indice sort du vert pour une raison purement artificielle.
+   */
+  const loadCalme: LoadMap = {}
+  for (let k = 0; k < 70; k++) loadCalme[addDays(NOW, -k)] = 4
+
+  it('s’allume quand la douleur est saisie et basse', () => {
+    const pain: PainMap = {}
+    for (let k = 0; k < 70; k++) pain[addDays(NOW, -k)] = { wake: 0, evening: 0 }
+    const r = adapt(loadCalme, pain, [], NOW)
+    expect(r.band.key).toBe('vert')
+    expect(r.rules.find((x) => x.id === 'FEUVERT')).toBeDefined()
+  })
+
+  it('reste éteint quand plus rien n’est saisi depuis cinq jours', () => {
+    // Même charge, même indice bas — mais bas parce qu'on ne sait rien, pas
+    // parce que le tendon va bien. Autoriser une hausse de volume là-dessus
+    // est exactement l'erreur que l'indice existe pour éviter.
+    const pain: PainMap = {}
+    for (let k = 5; k < 70; k++) pain[addDays(NOW, -k)] = { wake: 0, evening: 0 }
+    const r = adapt(loadCalme, pain, [], NOW)
+    expect(r.detail.painInconnue).toBe(true)
+    expect(r.rules.find((x) => x.id === 'FEUVERT')).toBeUndefined()
+  })
+})

@@ -108,9 +108,15 @@ export function TendonGauge({ breakdown: b, onDetail }: Props) {
         </div>
       </div>
 
-      {b.stale && (
+      {b.stale && !b.painInconnue && (
         <p style={{ color: 'var(--warning)', fontSize: 12.5, fontWeight: 600, margin: '12px 0 0' }}>
           Aucune douleur saisie depuis 24 h : l'indice tourne sur une estimation.
+        </p>
+      )}
+      {b.painInconnue && (
+        <p style={{ color: 'var(--warning)', fontSize: 12.5, fontWeight: 600, margin: '12px 0 0' }}>
+          Aucune douleur saisie depuis {b.joursSansDouleur ?? 'plus de 60'} jours : l'indice ne mesure plus que la
+          charge mécanique.
         </p>
       )}
       {b.confidence < 1 && (

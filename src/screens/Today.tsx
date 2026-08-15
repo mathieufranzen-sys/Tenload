@@ -140,7 +140,11 @@ export function Today({
               margin: '26px 0',
             }}
           >
-            <TendonArc value={A.detail.idx} />
+            {/* Sans douleur saisie depuis plus de quatre jours, la composante
+                douleur vaut zéro. Comme elle pèse 85 des 100 points, l'indice
+                affiche un vert rassurant alors qu'on ne sait rien. On montre
+                l'arc à vide plutôt qu'un chiffre faux. */}
+            <TendonArc value={A.detail.painInconnue ? 0 : A.detail.idx} />
 
             {/* Le chiffre remonte dans la courbe : c'est ce qui fait tenir
                 l'arc et la valeur comme un seul objet plutôt que deux. */}
@@ -164,12 +168,16 @@ export function Today({
                   lineHeight: 0.92,
                   marginTop: 2,
                   fontVariantNumeric: 'tabular-nums',
+                  // Un tiret à cette taille se lit comme une barre pleine, pas
+                  // comme une absence. Le point d'interrogation dit la même
+                  // chose et se reconnaît tout de suite.
+                  opacity: A.detail.painInconnue ? 0.5 : 1,
                 }}
               >
-                {A.detail.idx}
+                {A.detail.painInconnue ? '?' : A.detail.idx}
               </div>
               <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-.3px', marginTop: 6 }}>
-                {A.band.headline}
+                {A.detail.painInconnue ? 'Je ne sais pas' : A.band.headline}
               </div>
               <p
                 style={{
@@ -181,7 +189,9 @@ export function Today({
                   maxWidth: '34ch',
                 }}
               >
-                {A.band.detail}
+                {A.detail.painInconnue
+                  ? `Aucune douleur saisie depuis ${A.detail.joursSansDouleur ?? 'plus de 60'} jours. La charge mécanique, elle, est connue : ${Math.round(A.detail.ratio + A.detail.freshness + A.detail.monotony)} points sur 58. Note ta raideur au réveil et l'indice redevient lisible.`
+                  : A.band.detail}
               </p>
             </div>
 
@@ -207,7 +217,9 @@ export function Today({
               <Icon name="chevronRight" size={13} style={{ opacity: 0.7 }} />
             </button>
 
-            {A.detail.stale && <Note>Aucune douleur saisie depuis 24 h : l'indice tourne sur une estimation.</Note>}
+            {A.detail.stale && !A.detail.painInconnue && (
+              <Note>Aucune douleur saisie depuis 24 h : l'indice tourne sur une estimation.</Note>
+            )}
           </div>
 
           <div style={{ paddingBottom: 18 }}>

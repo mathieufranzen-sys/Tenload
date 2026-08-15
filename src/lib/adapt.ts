@@ -308,8 +308,17 @@ export function adapt(load: LoadMap, pain: PainMap, feedback: FeedbackRow[], now
   }
 
   // Feu vert : deux semaines sous 25 sans à-coup.
+  //
+  // Jamais sans douleur saisie récemment : un indice bas obtenu par absence de
+  // données n'est pas un feu vert, c'est un angle mort. Autoriser une hausse de
+  // volume là-dessus serait exactement l'erreur que l'indice existe pour éviter.
   const last14 = series.filter((r) => r.day <= now && r.day > addDays(now, -14))
-  if (band.key === 'vert' && last14.length >= 10 && Math.max(...last14.map((r) => r.idx)) <= 25) {
+  if (
+    !detail.painInconnue &&
+    band.key === 'vert' &&
+    last14.length >= 10 &&
+    Math.max(...last14.map((r) => r.idx)) <= 25
+  ) {
     rules.push({
       id: 'FEUVERT',
       title: 'Deux semaines sous 25 sans à-coup',

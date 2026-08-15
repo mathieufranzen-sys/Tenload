@@ -124,7 +124,7 @@ Allures lit la valeur du profil.
 
 ## L'indice de charge du tendon
 
-Le cœur du produit. `src/lib/tendonIndex.ts`, verrouillé par 22 tests dans
+Le cœur du produit. `src/lib/tendonIndex.ts`, verrouillé par 27 tests dans
 `src/lib/tendonIndex.test.ts`. **Si tu changes une constante et qu'un test casse,
 c'est probablement le modèle qui a tort, pas le test.**
 
@@ -244,13 +244,13 @@ reference/      tendo-v3.html (la version portée), scripts Python d'origine
 ## Feuille de route
 
 **Le portage est terminé.** Les cinq étapes prévues sont livrées, plus les
-écarts volontaires au plan : `npm test` donne 138 tests verts sur 10 fichiers,
+écarts volontaires au plan : `npm test` donne 153 tests verts sur 11 fichiers,
 `npm run build` passe. Le dépôt est entré dans sa phase de retours design.
 
 Fait :
 
 - [x] Socle Vite + React + TS + PWA, build qui passe
-- [x] `tendonIndex.ts` porté, 22 tests qui verrouillent seuils et planchers
+- [x] `tendonIndex.ts` porté, 27 tests qui verrouillent seuils, planchers et silence
 - [x] `paces.ts`, `load.ts`, `dates.ts`, `repartition.ts`, `insights.ts`
 - [x] Schéma Supabase avec RLS, testé sur PostgreSQL 16 (idempotent)
 - [x] Seed généré depuis le carnet et Strava, rejouable
@@ -298,6 +298,27 @@ discipline, la déplacer d'un jour, corriger sa distance ou sa durée.
   d'être supprimée : c'est ce qui garde toutes les écritures idempotentes, donc
   rejouables telles quelles par la file d'attente.
 
+### Quand la douleur n'est plus saisie
+
+Arbitré : l'app **dit qu'elle ne sait pas** plutôt que d'afficher un chiffre
+rassurant. La composante douleur pèse 85 des 100 points ; sans saisie elle vaut
+zéro, et l'indice tombe dans le vert alors qu'il ne mesure plus rien.
+
+- Le report décroissant de `painScore` couvre **trois** jours, pas quatre. Au
+  quatrième le facteur valait exactement zéro : un report qui ne dit plus rien
+  tout en se présentant comme une mesure, et c'est cet état qui affichait
+  « tout est autorisé » sur un carnet muet.
+- Au-delà, `painInconnue` passe à vrai. L'écran Aujourd'hui remplace l'indice
+  par un point d'interrogation et « Je ne sais pas », en donnant la part
+  mécanique, qui est la seule chose réellement connue. La jauge et la feuille
+  de charge portent la même mention.
+- **Le feu vert est bloqué tant que `painInconnue` est vrai.** Un indice bas
+  obtenu par absence de données n'est pas un feu vert, c'est un angle mort, et
+  autoriser une hausse de volume là-dessus serait l'erreur exacte que l'indice
+  existe pour éviter.
+- Le plan reste nominal : on ne dégrade pas les séances sur une absence
+  d'information, on refuse seulement de les augmenter.
+
 ### Le mot du coach
 
 `src/lib/coach.ts` produit l'encouragement du bas de l'écran Aujourd'hui.
@@ -311,11 +332,5 @@ non une observation.
 
 ## Pistes connues
 
-- Quand aucune douleur n'est saisie depuis plus de quatre jours, la composante
-  douleur retombe à zéro et l'indice peut paraître trop optimiste. Le report
-  décroissant (`painScore`) et le drapeau `stale` couvrent les quatre premiers
-  jours et sont affichés sur la jauge, la feuille de charge et l'écran
-  Aujourd'hui ; au-delà, rien ne retient l'indice. Un plancher de prudence
-  reste à trancher.
 - Le bundle passe 600 Ko, essentiellement `plan.json` embarqué. Sans
   conséquence tant que la PWA précharge tout, à revoir si le plan grossit.

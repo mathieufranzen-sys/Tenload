@@ -268,3 +268,63 @@ describe('calibration sur les données réelles', () => {
     expect(Math.max(...s)).toBeLessThan(80)
   })
 })
+
+describe('douleur inconnue', () => {
+  const jour = '2026-09-20'
+
+  it('signale l’absence dès que le report est épuisé', () => {
+    // Dernière saisie il y a cinq jours : painScore ne reporte plus rien.
+    const pain: PainMap = { [shiftDay(jour, -5)]: { wake: 3 } }
+    const b = tendonIndex(jour, {}, pain)
+    expect(b.painInconnue).toBe(true)
+    expect(b.painScore).toBeNull()
+    expect(b.joursSansDouleur).toBe(5)
+  })
+
+  it('bascule au quatrième jour, pas au cinquième', () => {
+    // Au quatrième jour le report valait exactement zéro : une mesure nulle
+    // en apparence, une absence de donnée en réalité. C'est cet état qui
+    // affichait « tout est autorisé » en vert sur un carnet muet.
+    const pain: PainMap = { [shiftDay(jour, -4)]: { wake: 6 } }
+    const b = tendonIndex(jour, {}, pain)
+    expect(b.painInconnue).toBe(true)
+    expect(b.painScore).toBeNull()
+  })
+
+  it('reporte encore au troisième jour, en décroissance', () => {
+    const pain: PainMap = { [shiftDay(jour, -3)]: { wake: 6 } }
+    const b = tendonIndex(jour, {}, pain)
+    expect(b.painInconnue).toBe(false)
+    expect(b.stale).toBe(true)
+    expect(b.painScore).toBeCloseTo(1.5, 5) // 6 x (1 − 3/4)
+  })
+
+  it('ne signale rien tant que le report tient', () => {
+    const pain: PainMap = { [shiftDay(jour, -2)]: { wake: 3 } }
+    const b = tendonIndex(jour, {}, pain)
+    expect(b.painInconnue).toBe(false)
+    expect(b.stale).toBe(true)
+  })
+
+  it('ne signale rien le jour d’une saisie', () => {
+    const b = tendonIndex(jour, {}, { [jour]: { wake: 1 } })
+    expect(b.painInconnue).toBe(false)
+    expect(b.joursSansDouleur).toBe(0)
+  })
+
+  it('reste vrai quand le carnet est entièrement vide', () => {
+    const b = tendonIndex(jour, {}, {})
+    expect(b.painInconnue).toBe(true)
+    expect(b.joursSansDouleur).toBeNull()
+  })
+
+  it('n’altère pas le calcul : c’est un drapeau, pas un terme', () => {
+    // Le même indice qu'avant l'ajout du drapeau. Si ce test casse, c'est que
+    // la composante douleur a bougé, ce qui n'était pas l'intention.
+    const load: LoadMap = {}
+    for (let k = 0; k < 28; k++) load[shiftDay(jour, -k)] = 8
+    const b = tendonIndex(jour, load, {})
+    expect(b.pain).toBe(0)
+    expect(b.idx).toBe(Math.max(0, b.ratio + b.freshness + b.monotony - b.credits))
+  })
+})

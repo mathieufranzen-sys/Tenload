@@ -209,9 +209,18 @@ export function ChargeSheet({
               peut pas être contourné par un total plus bas.
             </p>
           )}
-          {b.stale && (
+          {b.stale && !b.painInconnue && (
             <p style={{ fontSize: 12.5, color: 'var(--warning)', lineHeight: 1.45, margin: '10px 0 0', fontWeight: 500 }}>
               Aucune douleur saisie depuis 24 h : la part douleur tourne sur un report.
+            </p>
+          )}
+          {/* Le total affiché plus haut n'est pas faux, il est incomplet : le
+              dire ici, à côté du détail terme par terme, est le seul endroit
+              où la nuance se comprend vraiment. */}
+          {b.painInconnue && (
+            <p style={{ fontSize: 12.5, color: 'var(--warning)', lineHeight: 1.45, margin: '10px 0 0', fontWeight: 500 }}>
+              Aucune douleur saisie depuis {b.joursSansDouleur ?? 'plus de 60'} jours. La part douleur, qui pèse 85 des
+              100 points, est absente du total : ce qui reste ci-dessus ne mesure que la charge mécanique.
             </p>
           )}
           {b.confidence < 1 && (

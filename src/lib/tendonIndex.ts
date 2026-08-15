@@ -105,6 +105,15 @@ export interface IndexBreakdown {
   painScore: number | null
   /** true si le score repose sur un report faute de saisie récente. */
   stale: boolean
+  /**
+   * true quand plus aucune douleur n'a été saisie dans les quatre derniers
+   * jours. La composante douleur vaut alors zéro, et comme elle pèse 85 des
+   * 100 points, l'indice paraît vert alors qu'on ne sait simplement rien.
+   * L'affichage doit dire « je ne sais pas » plutôt qu'un chiffre rassurant.
+   */
+  painInconnue: boolean
+  /** Jours écoulés depuis la dernière douleur saisie, null si jamais aucune. */
+  joursSansDouleur: number | null
   /** Plancher appliqué (seuils garantis ou mémoire d'épisode). */
   floor: number
   /** 0 à 1 : part d'historique de charge disponible sur 28 jours. En dessous de 1,
@@ -230,10 +239,16 @@ export function painScore(
 
   if (vals.length === 0) {
     // Rien de saisi : l'absence de donnée n'est pas l'absence de douleur.
-    // On reporte la dernière valeur connue en la faisant décroître sur 4 jours.
-    for (let k = 1; k < 5; k++) {
+    // On reporte la dernière valeur connue en la faisant décroître sur trois
+    // jours, puis on rend la main.
+    //
+    // La boucle s'arrête à 3 et non à 4 : au quatrième jour le facteur vaut
+    // exactement zéro, donc le report ne dit plus rien tout en se présentant
+    // comme une mesure. L'app affichait alors « tout est autorisé » en vert
+    // sur une absence totale de données, ce qui est le pire des deux mondes.
+    for (let k = 1; k < 4; k++) {
       const vs = painValues(pain[shiftDay(day, -k)])
-      if (vs.length) return { score: Math.max(...vs) * Math.max(0, 1 - k / 4), stale: true }
+      if (vs.length) return { score: Math.max(...vs) * (1 - k / 4), stale: true }
     }
     return { score: null, stale: false }
   }
@@ -248,6 +263,18 @@ export function painScore(
   }
 
   return { score: 0.55 * weighted + 0.45 * peak, stale: false }
+}
+
+/**
+ * Jours écoulés depuis la dernière douleur saisie, 0 si c'est aujourd'hui.
+ * Cherché sur 60 jours : au-delà, savoir si le silence dure depuis deux mois
+ * ou six ne change rien à ce qu'on en fait.
+ */
+export function joursSansDouleur(day: string, pain: PainMap): number | null {
+  for (let k = 0; k <= 60; k++) {
+    if (painValues(pain[shiftDay(day, -k)]).length) return k
+  }
+  return null
 }
 
 /** Pente de la raideur matinale sur quatre jours. Seule une hausse compte. */
@@ -371,6 +398,8 @@ export function tendonIndex(
     acr: Math.round(acr * 100) / 100,
     painScore: score == null ? null : Math.round(score * 10) / 10,
     stale,
+    painInconnue: score == null,
+    joursSansDouleur: joursSansDouleur(day, pain),
     floor: Math.round(floor),
     confidence: Math.round(confidence * 100) / 100,
   }
