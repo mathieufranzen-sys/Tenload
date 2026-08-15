@@ -47,6 +47,23 @@ export interface Auth {
  */
 export const normaliserEmail = (v: string): string => v.trim().toLowerCase()
 
+/**
+ * Longueur du code, telle que Supabase la laisse régler dans
+ * Authentication → Providers → Email → Email OTP Length. Le défaut est 6 mais
+ * la valeur monte à 10, et rien dans le mail ne dit laquelle est active.
+ *
+ * L'app accepte donc toute la plage plutôt que d'imposer la sienne : un code à
+ * huit chiffres était refusé côté saisie sans même être envoyé, ce qui donnait
+ * un formulaire bloqué sans explication.
+ */
+export const CODE_MIN = 6
+export const CODE_MAX = 10
+
+export const codeValide = (code: string): boolean => {
+  const n = code.replace(/\D/g, '').length
+  return n >= CODE_MIN && n <= CODE_MAX
+}
+
 export function messageErreur(brut: string): string {
   const secondes = brut.match(/after (\d+) seconds?/i)
   if (secondes) {

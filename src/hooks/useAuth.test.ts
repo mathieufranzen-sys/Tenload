@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { messageErreur } from './useAuth'
+import { codeValide, messageErreur } from './useAuth'
 
 describe('messageErreur', () => {
   it('donne le nombre exact de secondes quand Supabase le fournit', () => {
@@ -40,5 +40,33 @@ describe('messageErreur', () => {
 
   it('a un repli pour tout le reste', () => {
     expect(messageErreur('boom')).toContain("L'envoi a échoué")
+  })
+})
+
+describe('codeValide', () => {
+  it('accepte six chiffres, le défaut de Supabase', () => {
+    expect(codeValide('482601')).toBe(true)
+  })
+
+  it('accepte huit chiffres', () => {
+    // Le réglage Email OTP Length monte à 10, et rien dans le mail ne dit
+    // laquelle est active. Imposer six bloquait le formulaire sans explication.
+    expect(codeValide('48260173')).toBe(true)
+  })
+
+  it('accepte la borne haute de dix chiffres', () => {
+    expect(codeValide('4826017391')).toBe(true)
+  })
+
+  it('refuse plus court que six', () => {
+    expect(codeValide('48260')).toBe(false)
+  })
+
+  it('refuse plus long que dix', () => {
+    expect(codeValide('48260173915')).toBe(false)
+  })
+
+  it('ignore les espaces d’un copier-coller', () => {
+    expect(codeValide('482 601')).toBe(true)
   })
 })

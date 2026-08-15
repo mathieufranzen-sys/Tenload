@@ -7,7 +7,7 @@
  * figé sur le vert, la couleur du tendon qui va bien.
  */
 import { useState, type FormEvent } from 'react'
-import type { Auth } from '../hooks/useAuth'
+import { CODE_MAX, CODE_MIN, codeValide, type Auth } from '../hooks/useAuth'
 import { MeshBackground } from '../components/MeshBackground'
 import { Icon } from '../components/Icon'
 
@@ -21,8 +21,8 @@ export function Login({ auth }: { auth: Auth }) {
   async function validerCode(e: FormEvent) {
     e.preventDefault()
     const propre = code.replace(/\D/g, '')
-    if (propre.length !== 6) {
-      setErreur('Le code fait six chiffres.')
+    if (!codeValide(propre)) {
+      setErreur(`Le code fait entre ${CODE_MIN} et ${CODE_MAX} chiffres.`)
       return
     }
     setVerif(true)
@@ -119,7 +119,7 @@ export function Login({ auth }: { auth: Auth }) {
               <b style={{ fontSize: 16.5, fontWeight: 700 }}>Code envoyé</b>
             </div>
             <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.55, color: '#D6D9DE' }}>
-              Va chercher le mail envoyé à {email}, puis recopie ici le code à six chiffres.
+              Va chercher le mail envoyé à {email}, puis recopie ici le code qu'il contient.
             </p>
 
             {/* Le code plutôt que le lien, et ce n'est pas une commodité : sur
@@ -132,11 +132,11 @@ export function Login({ auth }: { auth: Auth }) {
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 pattern="[0-9]*"
-                maxLength={6}
+                maxLength={CODE_MAX}
                 autoFocus
-                placeholder="000000"
+                placeholder="······"
                 value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, CODE_MAX))}
                 style={{
                   width: '100%',
                   boxSizing: 'border-box',
@@ -148,7 +148,9 @@ export function Login({ auth }: { auth: Auth }) {
                   font: 'inherit',
                   fontSize: 26,
                   fontWeight: 600,
-                  letterSpacing: '10px',
+                  // Dix chiffres à 10 px d'écart débordent d'un écran de 375 :
+                  // l'espacement se resserre dès que le code s'allonge.
+                  letterSpacing: code.length > 7 ? '5px' : '10px',
                   textAlign: 'center',
                   fontVariantNumeric: 'tabular-nums',
                   outline: 'none',
@@ -161,7 +163,7 @@ export function Login({ auth }: { auth: Auth }) {
               )}
               <button
                 type="submit"
-                disabled={verif || code.length !== 6}
+                disabled={verif || !codeValide(code)}
                 style={{
                   width: '100%',
                   marginTop: 14,
@@ -172,7 +174,7 @@ export function Login({ auth }: { auth: Auth }) {
                   font: 'inherit',
                   fontSize: 16,
                   fontWeight: 700,
-                  opacity: verif || code.length !== 6 ? 0.55 : 1,
+                  opacity: verif || !codeValide(code) ? 0.55 : 1,
                 }}
               >
                 {verif ? 'Vérification…' : 'Me connecter'}
