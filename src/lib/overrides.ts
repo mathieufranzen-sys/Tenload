@@ -206,12 +206,16 @@ export function verifierContraintes(seances: Session[]): Alerte[] {
     }
   }
 
-  // C4 — le dimanche ne porte aucune charge sur les jambes. Le marathon est la
-  // seule exception : c'est le dimanche 11 avril que tout ça existe.
-  if (jour(6).some((s) => s.type !== 'race' && TYPES_JAMBES.includes(s.type)))
+  // C4 — un jour de repos jambes complet dans la semaine. C'est le dimanche
+  // d'ordinaire, mais la contrainte porte sur l'existence du jour, pas sur sa
+  // place : quand une course tombe le dimanche, c'est le samedi qui le porte,
+  // et la semaine reste conforme. Chercher le dimanche nommément faisait crier
+  // le contrôle sur les deux semaines de course du plan de référence.
+  const repose = (d: number) => !jour(d).some((s) => TYPES_JAMBES.includes(s.type))
+  if (![0, 1, 2, 3, 4, 5, 6].some(repose))
     alertes.push({
       contrainte: 4,
-      texte: 'Le dimanche n’est plus un repos jambes complet.',
+      texte: 'Aucun jour de repos jambes complet dans la semaine.',
     })
 
   // C6 — jamais deux jours de course d'affilée, sauf lundi-mardi où le mardi

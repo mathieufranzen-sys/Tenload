@@ -25,7 +25,7 @@ quotidien.
 ## Ce qui est non négociable
 
 Ces contraintes viennent de son tendon et de son emploi du temps. Elles sont
-vérifiées par `reference/check_plan.py` sur les 315 séances du plan. **Aucune
+vérifiées par `reference/check_plan.py` sur les 313 séances du plan. **Aucune
 modification du plan ne doit les casser.**
 
 1. **La sortie longue ne s'incrémente jamais de plus de 2 km d'une semaine sur
@@ -67,11 +67,39 @@ volontaires vont dans `plan_overrides`.
   9 août ; enchaîner une longue le lendemain sur un tendon convalescent était
   exclu. Première vraie sortie longue le 17 août, à 22 km.
 - **Bloc A** (S1-8) réathlétisation, sortie longue 22 → 28 km.
-- **Bloc B** (S9-16) base aérobie, 24 → 32 km, volume vers 50 km/semaine.
+- **Bloc B** (S9-16) base aérobie, 24 → 32 km, volume vers 50 km/semaine. Deux
+  courses réelles s'y invitent, voir plus bas.
 - **Bloc C** (S17-25) développement, pic à 32 km, **semi-marathon test le
   samedi 30 janvier 2027**.
 - **Bloc D** (S26-32) spécifique marathon, allure course en volume.
 - **Bloc E** (S33-35) affûtage. Dernière longue de 28 km trois semaines avant.
+
+### Les deux courses d'automne
+
+Deux dossards à dates fixes, tous les deux un **dimanche**, c'est-à-dire le jour
+de repos jambes. Ils bousculent leur semaine et la suivante, et ces écarts sont
+écrits dans `COURSES` (build_plan.py) puis autorisés **nommément** dans
+`EXCEPTIONS` (check_plan.py) : un écart identique ailleurs reste une erreur.
+
+- **20 km de Paris, dimanche 11 octobre 2026** (S9). Record à battre : 1:33:24,
+  soit 4:40/km. Le plan le fait courir à allure marathon puis au seuil, ce qui
+  donne 1:30:40 sur le papier.
+- **10 km Hoka de Paris, dimanche 15 novembre 2026** (S14). Record à battre :
+  40:12, soit 4:01/km. L'allure affichée est la cible (3:57), pas la prédiction :
+  le test de 3 km du 8 août le situe plutôt vers 41:30, et la note le dit.
+
+**Semaine de course** (S9, S14) : la qualité du samedi passe au **mercredi**,
+avec l'escalade. C'est le seul écart à une contrainte non négociable de tout le
+plan, décidé par Mathieu pour ces deux semaines. L'EF du mardi devient du vélo,
+sans quoi lundi-mardi-mercredi feraient trois jours de course d'affilée ; le
+vélo Z2 du jeudi saute pour en garder deux dans la semaine ; le samedi devient
+la veille de course et porte le repos jambes à la place du dimanche.
+
+**Semaine d'après** (S10, S15) : lundi repos, la **sortie longue passe au
+jeudi**. Le renfo bas remonte au mardi à la place de l'EF, faute de pouvoir
+être le mercredi (escalade) ou collé à la longue (contrainte 3). La semaine
+n'a donc qu'un vélo. La distance de la sortie longue ne bouge pas : la
+contrainte 1 tient, rien ne décale dans les 35 semaines.
 
 Le semi test du 30 janvier est le **point de bascule de l'objectif** : sous
 1 h 25 avec douleur restée sous 2, on rouvre le dossier sub-3 ; autour de 1 h 30
@@ -244,7 +272,7 @@ reference/      tendo-v3.html (la version portée), scripts Python d'origine
 ## Feuille de route
 
 **Le portage est terminé.** Les cinq étapes prévues sont livrées, plus les
-écarts volontaires au plan : `npm test` donne 153 tests verts sur 11 fichiers,
+écarts volontaires au plan : `npm test` donne 195 tests verts sur 12 fichiers,
 `npm run build` passe. Le dépôt est entré dans sa phase de retours design.
 
 Fait :

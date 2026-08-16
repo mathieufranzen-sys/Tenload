@@ -56,6 +56,55 @@ SL = {
 DELOAD = {5, 9, 13, 17, 21, 25, 32, 34}
 NO_LONG_MONDAY = {1, 25, 35}   # amorce / semi test / marathon
 
+# ---------------------------------------------------------------- courses
+# Deux courses réelles, à dates fixes, tombent un DIMANCHE : le jour de repos
+# jambes. Elles bousculent leur semaine et la suivante, et ces écarts sont
+# écrits ici plutôt que subis. check_plan.py connaît la liste et sait
+# exactement ce qu'elle autorise ; tout le reste du plan reste sous contrainte.
+#
+# Semaine de course (S9, S14) :
+#   la qualité du samedi passe au MERCREDI, avec l'escalade. C'est un écart
+#   explicite à la contrainte 2, demandé par Mathieu pour ces deux semaines.
+#   L'EF du mardi devient du vélo, sans quoi lundi-mardi-mercredi feraient
+#   trois jours de course consécutifs sur un tendon en convalescence. Le vélo
+#   Z2 du jeudi saute pour garder deux vélos dans la semaine, et le samedi
+#   devient la veille de course : c'est lui qui porte le repos jambes.
+#
+# Semaine d'après (S10, S15) :
+#   lundi repos, la sortie longue passe au JEUDI. Le renfo bas remonte au
+#   mardi à la place de l'EF, parce qu'il ne peut être ni le mercredi
+#   (escalade), ni collé à la sortie longue (contrainte 3). Le vélo Z2 du
+#   jeudi lui cède la place : la semaine n'a donc qu'un vélo, et c'est assumé.
+COURSES = {
+    9: {
+        "title": "20 km de Paris",
+        "dist": 20,
+        "struct": [{"km": 15, "zone": "am"}, {"km": 5, "zone": "seuil"}],
+        "note": "Ton record sur 20 km est de 1:33:24, soit 4:40/km. Le plan te fait partir à "
+                "ton allure marathon et finir au seuil : sur le papier ça donne 1:30:40, presque "
+                "trois minutes sous le record. Ne pars pas plus vite que 4:37 sur les cinq "
+                "premiers kilomètres, c'est la seule erreur qui peut coûter la journée. Tu es en "
+                "semaine 9 sur 35 et le tendon reste la priorité : si la douleur dépasse 3 "
+                "pendant la course, tu finis en trottinant. Le record attendra le printemps.",
+    },
+    14: {
+        "title": "10 km Hoka de Paris",
+        "dist": 10,
+        "struct": [{"km": 10, "zone": "vo2"}],
+        "note": "Ton record sur 10 km est de 40:12, soit 4:01/km. L'allure affichée ici, 3:57, "
+                "est celle qui le bat de deux minutes : c'est la cible, pas une prédiction. La "
+                "prédiction, elle, est plus prudente — ton test de 3 km du 8 août (12:02) te "
+                "situe plutôt autour de 41:30 aujourd'hui, et les quatre-vingts secondes qui "
+                "manquent sont exactement ce que trois mois de base sont censés apporter, sans "
+                "que ce soit acquis d'avance. Donc : pars à 4:03, et décide au septième "
+                "kilomètre, pas au premier. Un 40:30 en novembre sur un tendon qui sort de "
+                "blessure vaut mieux qu'un abandon à 3:57 au sixième kilomètre.",
+    },
+}
+SEM_COURSE = set(COURSES)                     # la course tombe le dimanche
+SEM_APRES = {w + 1 for w in COURSES}          # la sortie longue passe au jeudi
+NO_LONG_MONDAY |= SEM_APRES
+
 # Structure de la sortie longue : liste de (km, zone) ; km=None => reste de la distance
 SL_STRUCT = {}
 for w, km in SL.items():
@@ -301,9 +350,49 @@ for w in range(1, 36):
         else:
             sl_struct.append({"km": float(seg), "zone": zone})
 
+    course = COURSES.get(w)
+    apres = w in SEM_APRES
+
+    def seance_longue(day):
+        """La sortie longue, quel que soit le jour où la semaine la place."""
+        return {"day": day, "type": "long",
+            "title": f"Sortie longue de {sl_km:g} km".replace(".0", ""),
+            "cat": "Sortie longue", "dist": sl_km,
+            "dur": None, "struct": sl_struct,
+            "note": ("Décharge : sortie longue raccourcie, tu dois finir en te sentant frais. "
+                     if dl else "") +
+                    ("Déplacée au jeudi : la course de dimanche dernier prend la place du lundi, "
+                     "et une longue le lendemain d'une course serait la pire chose pour le tendon. "
+                     if day == 3 else "") +
+                    ("Protocole course/marche autorisé (10 min course / 1 min marche) si le tendon est sensible au départ."
+                     if bid == "A" else
+                     "Bois 500 ml par heure et prends un gel toutes les 45 min à partir du 10e km."),
+            "feedback": True}
+
+    def seance_qualite(day):
+        """La séance de qualité, samedi d'ordinaire, mercredi en semaine de course."""
+        return {"day": day, "type": qtype, "title": q["name"],
+            "cat": {"test": "Test", "course": "Course", "inter": "Intervalles",
+                    "tempo": "Tempo"}[qtype],
+            "dist": q["dist"], "dur": None,
+            "wu": q["wu"], "main": q["main"], "cd": q["cd"],
+            "note": ("Avancée au mercredi, avec l'escalade : c'est la course de dimanche qui "
+                     "occupe le samedi. Fais-la AVANT de grimper, jamais après. " if day == 2 else "") +
+                    q["note"], "feedback": True}
+
+    qtype = {"test": "test", "course": "course", "cotes": "inter", "fartlek": "inter",
+             "interval": "inter", "seuil": "tempo", "progressif": "tempo"}[q["t"]]
+
     sessions = []
     # --- LUNDI : sortie longue
-    if w == 1:
+    if apres:
+        sessions.append({"day": 0, "type": "repos", "title": "Repos jambes complet",
+            "cat": "Repos", "dur": None,
+            "note": "Lendemain de course. Zéro charge sur les jambes : marche, mobilité cheville, "
+                    "glaçage si le tendon a parlé hier. La sortie longue de la semaine est jeudi, "
+                    "tu as trois jours pour arriver dessus propre.",
+            "feedback": True})
+    elif w == 1:
         sessions.append({"day": 0, "type": "velo", "title": "Récupération active — vélo 40 min",
             "cat": "Vélo", "dur": [40, 45],
             "note": "Tu as couru 25 km hier. Pas de sortie longue aujourd'hui : ce serait deux longues en deux jours, la pire chose pour un tendon qui sort de blessure. Vélo souple sans résistance, cadence 90 rpm, juste pour faire circuler. La vraie semaine 1 commence demain, et ta première sortie longue du plan est le lundi 17 août à 22 km.",
@@ -320,31 +409,36 @@ for w in range(1, 36):
             "note": "Semi-marathon test samedi : pas de sortie longue le lundi, c'est le semi qui joue ce rôle cette semaine. Reste tranquille.",
             "feedback": True})
     else:
-        sessions.append({"day": 0, "type": "long",
-            "title": f"Sortie longue de {sl_km:g} km".replace(".0", ""),
-            "cat": "Sortie longue", "dist": sl_km,
-            "dur": None, "struct": sl_struct,
-            "note": ("Décharge : sortie longue raccourcie, tu dois finir en te sentant frais. "
-                     if dl else "") +
-                    ("Protocole course/marche autorisé (10 min course / 1 min marche) si le tendon est sensible au départ."
-                     if bid == "A" else
-                     "Bois 500 ml par heure et prends un gel toutes les 45 min à partir du 10e km."),
-            "feedback": True})
+        sessions.append(seance_longue(0))
 
     # --- MARDI : EF courte + renfo haut du corps
-    sessions.append({"day": 1, "type": "ef", "title": f"Course facile de {ef_km(w):g} km",
-        "cat": "Course facile", "dist": ef_km(w), "dur": None,
-        "struct": [{"km": ef_km(w), "zone": "recup"}],
-        "note": "Récupération active au lendemain de la sortie longue. Vraiment lent : c'est une limite haute, pas un objectif. Si la douleur au réveil dépasse 2/10, tu remplaces par 45 min de vélo Z2.",
-        "swap": {"title": "Vélo Z2 45 min", "reason": "douleur réveil > 2"},
-        "feedback": True})
+    if course:
+        # L'EF sauterait sinon en troisième jour de course consécutif, entre la
+        # sortie longue d'hier et la qualité avancée à demain.
+        sessions.append({"day": 1, "type": "velo", "title": "Vélo Z2 45 min",
+            "cat": "Vélo", "dur": [45, 55],
+            "note": "Le mardi passe au vélo cette semaine : la séance de qualité est avancée à "
+                    "demain, et lundi-mardi-mercredi en course d'affilée serait de trop. Même "
+                    "rôle qu'une EF de récupération, sans l'impact.",
+            "feedback": True})
+    elif apres:
+        pass   # le renfo bas prend la place de l'EF, voir plus bas
+    else:
+        sessions.append({"day": 1, "type": "ef", "title": f"Course facile de {ef_km(w):g} km",
+            "cat": "Course facile", "dist": ef_km(w), "dur": None,
+            "struct": [{"km": ef_km(w), "zone": "recup"}],
+            "note": "Récupération active au lendemain de la sortie longue. Vraiment lent : c'est une limite haute, pas un objectif. Si la douleur au réveil dépasse 2/10, tu remplaces par 45 min de vélo Z2.",
+            "swap": {"title": "Vélo Z2 45 min", "reason": "douleur réveil > 2"},
+            "feedback": True})
     sessions.append({"day": 1, "type": "muscu-haut", "title": MUSCU_HAUT[bid]["name"],
         "cat": "Renforcement haut du corps", "dur": [40, 45],
         "ex": MUSCU_HAUT[bid]["ex"],
         "note": "Pas de charge sur les jambes aujourd'hui. Le tendon récupère de la sortie longue.",
         "feedback": True})
 
-    # --- MERCREDI : escalade
+    # --- MERCREDI : escalade (+ la qualité avancée, en semaine de course)
+    if course:
+        sessions.append(seance_qualite(2))
     sessions.append({"day": 2, "type": "escalade", "title": "Escalade",
         "cat": "Escalade", "dur": [90, 120] if w != 35 else [60, 75],
         "note": ("Semaine de course : reste en 5b/5c, aucune tentative limite, aucun risque de chute. "
@@ -352,20 +446,29 @@ for w in range(1, 36):
                 "Ta séance du mercredi soir. Aucune course, aucun renfo haut du corps aujourd'hui : les avant-bras et les épaules travaillent déjà. Évite les gros appuis en pointe prolongés, ils chargent le tendon en position raccourcie.",
         "feedback": True})
 
-    # --- JEUDI : muscu bas + vélo
+    # --- JEUDI : muscu bas + vélo (+ sortie longue la semaine d'après une course)
     light = w in (25, 35)
-    sessions.append({"day": 3, "type": "muscu-bas",
+    if apres:
+        sessions.append(seance_longue(3))
+    # Le renfo bas remonte au mardi la semaine d'après une course : il ne peut
+    # être ni le mercredi (escalade), ni collé à la sortie longue du jeudi.
+    sessions.append({"day": 1 if apres else 3, "type": "muscu-bas",
         "title": MUSCU_BAS["E"]["name"] if light else MUSCU_BAS[bid]["name"],
         "cat": "Renforcement bas du corps", "dur": [25, 30] if light else [40, 45],
         "ex": MUSCU_BAS["E"]["ex"] if light else MUSCU_BAS[bid]["ex"],
         "note": ("Version allégée : grosse échéance ce week-end, on entretient sans fatiguer. "
                  if light else "") +
+                ("Avancé au mardi : la sortie longue est jeudi, et le renfo bas ne se met jamais "
+                 "la veille ni le lendemain d'une longue. " if apres else "") +
                 "La séance la plus importante du plan pour ton tendon. Le protocole excentrique (Stanish) se fait lentement à la descente, une douleur de 3-4/10 pendant l'exercice est normale et même recherchée. Au-delà de 5, tu baisses la charge.",
         "feedback": True})
-    sessions.append({"day": 3, "type": "velo", "title": f"Vélo Z2 {velo_min(w)} min",
-        "cat": "Vélo", "dur": [velo_min(w), velo_min(w) + 10],
-        "note": "Volume aérobie sans impact. Cadence 85-95 rpm, respiration contrôlée, tu dois pouvoir tenir une conversation.",
-        "feedback": True})
+    # Le vélo Z2 du jeudi cède la place : à la qualité avancée en semaine de
+    # course, à la sortie longue déplacée la semaine d'après.
+    if not course and not apres:
+        sessions.append({"day": 3, "type": "velo", "title": f"Vélo Z2 {velo_min(w)} min",
+            "cat": "Vélo", "dur": [velo_min(w), velo_min(w) + 10],
+            "note": "Volume aérobie sans impact. Cadence 85-95 rpm, respiration contrôlée, tu dois pouvoir tenir une conversation.",
+            "feedback": True})
 
     # --- VENDREDI : vélo récup
     sessions.append({"day": 4, "type": "velo", "title": f"Vélo récupération {velo_min(w, True)} min",
@@ -373,24 +476,22 @@ for w in range(1, 36):
         "note": "Vélo souple, jambes qui tournent. Objectif : arriver frais sur la séance de qualité de demain. Si les jambes sont lourdes, tu coupes, c'est prévu.",
         "optional": True, "feedback": True})
 
-    # --- SAMEDI : qualité
-    qtype = {"test": "test", "course": "course", "cotes": "inter", "fartlek": "inter",
-             "interval": "inter", "seuil": "tempo", "progressif": "tempo"}[q["t"]]
-    if w == 35:
+    # --- SAMEDI : qualité, ou veille de course
+    if w == 35 or course:
         sessions.append({"day": 5, "type": "repos", "title": "Veille de course",
             "cat": "Repos", "dur": None,
-            "note": "Marche 20 minutes maximum, jambes surélevées le reste du temps. Repas riche en glucides le midi plutôt que le soir. Dossard, gels, chaussures et tenue préparés avant 20 h. Glaçage du tendon si le moindre signal.",
+            "note": "Marche 20 minutes maximum, jambes surélevées le reste du temps. Repas riche en glucides le midi plutôt que le soir. Dossard, gels, chaussures et tenue préparés avant 20 h. Glaçage du tendon si le moindre signal."
+                    + (" C'est ce samedi qui porte le repos jambes de la semaine, puisque le dimanche est pris." if course else ""),
             "feedback": False})
     else:
-        sessions.append({"day": 5, "type": qtype, "title": q["name"],
-            "cat": {"test": "Test", "course": "Course", "inter": "Intervalles",
-                    "tempo": "Tempo"}[qtype],
-            "dist": q["dist"], "dur": None,
-            "wu": q["wu"], "main": q["main"], "cd": q["cd"],
-            "note": q["note"], "feedback": True})
+        sessions.append(seance_qualite(5))
 
-    # --- DIMANCHE : repos jambes / marathon
-    if w == 35:
+    # --- DIMANCHE : repos jambes / course / marathon
+    if course:
+        sessions.append({"day": 6, "type": "course", "title": course["title"],
+            "cat": "Course", "dist": course["dist"], "dur": None,
+            "struct": course["struct"], "note": course["note"], "feedback": True})
+    elif w == 35:
         sessions.append({"day": 6, "type": "race", "title": "Marathon de Paris",
             "cat": "Course", "dist": 42.195, "dur": None,
             "wu": q["wu"], "main": q["main"], "cd": q["cd"],
@@ -400,6 +501,11 @@ for w in range(1, 36):
             "cat": "Repos", "dur": None,
             "note": "Zéro charge sur les jambes. Étirements doux, mobilité cheville, glaçage du tendon si sensible. C'est ce jour-là que le tendon se répare, pas pendant les séances.",
             "feedback": True})
+
+    # Les semaines bousculées par une course posent leurs séances hors ordre.
+    # Le tri est stable, donc l'ordre dans une même journée reste celui de
+    # l'écriture : c'est lui qui donne le `slot`, et le slot est une clé.
+    sessions.sort(key=lambda s: s["day"])
 
     weeks.append({
         "n": w, "bloc": bid, "blocName": b["name"], "monday": mon.isoformat(),

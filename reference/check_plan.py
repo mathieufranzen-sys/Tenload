@@ -5,6 +5,31 @@ p = json.load(open("plan.json", encoding="utf-8"))
 W = p["weeks"]
 errs, warns = [], []
 
+# ---------------------------------------------------------------- exceptions
+# Deux courses réelles tombent un dimanche, le jour de repos jambes : le 20 km
+# de Paris le 11 octobre 2026 (S9) et le 10 km Hoka le 15 novembre (S14). Elles
+# bousculent leur semaine et la suivante, et Mathieu a tranché sur la façon dont
+# elles la bousculent. Ces écarts-là sont donc autorisés NOMMÉMENT, jamais par
+# catégorie : un écart identique qui apparaîtrait ailleurs reste une erreur.
+#
+# Rien d'autre ne bouge. Les contraintes 1 (+2 km), 3 (vitesse et renfo bas
+# jamais accolés à la longue), 4 (un repos jambes complet) et 6 (jamais deux
+# jours de course consécutifs) tiennent sur les 35 semaines, courses comprises.
+EXCEPTIONS = {
+    "S9: mercredi contient inter (8 x 400 m)":
+        "qualité avancée au mercredi, la course occupe le samedi et le dimanche",
+    "S14: mercredi contient inter (6 x 1000 m)":
+        "qualité avancée au mercredi, la course occupe le samedi et le dimanche",
+    "S10: 1 vélo(s)":
+        "le vélo Z2 du jeudi cède la place à la sortie longue déplacée",
+    "S15: 1 vélo(s)":
+        "le vélo Z2 du jeudi cède la place à la sortie longue déplacée",
+}
+ATTENDUS = {
+    "S10: 2 courses": "lundi en repos au lendemain de la course, l'EF saute",
+    "S15: 2 courses": "lundi en repos au lendemain de la course, l'EF saute",
+}
+
 # 1) sortie longue : increment <= 2 km
 prev = None
 for w in W:
@@ -86,6 +111,23 @@ print(f"Semaines: {len(W)}  Séances: {sum(len(w['sessions']) for w in W)}")
 print(f"Sortie longue: {[w['sl'] for w in W]}")
 print(f"Volume course/sem approx: bloc A {W[0]['sl']+W[0]['efKm']}km + qualité")
 print()
+
+# Un écart documenté qui DISPARAÎT compte aussi : soit le plan a changé sans
+# qu'on mette la liste à jour, soit le vérificateur ne voit plus ce qu'il
+# devrait voir. Dans les deux cas il faut le savoir.
+attendus_absents = [k for k in EXCEPTIONS if k not in errs] + [k for k in ATTENDUS if k not in warns]
+ecarts = [e for e in errs if e in EXCEPTIONS]
+errs = [e for e in errs if e not in EXCEPTIONS]
+warns = [x for x in warns if x not in ATTENDUS]
+
+if ecarts:
+    print("Écarts documentés (courses du 11 octobre et du 15 novembre) :")
+    for e in ecarts:
+        print(f"  ~ {e}  →  {EXCEPTIONS[e]}")
+    print()
+if attendus_absents:
+    errs += [f"écart documenté introuvable, la liste est à revoir : {k}" for k in attendus_absents]
+
 if errs:
     print("ERREURS:"); [print("  x", e) for e in errs]
 else:

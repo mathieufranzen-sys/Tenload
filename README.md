@@ -42,7 +42,7 @@ c'est là que Claude Code prend le relais.
 ```
 npm install
 npm run dev        # http://localhost:5173
-npm test           # 153 tests, dont 27 sur le modèle d'indice
+npm test           # 195 tests, dont 29 sur le modèle d'indice
 npm run build      # typage puis build de production
 ```
 
@@ -223,7 +223,7 @@ bleu pour le renforcement.
 | `CLAUDE.md` | Le contexte complet : contraintes, décisions, calibration. Claude Code le lit tout seul. |
 | `src/lib/tendonIndex.ts` | Le modèle d'indice. Le cœur du produit. |
 | `src/lib/tendonIndex.test.ts` | 27 tests qui verrouillent les seuils. |
-| `src/data/plan.json` | Les 35 semaines, 315 séances. |
+| `src/data/plan.json` | Les 35 semaines, 313 séances. |
 | `src/styles/tokens.css` | Le design system. |
 | `supabase/schema.sql` | Les tables et la sécurité. |
 | `reference/tendo-v3.html` | La version d'origine, référence fonctionnelle et visuelle du portage. |

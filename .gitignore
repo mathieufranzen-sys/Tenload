@@ -13,3 +13,6 @@ dist-ssr
 coverage
 *.log
 .tsbuild
+
+# Sortie de reference/build_plan.py : la référence versionnée est src/data/plan.json
+reference/plan.json

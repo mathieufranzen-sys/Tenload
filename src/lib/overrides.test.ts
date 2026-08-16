@@ -116,9 +116,35 @@ describe('verifierContraintes', () => {
   it('ne dit rien sur le plan de référence', () => {
     // Les 35 semaines sont déjà validées par check_plan.py : si ce test casse,
     // c'est le contrôle qui a tort, pas le plan.
+    //
+    // Deux exceptions, les mêmes que dans check_plan.py : les semaines du
+    // 20 km de Paris et du 10 km Hoka avancent leur séance de qualité au
+    // mercredi, ce qui est un écart nommé et daté à la contrainte 2.
+    const QUALITE_MERCREDI = new Set([9, 14])
     for (const w of plan.weeks) {
-      expect(verifierContraintes(w.sessions), `semaine ${w.n}`).toEqual([])
+      const attendu = QUALITE_MERCREDI.has(w.n) ? [2] : []
+      expect(verifierContraintes(w.sessions).map((a) => a.contrainte), `semaine ${w.n}`).toEqual(
+        attendu,
+      )
     }
+  })
+
+  it('C4 — accepte que le repos jambes tombe un autre jour que le dimanche', () => {
+    // Semaine de course : le dimanche porte la course, le samedi porte le repos.
+    const a = verifierContraintes([
+      seance(0, 'long'),
+      seance(2, 'escalade'),
+      seance(5, 'repos'),
+      seance(6, 'course'),
+    ])
+    expect(a.map((x) => x.contrainte)).not.toContain(4)
+  })
+
+  it('C4 — signale une semaine sans aucun jour de repos jambes', () => {
+    const a = verifierContraintes(
+      [0, 1, 2, 3, 4, 5, 6].map((d) => seance(d, d === 2 ? 'escalade' : 'velo')),
+    )
+    expect(a.map((x) => x.contrainte)).toContain(4)
   })
 
   it('C2 — signale une course le mercredi', () => {
@@ -141,10 +167,6 @@ describe('verifierContraintes', () => {
     expect(a.map((x) => x.contrainte)).toContain(3)
   })
 
-  it('C4 — signale une charge jambes le dimanche', () => {
-    const a = verifierContraintes([seance(6, 'velo')])
-    expect(a.map((x) => x.contrainte)).toContain(4)
-  })
 
   it('C6 — tolère la paire lundi-mardi', () => {
     const a = verifierContraintes([seance(0, 'long'), seance(1, 'ef')])
@@ -165,9 +187,11 @@ describe('verifierContraintes', () => {
 describe('alertesAjoutees', () => {
   it('ne renvoie que ce que l’écart introduit', () => {
     // Le mercredi porte déjà une course avant l'écart : seule la nouvelle
-    // infraction du dimanche doit remonter.
-    const avant = [seance(2, 'ef'), seance(6, 'repos')]
-    const apres = [seance(2, 'ef'), seance(6, 'velo')]
+    // infraction du dimanche doit remonter. La semaine est pleine par ailleurs,
+    // sinon le repos jambes se reporterait simplement sur un autre jour.
+    const pleine = [0, 1, 3, 4, 5].map((d) => seance(d, 'velo'))
+    const avant = [...pleine, seance(2, 'ef'), seance(6, 'repos')]
+    const apres = [...pleine, seance(2, 'ef'), seance(6, 'velo')]
     const a = alertesAjoutees(avant, apres)
     expect(a).toHaveLength(1)
     expect(a[0].contrainte).toBe(4)
