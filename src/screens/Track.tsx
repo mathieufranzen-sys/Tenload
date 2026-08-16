@@ -245,7 +245,7 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
           legende={
             vuePain === 'separee'
               ? "Trois moments de mesure. La courbe qui compte le plus est celle de fin de journée : sur une tendinopathie, la réaction est retardée de plusieurs heures."
-              : "Les trois mesures empilées, sur 30. Utile pour voir la charge douloureuse totale d'une journée, même quand aucune des trois ne semble alarmante isolément."
+              : "Les trois mesures empilées. Utile pour voir la charge douloureuse totale d'une journée, même quand aucune des trois ne semble alarmante isolément. L'axe suit tes valeurs : le seuil reste toujours visible."
           }
           controle={
             <Segmented

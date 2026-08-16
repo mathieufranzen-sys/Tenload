@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { motDuCoach } from './coach'
+import { butDeLaSeance, motDuCoach } from './coach'
 import { addDays } from './dates'
 import type { PainMap } from './tendonIndex'
 
@@ -104,5 +104,28 @@ describe('motDuCoach — replis', () => {
   it('n’invente jamais de chiffre sans donnée', () => {
     const m = motDuCoach({ pain: {}, byDate: {}, now: NOW, seancesTotal: TOTAL })
     expect(m.texte).not.toMatch(/\d+,\d/)
+  })
+})
+
+describe('butDeLaSeance', () => {
+  it('explique ce que travaillent les séances de qualité', () => {
+    for (const t of ['inter', 'tempo', 'long', 'ef', 'test', 'course', 'race'] as const) {
+      expect(butDeLaSeance(t)).toBeTruthy()
+    }
+  })
+
+  it('se tait sur les séances sans objet de progression propre', () => {
+    // Un texte qui vaut pour tout le monde ne dit plus rien à personne.
+    for (const t of ['velo', 'escalade', 'repos', 'muscu-bas', 'muscu-haut'] as const) {
+      expect(butDeLaSeance(t)).toBeNull()
+    }
+  })
+
+  it('ne cite aucune donnée : c’est de la physiologie, pas une lecture du carnet', () => {
+    // « VO2max » est un nom, pas une mesure : c'est la seule occurrence de
+    // chiffre tolérée. Tout le reste serait une valeur affirmée sans source.
+    for (const t of ['inter', 'tempo', 'long', 'ef', 'test', 'race'] as const) {
+      expect(butDeLaSeance(t)!.replace(/VO2max/g, '')).not.toMatch(/\d/)
+    }
   })
 })

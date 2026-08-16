@@ -157,6 +157,70 @@ export function vap(
 }
 
 /**
+ * L'allure de la séance, quand elle en a UNE SEULE.
+ *
+ * Le header affichait l'allure de la zone dominante à côté de la distance et
+ * de la durée totales, ce qui donnait des lignes qui se contredisent : « 10 km,
+ * 55-60 min, 3:57/km » sur les 5 x 1000 m du 12 septembre, alors que le 3:57
+ * ne vaut que pour les cinq blocs et que les 10 km incluent échauffement,
+ * récupérations et retour au calme. Une séance à plusieurs allures n'a pas
+ * d'allure : elle a une structure, et c'est la structure qui est affichée plus
+ * bas, segment par segment.
+ */
+export function allureUnique(
+  session: Plan['weeks'][number]['sessions'][number],
+  marathonPace: number,
+): number | null {
+  const zones = new Set<ZoneKey>()
+  if (session.struct?.length) {
+    for (const seg of session.struct) zones.add(seg.zone)
+  } else {
+    for (const [, z] of [...(session.wu ?? []), ...(session.main ?? []), ...(session.cd ?? [])]) {
+      if (typeof z === 'string' && z in ZONE_OFFSETS) zones.add(z as ZoneKey)
+    }
+  }
+  if (zones.size !== 1) return null
+  return zonePace(marathonPace, [...zones][0])
+}
+
+/** Une série « N x Q unité », décomposée. */
+export interface Repetitions {
+  n: number
+  /** Distance d'une répétition en km, ou null quand elle est exprimée en temps. */
+  km: number | null
+  /** Durée d'une répétition en secondes, ou null quand elle est exprimée en distance. */
+  secondes: number | null
+}
+
+/**
+ * Lit « 5 x 1000 m », « 3 x 2 km », « 6 x 45 s », « 2 x 8 min ».
+ *
+ * L'unité était auparavant capturée par `(km|m)?`, ce qui produisait deux
+ * erreurs muettes : « 6 x 45 s » n'appariait aucune unité et les 45 étaient
+ * comptés en KILOMÈTRES, d'où une durée estimée de 19 h sur les côtes du
+ * 22 août ; et « 2 x 8 min » appariait le `m` de « min », d'où 8 mètres au
+ * lieu de 8 minutes. Les unités de temps sont donc reconnues explicitement,
+ * et `\b` empêche une unité de mordre sur le mot suivant.
+ */
+export function lireRepetitions(label: string | number): Repetitions | null {
+  if (typeof label === 'number') return null
+  const m = String(label).match(/^(\d+)\s*x\s*([\d,.]+)\s*(km|min|sec|m|s)?\b/i)
+  if (!m) return null
+
+  const n = Number(m[1])
+  const q = parseFloat(m[2].replace(',', '.'))
+  if (!Number.isFinite(n) || !Number.isFinite(q)) return null
+  const unite = (m[3] ?? '').toLowerCase()
+
+  if (unite === 'min') return { n, km: null, secondes: q * 60 }
+  if (unite === 's' || unite === 'sec') return { n, km: null, secondes: q }
+  if (unite === 'm') return { n, km: q / 1000, secondes: null }
+  if (unite === 'km') return { n, km: q, secondes: null }
+  // Sans unité, l'ordre de grandeur tranche : personne ne court 400 km en série.
+  return { n, km: q >= 100 ? q / 1000 : q, secondes: null }
+}
+
+/**
  * Durée estimée d'une séance, à partir de sa structure et des allures courantes.
  * Renvoie une fourchette en minutes, arrondie à 5 minutes près.
  */
@@ -184,13 +248,11 @@ export function estimateDuration(
         continue
       }
       const text = String(label)
-      // « 5 x 1000 m », « 6 x 800 m », « 3 x 2 km »
-      const reps = text.match(/^(\d+)\s*x\s*([\d,.]+)\s*(km|m)?/i)
+      const reps = lireRepetitions(text)
       if (reps) {
-        const n = Number(reps[1])
-        const q = parseFloat(reps[2].replace(',', '.'))
-        const km = reps[3]?.toLowerCase() === 'm' ? q / 1000 : q
-        sec += n * km * zonePace(marathonPace, z ?? 'vo2') + n * 90 // 90 s de récupération
+        const effort =
+          reps.secondes != null ? reps.secondes : reps.km! * zonePace(marathonPace, z ?? 'vo2')
+        sec += reps.n * effort + reps.n * 90 // 90 s de récupération
         continue
       }
       const km = text.match(/([\d,.]+)\s*km/)

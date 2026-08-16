@@ -18,9 +18,12 @@ export function BottomNav({ actif, onChange }: { actif: Onglet; onChange: (o: On
         position: 'fixed',
         left: '50%',
         transform: 'translateX(-50%)',
-        // La sécurité du home indicator vient déjà de env() : un gros supplément
-        // par-dessus faisait flotter la barre trop haut au-dessus du bord.
-        bottom: 'calc(6px + env(safe-area-inset-bottom, 0px))',
+        // La zone sûre du bas vaut 34 px sur un iPhone à Dynamic Island, mais
+        // le home indicator lui-même n'occupe qu'un fin bandeau centré tout en
+        // bas. S'en écarter de toute la zone faisait flotter la barre à 40 px
+        // du bord. On en reprend une bonne part, en gardant un plancher pour
+        // les appareils sans zone sûre.
+        bottom: 'max(8px, calc(env(safe-area-inset-bottom, 0px) - 18px))',
         zIndex: 40,
         width: 'calc(100% - 28px)',
         maxWidth: 400,

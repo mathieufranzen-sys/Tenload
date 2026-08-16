@@ -9,7 +9,9 @@ import type { CSSProperties, ReactNode } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan, Session, ZoneKey } from '../data/types'
 import { formatNumber } from '../lib/dates'
-import { estimateDuration, formatPace, zonePace } from '../lib/paces'
+import { allureUnique, estimateDuration, formatPace, zonePace } from '../lib/paces'
+import { butDeLaSeance } from '../lib/coach'
+import { CarteCoach } from './CarteCoach'
 
 const plan = planJson as unknown as Plan
 
@@ -34,6 +36,8 @@ export function SessionHero({
   // Le plan ne fixe une durée que pour le vélo et la muscu : pour une course,
   // elle se déduit de la structure et des allures courantes.
   const [dureeMin, dureeMax] = s.type === 'repos' ? [0, 0] : estimateDuration(s, marathonPace)
+  // Rien si la séance change d'allure en route : voir `allureUnique`.
+  const allure = allureUnique(s, marathonPace)
 
   return (
     <Balise
@@ -100,8 +104,8 @@ export function SessionHero({
         {dureeMin > 0 ? (
           <Kv label="Durée" value={dureeMin === dureeMax ? `${dureeMin} min` : `${dureeMin}-${dureeMax} min`} />
         ) : null}
-        {premierSegment ? (
-          <Kv label="Allure" value={formatPace(zonePace(marathonPace, premierSegment.zone))} />
+        {allure != null ? (
+          <Kv label="Allure" value={formatPace(allure)} />
         ) : s.type === 'repos' ? (
           <Kv label="Charge" value="Aucune" />
         ) : null}
@@ -129,24 +133,11 @@ export function SessionHero({
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: RETRAIT, borderTop: SEPARATEUR }}>
-        <span
-          aria-hidden
-          style={{
-            width: 26,
-            height: 26,
-            borderRadius: '50%',
-            flex: 'none',
-            display: 'grid',
-            placeItems: 'center',
-            background: 'linear-gradient(135deg,#D97757,#C15F3C)',
-            fontSize: 11,
-            fontWeight: 700,
-          }}
-        >
-          C
-        </span>
-        <p style={{ margin: 0, fontSize: 11.5, lineHeight: 1.45, color: 'var(--sur-ink-2)' }}>{s.note}</p>
+      {/* Même bandeau que dans le détail de séance : une seule voix, une seule
+          forme. La pastille ronde « C » qui tenait cette place ressemblait à un
+          troisième interlocuteur. */}
+      <div style={{ padding: '0 16px 15px 20px', marginTop: 15 }}>
+        <CarteCoach texte={s.note} but={butDeLaSeance(s.type)} compact />
       </div>
     </Balise>
   )

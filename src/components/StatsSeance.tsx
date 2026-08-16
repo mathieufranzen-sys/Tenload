@@ -8,7 +8,7 @@
  */
 import type { Session } from '../data/types'
 import { formatNumber } from '../lib/dates'
-import { estimateDuration, formatPace, zonePace } from '../lib/paces'
+import { allureUnique, estimateDuration, formatPace } from '../lib/paces'
 import { familleDe } from '../lib/insights'
 
 export function StatsSeance({
@@ -28,12 +28,10 @@ export function StatsSeance({
   const estCourse = familleDe(s.type) === 'course'
   const [dmin, dmax] = estimateDuration(s, marathonPace)
 
-  // Allure cible : celle de la zone dominante de la séance. On ne montre pas
-  // une cible que le plan n'a pas fixée.
-  const zoneCible = s.struct?.length
-    ? s.struct.reduce((a, b) => (b.km > a.km ? b : a)).zone
-    : (s.main?.find(([, z]) => typeof z === 'string' && z)?.[1] as string | undefined)
-  const allureCible = estCourse && zoneCible ? zonePace(marathonPace, zoneCible as never) : null
+  // Une seule allure, ou aucune : à côté de la distance et de la durée
+  // TOTALES, l'allure d'un seul bloc invite à une division qui ne tombe pas
+  // juste et fait douter des trois chiffres à la fois.
+  const allureCible = estCourse ? allureUnique(s, marathonPace) : null
 
   const duree = dmin === dmax ? `${dmin}` : `${dmin}-${dmax}`
 

@@ -2,9 +2,13 @@
  * Douleur au fil des jours.
  *
  * Deux lectures de la même donnée : les trois moments séparés, ou leur somme.
- * En cumulé l'échelle passe à 30 — additionner trois mesures sur 10 sans
- * changer l'axe écraserait la courbe contre le bas et donnerait l'illusion
- * que tout va bien.
+ *
+ * L'axe s'arrête juste au-dessus du pic réel au lieu d'aller au maximum
+ * théorique. La douleur de Mathieu tourne autour de 1 ou 2 : sur un axe qui
+ * montait jusqu'à 30 en cumulé, la courbe restait collée au sol, illisible, et
+ * une hausse de 2 à 4 — celle qui déclenche l'adaptation du plan — ne se
+ * voyait pas. Le seuil reste toujours dans le cadre : c'est la seule référence
+ * du graphique, un axe qui le laisse sortir ne veut plus rien dire.
  */
 import { formatDay } from '../../lib/dates'
 import { indicesEtiquettes } from './etiquettes'
@@ -43,18 +47,53 @@ const EMPILEMENT: Array<{ cle: keyof Omit<PainRow, 'day'>; couleur: string }> = 
   { cle: 'evening', couleur: 'var(--chart-3)' },
 ]
 
+/**
+ * Un maximum d'axe qui suit les données, avec des graduations rondes.
+ *
+ * `plafond` borne au maximum théorique de la vue (10 par mesure, 30 pour la
+ * somme des trois) et `seuil` garantit que la ligne de référence reste dans le
+ * cadre même quand la douleur est basse.
+ */
+export function echelle(
+  valeurMax: number,
+  seuil: number,
+  plafond: number,
+): { max: number; graduations: number[] } {
+  const vise = Math.min(plafond, Math.max(valeurMax * 1.15, seuil * 1.25))
+  for (const pas of [1, 2, 5, 10]) {
+    const marches = Math.ceil(vise / pas)
+    if (marches > 6) continue
+    const max = Math.min(plafond, pas * marches)
+    const graduations: number[] = []
+    for (let v = 0; v < max - 1e-9; v += pas) graduations.push(v)
+    graduations.push(max)
+    return { max, graduations }
+  }
+  return { max: plafond, graduations: [0, plafond / 2, plafond] }
+}
+
 export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
   const n = rows.length
   if (!n) return null
 
   const cumulee = vue === 'cumulee'
-  const max = cumulee ? 30 : 10
   const seuil = cumulee ? 12 : 4
+
+  const valeurMax = rows.reduce(
+    (m, r) =>
+      Math.max(
+        m,
+        cumulee
+          ? (r.wake ?? 0) + (r.effort ?? 0) + (r.evening ?? 0)
+          : Math.max(r.wake ?? 0, r.effort ?? 0, r.evening ?? 0),
+      ),
+    0,
+  )
+  const { max, graduations } = echelle(valeurMax, seuil, cumulee ? 30 : 10)
 
   const x = (i: number) => P.l + (n === 1 ? IW / 2 : (i * IW) / (n - 1))
   const y = (v: number) => P.t + IH - (Math.max(0, Math.min(max, v)) / max) * IH
   const etiquettes = indicesEtiquettes(n, x)
-  const graduations = cumulee ? [0, 6, 12, 18, 24, 30] : [0, 2, 4, 6, 8, 10]
 
   const trace = (points: Array<readonly [number, number]>) => {
     let d = ''

@@ -21,7 +21,7 @@ import {
 } from '../lib/dates'
 import { adapt, weekSessions, type SeancePlanifiee } from '../lib/adapt'
 import { construireInsights } from '../lib/insights'
-import { motDuCoach, type MotCoach } from '../lib/coach'
+import { motDuCoach } from '../lib/coach'
 import { bandOf, type LoadMap, type PainMap } from '../lib/tendonIndex'
 import type { ActivityRow } from '../lib/load'
 import type { FeedbackRow } from '../lib/buildPain'
@@ -36,6 +36,7 @@ import { SessionHero } from '../components/SessionHero'
 import { ChargeSheet } from '../components/ChargeSheet'
 import { Icon } from '../components/Icon'
 import { ProfileButton } from '../components/ProfileButton'
+import { CarteCoach } from '../components/CarteCoach'
 
 const plan = planJson as unknown as Plan
 
@@ -114,7 +115,17 @@ export function Today({
     () => weekSessions(semaine, now, A.byDate, ecarts),
     [semaine, now, A.byDate, ecarts],
   )
+  const feedbackDe = ({ jourOrigine, slot }: SeancePlanifiee) =>
+    feedback.find((f) => f.week === semaine.n && f.day_index === jourOrigine && f.slot === slot) ?? null
+
   const duJour = avantPlan ? [] : seances.filter((x) => x.day === jour)
+  /**
+   * Une séance notée est une séance faite : elle compte déjà dans la charge et
+   * dans les compteurs, et la laisser en tête d'écran continuait de la réclamer.
+   * Elle redescend plus bas, où elle sert de trace plutôt que de consigne.
+   */
+  const restantes = duJour.filter((x) => !feedbackDe(x))
+  const faites = duJour.filter((x) => feedbackDe(x))
   const suite = seances.filter((x) => x.day > jour).slice(0, 4)
 
   /** La semaine en cours, pour les compteurs et le coach : eux parlent du
@@ -156,9 +167,6 @@ export function Today({
   const jRace = daysBetween(now, plan.meta.raceDate)
   const jDebut = daysBetween(now, debutPlan)
   const sousTitre = formatDayLong(jour)
-
-  const feedbackDe = ({ jourOrigine, slot }: SeancePlanifiee) =>
-    feedback.find((f) => f.week === semaine.n && f.day_index === jourOrigine && f.slot === slot) ?? null
 
   return (
     // Le dégradé court sur toute la page, pas seulement sur le premier écran :
@@ -308,12 +316,12 @@ export function Today({
           </div>
 
           <div style={{ paddingBottom: 18 }}>
-            {duJour.length ? (
+            {restantes.length ? (
               <SessionHero
-                session={duJour[0].s}
+                session={restantes[0].s}
                 marathonPace={marathonPace}
                 quand={estAujourdhui ? "Aujourd'hui" : formatDay(jour)}
-                onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, duJour[0]))}
+                onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, restantes[0]))}
               />
             ) : (
               <div
@@ -337,22 +345,30 @@ export function Today({
                     flex: 'none',
                   }}
                 >
-                  <Icon name="rest" />
+                  <Icon name={faites.length ? 'check' : 'rest'} />
                 </span>
                 <div>
                   <b style={{ fontSize: 16, fontWeight: 600 }}>
                     {avantPlan
                       ? 'Le plan commence le 10 août'
-                      : estAujourdhui
-                        ? "Rien au programme aujourd'hui"
-                        : 'Rien au programme ce jour-là'}
+                      : faites.length
+                        ? faites.length > 1
+                          ? `${faites.length} séances notées`
+                          : 'Séance notée'
+                        : estAujourdhui
+                          ? "Rien au programme aujourd'hui"
+                          : 'Rien au programme ce jour-là'}
                   </b>
                   <div style={{ color: 'var(--sur-ink-2)', fontSize: 13 }}>
                     {avantPlan
                       ? 'Semaine 1 : amorce, sans sortie longue.'
-                      : estAujourdhui
-                        ? "Profites-en pour glacer et t'étirer."
-                        : 'Journée de repos jambes.'}
+                      : faites.length
+                        ? estAujourdhui
+                          ? "C'est fait pour aujourd'hui. Le détail est plus bas."
+                          : 'La journée est complète. Le détail est plus bas.'
+                        : estAujourdhui
+                          ? "Profites-en pour glacer et t'étirer."
+                          : 'Journée de repos jambes.'}
                   </div>
                 </div>
               </div>
@@ -365,33 +381,49 @@ export function Today({
       <div style={{ position: 'relative', zIndex: 5, padding: '24px var(--page-x) 0' }}>
         {estAujourdhui && <AlertBox adapt={A} />}
 
-        {duJour.slice(1).map((x, i) => (
+        {restantes.slice(1).map((x, i) => (
           <SessionCard
             key={i}
             session={x.s}
-            day={jour}
             marathonPace={marathonPace}
-            feedback={feedbackDe(x)}
             onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, x))}
           />
         ))}
 
+        {faites.length > 0 && (
+          <>
+            <Pretitle>Déjà noté</Pretitle>
+            {faites.map((x, i) => (
+              <SessionCard
+                key={i}
+                session={x.s}
+                marathonPace={marathonPace}
+                feedback={feedbackDe(x)}
+                onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, x))}
+              />
+            ))}
+          </>
+        )}
+
         {journalActif && <JournalDuJour day={jour} />}
 
-        {estAujourdhui && <MotCoachCard mot={mot} />}
+        {estAujourdhui && <CarteCoach texte={mot.texte} style={{ marginBottom: 14 }} />}
 
         {suite.length > 0 && (
           <>
             <Pretitle>{estAujourdhui ? 'La suite de la semaine' : 'La suite de cette semaine-là'}</Pretitle>
             {suite.map((x, i) => (
-              <SessionCard
-                key={i}
-                session={x.s}
-                day={x.day}
-                marathonPace={marathonPace}
-                feedback={feedbackDe(x)}
-                onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, x))}
-              />
+              <div key={i}>
+                {/* La carte ne porte plus sa date : ici elle change de jour
+                    d'une ligne à l'autre, il faut donc la redonner au-dessus. */}
+                {(i === 0 || suite[i - 1].day !== x.day) && <JourSuite jour={x.day} />}
+                <SessionCard
+                  session={x.s}
+                  marathonPace={marathonPace}
+                  feedback={feedbackDe(x)}
+                  onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, x))}
+                />
+              </div>
             ))}
           </>
         )}
@@ -429,6 +461,25 @@ function Note({ children }: { children: ReactNode }) {
 /** Même grammaire que les tuiles d'insights : micro-label en capitales,
  *  valeur en chiffres tabulaires, précision en dessous. */
 
+/** Même grammaire que l'en-tête de jour de l'écran Programme. */
+function JourSuite({ jour }: { jour: string }) {
+  const j = DAYS_LONG[weekdayIndex(jour)]
+  return (
+    <div
+      style={{
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: '1.2px',
+        textTransform: 'uppercase',
+        color: 'var(--sur-ink-3)',
+        margin: '16px 0 9px 2px',
+      }}
+    >
+      {j} {formatDay(jour)}
+    </div>
+  )
+}
+
 function Pretitle({ children }: { children: ReactNode }) {
   return (
     <h2
@@ -443,54 +494,6 @@ function Pretitle({ children }: { children: ReactNode }) {
     >
       {children}
     </h2>
-  )
-}
-
-/**
- * Le mot du coach. Il n'affirme que ce que les saisies portent réellement :
- * la construction du texte, et surtout ses conditions de silence, vivent dans
- * lib/coach.ts avec leurs tests.
- */
-function MotCoachCard({ mot }: { mot: MotCoach }) {
-  const teinte =
-    mot.ton === 'bravo'
-      ? { fond: 'rgba(52,211,153,.12)', bord: 'rgba(52,211,153,.28)', encre: '#6ee7b7' }
-      : mot.ton === 'vigilance'
-        ? { fond: 'rgba(250,178,25,.11)', bord: 'rgba(250,178,25,.3)', encre: '#FFD166' }
-        : { fond: 'rgba(255,255,255,.05)', bord: 'var(--border-2)', encre: 'var(--sur-ink-2)' }
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        gap: 12,
-        alignItems: 'flex-start',
-        background: teinte.fond,
-        border: `1px solid ${teinte.bord}`,
-        borderRadius: 'var(--radius)',
-        padding: '15px 16px',
-        marginBottom: 14,
-      }}
-    >
-      <span style={{ color: teinte.encre, flex: 'none', marginTop: 1 }}>
-        <Icon name={mot.ton === 'vigilance' ? 'alert' : 'heart'} size={19} />
-      </span>
-      <div>
-        <div
-          style={{
-            fontSize: 10.5,
-            fontWeight: 700,
-            letterSpacing: '1.3px',
-            textTransform: 'uppercase',
-            color: teinte.encre,
-            marginBottom: 5,
-          }}
-        >
-          Le mot du coach
-        </div>
-        <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.55, color: '#D6D9DE' }}>{mot.texte}</p>
-      </div>
-    </div>
   )
 }
 

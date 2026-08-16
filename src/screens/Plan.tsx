@@ -233,7 +233,6 @@ export function Plan({
                 <SessionCard
                   key={`${x.jourOrigine}-${x.slot}`}
                   session={x.s}
-                  day={addDays(semaine.monday, d)}
                   marathonPace={marathonPace}
                   feedback={feedbackDe(x)}
                   onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, x))}

@@ -74,3 +74,60 @@ describe('repartitionZones', () => {
     for (let i = 1; i < r.length; i++) expect(r[i - 1].secondes).toBeGreaterThanOrEqual(r[i].secondes)
   })
 })
+
+describe('ce qui ne se laisse pas attribuer', () => {
+  it("n'invente pas de distance pour une série au chronomètre", () => {
+    // « 6 x 45 s » comptait 45 km par répétition. Le camembert donnait alors
+    // 97 % de vo2 sur une séance de 9 km.
+    const r = repartitionZones(
+      seance({
+        type: 'inter',
+        dist: 9,
+        wu: [[3, 'ef']],
+        main: [['6 x 45 s en côte modérée', 'vo2']],
+        cd: [[2, 'recup']],
+      }),
+      PACE,
+    )
+    expect(r.find((x) => x.zone === 'vo2')).toBeUndefined()
+  })
+
+  it('se tait quand il ne couvre qu’une minorité de la séance', () => {
+    // 5 km attribués sur 9 : le camembert décrirait l'échauffement et le
+    // retour au calme en se présentant comme le portrait de la séance.
+    const r = repartitionZones(
+      seance({
+        type: 'inter',
+        dist: 9,
+        wu: [[3, 'ef']],
+        main: [['6 x 45 s en côte modérée', 'vo2']],
+        cd: [[2, 'recup']],
+      }),
+      PACE,
+    )
+    expect(r).toEqual([])
+  })
+
+  it('parle dès que la couverture est suffisante', () => {
+    const r = repartitionZones(
+      seance({
+        type: 'tempo',
+        dist: 9,
+        wu: [[2.5, 'ef']],
+        main: [['2 x 2 km', 'seuil']],
+        cd: [[2.5, 'recup']],
+      }),
+      PACE,
+    )
+    expect(r.length).toBeGreaterThan(1)
+  })
+
+  it('ne contrôle pas la couverture quand la structure est explicite', () => {
+    // `struct` vient du plan, pas d'une lecture de libellé : rien n'y manque.
+    const r = repartitionZones(
+      seance({ type: 'long', dist: 30, struct: [{ km: 12, zone: 'ef' }] }),
+      PACE,
+    )
+    expect(r).toHaveLength(1)
+  })
+})

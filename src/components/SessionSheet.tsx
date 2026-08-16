@@ -14,6 +14,8 @@ import {
   type EcartRow,
 } from '../lib/overrides'
 import { EcartEditor } from './EcartEditor'
+import { CarteCoach } from './CarteCoach'
+import { butDeLaSeance } from '../lib/coach'
 import { formatDayLong, formatNumber } from '../lib/dates'
 import { familleDe } from '../lib/insights'
 import { formatPace, zonePace } from '../lib/paces'
@@ -107,6 +109,21 @@ export function SessionSheet({
    * même vide : ni l'une ni l'autre n'a d'endroit où la saisir sans ce champ.
    */
   const demandeDistance = s.type === 'velo' || (familleDe(s.type) === 'course' && s.dist == null)
+
+  /**
+   * Un repos jambes complet n'a pas de ressenti à saisir : douleur à l'effort 0
+   * et effort perçu 0 ne sont pas des estimations, ce sont des définitions.
+   * Deux curseurs à zéro tous les dimanches n'apprenaient rien et donnaient
+   * l'habitude de valider sans lire.
+   *
+   * Rien n'est écrit en base pour autant, et c'est délibéré : un 0 à l'effort
+   * un jour de repos ne dit rien de la raideur au réveil, qui pèse 45 % du
+   * signal. L'injecter dans le modèle ferait retomber l'indice dans le vert sur
+   * un carnet muet, soit exactement l'angle mort que `painInconnue` existe pour
+   * signaler. Dès qu'un écart change la journée, elle redevient une séance
+   * comme une autre et le formulaire réapparaît.
+   */
+  const ressentiImplicite = s.type === 'repos' && !seance.ecart && !feedback
 
   return (
     <div
@@ -361,31 +378,7 @@ export function SessionSheet({
                 'repeating-linear-gradient(90deg, var(--border-2) 0 4px, transparent 4px 9px)',
             }}
           />
-          <div
-            style={{
-              position: 'relative',
-              borderRadius: 22,
-              padding: '17px 18px 18px',
-              margin: '22px 0 4px',
-              overflow: 'hidden',
-              background: 'linear-gradient(145deg, rgba(217,119,87,.20), rgba(217,119,87,.05) 58%, rgba(255,255,255,.04))',
-              border: '1px solid rgba(217,119,87,.28)',
-            }}
-          >
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: '1.4px',
-                textTransform: 'uppercase',
-                color: '#F0A683',
-                marginBottom: 9,
-              }}
-            >
-              Coach
-            </div>
-            <p style={{ margin: 0, color: '#E4E7EB', fontSize: 15.5, lineHeight: 1.55 }}>{s.note}</p>
-          </div>
+          <CarteCoach texte={s.note} but={butDeLaSeance(s.type)} style={{ margin: '22px 0 4px' }} />
 
           <div
             style={{
@@ -396,7 +389,35 @@ export function SessionSheet({
             }}
           />
           <SectionTitre icone="heart">Ton ressenti</SectionTitre>
-          {feedback && !modifie ? (
+          {ressentiImplicite ? (
+            <div
+              className="glass"
+              style={{ borderRadius: 'var(--radius)', padding: '15px 16px' }}
+            >
+              <h4
+                style={{
+                  margin: '0 0 8px',
+                  fontSize: 15.5,
+                  fontWeight: 800,
+                  color: '#5BE05B',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <Icon name="check" size={18} />
+                Douleur à l&apos;effort 0, effort perçu 0
+              </h4>
+              <p style={{ margin: 0, color: 'var(--sur-ink-2)', fontSize: 14, lineHeight: 1.5 }}>
+                Ce ne sont pas des estimations : il n&apos;y a pas eu d&apos;effort. Rien à saisir,
+                sauf si tu enregistres un écart et que la journée devient autre chose.
+              </p>
+              <p style={{ margin: '10px 0 0', color: 'var(--sur-ink-3)', fontSize: 12.5, lineHeight: 1.5 }}>
+                La raideur au réveil et la douleur du soir, elles, restent à noter dans le carnet de
+                l&apos;écran Aujourd&apos;hui : un jour sans course n&apos;est pas un jour sans tendon.
+              </p>
+            </div>
+          ) : feedback && !modifie ? (
             <>
               <div
                 className="glass"

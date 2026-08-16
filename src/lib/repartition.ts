@@ -10,7 +10,7 @@
  * inventée. Les pourcentages portent donc sur ce qui est attribué.
  */
 import type { Session, Step as StepTuple, ZoneKey } from '../data/types'
-import { ZONE_OFFSETS, zonePace } from './paces'
+import { ZONE_OFFSETS, lireRepetitions, zonePace } from './paces'
 
 export interface PartZone {
   zone: ZoneKey
@@ -22,18 +22,19 @@ export interface PartZone {
 
 const estZone = (v: unknown): v is ZoneKey => typeof v === 'string' && v in ZONE_OFFSETS
 
+/** Part minimale de la séance qu'il faut savoir attribuer pour montrer la répartition. */
+const COUVERTURE_MIN = 0.7
+
 /** Distance d'une étape, en kilomètres, ou null si elle ne s'exprime pas en distance. */
 function kmDeLEtape(label: string | number): number | null {
   if (typeof label === 'number') return label
   const texte = String(label)
 
-  // « 5 x 1000 m », « 6 x 800 m », « 3 x 2 km »
-  const reps = texte.match(/^(\d+)\s*x\s*([\d,.]+)\s*(km|m)?/i)
-  if (reps) {
-    const n = Number(reps[1])
-    const q = parseFloat(reps[2].replace(',', '.'))
-    return reps[3]?.toLowerCase() === 'm' ? (n * q) / 1000 : n * q
-  }
+  // « 5 x 1000 m », « 6 x 800 m », « 3 x 2 km », « 6 x 45 s »
+  const reps = lireRepetitions(texte)
+  // Une série au chronomètre n'a pas de distance : la convertir en supposant une
+  // allure reviendrait à inventer le kilométrage qu'on prétend mesurer.
+  if (reps) return reps.km != null ? reps.n * reps.km : null
 
   const km = texte.match(/([\d,.]+)\s*km/)
   if (km) return parseFloat(km[1].replace(',', '.'))
@@ -72,6 +73,16 @@ export function repartitionZones(session: Session, marathonPace: number): PartZo
 
   const total = [...parZone.values()].reduce((s, v) => s + v.secondes, 0)
   if (!total) return []
+
+  // Sans structure explicite, les zones sont déduites des libellés d'étapes, et
+  // certaines étapes ne se laissent pas rattacher. Quand ce qui est attribué ne
+  // couvre qu'une minorité de la séance — un échauffement étiqueté devant un
+  // corps de séance au chronomètre — le camembert décrit un bout de séance tout
+  // en s'affichant comme son portrait. Mieux vaut ne rien montrer.
+  const kmAttribues = [...parZone.values()].reduce((s, v) => s + v.km, 0)
+  if (!session.struct?.length && session.dist && kmAttribues < session.dist * COUVERTURE_MIN) {
+    return []
+  }
 
   return [...parZone.entries()]
     .map(([zone, v]) => ({

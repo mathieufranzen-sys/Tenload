@@ -13,6 +13,7 @@
  */
 import { addDays } from './dates'
 import { formatNumber } from './dates'
+import type { SessionType } from '../data/types'
 import type { PainMap } from './tendonIndex'
 
 export interface MotCoach {
@@ -136,5 +137,37 @@ export function motDuCoach({ pain, byDate, now, seancesTotal }: EntreeCoach): Mo
     ton: 'neutre',
     texte:
       'Note ta douleur au réveil chaque matin : c’est à partir de quatre semaines de saisies que le coach peut te dire si ça progresse vraiment.',
+  }
+}
+
+/**
+ * Ce que la séance travaille, et pourquoi ça fait avancer vers avril.
+ *
+ * Texte fixe, attaché au type : c'est de la physiologie, pas une lecture des
+ * données, et la règle de silence de ce fichier ne s'y applique donc pas — il
+ * n'y a aucun chiffre à inventer. La note du plan dit quoi faire ce jour-là ;
+ * ceci dit à quoi ça sert, ce qui est la question qui revient à la troisième
+ * séance de côtes.
+ *
+ * Les séances sans objet de progression clair (vélo, escalade, repos, renfo)
+ * ne renvoient rien : un texte pour tout le monde ne veut plus rien dire.
+ */
+export function butDeLaSeance(type: SessionType): string | null {
+  switch (type) {
+    case 'inter':
+      return "À quoi ça sert : ces répétitions courtes travaillent ta VO2max, le plafond d'oxygène que ton corps sait utiliser. Tu ne courras jamais le marathon à cette allure, mais plus le plafond est haut, plus ton allure cible se court bas dans la zone confortable."
+    case 'tempo':
+      return "À quoi ça sert : le seuil, c'est l'allure que tu tiendrais une heure à fond. La repousser rend ton allure marathon moins coûteuse à tenir, et c'est la séance qui déplace le plus le chrono d'avril."
+    case 'long':
+      return "À quoi ça sert : la sortie longue apprend à ton corps à puiser dans le gras plutôt que dans le sucre, et à ton tendon à encaisser la durée. C'est la durée qui compte ici, pas la vitesse."
+    case 'ef':
+      return "À quoi ça sert : l'endurance fondamentale construit le réseau capillaire et le cœur, sans coût pour le tendon. Courue trop vite, elle ne construit plus rien et fatigue quand même."
+    case 'test':
+      return "À quoi ça sert : ce test recalibre les allures des semaines qui suivent. Un chrono honnête vaut mieux qu'un beau chrono : tout le bloc suivant est réglé dessus."
+    case 'course':
+    case 'race':
+      return "À quoi ça sert : une course en conditions réelles est le seul endroit où se travaillent le départ, le ravitaillement et la gestion de l'allure sous adrénaline. Le chrono est un résultat, la répétition générale est l'objectif."
+    default:
+      return null
   }
 }

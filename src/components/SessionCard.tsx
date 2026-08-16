@@ -6,24 +6,25 @@
  * Le tag reprend la couleur du type, le chevron annonce que la carte s'ouvre.
  */
 import type { Session } from '../data/types'
-import { formatDayLong, formatNumber } from '../lib/dates'
+import { formatNumber } from '../lib/dates'
 import { estimateDuration, formatDuration } from '../lib/paces'
 import { Icon } from './Icon'
 
 interface Props {
   session: Session
-  day: string
   marathonPace: number
   /** Ressenti déjà enregistré. */
   feedback?: { pain: number; rpe: number } | null
   onClick?: () => void
 }
 
-export function SessionCard({ session: s, day, marathonPace, feedback, onClick }: Props) {
+export function SessionCard({ session: s, marathonPace, feedback, onClick }: Props) {
   const [lo, hi] = estimateDuration(s, marathonPace)
   const duration = lo === hi ? formatDuration(lo) : `${formatDuration(lo)} - ${formatDuration(hi)}`
-  // Le volume, quand le plan en fixe un : il complète le tag sans le doubler.
-  const volume = s.dist ? `${formatNumber(s.dist)} km` : s.dur ? formatDuration(s.dur[0]) : null
+  // La distance seulement : le repli sur `s.dur` répétait la durée à côté
+  // d'elle-même, « 40 min - 45 min · 40 min ». Une séance sans distance n'en
+  // a pas, et la ligne s'arrête à la durée.
+  const volume = s.dist ? `${formatNumber(s.dist)} km` : null
 
   return (
     <button
@@ -71,10 +72,16 @@ export function SessionCard({ session: s, day, marathonPace, feedback, onClick }
         >
           <span style={s.saute ? { textDecoration: 'line-through' } : undefined}>{s.title}</span>
         </h3>
-        <div style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500 }}>
-          {formatDayLong(day)}
-          {s.type !== 'repos' && ` · ${duration}`}
-        </div>
+        {/* Les deux chiffres de la séance sur la même ligne, juste sous le
+            titre. La date n'y est plus : ces cartes s'affichent toujours dans
+            un contexte qui la porte déjà — le jour consulté sur Aujourd'hui,
+            l'en-tête du jour sur Programme — et elle occupait la place des
+            deux seuls chiffres qui décident de la séance. */}
+        {s.type !== 'repos' && (
+          <div style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500 }}>
+            {[duration, volume].filter(Boolean).join(' · ')}
+          </div>
+        )}
 
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
           <span
@@ -104,9 +111,6 @@ export function SessionCard({ session: s, day, marathonPace, feedback, onClick }
             />
             {s.cat}
           </span>
-          {volume && s.type !== 'repos' && (
-            <span style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--sur-ink-2)' }}>{volume}</span>
-          )}
         </div>
 
         {(s.adapted || s.ecart) && (
