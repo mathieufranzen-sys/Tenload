@@ -1,67 +1,88 @@
 /**
- * Les deux valeurs du ressenti d'une séance, en barres graduées.
+ * Le rappel d'un ressenti déjà enregistré, en haut de la section « Ton
+ * ressenti » quand la séance est notée.
  *
- * Même grammaire que les curseurs de saisie : la douleur porte le dégradé de
- * gravité (c'est elle qui décide si le plan s'adapte), l'effort perçu reste
- * neutre — un 9 sur une séance de qualité est une bonne nouvelle, pas une
- * alerte, le colorer en rouge ferait mentir la lecture.
+ * C'était deux filets de 8 px sous un dégradé continu, hérités du curseur en
+ * biseau : depuis que la saisie se fait sur une barre pleine, le rappel ne
+ * ressemblait plus du tout à ce qu'on venait de régler. On reprend donc
+ * exactement la même barre, au repos — la valeur enregistrée doit se
+ * reconnaître au premier coup d'œil comme celle qu'on a posée.
+ *
+ * « Modifier » redevient un lien discret dans l'en-tête plutôt qu'un bouton
+ * pleine largeur : une séance notée est un état stable, la reprise est
+ * l'exception.
  */
-import { formatNumber } from '../lib/dates'
+import { BarreRessenti, LabelRessenti } from './BarreRessenti'
+import { DOULEUR_MOT, EFFORT_MOT, rangRessenti } from '../lib/ressenti'
+import { Icon } from './Icon'
 
-const DEGRADE_DOULEUR =
-  'linear-gradient(90deg,#0ca30c 0%,#8fc41a 25%,#fab219 45%,#ec835a 68%,#d03b3b 100%)'
-
-export function RessentiJauges({ pain, rpe }: { pain: number; rpe: number }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <Jauge label="Douleur au tendon" valeur={pain} remplissage={DEGRADE_DOULEUR} />
-      <Jauge label="Effort perçu" valeur={rpe} remplissage="rgba(255,255,255,.85)" />
-    </div>
-  )
-}
-
-function Jauge({
-  label,
-  valeur,
-  remplissage,
+export function RessentiJauges({
+  pain,
+  rpe,
+  onModifier,
 }: {
-  label: string
-  valeur: number
-  remplissage: string
+  pain: number
+  rpe: number
+  /** Absent en lecture seule : la feuille n'est alors pas modifiable. */
+  onModifier?: () => void
 }) {
-  const pct = Math.max(0, Math.min(100, (valeur / 10) * 100))
-
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
-        <span style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--sur-ink-2)' }}>{label}</span>
-        <span style={{ fontSize: 17, fontWeight: 650, letterSpacing: '-.3px', fontVariantNumeric: 'tabular-nums' }}>
-          {formatNumber(valeur)}
-          <small style={{ fontSize: 11, fontWeight: 600, color: 'var(--sur-ink-3)' }}>/10</small>
-        </span>
-      </div>
-      {/* Le dégradé couvre toute la largeur et se laisse recouvrir à droite :
-          la teinte à un niveau donné ne dépend pas de la valeur du jour. */}
+    <div
+      className="glass"
+      style={{ borderRadius: 'var(--radius)', padding: '15px 16px 17px', marginBottom: 13 }}
+    >
       <div
         style={{
-          position: 'relative',
-          height: 8,
-          borderRadius: 'var(--pill)',
-          background: 'rgba(255,255,255,.12)',
-          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          marginBottom: 15,
         }}
       >
-        <div style={{ position: 'absolute', inset: 0, background: remplissage }} />
-        <div
+        <span
           style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: `${pct}%`,
-            right: 0,
-            background: 'rgba(10,11,13,.82)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            fontSize: 14.5,
+            fontWeight: 700,
+            letterSpacing: '-.2px',
+            color: '#6ee7b7',
           }}
-        />
+        >
+          <Icon name="check" size={17} />
+          Séance notée
+        </span>
+        {onModifier && (
+          <button
+            onClick={onModifier}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: '4px 2px',
+              fontSize: 13,
+              fontWeight: 600,
+              color: 'var(--sur-ink-2)',
+              textDecoration: 'underline',
+              textUnderlineOffset: 3,
+              cursor: 'pointer',
+            }}
+          >
+            Modifier
+          </button>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
+        <div>
+          <LabelRessenti>Douleur au tendon</LabelRessenti>
+          <BarreRessenti valeur={pain} court={DOULEUR_MOT[rangRessenti(pain)]} teinte="douleur" />
+        </div>
+        <div>
+          <LabelRessenti>Effort perçu</LabelRessenti>
+          <BarreRessenti valeur={rpe} court={EFFORT_MOT[rangRessenti(rpe)]} teinte="neutre" />
+        </div>
       </div>
     </div>
   )

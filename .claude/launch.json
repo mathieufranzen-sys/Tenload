@@ -12,7 +12,7 @@
       "runtimeExecutable": "sh",
       "runtimeArgs": [
         "-c",
-        "VITE_SUPABASE_URL= VITE_SUPABASE_ANON_KEY= npx vite --port 5174"
+        "VITE_SUPABASE_URL= VITE_SUPABASE_ANON_KEY= npx vite --port 5174 --host"
       ],
       "port": 5174
     }

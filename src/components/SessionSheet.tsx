@@ -17,6 +17,13 @@ import { EcartEditor } from './EcartEditor'
 import { CarteCoach } from './CarteCoach'
 import { butDeLaSeance } from '../lib/coach'
 import { formatDayLong, formatNumber } from '../lib/dates'
+import {
+  DOULEUR_DETAIL,
+  DOULEUR_MOT,
+  EFFORT_DETAIL,
+  EFFORT_MOT,
+  rangRessenti,
+} from '../lib/ressenti'
 import { familleDe } from '../lib/insights'
 import { formatPace, zonePace } from '../lib/paces'
 import type { FeedbackRow } from '../lib/buildPain'
@@ -418,41 +425,11 @@ export function SessionSheet({
               </p>
             </div>
           ) : feedback && !modifie ? (
-            <>
-              <div
-                className="glass"
-                style={{
-                  borderRadius: 'var(--radius)',
-                  padding: '15px 16px',
-                  marginBottom: 13,
-                }}
-              >
-                <h4 style={{ margin: '0 0 12px', fontSize: 15.5, fontWeight: 800, color: '#5BE05B', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Icon name="check" size={18} />
-                  Séance notée
-                </h4>
-                <RessentiJauges pain={feedback.pain} rpe={feedback.rpe} />
-              </div>
-
-              {onSave && (
-                <button
-                  onClick={() => setModifie(true)}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: 15,
-                    borderRadius: 'var(--pill)',
-                    fontWeight: 700,
-                    fontSize: 16,
-                    background: 'transparent',
-                    color: 'var(--ink-2)',
-                    border: '1px solid var(--border-2)',
-                  }}
-                >
-                  Modifier
-                </button>
-              )}
-            </>
+            <RessentiJauges
+              pain={feedback.pain}
+              rpe={feedback.rpe}
+              onModifier={onSave && (() => setModifie(true))}
+            />
           ) : (
             <FormulaireRessenti
               feedback={feedback}
@@ -600,59 +577,6 @@ function StepView({
   )
 }
 
-const PAIN_H = [
-  'Rien du tout. Le tendon ne se manifeste pas.',
-  'Une présence, pas une douleur. Tout va bien.',
-  'Sensible mais silencieux à l’effort. Zone de travail acceptable.',
-  'Gêne nette. On surveille, on ne change rien encore.',
-  'Douleur. Le plan s’adapte : plateau de la sortie longue, qualité en vélo.',
-  'Douleur franche. Plateau et qualité neutralisée.',
-  'Trop. Sortie longue réduite de 25 %, qualité annulée.',
-  'Trop. Recul net sur la semaine à venir.',
-  'Stop. Cinq jours sans course, vélo et haut du corps seulement.',
-  'Stop et kiné. On ne discute pas.',
-  'Stop et kiné. On ne discute pas.',
-]
-const PAIN_COURT = [
-  'Rien',
-  'À peine',
-  'Sensible',
-  'Gênant',
-  'Douloureux',
-  'Franchement douloureux',
-  'Trop',
-  'Beaucoup trop',
-  'Stop',
-  'Stop, et kiné',
-  'Stop, et kiné',
-]
-const RPE_H = [
-  'Aucun effort.',
-  'Très facile, tu pourrais recommencer tout de suite.',
-  'Facile. Conversation possible sans effort.',
-  'Confortable. Le socle de l’endurance.',
-  'Modéré. Tu sens le travail sans le subir.',
-  'Soutenu. Phrases courtes.',
-  'Difficile. Quelques mots seulement.',
-  'Dur. Allure de seuil.',
-  'Très dur. Tu comptes les répétitions.',
-  'Presque maximal. Séance réussie de justesse.',
-  'Maximal. Tu n’aurais pas pu faire plus.',
-]
-const RPE_COURT = [
-  'Repos',
-  'Très facile',
-  'Facile',
-  'Confortable',
-  'Modéré',
-  'Soutenu',
-  'Difficile',
-  'Dur',
-  'Très dur',
-  'Presque maximal',
-  'Maximal',
-]
-
 function FormulaireRessenti({
   feedback,
   disabled,
@@ -678,8 +602,6 @@ function FormulaireRessenti({
     feedback?.distance_km != null ? String(feedback.distance_km) : '',
   )
 
-  const idx = (v: number) => Math.max(0, Math.min(10, Math.round(v)))
-
   return (
     <div>
       <p style={{ color: 'var(--sur-ink-2)', fontSize: 14, lineHeight: 1.5, margin: '0 0 18px' }}>
@@ -692,9 +614,9 @@ function FormulaireRessenti({
           valeur={pain}
           onChange={setPain}
           disabled={disabled}
-          court={PAIN_COURT[idx(pain)]}
-          detail={PAIN_H[idx(pain)]}
-          degrade="pain"
+          court={DOULEUR_MOT[rangRessenti(pain)]}
+          detail={DOULEUR_DETAIL[rangRessenti(pain)]}
+          teinte="douleur"
         />
       </div>
 
@@ -704,9 +626,9 @@ function FormulaireRessenti({
           valeur={rpe}
           onChange={setRpe}
           disabled={disabled}
-          court={RPE_COURT[idx(rpe)]}
-          detail={RPE_H[idx(rpe)]}
-          degrade="rpe"
+          court={EFFORT_MOT[rangRessenti(rpe)]}
+          detail={EFFORT_DETAIL[rangRessenti(rpe)]}
+          teinte="neutre"
         />
       </div>
 
