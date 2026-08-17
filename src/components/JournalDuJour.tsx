@@ -6,7 +6,8 @@
  * les exposer laisserait croire qu'ils comptent.
  */
 import type { DailyLogRow } from '../lib/buildPain'
-import { formatNumber } from '../lib/dates'
+import { DOULEUR_MOT, rangRessenti } from '../lib/ressenti'
+import { JaugeRessenti } from './JaugeRessenti'
 import { useJournal } from '../hooks/DataProvider'
 import { useFileAttente } from '../hooks/useFileAttente'
 
@@ -53,16 +54,28 @@ export function JournalDuJour({ day }: Props) {
         )}
       </div>
 
-      <Curseur
-        label="Raideur au réveil"
-        valeur={l?.pain_wake ?? null}
-        onChange={(v) => enregistrerLog(day, { pain_wake: v })}
-      />
-      <Curseur
-        label="Douleur en fin de journée"
-        valeur={l?.pain_evening ?? null}
-        onChange={(v) => enregistrerLog(day, { pain_evening: v })}
-      />
+      {/* Mêmes jauges que la feuille de séance, et surtout le même vocabulaire :
+          le carnet n'affichait qu'un nombre sur dix, alors que c'est la même
+          douleur au même tendon. Chaque mouvement écrit, la file d'attente
+          fusionne les appels rapprochés. */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
+        <JaugeRessenti
+          label="Raideur au réveil"
+          valeur={l?.pain_wake ?? null}
+          onChange={(v) => enregistrerLog(day, { pain_wake: v })}
+          court={l?.pain_wake == null ? 'Non saisi' : DOULEUR_MOT[rangRessenti(l.pain_wake)]}
+          teinte="pain"
+          pas={0.5}
+        />
+        <JaugeRessenti
+          label="Douleur en fin de journée"
+          valeur={l?.pain_evening ?? null}
+          onChange={(v) => enregistrerLog(day, { pain_evening: v })}
+          court={l?.pain_evening == null ? 'Non saisi' : DOULEUR_MOT[rangRessenti(l.pain_evening)]}
+          teinte="pain"
+          pas={0.5}
+        />
+      </div>
 
       <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
         {GESTES.map((g) => {
@@ -124,57 +137,5 @@ export function JournalDuJour({ day }: Props) {
         tendon du lendemain.
       </p>
     </section>
-  )
-}
-
-function Curseur({
-  label,
-  valeur,
-  onChange,
-}: {
-  label: string
-  valeur: number | null
-  onChange: (v: number) => void
-}) {
-  // Chaque mouvement du curseur écrit : la file d'attente fusionne les appels
-  // rapprochés en une seule saisie, pas besoin d'attendre un relâchement.
-  const affiche = valeur ?? 0
-  // Trait plein blanc jusqu'à la valeur : l'accent-color seul ne se voyait pas,
-  // le track custom (global.css) a besoin d'un dégradé --track explicite.
-  const pct = (affiche / 10) * 100
-  const track = `linear-gradient(90deg, #fff 0%, #fff ${pct}%, rgba(255,255,255,.18) ${pct}%, rgba(255,255,255,.18) 100%)`
-
-  return (
-    <div style={{ marginTop: 14 }}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          fontSize: 13.5,
-          fontWeight: 500,
-          marginBottom: 6,
-        }}
-      >
-        <span>{label}</span>
-        <span
-          style={{
-            color: valeur === null ? 'var(--sur-ink-3)' : 'var(--ink)',
-            fontWeight: valeur === null ? 500 : 650,
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          {valeur === null ? 'non saisi' : `${formatNumber(affiche)}/10`}
-        </span>
-      </div>
-      <input
-        type="range"
-        min={0}
-        max={10}
-        step={0.5}
-        value={affiche}
-        onChange={(e) => onChange(Number(e.target.value))}
-        style={{ width: '100%', ['--track' as string]: track }}
-      />
-    </div>
   )
 }
