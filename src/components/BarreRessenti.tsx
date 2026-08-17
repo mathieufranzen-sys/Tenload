@@ -24,6 +24,21 @@ const RETRAIT = 13
 /** Largeur plancher du remplissage : le chiffre doit tenir dedans à zéro. */
 const LARGEUR_MIN = 46
 
+/**
+ * Largeur CSS du remplissage pour une valeur de 0 à 10.
+ *
+ * Le plancher de 46 px était appliqué APRÈS un calcul linéaire de 0 à 100 %,
+ * avec `max()`. Sur une barre de 305 px, 0 et 1 tombaient donc tous les deux
+ * à 46 px et 2 à 61 px : les trois premiers crans étaient écrasés, alors que
+ * c'est exactement la zone où vit la douleur de Mathieu au quotidien (0,8 au
+ * réveil, 1,3 le soir). L'échelle part maintenant DU plancher au lieu de s'y
+ * heurter : chaque cran vaut le même écart, plancher compris.
+ */
+export function largeurRemplissage(valeur: number): string {
+  const part = Math.max(0, Math.min(10, valeur)) / 10
+  return `calc(${LARGEUR_MIN}px + ${part} * (100% - ${LARGEUR_MIN}px))`
+}
+
 /** Teinte neutre de l'effort perçu : un 9 sur une séance de qualité est une réussite. */
 const NEUTRE = '#d4d4d8'
 
@@ -85,9 +100,7 @@ export function BarreRessenti({
           left: 0,
           top: 0,
           bottom: 0,
-          // Assez large pour contenir le chiffre même à zéro : plus étroit,
-          // le remplissage coupait le nombre en deux au lieu de le porter.
-          width: `max(${LARGEUR_MIN}px, ${pct}%)`,
+          width: largeurRemplissage(affiche),
           background: hex ?? 'rgba(255,255,255,.16)',
           borderRadius: RAYON,
           transition: 'background var(--dur-fast), width var(--dur-fast)',

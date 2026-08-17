@@ -61,6 +61,10 @@ export function JaugeRessenti({
       </div>
 
       {detail && (
+        // Deux lignes réservées, la longueur maximale de ces textes. Sans
+        // hauteur plancher, passer de « Rien du tout. » à une phrase de deux
+        // lignes rallongeait le bloc en cours de glissement et faisait sauter
+        // tout ce qui suit sous le pouce.
         <p
           style={{
             fontSize: 12.5,
@@ -68,6 +72,7 @@ export function JaugeRessenti({
             lineHeight: 1.4,
             color: 'var(--sur-ink-2)',
             margin: '8px 2px 0',
+            minHeight: 36,
           }}
         >
           {detail}

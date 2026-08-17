@@ -9,6 +9,7 @@ import type { DailyLogRow } from '../lib/buildPain'
 import { DOULEUR_MOT, rangRessenti } from '../lib/ressenti'
 import { JaugeRessenti } from './JaugeRessenti'
 import { useJournal } from '../hooks/DataProvider'
+import { useSaisieDifferee } from '../hooks/useSaisieDifferee'
 import { useFileAttente } from '../hooks/useFileAttente'
 
 interface Props {
@@ -56,24 +57,17 @@ export function JournalDuJour({ day }: Props) {
 
       {/* Mêmes jauges que la feuille de séance, et surtout le même vocabulaire :
           le carnet n'affichait qu'un nombre sur dix, alors que c'est la même
-          douleur au même tendon. Chaque mouvement écrit, la file d'attente
-          fusionne les appels rapprochés. */}
+          douleur au même tendon. */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
-        <JaugeRessenti
+        <CurseurCarnet
           label="Raideur au réveil"
           valeur={l?.pain_wake ?? null}
-          onChange={(v) => enregistrerLog(day, { pain_wake: v })}
-          court={l?.pain_wake == null ? 'Non saisi' : DOULEUR_MOT[rangRessenti(l.pain_wake)]}
-          teinte="douleur"
-          pas={0.5}
+          onEcrire={(v) => enregistrerLog(day, { pain_wake: v })}
         />
-        <JaugeRessenti
+        <CurseurCarnet
           label="Douleur en fin de journée"
           valeur={l?.pain_evening ?? null}
-          onChange={(v) => enregistrerLog(day, { pain_evening: v })}
-          court={l?.pain_evening == null ? 'Non saisi' : DOULEUR_MOT[rangRessenti(l.pain_evening)]}
-          teinte="douleur"
-          pas={0.5}
+          onEcrire={(v) => enregistrerLog(day, { pain_evening: v })}
         />
       </div>
 
@@ -137,5 +131,36 @@ export function JournalDuJour({ day }: Props) {
         tendon du lendemain.
       </p>
     </section>
+  )
+}
+
+/**
+ * Un curseur du carnet : il suit le doigt tout de suite, il écrit après.
+ *
+ * L'écriture recalcule l'indice, donc la bande, donc le mot du coach et le
+ * bloc de tête, tous plus haut dans la page et tous de hauteurs variables.
+ * Écrire à chaque mouvement faisait sauter le contenu sous le pouce en plein
+ * geste. Voir `useSaisieDifferee`.
+ */
+function CurseurCarnet({
+  label,
+  valeur,
+  onEcrire,
+}: {
+  label: string
+  valeur: number | null
+  onEcrire: (v: number) => void
+}) {
+  const [affichee, changer] = useSaisieDifferee(valeur, onEcrire)
+
+  return (
+    <JaugeRessenti
+      label={label}
+      valeur={affichee}
+      onChange={changer}
+      court={affichee == null ? 'Non saisi' : DOULEUR_MOT[rangRessenti(affichee)]}
+      teinte="douleur"
+      pas={0.5}
+    />
   )
 }
