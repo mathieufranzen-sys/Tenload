@@ -136,13 +136,19 @@ export interface Band {
  * Les cinq bandes. Les seuils 50 et 65 viennent directement des règles posées
  * par Mathieu : « au-dessus de 50 pas de tempo ni d'intervalles, au-dessus de
  * 60 pas de course du tout ».
+ *
+ * `color` est la teinte de référence de la bande : elle colore le point du
+ * graphique d'indice (écran Suivi) et sert de base au camaïeu du dégradé
+ * d'accueil (`[data-band]` dans tokens.css, où elle est reprise à l'identique
+ * en `--m2`). Teal, bleu, ambre, rouge corail, violet : le même principe de
+ * bandes qu'avant, une nouvelle gamme.
  */
 export const BANDS: readonly Band[] = [
   {
     key: 'vert',
     max: 29,
     name: 'Vert',
-    color: '#0ca30c',
+    color: '#2dd4bf',
     headline: 'Tout est autorisé',
     detail:
       "Le tendon encaisse. Si tu restes sous 15 trois jours de suite, tu peux même ajouter du volume.",
@@ -151,7 +157,7 @@ export const BANDS: readonly Band[] = [
     key: 'jaune',
     max: 49,
     name: 'Jaune',
-    color: '#fab219',
+    color: '#4e8cff',
     headline: 'Plan nominal',
     detail:
       "Charge normale d'un entraînement qui progresse. Rien à changer, mais garde un œil sur la douleur du soir.",
@@ -160,7 +166,7 @@ export const BANDS: readonly Band[] = [
     key: 'orange',
     max: 64,
     name: 'Orange',
-    color: '#ec835a',
+    color: '#f5b32e',
     headline: 'Ni vitesse ni muscu lourde',
     detail:
       "Pas de séance de qualité aujourd'hui, pas de renfo bas du corps chargé. Sortie longue raccourcie de 20 %. Endurance facile et vélo restent ouverts.",
@@ -169,7 +175,7 @@ export const BANDS: readonly Band[] = [
     key: 'rouge',
     max: 79,
     name: 'Rouge',
-    color: '#d03b3b',
+    color: '#ff5a46',
     headline: 'Aucune course',
     detail:
       "Vélo en Z2 et haut du corps uniquement. Le tendon est en réaction : courir dessus prolonge l'épisode de plusieurs semaines.",
@@ -178,7 +184,7 @@ export const BANDS: readonly Band[] = [
     key: 'noir',
     max: 100,
     name: 'Noir',
-    color: '#8B1A1A',
+    color: '#a855f7',
     headline: 'Repos complet des jambes',
     detail:
       'Zéro charge. Mobilité douce, glaçage. Si tu restes ici trois jours, tu prends rendez-vous chez ton kiné.',

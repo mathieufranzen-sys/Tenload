@@ -141,44 +141,50 @@
    Six teintes d'une même famille par bande, pas une couleur unique déclinée
    en opacité : c'est ce qui donne la profondeur. --m6 est le fond du bas, il
    sert aussi de couleur d'écran derrière le dégradé.
+
+   Le camaïeu de chaque bande a changé de teinte de départ (teal, bleu, ambre,
+   rouge corail, violet) mais garde le même principe : m2 est la teinte de
+   référence, c'est elle qui donne aussi la couleur d'accent de la bande
+   (`color` dans `tendonIndex.ts`, réutilisée par le point du graphique
+   d'indice sur l'écran Suivi) — fond et accent restent la même couleur.
    ══════════════════════════════════════════════════════════════════════════ */
 [data-band='vert'] {
-  --m1: #a7f3d0;
-  --m2: #34d399;
-  --m3: #15803d;
-  --m4: #bef264;
-  --m5: #0d9488;
-  --m6: #04140e;
+  --m1: #99f6e4;
+  --m2: #2dd4bf;
+  --m3: #0f766e;
+  --m4: #5eead4;
+  --m5: #134e4a;
+  --m6: #041210;
 }
 [data-band='jaune'] {
-  --m1: #fef08a;
-  --m2: #facc15;
-  --m3: #a16207;
-  --m4: #bef264;
-  --m5: #b45309;
-  --m6: #141002;
+  --m1: #bfdbfe;
+  --m2: #4e8cff;
+  --m3: #1d4ed8;
+  --m4: #93c5fd;
+  --m5: #1e3a8a;
+  --m6: #05070f;
 }
 [data-band='orange'] {
-  --m1: #fed7aa;
-  --m2: #fb923c;
-  --m3: #c2410c;
-  --m4: #fbbf24;
-  --m5: #9a3412;
-  --m6: #170a05;
+  --m1: #fde68a;
+  --m2: #f5b32e;
+  --m3: #b45309;
+  --m4: #fcd34d;
+  --m5: #78350f;
+  --m6: #170f02;
 }
 [data-band='rouge'] {
   --m1: #fecaca;
-  --m2: #f87171;
+  --m2: #ff5a46;
   --m3: #b91c1c;
-  --m4: #fb923c;
+  --m4: #fb7185;
   --m5: #7f1d1d;
-  --m6: #160406;
+  --m6: #170504;
 }
 [data-band='noir'] {
-  --m1: #fca5a5;
-  --m2: #b91c1c;
-  --m3: #7f1d1d;
-  --m4: #a1526b;
-  --m5: #4c1d3d;
-  --m6: #0e0305;
+  --m1: #e9d5ff;
+  --m2: #a855f7;
+  --m3: #7e22ce;
+  --m4: #d946ef;
+  --m5: #4c1d95;
+  --m6: #0f0518;
 }

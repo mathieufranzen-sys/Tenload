@@ -9,7 +9,7 @@
 import { formatNumber } from '../lib/dates'
 
 const DEGRADE_DOULEUR =
-  'linear-gradient(90deg,#0ca30c 0%,#8fc41a 25%,#fab219 45%,#ec835a 68%,#d03b3b 100%)'
+  'linear-gradient(90deg,#0ca30c 0%,#7fc41c 20%,#f5951f 45%,#e6624c 68%,#a52424 100%)'
 
 export function RessentiJauges({ pain, rpe }: { pain: number; rpe: number }) {
   return (

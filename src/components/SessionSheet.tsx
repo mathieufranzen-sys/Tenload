@@ -619,12 +619,12 @@ const PAIN_COURT = [
   'Sensible',
   'Gênant',
   'Douloureux',
-  'Franchement douloureux',
-  'Trop',
-  'Beaucoup trop',
+  'Handicapant',
+  'Sévère',
+  'Alarmant',
+  'Critique',
+  'Extrême',
   'Stop',
-  'Stop, et kiné',
-  'Stop, et kiné',
 ]
 const RPE_H = [
   'Aucun effort.',
