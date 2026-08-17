@@ -15,6 +15,7 @@ import { today as todayISO } from '../lib/dates'
 import { Icon } from '../components/Icon'
 import { SubPage } from '../components/SubPage'
 import { MeshBackground } from '../components/MeshBackground'
+import { EnteteEcran } from '../components/EnteteEcran'
 import { Constraints } from './profile/Constraints'
 import { TendonIndexInfo } from './profile/TendonIndexInfo'
 import { HeartRateZones } from './profile/HeartRateZones'
@@ -96,14 +97,9 @@ export function Profile({ load, pain, feedback, marathonPace, test3k, hrMax, onS
         <div style={{
         position: 'relative',
         zIndex: 5,
-        padding: 'calc(22px + env(safe-area-inset-top)) var(--page-x) 0',
+        padding: '0 var(--page-x) 0',
       }}>
-          <header style={{ marginBottom: 22 }}>
-            <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>Profil</h1>
-            <p style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500, margin: '3px 0 0' }}>
-              Règles du plan, calcul de l'indice, connexions
-            </p>
-          </header>
+          <EnteteEcran titre="Profil" contexte={<>Règles du plan, calcul de l'indice, connexions</>} />
 
           {GROUPES.map((groupe) => (
             <section key={groupe.titre} style={{ marginBottom: 22 }}>

@@ -11,7 +11,7 @@ import type { FeedbackRow } from '../lib/buildPain'
 import type { EcartRow } from '../lib/overrides'
 import { SessionCard } from '../components/SessionCard'
 import { Icon } from '../components/Icon'
-import { ProfileButton } from '../components/ProfileButton'
+import { EnteteEcran } from '../components/EnteteEcran'
 import { MeshBackground } from '../components/MeshBackground'
 
 const plan = planJson as unknown as PlanType
@@ -76,17 +76,13 @@ export function Plan({
       <div style={{
         position: 'relative',
         zIndex: 5,
-        padding: 'calc(22px + env(safe-area-inset-top)) var(--page-x) 0',
+        padding: '0 var(--page-x) 0',
       }}>
-        <header style={{ marginBottom: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>Programme</h1>
-            <p style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500, margin: '3px 0 0' }}>
-              Marathon de Paris · dimanche 11 avril 2027
-            </p>
-          </div>
-          <ProfileButton onClick={onOuvrirProfil} />
-        </header>
+        <EnteteEcran
+          titre="Programme"
+          contexte={<>Marathon de Paris · dimanche 11 avril 2027</>}
+          onOuvrirProfil={onOuvrirProfil}
+        />
 
         {/* En-tête de bloc : ce qui situe la semaine dans les 35. Le nom du
             bloc et sa couleur restent le repère, la barre dit où on en est. */}
@@ -176,10 +172,6 @@ export function Plan({
               />
             ))}
           </div>
-          <div style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--sur-ink-3)' }}>
-            {rangDansBloc}<sup style={{ fontSize: 8 }}>{rangDansBloc === 1 ? 're' : 'e'}</sup> semaine sur {dureeBloc} du bloc
-          </div>
-
           <p style={{ fontSize: 13.5, lineHeight: 1.5, color: 'var(--sur-ink-2)', margin: '13px 0 0' }}>
             {bloc.focus}
           </p>

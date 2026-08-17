@@ -10,8 +10,6 @@ import planJson from '../data/plan.json'
 import type { Plan, Session, ZoneKey } from '../data/types'
 import { formatNumber } from '../lib/dates'
 import { allureUnique, estimateDuration, formatPace, zonePace } from '../lib/paces'
-import { butDeLaSeance } from '../lib/coach'
-import { CarteCoach } from './CarteCoach'
 
 const plan = planJson as unknown as Plan
 
@@ -133,12 +131,9 @@ export function SessionHero({
         </div>
       )}
 
-      {/* Même bandeau que dans le détail de séance : une seule voix, une seule
-          forme. La pastille ronde « C » qui tenait cette place ressemblait à un
-          troisième interlocuteur. */}
-      <div style={{ padding: '0 16px 15px 20px', marginTop: 15 }}>
-        <CarteCoach texte={s.note} but={butDeLaSeance(s.type)} compact />
-      </div>
+      {/* Pas de mot du coach ici : il vit dans le détail de séance, à un clic,
+          et l'écran Aujourd'hui en porte déjà un en bas. Trois fois la même
+          voix sur un même écran, c'est deux fois de trop. */}
     </Balise>
   )
 }

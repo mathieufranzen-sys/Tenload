@@ -11,7 +11,7 @@ import { adapt } from '../lib/adapt'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { FeedbackRow } from '../lib/buildPain'
 import { MARATHON_KM, formatDuration, formatPace, zonePace, zoneHrRange } from '../lib/paces'
-import { ProfileButton } from '../components/ProfileButton'
+import { EnteteEcran } from '../components/EnteteEcran'
 import { MeshBackground } from '../components/MeshBackground'
 import { Segmented } from '../components/Segmented'
 
@@ -72,17 +72,13 @@ export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLab
       <div style={{
         position: 'relative',
         zIndex: 5,
-        padding: 'calc(22px + env(safe-area-inset-top)) var(--page-x) 0',
+        padding: '0 var(--page-x) 0',
       }}>
-        <header style={{ marginBottom: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>Allures</h1>
-            <p style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500, margin: '3px 0 0' }}>
-              Objectif {goalLabel} · calibré sur ton dernier test de 3 km
-            </p>
-          </div>
-          <ProfileButton onClick={onOuvrirProfil} />
-        </header>
+        <EnteteEcran
+          titre="Allures"
+          contexte={<>Objectif {goalLabel} · calibré sur ton dernier test de 3 km</>}
+          onOuvrirProfil={onOuvrirProfil}
+        />
 
         <div
           style={{
@@ -158,7 +154,19 @@ export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLab
                   <div style={{ width: 4.5, height: 34, borderRadius: 3, flex: 'none', background: `var(--g-${z.color})` }} />
                   <div style={{ flex: 1 }}>
                     <b style={{ display: 'block', fontSize: 15.5, fontWeight: 700, letterSpacing: '-.2px' }}>{z.label}</b>
-                    <span style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500 }}>
+                    {/* Interlignage resserré : ces descriptions tiennent sur
+                        deux lignes, et l'interligne du corps de texte les
+                        faisait respirer comme un paragraphe. */}
+                    <span
+                      style={{
+                        display: 'block',
+                        color: 'var(--sur-ink-2)',
+                        fontSize: 13,
+                        fontWeight: 500,
+                        lineHeight: 1.28,
+                        marginTop: 2,
+                      }}
+                    >
                       {vueZone === 'velo' ? ZONE_DESC_VELO[k] : ZONE_DESC[k]}
                     </span>
                   </div>
@@ -180,7 +188,7 @@ export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLab
             })}
           </div>
           {vueZone === 'velo' && (
-            <p style={{ color: 'var(--sur-ink-3)', fontSize: 12, lineHeight: 1.5, margin: '12px 0 0' }}>
+            <p style={{ color: 'var(--sur-ink-3)', fontSize: 12, lineHeight: 1.32, margin: '12px 0 0' }}>
               Chez toi, la FC à vélo est inférieure de 20 bpm à la FC course à effort équivalent —
               les fourchettes ci-dessus en tiennent compte.
             </p>

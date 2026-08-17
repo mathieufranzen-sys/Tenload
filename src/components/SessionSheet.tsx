@@ -683,8 +683,7 @@ function FormulaireRessenti({
   return (
     <div>
       <p style={{ color: 'var(--sur-ink-2)', fontSize: 14, lineHeight: 1.5, margin: '0 0 18px' }}>
-        Deux curseurs après chaque séance. C'est ce qui pilote l'adaptation du plan : au-delà de 4
-        sur la douleur, la semaine suivante change automatiquement.
+        Deux curseurs après chaque séance. C'est ce qui pilote l'adaptation du plan.
       </p>
 
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '18px 16px 14px', marginBottom: 12 }}>

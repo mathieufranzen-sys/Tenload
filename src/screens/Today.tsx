@@ -35,8 +35,8 @@ import { InsightTiles } from '../components/InsightTiles'
 import { SessionHero } from '../components/SessionHero'
 import { ChargeSheet } from '../components/ChargeSheet'
 import { Icon } from '../components/Icon'
-import { ProfileButton } from '../components/ProfileButton'
 import { CarteCoach } from '../components/CarteCoach'
+import { EnteteEcran } from '../components/EnteteEcran'
 
 const plan = planJson as unknown as Plan
 
@@ -149,10 +149,8 @@ export function Today({
         feedback,
         activities,
         byDate: A.byDate,
-        weeks: plan.weeks,
-        ecarts,
       }),
-    [semaineCourante, seancesCourantes, now, feedback, activities, A.byDate, ecarts],
+    [semaineCourante, seancesCourantes, now, feedback, activities, A.byDate],
   )
 
   const mot = useMemo(
@@ -186,26 +184,16 @@ export function Today({
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <header
-            style={{
-              padding: 'calc(22px + env(safe-area-inset-top)) 2px 0',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              gap: 10,
-            }}
-          >
-            <div>
-              <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>
-                {avantPlan ? 'Bientôt' : estAujourdhui ? "Aujourd'hui" : titreJour(jour, now)}
-              </h1>
-              <p style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500, margin: '3px 0 0' }}>
+          <EnteteEcran
+            titre={avantPlan ? 'Bientôt' : estAujourdhui ? "Aujourd'hui" : titreJour(jour, now)}
+            contexte={
+              <>
                 {sousTitre[0].toUpperCase() + sousTitre.slice(1)} ·{' '}
                 {avantPlan ? `J-${jDebut} avant la semaine 1` : `J-${jRace} avant Paris`}
-              </p>
-            </div>
-            <ProfileButton onClick={onOuvrirProfil} />
-          </header>
+              </>
+            }
+            onOuvrirProfil={onOuvrirProfil}
+          />
 
           <NavigationJour
             jour={jour}

@@ -21,7 +21,7 @@ import { VolumeChart, type BarRow, type VueVolume } from '../components/charts/V
 import { LoadChart, type StackRow } from '../components/charts/LoadChart'
 import { MeshBackground } from '../components/MeshBackground'
 import { Segmented } from '../components/Segmented'
-import { ProfileButton } from '../components/ProfileButton'
+import { EnteteEcran } from '../components/EnteteEcran'
 
 const plan = planJson as unknown as Plan
 
@@ -191,18 +191,14 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
       <div style={{
         position: 'relative',
         zIndex: 5,
-        padding: 'calc(22px + env(safe-area-inset-top)) var(--page-x) 0',
+        padding: '0 var(--page-x) 0',
       }}>
-        <header style={{ marginBottom: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>Suivi</h1>
-            <p style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500, margin: '3px 0 0' }}>
-              Carnet tendon d'Achille · {jours.length} jour{jours.length > 1 ? 's' : ''} enregistré
-              {jours.length > 1 ? 's' : ''}
-            </p>
-          </div>
-          <ProfileButton onClick={onOuvrirProfil} />
-        </header>
+        <EnteteEcran
+          titre="Suivi"
+          contexte={<>Carnet tendon d'Achille · {jours.length} jour{jours.length > 1 ? 's' : ''} enregistré
+              {jours.length > 1 ? 's' : ''}</>}
+          onOuvrirProfil={onOuvrirProfil}
+        />
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 14 }}>
           <Kpi
@@ -235,7 +231,7 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
 
         <Viz
           titre="Indice de charge du tendon"
-          legende="Zéro veut dire tendon frais, cent veut dire repos obligatoire. Les points après aujourd'hui sont une projection : ce que donnerait l'indice si tu fais les séances prévues et que ta douleur reste à son niveau actuel."
+          legende="Zéro, tendon frais. Cent, repos obligatoire. Après aujourd'hui, c'est une projection."
         >
           <IndexChart series={idxRows} now={now} />
         </Viz>
@@ -244,8 +240,8 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
           titre="Douleur au fil des jours"
           legende={
             vuePain === 'separee'
-              ? "Trois moments de mesure. La courbe qui compte le plus est celle de fin de journée : sur une tendinopathie, la réaction est retardée de plusieurs heures."
-              : "Les trois mesures empilées. Utile pour voir la charge douloureuse totale d'une journée, même quand aucune des trois ne semble alarmante isolément. L'axe suit tes valeurs : le seuil reste toujours visible."
+              ? "Trois moments de mesure. Celle de fin de journée compte le plus : la réaction du tendon est retardée de plusieurs heures."
+              : "Les trois mesures empilées : la charge douloureuse totale d'une journée, même quand aucune ne semble alarmante seule."
           }
           controle={
             <Segmented
@@ -273,8 +269,8 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
           titre="Volume par semaine"
           legende={
             vueVolume === 'course'
-              ? "Tes kilomètres de course, relevés sur Strava. Le vélo n'y figure pas : seul l'impact au sol charge le tendon."
-              : 'Course et vélo cumulés. Le vélo ne charge pas le tendon mais porte le volume aérobie : cette lecture dit ce que le moteur encaisse, pas ce que le tendon subit.'
+              ? "Tes kilomètres de course. Le vélo n'y figure pas : seul l'impact au sol charge le tendon."
+              : 'Course et vélo cumulés : ce que le moteur encaisse, pas ce que le tendon subit.'
           }
           controle={
             <Segmented
@@ -302,7 +298,7 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
 
         <Viz
           titre="Charge d'entraînement par semaine"
-          legende="Le même coût que l'indice de charge du tendon, séparé par discipline. Le vélo et le reste sont ce qui te permet de garder du volume aérobie pendant que le tendon récupère."
+          legende="Le même coût que l'indice de charge, séparé par discipline. Le vélo porte le volume aérobie pendant que le tendon récupère."
           legendeCouleurs={[
             { label: 'Course', couleur: 'var(--chart-1)' },
             { label: 'Vélo', couleur: 'var(--chart-2)' },
