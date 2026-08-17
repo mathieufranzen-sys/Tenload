@@ -425,41 +425,11 @@ export function SessionSheet({
               </p>
             </div>
           ) : feedback && !modifie ? (
-            <>
-              <div
-                className="glass"
-                style={{
-                  borderRadius: 'var(--radius)',
-                  padding: '15px 16px',
-                  marginBottom: 13,
-                }}
-              >
-                <h4 style={{ margin: '0 0 12px', fontSize: 15.5, fontWeight: 800, color: '#5BE05B', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Icon name="check" size={18} />
-                  Séance notée
-                </h4>
-                <RessentiJauges pain={feedback.pain} rpe={feedback.rpe} />
-              </div>
-
-              {onSave && (
-                <button
-                  onClick={() => setModifie(true)}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: 15,
-                    borderRadius: 'var(--pill)',
-                    fontWeight: 700,
-                    fontSize: 16,
-                    background: 'transparent',
-                    color: 'var(--ink-2)',
-                    border: '1px solid var(--border-2)',
-                  }}
-                >
-                  Modifier
-                </button>
-              )}
-            </>
+            <RessentiJauges
+              pain={feedback.pain}
+              rpe={feedback.rpe}
+              onModifier={onSave && (() => setModifie(true))}
+            />
           ) : (
             <FormulaireRessenti
               feedback={feedback}
@@ -646,7 +616,7 @@ function FormulaireRessenti({
           disabled={disabled}
           court={DOULEUR_MOT[rangRessenti(pain)]}
           detail={DOULEUR_DETAIL[rangRessenti(pain)]}
-          teinte="pain"
+          teinte="douleur"
         />
       </div>
 

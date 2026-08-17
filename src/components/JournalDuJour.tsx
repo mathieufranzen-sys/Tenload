@@ -64,7 +64,7 @@ export function JournalDuJour({ day }: Props) {
           valeur={l?.pain_wake ?? null}
           onChange={(v) => enregistrerLog(day, { pain_wake: v })}
           court={l?.pain_wake == null ? 'Non saisi' : DOULEUR_MOT[rangRessenti(l.pain_wake)]}
-          teinte="pain"
+          teinte="douleur"
           pas={0.5}
         />
         <JaugeRessenti
@@ -72,7 +72,7 @@ export function JournalDuJour({ day }: Props) {
           valeur={l?.pain_evening ?? null}
           onChange={(v) => enregistrerLog(day, { pain_evening: v })}
           court={l?.pain_evening == null ? 'Non saisi' : DOULEUR_MOT[rangRessenti(l.pain_evening)]}
-          teinte="pain"
+          teinte="douleur"
           pas={0.5}
         />
       </div>

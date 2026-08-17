@@ -67,3 +67,29 @@ export const EFFORT_DETAIL = [
 
 /** Le rang dans les tables ci-dessus, pour une valeur qui peut être décimale. */
 export const rangRessenti = (v: number): number => Math.max(0, Math.min(10, Math.round(v)))
+
+/**
+ * La couleur d'une douleur, reprise des cinq bandes de l'indice.
+ *
+ * Le mapping n'est pas décoratif : ce sont les planchers garantis de
+ * `tendonIndex.ts` qui le fixent. Une douleur ≥ 4 impose la bande orange quoi
+ * que dise le reste du calcul, ≥ 6 la rouge, ≥ 8 la noire. La jauge annonce
+ * donc la bande dans laquelle la journée va tomber, avant même que l'indice
+ * soit recalculé.
+ *
+ *   0-1  vert    aucun plancher
+ *   2-3  bleu    aucun plancher non plus, mais on approche
+ *   4-5  ambre   plancher orange
+ *   6-7  corail  plancher rouge
+ *   8-10 violet  plancher noir
+ *
+ * Deux teintes par palier, la seconde plus sombre : la progression reste
+ * lisible à l'intérieur d'un même plancher.
+ */
+export const COULEUR_DOULEUR = [
+  '#34d399', '#10b981',
+  '#4e8cff', '#2563eb',
+  '#f5b32e', '#d97706',
+  '#ff5a46', '#dc2626',
+  '#a855f7', '#7e22ce', '#581c87',
+]

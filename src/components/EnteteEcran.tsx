@@ -47,9 +47,13 @@ export function EnteteEcran({
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         gap: 10,
-        backdropFilter: 'blur(16px) saturate(1.5)',
-        WebkitBackdropFilter: 'blur(16px) saturate(1.5)',
-        background: `linear-gradient(180deg, rgba(8,9,11,.86) 0%, rgba(8,9,11,.78) calc(100% - ${FONDU}px), rgba(8,9,11,0) 100%)`,
+        // Aucun fond posé par-dessus : l'en-tête garde exactement la couleur
+        // du dégradé qui passe dessous, comme avant qu'il ne devienne collant.
+        // Un voile sombre le détachait du reste de l'écran alors qu'il doit y
+        // appartenir ; c'est le flou seul qui rend le titre lisible quand du
+        // contenu défile derrière.
+        backdropFilter: 'blur(18px) saturate(1.4)',
+        WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
         maskImage: MASQUE,
         WebkitMaskImage: MASQUE,
       }}

@@ -106,12 +106,10 @@
   --chart-grille: rgba(255, 255, 255, 0.09);
   --chart-texte: rgba(255, 255, 255, 0.45);
 
-  /* ─── bandes de l'indice de charge du tendon ─────────────────────────── */
-  --band-vert: #0ca30c;
-  --band-jaune: #fab219;
-  --band-orange: #ec835a;
-  --band-rouge: #d03b3b;
-  --band-noir: #8b1a1a;
+  /* Les teintes des cinq bandes ne sont plus dupliquées ici : elles vivent
+     dans `BANDS` (tendonIndex.ts) et dans les camaïeux `[data-band]` du bas de
+     ce fichier. Ces variables n'étaient référencées nulle part et donnaient
+     une troisième version des mêmes couleurs, déjà périmée. */
 
   /* ─── état ───────────────────────────────────────────────────────────── */
   --good: #0ca30c;
@@ -142,19 +140,19 @@
    en opacité : c'est ce qui donne la profondeur. --m6 est le fond du bas, il
    sert aussi de couleur d'écran derrière le dégradé.
 
-   Le camaïeu de chaque bande a changé de teinte de départ (teal, bleu, ambre,
+   Le camaïeu de chaque bande a changé de teinte de départ (vert, bleu, ambre,
    rouge corail, violet) mais garde le même principe : m2 est la teinte de
    référence, c'est elle qui donne aussi la couleur d'accent de la bande
    (`color` dans `tendonIndex.ts`, réutilisée par le point du graphique
    d'indice sur l'écran Suivi) — fond et accent restent la même couleur.
    ══════════════════════════════════════════════════════════════════════════ */
 [data-band='vert'] {
-  --m1: #99f6e4;
-  --m2: #2dd4bf;
-  --m3: #0f766e;
-  --m4: #5eead4;
-  --m5: #134e4a;
-  --m6: #041210;
+  --m1: #a7f3d0;
+  --m2: #34d399;
+  --m3: #047857;
+  --m4: #6ee7b7;
+  --m5: #064e3b;
+  --m6: #04140e;
 }
 [data-band='jaune'] {
   --m1: #bfdbfe;

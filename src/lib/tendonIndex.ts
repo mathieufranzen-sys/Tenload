@@ -140,7 +140,7 @@ export interface Band {
  * `color` est la teinte de référence de la bande : elle colore le point du
  * graphique d'indice (écran Suivi) et sert de base au camaïeu du dégradé
  * d'accueil (`[data-band]` dans tokens.css, où elle est reprise à l'identique
- * en `--m2`). Teal, bleu, ambre, rouge corail, violet : le même principe de
+ * en `--m2`). Vert, bleu, ambre, rouge corail, violet : le même principe de
  * bandes qu'avant, une nouvelle gamme.
  */
 export const BANDS: readonly Band[] = [
@@ -148,7 +148,7 @@ export const BANDS: readonly Band[] = [
     key: 'vert',
     max: 29,
     name: 'Vert',
-    color: '#2dd4bf',
+    color: '#34d399',
     headline: 'Tout est autorisé',
     detail:
       "Le tendon encaisse. Si tu restes sous 15 trois jours de suite, tu peux même ajouter du volume.",
