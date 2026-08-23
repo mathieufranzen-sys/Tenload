@@ -2,14 +2,16 @@
  * Socle de l'application : authentification, chargement des données, puis la
  * navigation à cinq onglets (Aujourd'hui, Programme, Suivi, Allures, Profil).
  */
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import planJson from './data/plan.json'
 import notionSeed from './data/notion-seed.json'
 import stravaSeed from './data/strava-seed.json'
 import type { Plan, Week } from './data/types'
 import { buildLoad, buildLoadParDiscipline, type ActivityRow } from './lib/load'
 import { HR_MAX } from './lib/paces'
+import { ajusterForme } from './lib/forme'
 import { buildPain, type DailyLogRow, type FeedbackRow } from './lib/buildPain'
+import { NOTE_DEMO, construireDemo } from './data/demo'
 import { indexerEcarts, type EcartPatch, type EcartRow } from './lib/overrides'
 import type { SeancePlanifiee } from './lib/adapt'
 import type { PainMap } from './lib/tendonIndex'
@@ -24,7 +26,6 @@ import { Paces } from './screens/Paces'
 import { Profile } from './screens/Profile'
 import { BottomNav, type Onglet } from './components/BottomNav'
 import { SessionSheet } from './components/SessionSheet'
-import { echangerCode, synchroniser } from './lib/strava'
 import {
   DataProvider,
   useActivities,
@@ -55,13 +56,81 @@ const plan = planJson as unknown as Plan
  */
 export function App() {
   const auth = useAuth()
+  // Le mode démo court sur des données inventées, sans compte ni écriture.
+  // Il vit dans l'état plutôt que dans l'URL : rien à partager, rien à
+  // restaurer, et aucun risque d'y atterrir par un lien collé.
+  const [demo, setDemo] = useState(false)
+
+  if (demo) return <CoquilleDemo onQuitter={() => setDemo(false)} />
   if (!isConfigured) return <Coquille />
   if (auth.state === 'loading') return null
-  if (auth.state === 'signedOut') return <Login auth={auth} />
+  if (auth.state === 'signedOut') return <Login auth={auth} onDemo={() => setDemo(true)} />
   return (
     <DataProvider userId={auth.user!.id}>
       <CoquilleConnectee onDeconnexion={auth.deconnexion} />
     </DataProvider>
+  )
+}
+
+/**
+ * L'app complète sur un jeu fictif, et pleinement manipulable.
+ *
+ * Le visiteur peut bouger une douleur ou un effort et voir l'indice de charge
+ * réagir — c'est tout l'intérêt du produit, une démonstration en lecture seule
+ * n'aurait rien montré. Les saisies vivent en mémoire : le provider en mode
+ * démo n'écrit ni en base, ni dans le cache, ni dans la file d'attente, et
+ * tout disparaît en quittant.
+ */
+function CoquilleDemo({ onQuitter }: { onQuitter: () => void }) {
+  const now = today()
+  const jeu = useMemo(() => construireDemo(now), [now])
+  const initial = useMemo(
+    () => ({ profil: null, logs: jeu.logs, feedback: jeu.feedback, activites: [], ecarts: [] }),
+    [jeu],
+  )
+
+  return (
+    <DataProvider userId="demo" demo={initial}>
+      <CoquilleDemoInterne activities={jeu.activities} onQuitter={onQuitter} />
+    </DataProvider>
+  )
+}
+
+function CoquilleDemoInterne({
+  activities,
+  onQuitter,
+}: {
+  activities: ActivityRow[]
+  onQuitter: () => void
+}) {
+  const { logs } = useLogs()
+  const { feedback } = useFeedback()
+  const { enregistrerFeedback } = useSeanceFeedback()
+  const { ecarts, enregistrerEcart } = useEcarts()
+  const { profil, enregistrerProfil } = useProfile()
+
+  // `bascule` au plus tôt : sans compte, tout le carnet de la démo est
+  // considéré comme saisi dans l'app, jamais importé.
+  const pain = useMemo(
+    () => buildPain({ logs, feedback, bascule: '1970-01-01' }),
+    [logs, feedback],
+  )
+
+  return (
+    <Coquille
+      activities={activities}
+      pain={pain}
+      logs={logs}
+      feedback={feedback}
+      profil={profil}
+      ecarts={ecarts}
+      journalActif
+      demo
+      onQuitterDemo={onQuitter}
+      onSaveFeedback={enregistrerFeedback}
+      onSaveProfil={enregistrerProfil}
+      onSaveEcart={enregistrerEcart}
+    />
   )
 }
 
@@ -173,11 +242,16 @@ function Coquille({
   ecarts: ecartsRows = [],
   journalActif = false,
   erreurSync,
+  demo = false,
+  onQuitterDemo,
   onSaveFeedback,
   onSaveProfil,
   onSaveEcart,
   onDeconnexion,
 }: {
+  /** Vrai en démonstration : bannière dédiée, et rien n'est enregistré. */
+  demo?: boolean
+  onQuitterDemo?: () => void
   activities?: ActivityRow[]
   pain?: PainMap
   logs?: DailyLogRow[]
@@ -208,13 +282,19 @@ function Coquille({
   // valeur de référence du plan. Changer l'objectif dans Allures recalcule
   // tous les écrans qui reçoivent `marathonPace`.
   const marathonPace = profil?.marathon_pace_s ?? plan.meta.targetMarathonPace
-  const fitnessPace = profil?.fitness_pace_s ?? plan.meta.fitnessPace
+  const fitnessPaceTest = profil?.fitness_pace_s ?? plan.meta.fitnessPace
   const test3k = profil?.test_3k_s ?? plan.meta.test3k
   const goalLabel = profil?.goal_label ?? plan.meta.goalLabel
   // Repli sur la valeur mesurée du 9 août 2026, pas sur les 193 supposés par Strava.
   const hrMax = profil?.hr_max ?? HR_MAX
 
   const now = today()
+
+  // Le test de 3 km ancre la forme, le ressenti la fait vivre entre deux
+  // tests — qui sont rares, un par bloc au mieux. L'écart est borné à
+  // ±15 s/km : le ressenti nuance la mesure, il ne la remplace pas.
+  const forme = useMemo(() => ajusterForme(fitnessPaceTest, feedback, now), [fitnessPaceTest, feedback, now])
+  const fitnessPace = forme.allure
 
   // Une séance sans import Strava (muscu, escalade, ou une course avant que
   // Strava soit branché) ne compte dans la charge que si son ressenti a été
@@ -261,29 +341,6 @@ function Coquille({
   const [numeroSemaine, setNumeroSemaine] = useState(
     () => (plan.weeks.find((w) => now >= w.monday && now <= addDays(w.monday, 6)) ?? plan.weeks[0]).n,
   )
-  const [banniereStrava, setBanniereStrava] = useState<{ ok: boolean; texte: string } | null>(null)
-
-  // Retour de Strava : `?code=...` dans l'URL après l'autorisation. Nettoyée
-  // tout de suite pour qu'un rechargement ne rejoue pas l'échange.
-  useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get('code')
-    if (!code) return
-    window.history.replaceState({}, '', window.location.pathname)
-    ;(async () => {
-      const r = await echangerCode(code)
-      if (!r.ok) {
-        setBanniereStrava({ ok: false, texte: r.erreur ?? "La connexion Strava a échoué." })
-        return
-      }
-      const s = await synchroniser()
-      setBanniereStrava(
-        s.ok
-          ? { ok: true, texte: `Strava connecté${s.importees != null ? ` · ${s.importees} activités importées` : ''}.` }
-          : { ok: false, texte: `Connecté, mais la première synchro a échoué : ${s.erreur ?? ''}` },
-      )
-    })()
-  }, [])
-
   const feedbackOuvert = seance
     ? (feedback.find(
         (f) =>
@@ -295,9 +352,9 @@ function Coquille({
 
   return (
     <>
-      {!isConfigured && <BandeauSeed />}
+      {demo && <BandeauDemo onQuitter={onQuitterDemo} />}
+      {!demo && !isConfigured && <BandeauSeed />}
       {erreurSync && <BandeauErreur />}
-      {banniereStrava && <BandeauStrava ok={banniereStrava.ok} texte={banniereStrava.texte} onFermer={() => setBanniereStrava(null)} />}
 
       {onglet === 'today' && (
         <Today
@@ -343,6 +400,7 @@ function Coquille({
           feedback={feedback}
           marathonPace={marathonPace}
           fitnessPace={fitnessPace}
+          forme={forme}
           goalLabel={goalLabel}
           hrMax={hrMax}
           onOuvrirProfil={() => setOnglet('profile')}
@@ -376,6 +434,47 @@ function Coquille({
         />
       )}
     </>
+  )
+}
+
+function BandeauDemo({ onQuitter }: { onQuitter?: () => void }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        maxWidth: 'var(--shell-max)',
+        margin: '0 auto',
+        background: 'rgba(78,140,255,.12)',
+        border: '1px solid rgba(78,140,255,.3)',
+        borderRadius: 'var(--radius-sm)',
+        padding: '11px 12px',
+        fontSize: 13,
+        lineHeight: 1.45,
+        color: 'var(--ink-2)',
+      }}
+    >
+      <span style={{ flex: 1 }}>{NOTE_DEMO}</span>
+      {onQuitter && (
+        <button
+          onClick={onQuitter}
+          style={{
+            flex: 'none',
+            padding: '6px 12px',
+            borderRadius: 'var(--pill)',
+            border: '1px solid rgba(78,140,255,.4)',
+            background: 'transparent',
+            color: '#9DC1FF',
+            fontSize: 12.5,
+            fontWeight: 650,
+            cursor: 'pointer',
+          }}
+        >
+          Quitter
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -420,30 +519,4 @@ function BandeauErreur() {
   )
 }
 
-function BandeauStrava({ ok, texte, onFermer }: { ok: boolean; texte: string; onFermer: () => void }) {
-  return (
-    <div
-      style={{
-        maxWidth: 'var(--shell-max)',
-        margin: '0 auto',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 10,
-        background: 'var(--surface)',
-        border: `1px solid ${ok ? 'var(--good)' : 'var(--c-inter)'}`,
-        borderRadius: 'var(--radius-sm)',
-        padding: '13px 14px',
-        fontSize: 13.5,
-        lineHeight: 1.5,
-        color: 'var(--ink-2)',
-      }}
-    >
-      <span>{texte}</span>
-      <button onClick={onFermer} style={{ color: 'var(--ink-3)', fontWeight: 700, flex: 'none' }}>
-        ✕
-      </button>
-    </div>
-  )
-}
 

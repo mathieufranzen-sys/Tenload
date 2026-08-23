@@ -20,7 +20,19 @@ export interface StackRow {
   course: number
   velo: number
   autre: number
+  /**
+   * Part de la barre qui vient du plan et non du réalisé. Une semaine passée
+   * vaut 0, une semaine à venir vaut son total. La semaine en cours est
+   * partagée : le début est déjà couru, la fin ne l'est pas.
+   */
+  projete?: { course: number; velo: number; autre: number }
 }
+
+const DISCIPLINES = [
+  { cle: 'course', couleur: 'var(--chart-1)' },
+  { cle: 'velo', couleur: 'var(--chart-2)' },
+  { cle: 'autre', couleur: 'var(--chart-3)' },
+] as const
 
 export function LoadChart({ rows }: { rows: StackRow[] }) {
   const n = rows.length
@@ -35,6 +47,15 @@ export function LoadChart({ rows }: { rows: StackRow[] }) {
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Charge d'entraînement par semaine">
+      <defs>
+        {/* Hachures : ce qui n'a pas encore été fait ne doit pas se lire comme
+            un relevé. La couleur reste celle de la discipline, la texture dit
+            que c'est le plan qui parle. */}
+        <pattern id="projete" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="4" height="4" fill="rgba(6,7,10,.55)" />
+          <line x1="0" y1="0" x2="0" y2="4" stroke="rgba(255,255,255,.5)" strokeWidth="2" />
+        </pattern>
+      </defs>
       {[0, 1, 2, 3, 4].map((k) => {
         const v = (max / 4) * k
         return (
@@ -47,25 +68,40 @@ export function LoadChart({ rows }: { rows: StackRow[] }) {
         )
       })}
       {rows.map((r, i) => {
-        const hCourse = Math.max(0, IH - (y(r.course) - P.t))
-        const hVelo = Math.max(0, IH - (y(r.velo) - P.t))
-        const hAutre = Math.max(0, IH - (y(r.autre) - P.t))
+        // Chaque discipline s'empile en deux morceaux : le réalisé plein, la
+        // projection hachurée par-dessus. Base commune à zéro, donc la course
+        // reste comparable d'une semaine à l'autre.
+        let base = 0
+        const morceaux: Array<{ y: number; h: number; fill: string; op: number; cle: string }> = []
+        for (const d of DISCIPLINES) {
+          const total = r[d.cle]
+          if (total <= 0) continue
+          const proj = Math.min(total, r.projete?.[d.cle] ?? 0)
+          const reel = total - proj
+          for (const [part, projete] of [
+            [reel, false],
+            [proj, true],
+          ] as const) {
+            if (part <= 0) continue
+            const haut = base + part
+            morceaux.push({
+              y: y(haut),
+              h: Math.max(1, y(base) - y(haut)),
+              fill: d.couleur,
+              op: projete ? 0.42 : 1,
+              cle: `${d.cle}-${projete ? 'p' : 'r'}`,
+            })
+            if (projete) {
+              morceaux.push({ y: y(haut), h: Math.max(1, y(base) - y(haut)), fill: 'url(#projete)', op: 0.5, cle: `${d.cle}-h` })
+            }
+            base = haut
+          }
+        }
         return (
           <g key={i}>
-            {r.course > 0 && <rect x={x(i)} y={y(r.course)} width={bw} height={hCourse} rx={2} fill="var(--chart-1)" />}
-            {r.velo > 0 && (
-              <rect x={x(i)} y={y(r.course + r.velo)} width={bw} height={Math.max(1, hVelo - 1)} rx={2} fill="var(--chart-2)" />
-            )}
-            {r.autre > 0 && (
-              <rect
-                x={x(i)}
-                y={y(r.course + r.velo + r.autre)}
-                width={bw}
-                height={Math.max(1, hAutre - 1)}
-                rx={2}
-                fill="var(--chart-3)"
-              />
-            )}
+            {morceaux.map((m) => (
+              <rect key={m.cle} x={x(i)} y={m.y} width={bw} height={m.h} rx={2} fill={m.fill} opacity={m.op} />
+            ))}
           </g>
         )
       })}

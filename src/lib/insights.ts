@@ -52,10 +52,17 @@ export interface Insights {
   km7: number
   /** Kilomètres de course jour par jour, du plus ancien au plus récent. */
   km7Jours: number[]
+  /** Indice du jour, null si le jour n'est pas dans la série. */
+  chargeAujourdhui: number | null
   /** Indice de la veille, null si le jour n'est pas dans la série. */
   chargeVeille: number | null
-  /** Écart avec l'avant-veille, null si l'un des deux manque. */
+  /** Écart entre aujourd'hui et hier, null si l'un des deux manque. */
   chargeEcart: number | null
+  /**
+   * Séances passées qui attendent encore un ressenti. Le jour même n'y entre
+   * jamais : une séance du soir n'est pas « en retard » à midi.
+   */
+  notesEnRetard: number
 }
 
 export interface EntreeInsights {
@@ -92,6 +99,8 @@ export function construireInsights({
 
   const notees = new Set(feedback.map((f) => `${f.week}-${f.day_index}-${f.slot}`))
 
+  let notesEnRetard = 0
+
   seances.forEach(({ s, jourOrigine, slot, day }) => {
     // Une séance déclarée non faite n'est ni prévue ni réalisée : la compter
     // au dénominateur donnerait une semaine perpétuellement en retard.
@@ -105,6 +114,11 @@ export function construireInsights({
     const aUnRessenti = notees.has(`${semaine.n}-${jourOrigine}-${slot}`)
     const aUneActivite = importeesParJour.get(day)?.has(f) ?? false
     if (aUnRessenti || aUneActivite) compteurs[f].realise++
+
+    // Le retard ne se compte que sur les jours révolus, et seul le ressenti
+    // le lève : une activité Strava dit qu'on a couru, pas ce que ça a coûté
+    // au tendon, qui est précisément ce que la note apporte.
+    if (day < now && !aUnRessenti) notesEnRetard++
   })
 
   const seancesTotal: Compteur = {
@@ -137,15 +151,20 @@ export function construireInsights({
   }
   const km7 = Math.round(km7Jours.reduce((a, b) => a + b, 0) * 10) / 10
 
+  // L'écart qui intéresse est celui du jour : « ma charge a monté depuis
+  // hier ». Comparer hier à avant-hier parlait d'un mouvement déjà passé,
+  // sans rapport avec le chiffre affiché en grand juste à côté.
+  const aujourdhui = byDate[now]?.idx ?? null
   const veille = byDate[addDays(now, -1)]?.idx ?? null
-  const avantVeille = byDate[addDays(now, -2)]?.idx ?? null
 
   return {
     seances: compteurs,
     seancesTotal,
     km7,
     km7Jours,
+    chargeAujourdhui: aujourdhui,
     chargeVeille: veille,
-    chargeEcart: veille != null && avantVeille != null ? veille - avantVeille : null,
+    chargeEcart: aujourdhui != null && veille != null ? aujourdhui - veille : null,
+    notesEnRetard,
   }
 }

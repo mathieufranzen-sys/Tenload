@@ -19,11 +19,10 @@ import { EnteteEcran } from '../components/EnteteEcran'
 import { Constraints } from './profile/Constraints'
 import { TendonIndexInfo } from './profile/TendonIndexInfo'
 import { HeartRateZones } from './profile/HeartRateZones'
-import { StravaStatus } from './profile/StravaStatus'
 import { PlanStructure } from './profile/PlanStructure'
 import { PaceSettings } from './profile/PaceSettings'
 
-type SectionKey = 'contraintes' | 'indice' | 'coeur' | 'strava' | 'structure' | 'allure'
+type SectionKey = 'contraintes' | 'indice' | 'coeur' | 'structure' | 'allure'
 
 type IconeRubrique = 'alert' | 'clip' | 'chart' | 'heart' | 'gauge' | 'run'
 
@@ -53,7 +52,6 @@ const GROUPES: Array<{ titre: string; rubriques: Rubrique[] }> = [
     titre: 'Réglages',
     rubriques: [
       { key: 'allure', titre: 'Réglages d’allure', description: 'Recalibrer ta forme, changer l’objectif', icone: 'gauge' },
-      { key: 'strava', titre: 'Connexion Strava', description: 'Statut de la synchronisation', icone: 'run' },
     ],
   },
 ]
@@ -99,7 +97,7 @@ export function Profile({ load, pain, feedback, marathonPace, test3k, hrMax, onS
         zIndex: 5,
         padding: '0 var(--page-x) 0',
       }}>
-          <EnteteEcran titre="Profil" contexte={<>Règles du plan, calcul de l'indice, connexions</>} />
+          <EnteteEcran titre="Profil" contexte={<>Règles du plan, calcul de l'indice, réglages</>} />
 
           {GROUPES.map((groupe) => (
             <section key={groupe.titre} style={{ marginBottom: 22 }}>
@@ -193,7 +191,6 @@ export function Profile({ load, pain, feedback, marathonPace, test3k, hrMax, onS
         {section === 'indice' && <TendonIndexInfo idx={A.detail.idx} band={A.band} />}
         {section === 'allure' && <PaceSettings marathonPace={marathonPace} test3k={test3k} onSave={onSaveProfil} />}
         {section === 'coeur' && <HeartRateZones hrMax={hrMax} onSave={onSaveProfil} />}
-        {section === 'strava' && <StravaStatus />}
         {section === 'structure' && <PlanStructure />}
       </SubPage>
     </>

@@ -49,18 +49,20 @@ export function InsightTiles({ insights }: { insights: Insights }) {
         </div>
       </Tile>
 
-      <Tile label="Hier">
-        <Valeur nombre={chargeVeille != null ? `${chargeVeille}` : '—'} />
+      {/* Le mouvement du jour, pas une valeur de plus : l'indice est déjà en
+          grand sous l'arc, le répéter ici n'apprenait rien. */}
+      <Tile label="Vs hier">
+        <Valeur
+          nombre={
+            chargeEcart == null ? '—' : `${chargeEcart > 0 ? '+' : chargeEcart < 0 ? '−' : ''}${Math.abs(chargeEcart)}`
+          }
+        />
         <div style={sousTexte}>
           charge tendon
-          {chargeEcart != null && (
+          {chargeVeille != null && (
             <>
               <br />
-              <b style={fort}>
-                {chargeEcart > 0 ? '+' : chargeEcart < 0 ? '−' : ''}
-                {Math.abs(chargeEcart)}
-              </b>{' '}
-              vs avant-hier
+              hier <b style={fort}>{chargeVeille}</b>
             </>
           )}
         </div>

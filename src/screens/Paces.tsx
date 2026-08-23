@@ -11,6 +11,7 @@ import { adapt } from '../lib/adapt'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { FeedbackRow } from '../lib/buildPain'
 import { MARATHON_KM, formatDuration, formatPace, zonePace, zoneHrRange } from '../lib/paces'
+import type { AjustementForme } from '../lib/forme'
 import { EnteteEcran } from '../components/EnteteEcran'
 import { MeshBackground } from '../components/MeshBackground'
 import { Segmented } from '../components/Segmented'
@@ -45,12 +46,14 @@ interface Props {
   marathonPace: number
   fitnessPace: number
   goalLabel: string
+  /** Ce que le ressenti a ajouté ou retiré à la forme projetée par le test. */
+  forme: AjustementForme
   /** FC max en vigueur : c'est elle qui borne les zones cardiaques. */
   hrMax: number
   onOuvrirProfil: () => void
 }
 
-export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLabel, hrMax, onOuvrirProfil }: Props) {
+export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLabel, forme, hrMax, onOuvrirProfil }: Props) {
   const now = todayISO()
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
   const [vueZone, setVueZone] = useState<VueZone>('allure')
@@ -112,6 +115,28 @@ export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLab
               <div style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 600 }}>Forme actuelle projetée</div>
               <div style={{ fontSize: 24, fontWeight: 650, letterSpacing: '-.6px', marginTop: 2 }}>{formatDuration(Math.round(ft / 60))}</div>
               <div style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 600 }}>{formatPace(fitnessPace)}/km</div>
+              {/* D'où vient l'ajustement : sans cette ligne, la forme bouge
+                  toute seule entre deux tests et rien ne dit pourquoi. */}
+              {forme.ecart !== 0 && (
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    marginTop: 7,
+                    padding: '3px 9px',
+                    borderRadius: 'var(--pill)',
+                    background: 'rgba(255,255,255,.1)',
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    color: 'var(--sur-ink-2)',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {forme.ecart > 0 ? '+' : '−'}
+                  {Math.abs(forme.ecart)} s/km · ressenti
+                </div>
+              )}
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 600 }}>Écart à combler</div>

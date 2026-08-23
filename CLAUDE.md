@@ -127,28 +127,55 @@ qui est le sien.
 kilomètre à 3:50, splits 3:59 / 3:55 / 4:05). Le test était bien maximal, voir
 la section suivante. Ne pas le refaire avant la fin du bloc A.
 
+### La forme projetée bouge avec le ressenti
+
+`src/lib/forme.ts` (+ 10 tests). Le test de 3 km reste **l'ancre**, mais il se
+fait au mieux une fois par bloc : entre deux tests, la forme projetée restait
+figée des mois pendant que l'entraînement avançait. L'effort perçu comble ce
+trou — à allure donnée, un RPE plus bas que prévu dit qu'on encaisse mieux.
+
+Chaque type de séance a un RPE attendu (endurance 4, sortie longue 7, tempo 8,
+intervalles 9, course 8). L'écart moyen sur 28 jours vaut **4 s/km par point**.
+
+Quatre garde-fous, parce qu'un RPE est bruité et qu'aucun ne doit pouvoir
+emmener le plan loin de la mesure :
+
+1. **Seules les séances de course comptent.** Le renfo et l'escalade n'ont pas
+   d'allure, leur RPE ne dit rien de la vitesse.
+2. **Une séance douloureuse est écartée** (douleur ≥ 4). Au-delà, le RPE mesure
+   la douleur et plus la condition physique — c'est même l'inverse d'un signal
+   de forme.
+3. **Trois séances minimum sur 28 jours.** En dessous, une mauvaise journée
+   déplacerait la projection à elle seule.
+4. **L'écart est borné à ±15 s/km.** Le ressenti nuance le test, il ne le
+   remplace pas : au-delà, c'est un nouveau test qu'il faut, pas un calcul.
+
+L'écart appliqué s'affiche en pastille sous la forme projetée, dans Allures :
+une valeur qui bouge toute seule sans dire pourquoi ne serait pas lisible.
+
 ## Les zones cardiaques — piège corrigé
 
-Strava calcule les zones de Mathieu sur une FC max implicite d'environ **193**.
-C'est faux : il plafonne à **179-180** sur un 3 km maximal, avec un plateau de
-FC moyenne à 174 pendant huit minutes. **On retient 181.**
+Une FC max surestimée fait passer de l'endurance pour du tempo. Sur son 3 km
+maximal du 8 août, Mathieu plafonnait à **179-180**, avec un plateau de FC
+moyenne à 174 pendant huit minutes — on retenait 181.
+
+**Relevé à 183 la semaine du 10 août 2026.** C'est une mesure, elle prime sur
+l'estimation : `HR_MAX` vaut désormais 183.
 
 Conséquences à garder en tête :
 
-- Sur son test de 3 km, il était à 96-98 % de son maximum : l'effort était bien
+- Sur son test de 3 km, il était à 95-98 % de son maximum : l'effort était bien
   maximal, et le 12:02 est une valeur exploitable. Les allures ne sont pas
   conservatrices, elles sont justes.
 - Sur sa sortie de 25 km à 140 de moyenne, il est au **haut de Z2**, pas au
   milieu : il court son endurance un peu trop vite.
 
-Zones retenues (`HR_ZONES` dans `src/lib/paces.ts`) : Z1 < 123, Z2 123-150,
-Z3 150-161, Z4 161-170, Z5 > 170.
-
-**181 est désormais une valeur par défaut, pas une constante.** Elle vit dans
+**183 est une valeur par défaut, pas une constante.** Elle vit dans
 `profiles.hr_max` et se recalibre depuis Profil → Fréquence cardiaque, qui
 prévisualise les zones avant d'enregistrer. `HR_MAX` dans `paces.ts` ne sert
 plus que de repli quand le profil n'est pas chargé. Le tableau de l'écran
-Allures lit la valeur du profil.
+Allures lit la valeur du profil — **changer la constante ne suffit donc pas :
+il faut enregistrer la nouvelle valeur depuis l'écran.**
 
 ## L'indice de charge du tendon
 
@@ -219,20 +246,27 @@ entorses, mais il avait vu que la journée arrivait sur un tendon chargé.
 src/
   data/         plan.json (référence), types.ts, instantanés de seed
   lib/          tendonIndex, adapt, load, buildPain, paces, repartition,
-                insights, offlineQueue, dates, strava, supabase (+ tests)
+                insights, offlineQueue, dates, overrides, supabase (+ tests)
   hooks/        useAuth, DataProvider (source unique), useFileAttente
   components/   TendonGauge, TendonArc, SessionCard, SessionSheet, charts/…
   screens/      Today, Plan, Track, Paces, Profile (+ profile/…)
   styles/       tokens.css (design system), global.css
 supabase/       schema.sql (RLS testé), seed.sql (généré)
-netlify/functions/  strava-callback.ts, strava-sync.ts
 reference/      tendo-v3.html (la version portée), scripts Python d'origine
 ```
 
 - **L'onglet Coach de la référence HTML n'existe plus.** Son contenu utile
-  (allures, zones cardiaques, contraintes, structure du plan, statut Strava) est
+  (allures, zones cardiaques, contraintes, structure du plan) est
   devenu l'écran Profil et ses sous-pages ; le reste décrivait une mécanique de
   chat propre au prototype.
+- **Strava a été retiré le 23 août 2026.** Il n'avait servi qu'à récupérer
+  l'historique : OAuth, synchro, page de statut et fonctions Netlify sont
+  supprimés. La table `activities` **reste**, figée sur les 83 activités de mai
+  à août — elles portent la charge chronique et la moitié gauche des graphiques
+  de Suivi. Plus rien de neuf n'y entre : **à partir du 10 août, l'app est la
+  seule source**, par les ressentis de séance et le carnet du jour. Toute
+  lecture croise donc les deux : Strava d'abord quand il a la journée, le
+  ressenti sinon — jamais les deux, sinon la séance compte double.
 - **`DataProvider` est la seule source des données distantes.** Les cinq écrans
   lisent les mêmes lignes au même moment, l'indice croisant journal, activités et
   ressentis : un seul chargement partagé, et `useProfile` / `useLogs` /
@@ -244,9 +278,7 @@ reference/      tendo-v3.html (la version portée), scripts Python d'origine
 - **Vite + React + TypeScript strict.** Styles en variables CSS, pas de Tailwind :
   le design system existe déjà et Mathieu le lit directement.
 - **Supabase** pour l'auth (magic link) et les données. RLS sur toutes les
-  tables, filtré sur `auth.uid()`. La table `strava_tokens` n'a **aucune
-  politique** : elle est inaccessible depuis le navigateur, seules les fonctions
-  Netlify y touchent avec la clé de service.
+  tables, filtré sur `auth.uid()`.
 - **PWA** via `vite-plugin-pwa`. L'app doit s'ouvrir hors ligne : le plan est
   statique, seules les saisies ont besoin du réseau.
 - **Le calcul de l'indice reste côté client**, en TypeScript. C'est ce qui permet
@@ -281,7 +313,7 @@ Fait :
 - [x] `tendonIndex.ts` porté, 27 tests qui verrouillent seuils, planchers et silence
 - [x] `paces.ts`, `load.ts`, `dates.ts`, `repartition.ts`, `insights.ts`
 - [x] Schéma Supabase avec RLS, testé sur PostgreSQL 16 (idempotent)
-- [x] Seed généré depuis le carnet et Strava, rejouable
+- [x] Seed généré depuis le carnet, rejouable
 - [x] **Supabase branché** : `useAuth` (lien magique), `DataProvider` en source
       unique, cache `localStorage` hydraté au montage, écritures optimistes,
       file d'attente hors ligne (`offlineQueue`, 12 tests)
@@ -289,7 +321,6 @@ Fait :
 - [x] **Les quatre graphiques** : indice, douleur, volume, charge empilée
 - [x] **Détail de séance** en feuille modale, avec les curseurs de ressenti
 - [x] **Moteur d'adaptation** `adapt.ts`, 24 tests
-- [x] **Strava OAuth** : connexion, retour, synchro manuelle
 - [x] **Écarts volontaires** `overrides.ts` (23 tests) et `EcartEditor`
 - [x] **Mot du coach** `coach.ts` (11 tests), en bas de l'écran Aujourd'hui
 - [x] Design tokens, icônes PWA
@@ -297,7 +328,6 @@ Fait :
 À faire, dans cet ordre :
 
 1. **Retours design de Mathieu** — la vraie raison de ce dépôt.
-2. **Webhook Strava**, si Mathieu veut se passer de la synchro manuelle.
 
 ### Les écarts volontaires
 

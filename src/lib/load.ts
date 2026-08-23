@@ -2,9 +2,13 @@
  * Construction de la charge tendineuse quotidienne.
  *
  * Deux sources se complètent :
- *   - le passé vient des activités réellement enregistrées (Strava fait foi) ;
+ *   - le passé vient de ce qui a réellement été fait — les activités importées
+ *     de Strava jusqu'au 9 août 2026, les ressentis saisis dans l'app ensuite ;
  *   - le futur vient du plan, ce qui permet de PROJETER l'indice sur dix jours
  *     et de voir venir une zone orange avant d'y être.
+ *
+ * `activities` est un historique figé : l'intégration Strava a été retirée,
+ * plus rien de neuf n'y entre. Tout ce qui arrive passe par les ressentis.
  *
  * Règle anti-double-comptage : si une journée passée porte au moins une
  * activité enregistrée, on ignore le plan pour cette journée.

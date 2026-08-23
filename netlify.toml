@@ -2,18 +2,11 @@
 [build]
   command = "npm run build"
   publish = "dist"
-  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "22"
 
-# Single Page App : toutes les routes retombent sur index.html,
-# SAUF les fonctions serverless.
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
+# Single Page App : toutes les routes retombent sur index.html.
 [[redirects]]
   from = "/*"
   to = "/index.html"

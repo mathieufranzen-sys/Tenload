@@ -86,7 +86,7 @@ const PROFIL_VIDE = (id: string): ProfilRow => ({
   fitness_pace_s: 289,
   test_3k_s: null,
   test_3k_date: null,
-  hr_max: 181,
+  hr_max: 183,
   goal_label: '3 h 15',
   race_date: '2027-04-11',
   plan_start: '2026-08-10',
@@ -128,9 +128,23 @@ function ecrireCache(d: DonneesDistantes): void {
 
 const Contexte = createContext<EtatProvider | null>(null)
 
-export function DataProvider({ userId, children }: { userId: string; children: ReactNode }) {
-  const [donnees, setDonnees] = useState<DonneesDistantes>(() => lireCache() ?? VIDE)
-  const [chargement, setChargement] = useState(() => lireCache() === null)
+export function DataProvider({
+  userId,
+  demo,
+  children,
+}: {
+  userId: string
+  /**
+   * Jeu de départ pour la démonstration. Quand il est fourni, le provider ne
+   * parle plus au réseau : il sert ces données, accepte les saisies en mémoire
+   * pour que l'indice réagisse sous les doigts du visiteur, et n'écrit ni dans
+   * le cache ni dans la file d'attente. Rien ne sort de l'onglet.
+   */
+  demo?: DonneesDistantes
+  children: ReactNode
+}) {
+  const [donnees, setDonnees] = useState<DonneesDistantes>(() => demo ?? lireCache() ?? VIDE)
+  const [chargement, setChargement] = useState(() => !demo && lireCache() === null)
   const [erreur, setErreur] = useState<string | null>(null)
   const [version, setVersion] = useState(0)
 
@@ -149,17 +163,35 @@ export function DataProvider({ userId, children }: { userId: string; children: R
   }, [envoyer])
 
   useEffect(() => {
-    if (!supabase) return
+    // En démonstration, les données sont déjà là et il n'y a pas de compte
+    // derrière : aucun appel réseau n'aurait de sens.
+    if (!supabase || demo) return
     let vivant = true
 
-    async function charger() {
-      const [profil, logs, feedback, activites, ecarts] = await Promise.all([
-        supabase!.from('profiles').select('*').eq('id', userId).single(),
+    const requetes = () =>
+      Promise.all([
+        // `maybeSingle` et non `single` : un profil absent est un état normal
+        // au tout premier lancement, pas une erreur. `single` renvoyait
+        // PGRST116 et déclenchait la bannière « synchronisation en échec »
+        // alors que tout allait bien.
+        supabase!.from('profiles').select('*').eq('id', userId).maybeSingle(),
         supabase!.from('daily_logs').select('*').eq('user_id', userId).order('day'),
         supabase!.from('session_feedback').select('*').eq('user_id', userId).order('day'),
         supabase!.from('activities').select('*').eq('user_id', userId).order('day'),
         supabase!.from('plan_overrides').select('*').eq('user_id', userId).order('week'),
       ])
+
+    async function charger() {
+      let [profil, logs, feedback, activites, ecarts] = await requetes()
+
+      // Au démarrage à froid, le jeton d'accès peut encore être en cours de
+      // rafraîchissement quand ces requêtes partent : elles reviennent alors
+      // en 401 une fois, puis passent. Un seul essai supplémentaire suffit à
+      // supprimer la bannière qui obligeait à relancer l'app.
+      if (vivant && [profil, logs, feedback, activites, ecarts].some((r) => r.error)) {
+        await new Promise((r) => setTimeout(r, 700))
+        if (vivant) [profil, logs, feedback, activites, ecarts] = await requetes()
+      }
 
       if (!vivant) return
 
@@ -192,6 +224,7 @@ export function DataProvider({ userId, children }: { userId: string; children: R
   // file d'attente et redemande les données : c'est le moment le plus probable
   // pour un écart entre ce que l'appareil croit avoir envoyé et la base.
   useEffect(() => {
+    if (demo) return
     const surRetour = () => {
       viderFile()
       actualiser()
@@ -223,16 +256,16 @@ export function DataProvider({ userId, children }: { userId: string; children: R
         const ligne: DailyLogRow = { ...(i === -1 ? { day, ...LIGNE_VIDE } : d.logs[i]), ...patch }
         const logs = i === -1 ? [...d.logs, ligne] : d.logs.map((l, idx) => (idx === i ? ligne : l))
         const suivant = { ...d, logs }
-        ecrireCache(suivant)
+        if (!demo) ecrireCache(suivant)
         return suivant
       })
-      empiler({
+      if (!demo) empiler({
         table: 'daily_logs',
         cle: cleJour(day),
         valeurs: { user_id: userId, day, ...patch },
         maj: Date.now(),
       })
-      viderFile()
+      if (!demo) viderFile()
     },
     [userId, viderFile],
   )
@@ -250,16 +283,16 @@ export function DataProvider({ userId, children }: { userId: string; children: R
         )
         const feedback = i === -1 ? [...d.feedback, ligne] : d.feedback.map((f, idx) => (idx === i ? ligne : f))
         const suivant = { ...d, feedback }
-        ecrireCache(suivant)
+        if (!demo) ecrireCache(suivant)
         return suivant
       })
-      empiler({
+      if (!demo) empiler({
         table: 'session_feedback',
         cle: cleSeance(ligne.week, ligne.day_index, ligne.slot),
         valeurs: { user_id: userId, ...ligne },
         maj: Date.now(),
       })
-      viderFile()
+      if (!demo) viderFile()
     },
     [userId, viderFile],
   )
@@ -273,16 +306,16 @@ export function DataProvider({ userId, children }: { userId: string; children: R
       setDonnees((d) => {
         const profil: ProfilRow = { ...(d.profil ?? PROFIL_VIDE(userId)), ...patch }
         const suivant = { ...d, profil }
-        ecrireCache(suivant)
+        if (!demo) ecrireCache(suivant)
         return suivant
       })
-      empiler({
+      if (!demo) empiler({
         table: 'profiles',
         cle: userId,
         valeurs: { id: userId, ...patch },
         maj: Date.now(),
       })
-      viderFile()
+      if (!demo) viderFile()
     },
     [userId, viderFile],
   )
@@ -304,16 +337,16 @@ export function DataProvider({ userId, children }: { userId: string; children: R
         )
         const ecarts = i === -1 ? [...d.ecarts, ligne] : d.ecarts.map((e, idx) => (idx === i ? ligne : e))
         const suivant = { ...d, ecarts }
-        ecrireCache(suivant)
+        if (!demo) ecrireCache(suivant)
         return suivant
       })
-      empiler({
+      if (!demo) empiler({
         table: 'plan_overrides',
         cle: cleSeance(week, dayIndex, slot),
         valeurs: { user_id: userId, week, day_index: dayIndex, slot, patch, reason },
         maj: Date.now(),
       })
-      viderFile()
+      if (!demo) viderFile()
     },
     [userId, viderFile],
   )

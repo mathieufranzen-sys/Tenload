@@ -10,8 +10,11 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan } from '../data/types'
+import type { SessionType } from '../data/types'
 import { addDays, formatDay, formatNumber, mondayOf, today as todayISO } from '../lib/dates'
 import { adapt } from '../lib/adapt'
+import { familleDe, familleDuSport } from '../lib/insights'
+import { slotsParJour } from '../lib/overrides'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { ActivityRow, LoadParDiscipline } from '../lib/load'
 import type { FeedbackRow } from '../lib/buildPain'
@@ -80,18 +83,56 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
   const soir30 = moyenne(last30, 'evening')
   const sante = santeDuTendon(reveil30, soir30)
 
-  const stravaRef = useMemo(() => {
-    const jrs = activities.map((a) => a.day).sort()
-    return jrs.length ? jrs[jrs.length - 1] : now
-  }, [activities, now])
+  /**
+   * Kilomètres de course par jour : Strava quand il a la sortie, le ressenti
+   * sinon. Même règle que le graphique de volume juste en dessous, pour que
+   * les deux chiffres de la page ne se contredisent jamais.
+   */
+  const kmCourseParJour = useMemo(() => {
+    const m = new Map<string, number>()
+    const importe = new Set<string>()
+    for (const a of activities) {
+      if (familleDuSport(a.sport) !== 'course') continue
+      m.set(a.day, (m.get(a.day) ?? 0) + a.distance_m / 1000)
+      importe.add(a.day)
+    }
+    for (const f of feedback) {
+      if (familleDe(f.session_type as SessionType) !== 'course') continue
+      if (f.distance_km == null || importe.has(f.day)) continue
+      m.set(f.day, (m.get(f.day) ?? 0) + f.distance_km)
+    }
+    return m
+  }, [activities, feedback])
+
+  // Fenêtre ancrée sur aujourd'hui : « sur 7 jours » doit vouloir dire les
+  // sept derniers jours, pas les sept jours précédant la dernière synchro.
   const km = (depuis: number) =>
-    activities
-      .filter((a) => a.sport === 'Run' && a.day > addDays(stravaRef, -depuis))
-      .reduce((s, a) => s + a.distance_m / 1000, 0)
+    [...kmCourseParJour.entries()]
+      .filter(([d]) => d > addDays(now, -depuis) && d <= now)
+      .reduce((s, [, v]) => s + v, 0)
   const km7 = km(7)
   const km28 = km(28)
 
   const totalAttendu = plan.weeks.reduce((acc, w) => acc + w.sessions.filter((s) => s.feedback).length, 0)
+
+  /**
+   * Séances déjà passées qui attendent encore leur note. Le jour même en est
+   * exclu : une séance du soir n'est pas en retard à midi. C'est ce décompte,
+   * pas le total, qui appelle une action.
+   */
+  const notesEnRetard = useMemo(() => {
+    const notees = new Set(feedback.map((f) => `${f.week}-${f.day_index}-${f.slot}`))
+    let n = 0
+    for (const w of plan.weeks) {
+      const slots = slotsParJour(w.sessions)
+      w.sessions.forEach((s, i) => {
+        if (!s.feedback) return
+        if (addDays(w.monday, s.day) >= now) return
+        if (!notees.has(`${w.n}-${s.day}-${slots[i]}`)) n++
+      })
+    }
+    return n
+  }, [feedback, now])
 
   const idxRows = useMemo(
     () =>
@@ -101,15 +142,24 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
     [A.byDate],
   )
 
-  // Moyenne de l'indice sur les 7 derniers jours réels contre les 7 précédents :
-  // on exclut la projection, sinon un plan calme à venir ferait mécaniquement
-  // baisser le pourcentage sans rien dire de ce qui s'est passé.
-  const idxPct = useMemo(() => {
+  /**
+   * Écart de l'indice moyen entre les 7 derniers jours et les 7 précédents,
+   * EN POINTS et non en pourcentage.
+   *
+   * Un indice borné à 100 ne se compare pas en ratio : passer de 8 à 26 est un
+   * mouvement banal de début de plan, et l'afficher « +224 % » donnait un
+   * chiffre spectaculaire qui ne voulait rien dire. Dix-huit points de plus,
+   * si — c'est la moitié d'une bande.
+   *
+   * La projection est exclue : un plan calme à venir ferait baisser l'écart
+   * sans rien dire de ce qui s'est passé.
+   */
+  const idxEcart = useMemo(() => {
     const passe = idxRows.filter((r) => r.day <= now)
     const moy = (l: typeof passe) => (l.length ? l.reduce((a, r) => a + r.idx, 0) / l.length : null)
     const der = moy(passe.slice(-7))
     const prec = moy(passe.slice(-14, -7))
-    return der != null && prec != null && prec > 0.5 ? Math.round(((der - prec) / prec) * 100) : null
+    return der != null && prec != null ? Math.round(der - prec) : null
   }, [idxRows, now])
 
   const painRows: PainRow[] = useMemo(
@@ -123,30 +173,41 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
     [jours, pain],
   )
 
+  /**
+   * Volume hebdomadaire, Strava d'abord et le ressenti pour compléter.
+   *
+   * La course ne lisait que Strava : sans synchronisation, les kilomètres
+   * déclarés dans les ressentis n'apparaissaient nulle part et le graphique
+   * semblait figé. L'écran Aujourd'hui, lui, comptait déjà les ressentis —
+   * les deux écrans donnaient des totaux différents pour la même semaine.
+   *
+   * Une journée couverte par Strava ignore son ressenti, sinon la séance
+   * compterait deux fois.
+   */
   const volumeRows: BarRow[] = useMemo(() => {
     const parSemaine = new Map<string, { course: number; velo: number }>()
-    // Les jours où Strava a une sortie vélo : au-delà, une séance de home
-    // trainer ou une sortie non synchronisée ne remonte que par le ressenti,
-    // via son champ « Distance parcourue ».
-    const veloImporte = new Set<string>()
+    const importe = { course: new Set<string>(), velo: new Set<string>() }
+
     for (const a of activities) {
-      if (a.sport !== 'Run' && a.sport !== 'Ride') continue
+      const f = familleDuSport(a.sport)
+      if (f !== 'course' && f !== 'velo') continue
       const lundi = mondayOf(a.day)
       const cur = parSemaine.get(lundi) ?? { course: 0, velo: 0 }
-      if (a.sport === 'Run') cur.course += a.distance_m / 1000
-      else {
-        cur.velo += a.distance_m / 1000
-        veloImporte.add(a.day)
-      }
+      cur[f] += a.distance_m / 1000
+      importe[f].add(a.day)
       parSemaine.set(lundi, cur)
     }
+
     for (const f of feedback) {
-      if (f.session_type !== 'velo' || f.distance_km == null || veloImporte.has(f.day)) continue
+      const famille = familleDe(f.session_type as SessionType)
+      if (famille !== 'course' && famille !== 'velo') continue
+      if (f.distance_km == null || importe[famille].has(f.day)) continue
       const lundi = mondayOf(f.day)
       const cur = parSemaine.get(lundi) ?? { course: 0, velo: 0 }
-      cur.velo += f.distance_km
+      cur[famille] += f.distance_km
       parSemaine.set(lundi, cur)
     }
+
     return [...parSemaine.entries()]
       .sort(([a], [b]) => (a < b ? -1 : 1))
       .map(([lundi, v]) => ({
@@ -160,24 +221,36 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
   // par semaine — pas l'effort relatif de Strava, que Strava calcule à sa
   // façon et sans rapport avec le modèle de l'app.
   const loadRows: StackRow[] = useMemo(() => {
-    const parSemaine = new Map<string, { course: number; velo: number; autre: number }>()
+    const vide = () => ({ course: 0, velo: 0, autre: 0 })
+    const parSemaine = new Map<string, { total: LoadParDiscipline; projete: LoadParDiscipline }>()
     for (const [day, v] of Object.entries(loadParDiscipline)) {
       const lundi = mondayOf(day)
-      const cur = parSemaine.get(lundi) ?? { course: 0, velo: 0, autre: 0 }
-      cur.course += v.course
-      cur.velo += v.velo
-      cur.autre += v.autre
+      const cur = parSemaine.get(lundi) ?? { total: vide(), projete: vide() }
+      // Après aujourd'hui, la charge vient du plan et pas du réalisé : elle
+      // reste comptée, mais séparément, pour que le graphique puisse la
+      // montrer comme une intention.
+      const cible = day > now ? [cur.total, cur.projete] : [cur.total]
+      for (const c of cible) {
+        c.course += v.course
+        c.velo += v.velo
+        c.autre += v.autre
+      }
       parSemaine.set(lundi, cur)
     }
     return [...parSemaine.entries()]
       .sort(([a], [b]) => (a < b ? -1 : 1))
       .map(([lundi, v]) => ({
         label: formatDay(lundi),
-        course: Math.round(v.course),
-        velo: Math.round(v.velo),
-        autre: Math.round(v.autre),
+        course: Math.round(v.total.course),
+        velo: Math.round(v.total.velo),
+        autre: Math.round(v.total.autre),
+        projete: {
+          course: Math.round(v.projete.course),
+          velo: Math.round(v.projete.velo),
+          autre: Math.round(v.projete.autre),
+        },
       }))
-  }, [loadParDiscipline])
+  }, [loadParDiscipline, now])
 
   const volumeAffiche =
     vueVolume === 'cumul'
@@ -203,9 +276,11 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 14 }}>
           <Kpi
             label="Charge vs semaine dernière"
-            valeur={idxPct == null ? '—' : `${idxPct > 0 ? '+' : ''}${idxPct}`}
-            suffix={idxPct == null ? '' : ' %'}
-            couleur={idxPct == null ? undefined : idxPct > 5 ? 'var(--warning)' : idxPct < -5 ? 'var(--good)' : undefined}
+            valeur={idxEcart == null ? '—' : `${idxEcart > 0 ? '+' : idxEcart < 0 ? '−' : ''}${Math.abs(idxEcart)}`}
+            suffix={idxEcart == null ? '' : ' pts'}
+            couleur={
+              idxEcart == null ? undefined : idxEcart > 5 ? 'var(--warning)' : idxEcart < -5 ? 'var(--good)' : undefined
+            }
             detail="moyenne de l'indice sur 7 jours"
           />
           <Kpi
@@ -226,6 +301,7 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
             valeur={`${feedback.length}`}
             suffix={` / ${totalAttendu}`}
             detail="depuis le 10 août"
+            tag={notesEnRetard > 0 ? `${notesEnRetard} en retard` : undefined}
           />
         </div>
 
@@ -298,12 +374,13 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
 
         <Viz
           titre="Charge d'entraînement par semaine"
-          legende="Le même coût que l'indice de charge, séparé par discipline. Le vélo porte le volume aérobie pendant que le tendon récupère."
+          legende="Le même coût que l'indice de charge, séparé par discipline. Le vélo porte le volume aérobie pendant que le tendon récupère. Les barres hachurées sont ce que le plan prévoit, pas ce que tu as fait."
           legendeCouleurs={[
             { label: 'Course', couleur: 'var(--chart-1)' },
             { label: 'Vélo', couleur: 'var(--chart-2)' },
             { label: 'Muscu, escalade, autres', couleur: 'var(--chart-3)' },
           ]}
+          note={loadRows.some((r) => (r.projete?.course ?? 0) + (r.projete?.velo ?? 0) + (r.projete?.autre ?? 0) > 0) ? 'hachuré = à venir' : undefined}
         >
           <LoadChart rows={loadRows} />
         </Viz>
@@ -318,12 +395,15 @@ function Kpi({
   suffix,
   detail,
   couleur,
+  tag,
 }: {
   label: string
   valeur: string
   suffix: string
   detail: string
   couleur?: string
+  /** Étiquette d'alerte, affichée sous le détail quand il y a lieu d'agir. */
+  tag?: string
 }) {
   return (
     <div className="glass" style={{ borderRadius: 17, padding: '11px 12px 10px' }}>
@@ -355,6 +435,24 @@ function Kpi({
       <div style={{ fontSize: 9, fontWeight: 500, marginTop: 5, color: 'var(--sur-ink-3)', lineHeight: 1.35 }}>
         {detail}
       </div>
+      {tag && (
+        <span
+          style={{
+            display: 'inline-block',
+            marginTop: 6,
+            padding: '2.5px 7px',
+            borderRadius: 'var(--pill)',
+            background: 'rgba(250,178,25,.18)',
+            border: '1px solid rgba(250,178,25,.28)',
+            color: '#FFD166',
+            fontSize: 9,
+            fontWeight: 700,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {tag}
+        </span>
+      )}
     </div>
   )
 }

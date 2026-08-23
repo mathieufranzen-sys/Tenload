@@ -255,15 +255,82 @@ describe('volume de course', () => {
   })
 })
 
-describe('charge de la veille', () => {
-  it('lit l’indice de la veille et l’écart avec l’avant-veille', () => {
+describe('notes en retard', () => {
+  // LUNDI = 2026-08-10, now = 2026-08-13 : jours 0 à 2 sont révolus, le 3 est
+  // aujourd'hui, le 4 est à venir.
+  it('compte les séances passées sans ressenti', () => {
+    const r = construireInsights({
+      ...base,
+      seances: planifiees([seance({ day: 0 }), seance({ day: 1 })]),
+    })
+    expect(r.notesEnRetard).toBe(2)
+  })
+
+  it('ne compte jamais le jour même', () => {
+    const r = construireInsights({ ...base, seances: planifiees([seance({ day: 3 })]) })
+    expect(r.notesEnRetard).toBe(0)
+  })
+
+  it('ne compte pas les séances à venir', () => {
+    const r = construireInsights({ ...base, seances: planifiees([seance({ day: 5 })]) })
+    expect(r.notesEnRetard).toBe(0)
+  })
+
+  it('une séance notée n’est plus en retard', () => {
+    const r = construireInsights({
+      ...base,
+      seances: planifiees([seance({ day: 0 }), seance({ day: 1 })]),
+      feedback: [ressenti(0)],
+    })
+    expect(r.notesEnRetard).toBe(1)
+  })
+
+  it('une séance sautée ne réclame pas de note', () => {
+    const r = construireInsights({
+      ...base,
+      seances: planifiees([seance({ day: 0, saute: true }), seance({ day: 1 })]),
+    })
+    expect(r.notesEnRetard).toBe(1)
+  })
+
+  it('une activité Strava ne lève pas le retard', () => {
+    // Strava dit qu'on a couru, pas ce que ça a coûté au tendon.
+    const r = construireInsights({
+      ...base,
+      seances: planifiees([seance({ day: 0 })]),
+      activities: [activite(LUNDI, 'Run')],
+    })
+    expect(r.notesEnRetard).toBe(1)
+  })
+
+  it('le repos et l’escalade n’attendent aucune note', () => {
+    const r = construireInsights({
+      ...base,
+      seances: planifiees([seance({ day: 0, type: 'repos' }), seance({ day: 1, type: 'escalade' })]),
+    })
+    expect(r.notesEnRetard).toBe(0)
+  })
+})
+
+describe('charge du jour', () => {
+  it('compare aujourd’hui à hier, pas hier à avant-hier', () => {
     const r = construireInsights({
       ...base,
       seances: [] as SeancePlanifiee[],
-      byDate: { '2026-08-12': { idx: 51 }, '2026-08-11': { idx: 44 } },
+      byDate: { '2026-08-13': { idx: 58 }, '2026-08-12': { idx: 51 }, '2026-08-11': { idx: 44 } },
     })
+    expect(r.chargeAujourdhui).toBe(58)
     expect(r.chargeVeille).toBe(51)
     expect(r.chargeEcart).toBe(7)
+  })
+
+  it('rend l’écart négatif quand la charge redescend', () => {
+    const r = construireInsights({
+      ...base,
+      seances: [] as SeancePlanifiee[],
+      byDate: { '2026-08-13': { idx: 30 }, '2026-08-12': { idx: 44 } },
+    })
+    expect(r.chargeEcart).toBe(-14)
   })
 
   it('reste nul quand l’historique manque', () => {

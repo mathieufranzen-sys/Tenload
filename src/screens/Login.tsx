@@ -11,7 +11,7 @@ import { CODE_MAX, CODE_MIN, codeValide, type Auth } from '../hooks/useAuth'
 import { MeshBackground } from '../components/MeshBackground'
 import { Icon } from '../components/Icon'
 
-export function Login({ auth }: { auth: Auth }) {
+export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
   const [email, setEmail] = useState('')
   const [statut, setStatut] = useState<'saisie' | 'envoi' | 'envoyé'>('saisie')
   const [erreur, setErreur] = useState<string | null>(null)
@@ -284,6 +284,28 @@ export function Login({ auth }: { auth: Auth }) {
               Aucun mot de passe. Un lien à usage unique, valable une heure.
             </p>
           </form>
+        )}
+
+        {/* Porte d'entrée sans compte : l'app entière sur un coureur fictif.
+            Aucune donnée réelle n'y apparaît, et rien ne s'y enregistre. */}
+        {onDemo && statut !== 'envoyé' && (
+          <button
+            onClick={onDemo}
+            className="glass"
+            style={{
+              width: '100%',
+              marginTop: 12,
+              borderRadius: 'var(--pill)',
+              padding: 14,
+              font: 'inherit',
+              fontSize: 14.5,
+              fontWeight: 600,
+              color: 'var(--sur-ink-2)',
+              cursor: 'pointer',
+            }}
+          >
+            Visiter la démo, sans compte
+          </button>
         )}
       </div>
     </div>

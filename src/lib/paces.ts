@@ -65,10 +65,14 @@ export const paceForTarget = (targetSeconds: number): number =>
  * Fréquences cardiaques.
  *
  * Corrigées le 9 août 2026 : Strava calculait les zones sur une FC max implicite
- * d'environ 193, alors que Mathieu plafonne à 179-180 sur un 3 km maximal
- * (FC moyenne 174 sur 12 minutes d'effort). On retient 181.
+ * d'environ 193, alors que Mathieu plafonnait à 179-180 sur son 3 km maximal
+ * du 8 août (FC moyenne 174 sur 12 minutes d'effort). On retenait 181.
+ *
+ * Relevé à 183 la semaine du 10 août 2026, valeur mesurée qui prime sur
+ * l'estimation. Ce n'est qu'un repli : `profiles.hr_max` fait foi dès que le
+ * profil est chargé, et se recalibre depuis Profil › Fréquence cardiaque.
  */
-export const HR_MAX = 181
+export const HR_MAX = 183
 
 export const HR_ZONES = [
   { key: 'Z1', label: 'Récupération', pct: [0, 0.68] },

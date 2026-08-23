@@ -52,9 +52,9 @@ export function HeartRateZones({ hrMax, onSave }: Props) {
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
         <b style={{ fontSize: 16 }}>Ta fréquence cardiaque maximale</b>
         <p style={{ color: 'var(--ink-2)', fontSize: 14.5, lineHeight: 1.5, margin: '6px 0 14px' }}>
-          Strava calcule tes zones sur une FC max implicite d'environ 193, ce qui est faux : tu
-          plafonnes autour de 180 sur un 3 km maximal. Une valeur trop haute te fait croire que tu
-          cours en endurance alors que tu es un cran au-dessus.
+          Une FC max trop haute te fait croire que tu cours en endurance alors que tu es un cran
+          au-dessus. Ton 3 km maximal du 8 août plafonnait à 179-180 ; tu as relevé 183 la semaine
+          du 10 août. C'est cette mesure qui fait foi.
         </p>
         <input
           type="number"

@@ -3,7 +3,7 @@
  * d'aller au maximum théorique, sans jamais laisser sortir le seuil du cadre.
  */
 import { describe, expect, it } from 'vitest'
-import { echelle } from './PainChart'
+import { continuer, echelle } from './PainChart'
 
 describe('echelle', () => {
   it('se resserre quand la douleur reste basse', () => {
@@ -41,5 +41,41 @@ describe('echelle', () => {
         expect(graduations[i]).toBeGreaterThan(graduations[i - 1])
       }
     }
+  })
+})
+
+describe('continuer', () => {
+  it('tient la valeur de la veille sur un jour sans mesure', () => {
+    expect(continuer([2, null, 3])).toEqual([
+      [0, 2],
+      [1, 2],
+      [2, 3],
+    ])
+  })
+
+  it('ne démarre qu’à la première mesure', () => {
+    // Avant le premier relevé il n'y a rien à prolonger.
+    expect(continuer([null, null, 4])).toEqual([[2, 4]])
+  })
+
+  it('tient jusqu’au bout après la dernière mesure', () => {
+    expect(continuer([1, null, null])).toEqual([
+      [0, 1],
+      [1, 1],
+      [2, 1],
+    ])
+  })
+
+  it('ne renvoie rien quand rien n’est mesuré', () => {
+    expect(continuer([null, null])).toEqual([])
+  })
+
+  it('laisse passer un vrai zéro', () => {
+    // Zéro mesuré et absence de mesure ne doivent pas se confondre.
+    expect(continuer([0, null, 2])).toEqual([
+      [0, 0],
+      [1, 0],
+      [2, 2],
+    ])
   })
 })

@@ -37,6 +37,27 @@ const SERIES: Array<{ cle: keyof Omit<PainRow, 'day'>; couleur: string; epaisseu
 ]
 
 /**
+ * Série continue : les jours sans mesure tiennent la valeur de la veille.
+ *
+ * Un jour de repos n'a pas de douleur à l'effort, mais ce n'est pas zéro — le
+ * tendon reste où il en était. Couper le trait donnait à lire un trou dans le
+ * carnet plutôt qu'une journée sans séance.
+ *
+ * La série ne démarre qu'à la première mesure : avant, il n'y a rien à
+ * prolonger. Les points restent posés sur les seules valeurs mesurées, ce qui
+ * distingue à l'œil ce qui est relevé de ce qui est tenu.
+ */
+export function continuer(valeurs: Array<number | null>): Array<readonly [number, number]> {
+  const out: Array<readonly [number, number]> = []
+  let dernier: number | null = null
+  valeurs.forEach((v, i) => {
+    if (v != null) dernier = v
+    if (dernier != null) out.push([i, dernier] as const)
+  })
+  return out
+}
+
+/**
  * Ordre d'empilement en cumulé, du bas vers le haut. Même couleur qu'en vue
  * séparée pour chaque mesure : basculer d'une vue à l'autre ne doit pas faire
  * changer la teinte de la douleur au réveil.
@@ -179,8 +200,13 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
           if (!pts.length) return null
           return (
             <g key={cle}>
+              {/* Le trait tient le niveau de la veille à travers les jours sans
+                  mesure : une journée sans séance n'est pas une douleur nulle,
+                  et la ligne qui se coupait donnait l'impression d'un trou dans
+                  le suivi. Les points, eux, ne se posent que sur du mesuré —
+                  c'est ce qui garde la distinction visible. */}
               <path
-                d={trace(pts)}
+                d={trace(continuer(rows.map((r) => r[cle])))}
                 fill="none"
                 stroke={couleur}
                 strokeWidth={epaisseur}

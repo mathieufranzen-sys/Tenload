@@ -35,6 +35,19 @@ interface Props {
   onSave?: (patch: ProfilPatch) => void
 }
 
+/**
+ * Pose le deux-points toute seule après les minutes.
+ *
+ * Le clavier numérique du téléphone n'a pas de « : » : sans ça, le champ était
+ * impossible à remplir sur mobile. On ne garde que les chiffres et on reformate
+ * à chaque frappe, ce qui rend aussi l'effacement naturel.
+ */
+export function formaterChrono(brut: string): string {
+  const chiffres = brut.replace(/\D/g, '').slice(0, 4)
+  if (chiffres.length <= 2) return chiffres
+  return `${chiffres.slice(0, chiffres.length - 2)}:${chiffres.slice(-2)}`
+}
+
 export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
   const [saisie, setSaisie] = useState(versMMSS(test3k))
   const [erreur, setErreur] = useState<string | null>(null)
@@ -79,7 +92,7 @@ export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
           placeholder="12:02"
           value={saisie}
           disabled={!onSave}
-          onChange={(e) => setSaisie(e.target.value)}
+          onChange={(e) => setSaisie(formaterChrono(e.target.value))}
           onKeyDown={(e) => e.key === 'Enter' && recalibrer()}
           style={{
             width: '100%',
