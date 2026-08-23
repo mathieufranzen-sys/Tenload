@@ -35,8 +35,6 @@ import { DecoupageSeance, ProfilSeance } from './ProfilSeance'
 import { RessentiJauges } from './RessentiJauges'
 import { JaugeRessenti } from './JaugeRessenti'
 import { StatsSeance } from './StatsSeance'
-import { ZonesSeance } from './ZonesSeance'
-import { repartitionZones } from '../lib/repartition'
 
 const plan = planJson as unknown as Plan
 
@@ -257,8 +255,6 @@ export function SessionSheet({
             marathonPace={marathonPace}
             distanceNotee={demandeDistance ? (feedback?.distance_km ?? null) : null}
           />
-
-          <ZonesSeance parts={repartitionZones(s, marathonPace)} />
 
           <div style={{ height: 1, background: 'var(--border)', margin: '24px 0 20px' }} />
 
