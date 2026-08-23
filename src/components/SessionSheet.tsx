@@ -4,7 +4,7 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import planJson from '../data/plan.json'
-import type { Plan, Session, Step as StepTuple, Week, ZoneKey } from '../data/types'
+import type { Plan, Session, Week, ZoneKey } from '../data/types'
 import type { SeancePlanifiee } from '../lib/adapt'
 import {
   cleEcart,
@@ -16,7 +16,7 @@ import {
 import { EcartEditor } from './EcartEditor'
 import { CarteCoach } from './CarteCoach'
 import { butDeLaSeance } from '../lib/coach'
-import { formatDayLong, formatNumber } from '../lib/dates'
+import { formatDayLong } from '../lib/dates'
 import {
   DOULEUR_DETAIL,
   DOULEUR_MOT,
@@ -30,6 +30,8 @@ import type { FeedbackRow } from '../lib/buildPain'
 import { Icon } from './Icon'
 import { EchelleIntensite } from './MarqueSeance'
 import { encreZone, styleSeance } from '../lib/seanceStyle'
+import { deroulerSeance } from '../lib/deroule'
+import { DecoupageSeance, ProfilSeance } from './ProfilSeance'
 import { RessentiJauges } from './RessentiJauges'
 import { JaugeRessenti } from './JaugeRessenti'
 import { StatsSeance } from './StatsSeance'
@@ -133,6 +135,8 @@ export function SessionSheet({
    * comme une autre et le formulaire réapparaît.
    */
   const ressentiImplicite = s.type === 'repos' && !seance.ecart && !feedback
+
+  const deroule = useMemo(() => deroulerSeance(s, marathonPace), [s, marathonPace])
 
   return (
     <div
@@ -297,31 +301,15 @@ export function SessionSheet({
             </div>
           )}
 
-          {s.struct && (
+          {/* Le profil d'abord, le détail ensuite : la forme de la séance se
+              lit en un coup d'œil, les allures se lisent quand on s'y met. */}
+          {deroule.length > 0 && (
             <>
-              <SectionTitre icone="run">Session</SectionTitre>
-              {s.struct.map((seg, i) => (
-                <StepView key={i} main={`${formatNumber(seg.km)} km`} zone={seg.zone} marathonPace={marathonPace} />
-              ))}
-            </>
-          )}
-
-          {s.wu && s.wu.length > 0 && (
-            <>
-              <SectionTitre icone="up">Échauffement</SectionTitre>
-              <Segs steps={s.wu} marathonPace={marathonPace} />
-            </>
-          )}
-          {s.main && s.main.length > 0 && (
-            <>
-              <SectionTitre icone="run">{['race', 'course'].includes(s.type) ? 'Course' : 'Corps de séance'}</SectionTitre>
-              <Segs steps={s.main} marathonPace={marathonPace} />
-            </>
-          )}
-          {s.cd && s.cd.length > 0 && (
-            <>
-              <SectionTitre icone="down">Retour au calme</SectionTitre>
-              <Segs steps={s.cd} marathonPace={marathonPace} />
+              <SectionTitre icone="run">
+                {['race', 'course'].includes(s.type) ? 'Course' : 'Déroulé'}
+              </SectionTitre>
+              <ProfilSeance blocs={deroule} />
+              <DecoupageSeance session={s} blocs={deroule} marathonPace={marathonPace} />
             </>
           )}
 
@@ -539,20 +527,6 @@ function SectionTitre({
       <Icon name={icone} size={21} />
       {children}
     </div>
-  )
-}
-
-function Segs({ steps, marathonPace }: { steps: StepTuple[]; marathonPace: number }) {
-  return (
-    <>
-      {steps.map(([a, b], i) => {
-        const main = typeof a === 'number' ? `${formatNumber(a)} km` : String(a)
-        if (b == null) return <StepView key={i} main={main} zone={null} marathonPace={marathonPace} />
-        if (typeof b === 'string' && b in plan.zones)
-          return <StepView key={i} main={main} zone={b as ZoneKey} marathonPace={marathonPace} />
-        return <StepView key={i} main={main} zone={null} sub={String(b)} marathonPace={marathonPace} />
-      })}
-    </>
   )
 }
 
