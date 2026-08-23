@@ -8,19 +8,22 @@
  *
  * À la place, deux dimensions séparées, toutes deux en encre neutre :
  *
- * 1. **La discipline**, portée par une icône. Cinq familles seulement :
- *    courir, pédaler, soulever, grimper, se reposer. C'est ce qu'on cherche
- *    quand on balaie sa semaine.
- * 2. **L'intensité**, portée par une échelle de quatre barres. C'est elle qui
- *    sépare les quatre séances de course, que l'icône ne peut pas distinguer :
- *    une endurance et des intervalles sont le même geste à deux efforts.
+ * 1. **La nature de la séance**, portée par une icône. La course en compte
+ *    trois plutôt qu'une, parce que trois séances de course ne se préparent
+ *    pas pareil : le pas de course pour l'endurance, le tracé qui serpente
+ *    pour la sortie longue dont la distance est le sujet, l'éclair pour la
+ *    qualité. S'ajoutent pédaler, soulever, grimper, se reposer, et le
+ *    dossard des jours de course.
+ * 2. **L'intensité**, portée par une échelle de quatre barres. Elle nuance à
+ *    l'intérieur d'une même icône : un tempo et des intervalles sont le même
+ *    geste à deux efforts.
  *
  * Séparer les deux est un gain sur les dégradés, qui les confondaient : le
  * violet de la sortie longue ne disait ni « course » ni « facile ».
  */
 import type { SessionType, ZoneKey } from '../data/types'
 
-export type Discipline = 'run' | 'bike' | 'dumb' | 'climb' | 'rest' | 'flag'
+export type Discipline = 'run' | 'route' | 'bolt' | 'bike' | 'dumb' | 'climb' | 'rest' | 'flag'
 
 export interface StyleSeance {
   /** Nom d'icône dans `Icon`. */
@@ -37,11 +40,11 @@ export interface StyleSeance {
  * sur la carte, l'échelle n'a pas à le répéter.
  */
 export const STYLE_SEANCE: Record<SessionType, StyleSeance> = {
-  ef: { icone: 'run', intensite: 1, famille: 'Course' },
-  long: { icone: 'run', intensite: 2, famille: 'Course' },
-  tempo: { icone: 'run', intensite: 3, famille: 'Course' },
-  inter: { icone: 'run', intensite: 4, famille: 'Course' },
-  test: { icone: 'run', intensite: 4, famille: 'Course' },
+  ef: { icone: 'run', intensite: 1, famille: 'Course facile' },
+  long: { icone: 'route', intensite: 2, famille: 'Sortie longue' },
+  tempo: { icone: 'bolt', intensite: 3, famille: 'Séance de qualité' },
+  inter: { icone: 'bolt', intensite: 4, famille: 'Séance de qualité' },
+  test: { icone: 'bolt', intensite: 4, famille: 'Test de calibrage' },
   course: { icone: 'flag', intensite: 4, famille: 'Dossard' },
   race: { icone: 'flag', intensite: 4, famille: 'Dossard' },
   velo: { icone: 'bike', intensite: 1, famille: 'Vélo' },

@@ -23,6 +23,11 @@ const PATHS: Record<string, string> = {
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 20.5c1.6-3.6 4.8-5.5 8-5.5s6.4 1.9 8 5.5"/>',
   bike: '<circle cx="5.5" cy="17" r="3.6"/><circle cx="18.5" cy="17" r="3.6"/><circle cx="14.5" cy="4.4" r="1.6"/><path d="M5.5 17l4-5.4h5l-3-3.6 3-2.2M14.5 11.6 18.5 17"/>',
   flag: '<path d="M5.5 21V3.5M5.5 4.6h11l-2 3.4 2 3.4h-11"/>',
+  // Un tracé qui serpente entre son départ et son arrivée : la sortie longue
+  // est la seule séance dont la distance est le sujet.
+  route:
+    '<circle cx="5.5" cy="19" r="2.3"/><circle cx="18.5" cy="5" r="2.3"/><path d="M7.8 19h6.7a3.5 3.5 0 0 0 0-7H9.5a3.5 3.5 0 0 1 0-7h6.7"/>',
+  bolt: '<path d="M13.4 2.5 4.5 14h6.6l-1.5 7.5L19.5 10h-6.6l.5-7.5Z"/>',
 }
 
 export function Icon({

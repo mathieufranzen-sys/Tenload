@@ -1,9 +1,9 @@
 /**
  * La séance du jour, dépliée, en verre dépoli sur le dégradé.
  *
- * Toutes les sections partagent le même retrait horizontal (16 px, 20 px à
- * gauche pour dégager le rail) : c'est ce qui manquait à la maquette, chaque
- * bloc avait son propre padding et les colonnes ne s'alignaient pas.
+ * Toutes les sections partagent le même retrait horizontal : c'est ce qui
+ * manquait à la maquette, chaque bloc avait son propre padding et les colonnes
+ * ne s'alignaient pas.
  */
 import type { CSSProperties, ReactNode } from 'react'
 import planJson from '../data/plan.json'
@@ -15,8 +15,9 @@ import { EchelleIntensite, MarqueSeance } from './MarqueSeance'
 
 const plan = planJson as unknown as Plan
 
-/** Retrait commun à toutes les sections de la carte. */
-const RETRAIT = '15px 16px 15px 20px'
+/** Retrait commun à toutes les sections de la carte, symétrique depuis que
+ *  le rail de gauche a disparu. */
+const RETRAIT = '15px 16px'
 
 export function SessionHero({
   session: s,
@@ -55,21 +56,8 @@ export function SessionHero({
         cursor: onClick ? 'pointer' : 'default',
       }}
     >
-      {/* Le rail reste, mais il n'est plus qu'une structure : la nature de la
-          séance se lit maintenant dans l'icône et l'échelle d'effort, la
-          couleur étant rendue à la charge du tendon. */}
-      <span
-        aria-hidden
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: 4,
-          background: 'rgba(255,255,255,.3)',
-        }}
-      />
-
+      {/* Plus de rail : une fois vidé de sa couleur il ne portait plus rien,
+          et il décalait toutes les colonnes de la carte pour se dégager. */}
       <div style={{ padding: RETRAIT, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <MarqueSeance type={s.type} taille={38} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -163,7 +151,7 @@ const etiquette: CSSProperties = {
 
 function Kv({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ flex: 1, padding: '11px 12px 11px 20px', borderRight: SEPARATEUR }}>
+    <div style={{ flex: 1, padding: '11px 12px 11px 16px', borderRight: SEPARATEUR }}>
       <div
         style={{
           fontSize: 8.5,
