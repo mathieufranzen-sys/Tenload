@@ -80,38 +80,37 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick }: Pro
           </div>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
-          {/* L'échelle a remplacé la pastille de couleur : la pastille ne
-              faisait que redire le type déjà écrit à côté d'elle, l'échelle
-              ajoute l'effort, qui ne l'est nulle part. */}
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '4px 10px',
-              borderRadius: 'var(--pill)',
-              background: 'rgba(255,255,255,.07)',
-              border: '1px solid rgba(255,255,255,.12)',
-              fontSize: 11.5,
-              fontWeight: 650,
-              letterSpacing: '.2px',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {s.cat}
-            {st.intensite > 0 && <EchelleIntensite niveau={st.intensite} hauteur={11} />}
-          </span>
+        {/* Les étiquettes d'écart tiennent sur la même ligne que l'intensité :
+            elles qualifient la même séance, les empiler sur deux rangs donnait
+            à lire deux informations de nature différente. */}
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 7, marginTop: 10 }}>
+          {/* Le nom de la séance était déjà le titre, juste au-dessus. Le tag
+              porte donc ce qui n'est écrit nulle part ailleurs : l'effort. */}
+          {st.intensite > 0 && (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '4px 10px',
+                borderRadius: 'var(--pill)',
+                background: 'rgba(255,255,255,.07)',
+                border: '1px solid rgba(255,255,255,.12)',
+                fontSize: 11.5,
+                fontWeight: 650,
+                letterSpacing: '.2px',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Intensité
+              <EchelleIntensite niveau={st.intensite} hauteur={11} />
+            </span>
+          )}
+          {/* Bleu pour une décision de Mathieu, ambre pour le moteur
+              d'adaptation : la couleur dit d'où vient le changement. */}
+          {s.ecart && <Etiquette teinte="78,140,255" encre="#9DC1FF">{s.ecart}</Etiquette>}
+          {s.adapted && <Etiquette teinte="250,178,25" encre="#FFD166">{s.adapted}</Etiquette>}
         </div>
-
-        {(s.adapted || s.ecart) && (
-          <div style={{ marginTop: 9, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {/* Bleu pour une décision de Mathieu, ambre pour le moteur
-                d'adaptation : la couleur dit d'où vient le changement. */}
-            {s.ecart && <Etiquette teinte="78,140,255" encre="#9DC1FF">{s.ecart}</Etiquette>}
-            {s.adapted && <Etiquette teinte="250,178,25" encre="#FFD166">{s.adapted}</Etiquette>}
-          </div>
-        )}
 
         {feedback && (
           <div style={{ marginTop: 9, color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500 }}>
