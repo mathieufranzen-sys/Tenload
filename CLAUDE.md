@@ -159,8 +159,8 @@ Une FC max surestimée fait passer de l'endurance pour du tempo. Sur son 3 km
 maximal du 8 août, Mathieu plafonnait à **179-180**, avec un plateau de FC
 moyenne à 174 pendant huit minutes — on retenait 181.
 
-**Relevé à 183 la semaine du 10 août 2026.** C'est une mesure, elle prime sur
-l'estimation : `HR_MAX` vaut désormais 183.
+**Relevé à 183 la semaine du 10 août 2026, puis à 185 le 23 août.** Ce sont des
+mesures, elles priment sur l'estimation : `HR_MAX` vaut désormais 185.
 
 Conséquences à garder en tête :
 
@@ -170,7 +170,7 @@ Conséquences à garder en tête :
 - Sur sa sortie de 25 km à 140 de moyenne, il est au **haut de Z2**, pas au
   milieu : il court son endurance un peu trop vite.
 
-**183 est une valeur par défaut, pas une constante.** Elle vit dans
+**185 est une valeur par défaut, pas une constante.** Elle vit dans
 `profiles.hr_max` et se recalibre depuis Profil → Fréquence cardiaque, qui
 prévisualise les zones avant d'enregistrer. `HR_MAX` dans `paces.ts` ne sert
 plus que de repli quand le profil n'est pas chargé. Le tableau de l'écran

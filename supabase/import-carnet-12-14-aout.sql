@@ -54,6 +54,15 @@ begin
     mood         = excluded.mood,
     note         = excluded.note;
 
-  raise notice 'Carnet complété : 3 journées (12 au 14 août 2026).';
+  -- FC max relevée à 185 le 23 août 2026. C'est `profiles.hr_max` qui fait foi
+  -- dans l'app ; la constante de `paces.ts` n'est qu'un repli quand le profil
+  -- n'est pas encore chargé. Changer la constante seule ne déplace donc pas
+  -- les zones affichées.
+  update public.profiles set hr_max = 185 where id = uid;
+  if not found then
+    raise exception 'Aucune ligne profiles pour ce compte. Ouvre l''app une fois, puis relance.';
+  end if;
+
+  raise notice 'Carnet complété (12 au 14 août 2026) et FC max portée à 185.';
 end
 $import$;
