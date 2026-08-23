@@ -10,10 +10,10 @@
  *
  * 1. **La nature de la séance**, portée par une icône. La course en compte
  *    trois plutôt qu'une, parce que trois séances de course ne se préparent
- *    pas pareil : le pas de course pour l'endurance, le tracé qui serpente
- *    pour la sortie longue dont la distance est le sujet, l'éclair pour la
- *    qualité. S'ajoutent pédaler, soulever, grimper, se reposer, et le
- *    dossard des jours de course.
+ *    pas pareil : le coureur seul pour l'endurance, le coureur avec son sac
+ *    pour la sortie longue — la seule où l'on emporte de quoi tenir la
+ *    distance —, le coureur lancé pour la qualité. S'ajoutent pédaler,
+ *    soulever, grimper, se reposer, et le dossard des jours de course.
  * 2. **L'intensité**, portée par une échelle de quatre barres. Elle nuance à
  *    l'intérieur d'une même icône : un tempo et des intervalles sont le même
  *    geste à deux efforts.
@@ -23,7 +23,15 @@
  */
 import type { SessionType, ZoneKey } from '../data/types'
 
-export type Discipline = 'run' | 'route' | 'bolt' | 'bike' | 'dumb' | 'climb' | 'rest' | 'flag'
+export type Discipline =
+  | 'run'
+  | 'runPack'
+  | 'runFast'
+  | 'bike'
+  | 'dumb'
+  | 'climb'
+  | 'rest'
+  | 'flag'
 
 export interface StyleSeance {
   /** Nom d'icône dans `Icon`. */
@@ -41,10 +49,10 @@ export interface StyleSeance {
  */
 export const STYLE_SEANCE: Record<SessionType, StyleSeance> = {
   ef: { icone: 'run', intensite: 1, famille: 'Course facile' },
-  long: { icone: 'route', intensite: 2, famille: 'Sortie longue' },
-  tempo: { icone: 'bolt', intensite: 3, famille: 'Séance de qualité' },
-  inter: { icone: 'bolt', intensite: 4, famille: 'Séance de qualité' },
-  test: { icone: 'bolt', intensite: 4, famille: 'Test de calibrage' },
+  long: { icone: 'runPack', intensite: 2, famille: 'Sortie longue' },
+  tempo: { icone: 'runFast', intensite: 3, famille: 'Séance de qualité' },
+  inter: { icone: 'runFast', intensite: 4, famille: 'Séance de qualité' },
+  test: { icone: 'runFast', intensite: 4, famille: 'Test de calibrage' },
   course: { icone: 'flag', intensite: 4, famille: 'Dossard' },
   race: { icone: 'flag', intensite: 4, famille: 'Dossard' },
   velo: { icone: 'bike', intensite: 1, famille: 'Vélo' },

@@ -23,11 +23,20 @@ const PATHS: Record<string, string> = {
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 20.5c1.6-3.6 4.8-5.5 8-5.5s6.4 1.9 8 5.5"/>',
   bike: '<circle cx="5.5" cy="17" r="3.6"/><circle cx="18.5" cy="17" r="3.6"/><circle cx="14.5" cy="4.4" r="1.6"/><path d="M5.5 17l4-5.4h5l-3-3.6 3-2.2M14.5 11.6 18.5 17"/>',
   flag: '<path d="M5.5 21V3.5M5.5 4.6h11l-2 3.4 2 3.4h-11"/>',
-  // Un tracé qui serpente entre son départ et son arrivée : la sortie longue
-  // est la seule séance dont la distance est le sujet.
-  route:
-    '<circle cx="5.5" cy="19" r="2.3"/><circle cx="18.5" cy="5" r="2.3"/><path d="M7.8 19h6.7a3.5 3.5 0 0 0 0-7H9.5a3.5 3.5 0 0 1 0-7h6.7"/>',
   bolt: '<path d="M13.4 2.5 4.5 14h6.6l-1.5 7.5L19.5 10h-6.6l.5-7.5Z"/>',
+  /*
+   * Trois coureurs pour les trois natures de course. Le même bonhomme à
+   * chaque fois, ce qui garde la famille lisible ; ce qui l'entoure dit
+   * laquelle.
+   *
+   * `runFast` : le coureur poussé vers la droite, trois traits de vitesse
+   * derrière lui. `runPack` : le même avec un sac sur le dos, parce qu'une
+   * sortie longue est la seule où l'on emporte de quoi tenir la distance.
+   */
+  runFast:
+    '<circle cx="16" cy="4" r="2"/><path d="M14.2 8.2 11 10l1.6 3.6L9.5 21M12.6 13.6l4.4 1.4 1.6 5M14.2 8.2c1.6-.8 3.4-.4 4.4 1l.8 1.2 2.2.5"/><path d="M2 8.5h4M1.5 12.5h4.4M3 16.5h3.4"/>',
+  runPack:
+    '<g transform="translate(5.6 1.2) scale(.8)"><circle cx="14.5" cy="4" r="2"/><path d="M12.7 8.2 9.5 10l1.6 3.6L8 21M11.1 13.6l4.4 1.4 1.6 5M12.7 8.2c1.6-.8 3.4-.4 4.4 1l1 1.4 2.6.6"/></g><path d="M10.4 7.4v-.8a1.2 1.2 0 0 1 1.2-1.2h.4a1.2 1.2 0 0 1 1.2 1.2v.8"/><rect x="8.6" y="7.4" width="5" height="5.4" rx="1.6"/>',
 }
 
 export function Icon({
