@@ -1,0 +1,4 @@
+# Single Page App : toutes les routes retombent sur index.html.
+# Doublon volontaire de netlify.toml, pour les hébergeurs qui lisent ce
+# fichier-ci (Cloudflare Pages). Netlify donne la priorité au toml.
+/*    /index.html    200

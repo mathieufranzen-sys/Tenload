@@ -1,0 +1,20 @@
+# Mêmes en-têtes que netlify.toml, au format lu par Cloudflare Pages.
+# Netlify lit les deux et donne la priorité au toml : garder les deux en
+# phase, sinon l'app ne se comporte pas pareil selon l'hébergeur.
+
+# Le service worker ne doit jamais être mis en cache par le navigateur,
+# sinon les mises à jour de l'app ne descendent pas.
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
