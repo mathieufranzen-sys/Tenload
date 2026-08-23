@@ -98,7 +98,7 @@ export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
             width: '100%',
             boxSizing: 'border-box',
             background: 'var(--surface-2)',
-            border: `1px solid ${erreur ? 'var(--c-inter)' : 'var(--border-2)'}`,
+            border: `1px solid ${erreur ? 'var(--c-erreur)' : 'var(--border-2)'}`,
             borderRadius: 14,
             padding: 14,
             fontSize: 19,
@@ -108,7 +108,7 @@ export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
           }}
         />
         {erreur ? (
-          <div style={{ color: 'var(--c-inter)', fontSize: 12.5, margin: '8px 2px 14px', fontWeight: 600 }}>{erreur}</div>
+          <div style={{ color: 'var(--c-erreur)', fontSize: 12.5, margin: '8px 2px 14px', fontWeight: 600 }}>{erreur}</div>
         ) : (
           <div style={{ color: 'var(--ink-3)', fontSize: 12.5, margin: '8px 2px 14px', fontWeight: 600 }}>
             Format mm:ss — temps total sur 3 km

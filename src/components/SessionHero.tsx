@@ -10,6 +10,8 @@ import planJson from '../data/plan.json'
 import type { Plan, Session, ZoneKey } from '../data/types'
 import { formatNumber } from '../lib/dates'
 import { allureUnique, estimateDuration, formatPace, zonePace } from '../lib/paces'
+import { encreZone, styleSeance } from '../lib/seanceStyle'
+import { EchelleIntensite, MarqueSeance } from './MarqueSeance'
 
 const plan = planJson as unknown as Plan
 
@@ -53,6 +55,9 @@ export function SessionHero({
         cursor: onClick ? 'pointer' : 'default',
       }}
     >
+      {/* Le rail reste, mais il n'est plus qu'une structure : la nature de la
+          séance se lit maintenant dans l'icône et l'échelle d'effort, la
+          couleur étant rendue à la charge du tendon. */}
       <span
         aria-hidden
         style={{
@@ -61,12 +66,19 @@ export function SessionHero({
           top: 0,
           bottom: 0,
           width: 4,
-          background: `var(--c-${s.type})`,
+          background: 'rgba(255,255,255,.3)',
         }}
       />
 
-      <div style={{ padding: RETRAIT }}>
-        <div style={etiquette}>{quand} · {s.cat}</div>
+      <div style={{ padding: RETRAIT, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+        <MarqueSeance type={s.type} taille={38} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ ...etiquette, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>{quand} · {s.cat}</span>
+          {styleSeance(s.type).intensite > 0 && (
+            <EchelleIntensite niveau={styleSeance(s.type).intensite} hauteur={10} />
+          )}
+        </div>
         <h2
           style={{
             fontSize: 17,
@@ -95,6 +107,7 @@ export function SessionHero({
             {s.adapted}
           </span>
         )}
+        </div>
       </div>
 
       <div style={{ display: 'flex', borderTop: SEPARATEUR }}>
@@ -115,18 +128,18 @@ export function SessionHero({
             <Pas
               titre={`${formatNumber(premierSegment.km)} km : ${formatPace(zonePace(marathonPace, premierSegment.zone))}/km`}
               detail={detailZone(premierSegment.zone, marathonPace)}
-              couleur={`var(--c-${plan.zones[premierSegment.zone].color})`}
+              couleur={encreZone(premierSegment.zone)}
             />
           )}
           {!premierSegment && premierPas && (
             <Pas
               titre={typeof premierPas[0] === 'number' ? `${formatNumber(premierPas[0])} km` : String(premierPas[0])}
               detail={typeof premierPas[1] === 'string' && !(premierPas[1] in plan.zones) ? premierPas[1] : undefined}
-              couleur={`var(--c-${s.type})`}
+              couleur="rgba(255,255,255,.34)"
             />
           )}
           {!premierSegment && !premierPas && s.ex?.[0] && (
-            <Pas titre={s.ex[0][0]} detail={s.ex[0][1]} couleur={`var(--c-${s.type})`} />
+            <Pas titre={s.ex[0][0]} detail={s.ex[0][1]} couleur="rgba(255,255,255,.34)" />
           )}
         </div>
       )}

@@ -54,33 +54,14 @@
   --dur-fast: 0.15s;
   --dur: 0.3s;
 
-  /* ─── dégradés par type de séance ────────────────────────────────────── */
-  --g-long: linear-gradient(180deg, #6d4bc9, #ac74e3);
-  --g-ef: linear-gradient(180deg, #e4da3a, #3fd13f);
-  --g-inter: linear-gradient(180deg, #e5433d, #f5872e);
-  --g-tempo: linear-gradient(180deg, #f5a623, #f5de23);
-  --g-test: linear-gradient(180deg, #ff5e3a, #ffb03a);
-  --g-course: linear-gradient(180deg, #f5527a, #c9184a);
-  --g-race: linear-gradient(180deg, #e5484d, #8b1a1a);
-  --g-muscu-haut: linear-gradient(180deg, #2e7be8, #5cacff);
-  --g-muscu-bas: linear-gradient(180deg, #1c5fd0, #3e90f5);
-  --g-velo: linear-gradient(180deg, #00b3c4, #45e0b8);
-  --g-escalade: linear-gradient(180deg, #e86fa8, #b33e86);
-  --g-repos: linear-gradient(180deg, #454a54, #6e747e);
-
-  /* teinte pleine, pour les pastilles et les bordures */
-  --c-long: #6d4bc9;
-  --c-ef: #7ad13f;
-  --c-inter: #e5433d;
-  --c-tempo: #f5a623;
-  --c-test: #ff5e3a;
-  --c-course: #f5527a;
-  --c-race: #e5484d;
-  --c-muscu-haut: #2e7be8;
-  --c-muscu-bas: #1c5fd0;
-  --c-velo: #00b3c4;
-  --c-escalade: #e86fa8;
-  --c-repos: #6e747e;
+  /* ─── encre d'erreur ─────────────────────────────────────────────────
+     Les douze dégradés et teintes par type de séance sont partis : la couleur
+     est rendue à la charge du tendon, seule information de l'app qui ait un
+     sens de lecture. La nature d'une séance se dit désormais par son icône de
+     discipline et son échelle d'intensité (voir src/lib/seanceStyle.ts).
+     Seul le rouge survit, pour ce qu'il a toujours vraiment servi ici : les
+     états d'erreur de formulaire, qui empruntaient le rouge des intervalles. */
+  --c-erreur: #e5433d;
 
   /* ─── data-viz : palette validée pour surface sombre ─────────────────── */
   --series-1: #3987e5;

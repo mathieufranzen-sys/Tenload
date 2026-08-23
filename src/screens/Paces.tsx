@@ -12,6 +12,7 @@ import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { FeedbackRow } from '../lib/buildPain'
 import { MARATHON_KM, formatDuration, formatPace, zonePace, zoneHrRange } from '../lib/paces'
 import type { AjustementForme } from '../lib/forme'
+import { encreZone } from '../lib/seanceStyle'
 import { EnteteEcran } from '../components/EnteteEcran'
 import { MeshBackground } from '../components/MeshBackground'
 import { Segmented } from '../components/Segmented'
@@ -176,7 +177,10 @@ export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLab
               const [lo, hi] = zoneHrRange(k, vueZone === 'velo' ? 'velo' : 'course', hrMax)
               return (
                 <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 0', borderBottom: '1px solid var(--glass-border)' }}>
-                  <div style={{ width: 4.5, height: 34, borderRadius: 3, flex: 'none', background: `var(--g-${z.color})` }} />
+                  {/* Le liseré monte en densité avec la zone : les six se
+                      classent à l'œil, ce qu'une palette de six teintes ne
+                      permettait pas. */}
+                  <div style={{ width: 4.5, height: 34, borderRadius: 3, flex: 'none', background: encreZone(k) }} />
                   <div style={{ flex: 1 }}>
                     <b style={{ display: 'block', fontSize: 15.5, fontWeight: 700, letterSpacing: '-.2px' }}>{z.label}</b>
                     {/* Interlignage resserré : ces descriptions tiennent sur

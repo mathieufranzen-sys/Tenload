@@ -28,6 +28,8 @@ import { familleDe } from '../lib/insights'
 import { formatPace, zonePace } from '../lib/paces'
 import type { FeedbackRow } from '../lib/buildPain'
 import { Icon } from './Icon'
+import { EchelleIntensite } from './MarqueSeance'
+import { encreZone, styleSeance } from '../lib/seanceStyle'
 import { RessentiJauges } from './RessentiJauges'
 import { JaugeRessenti } from './JaugeRessenti'
 import { StatsSeance } from './StatsSeance'
@@ -146,9 +148,9 @@ export function SessionSheet({
         margin: '0 auto',
       }}
     >
-      {/* Le dégradé du type de séance tient tout le haut de l'écran, à la
-          manière des fiches santé qui ont servi de référence : c'est lui qui
-          annonce la nature de la séance avant même le titre. */}
+      {/* Le haut de l'écran garde sa masse claire, mais en encre neutre : la
+          discipline s'annonce par le grand pictogramme filigrané plutôt que
+          par une teinte, qui ne dit plus que la charge du tendon. */}
       <div
         aria-hidden
         style={{
@@ -157,11 +159,23 @@ export function SessionSheet({
           left: 0,
           right: 0,
           height: 460,
-          background: `var(--g-${s.type})`,
-          opacity: 0.42,
+          background: 'linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,0))',
           pointerEvents: 'none',
         }}
       />
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: 46,
+          right: -26,
+          color: 'var(--ink)',
+          opacity: 0.075,
+          pointerEvents: 'none',
+        }}
+      >
+        <Icon name={styleSeance(s.type).icone} size={200} style={{ strokeWidth: 1.1 }} />
+      </div>
       <div
         aria-hidden
         style={{
@@ -212,9 +226,9 @@ export function SessionSheet({
               marginBottom: 12,
             }}
           >
-            <span
-              style={{ width: 7, height: 7, borderRadius: '50%', background: `var(--c-${s.type})` }}
-            />
+            {styleSeance(s.type).intensite > 0 && (
+              <EchelleIntensite niveau={styleSeance(s.type).intensite} hauteur={11} />
+            )}
             {s.cat} · {formatDayLong(day)}
           </div>
 
@@ -563,7 +577,7 @@ function StepView({
         ? `Pas plus vite que ${allure}/km. C'est une limite, pas un objectif.`
         : z.label
     : sub
-  const couleur = z ? `var(--c-${z.color})` : 'var(--ink-3)'
+  const couleur = zone ? encreZone(zone) : 'var(--ink-3)'
 
   return (
     <div style={{ position: 'relative', paddingLeft: 18, marginBottom: 14 }}>

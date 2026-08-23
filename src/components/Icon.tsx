@@ -21,6 +21,8 @@ const PATHS: Record<string, string> = {
   chevronLeft: '<path d="M14.5 5 8 12l6.5 7"/>',
   chevronRight: '<path d="M9.5 5 16 12l-6.5 7"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 20.5c1.6-3.6 4.8-5.5 8-5.5s6.4 1.9 8 5.5"/>',
+  bike: '<circle cx="5.5" cy="17" r="3.6"/><circle cx="18.5" cy="17" r="3.6"/><circle cx="14.5" cy="4.4" r="1.6"/><path d="M5.5 17l4-5.4h5l-3-3.6 3-2.2M14.5 11.6 18.5 17"/>',
+  flag: '<path d="M5.5 21V3.5M5.5 4.6h11l-2 3.4 2 3.4h-11"/>',
 }
 
 export function Icon({

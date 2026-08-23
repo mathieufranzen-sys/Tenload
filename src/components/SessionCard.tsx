@@ -1,14 +1,17 @@
 /**
  * Carte de séance : le composant le plus vu de l'app.
  *
- * Le liseré vertical de 9 px, à ras du bord, porte l'identité du type de
- * séance. C'est le repère qui permet de lire sa semaine sans lire les titres.
- * Le tag reprend la couleur du type, le chevron annonce que la carte s'ouvre.
+ * L'identité du type de séance tient dans l'icône de discipline à gauche et
+ * l'échelle d'intensité qui l'accompagne, toutes deux en encre neutre. Le
+ * liseré de couleur qui jouait ce rôle est parti : la couleur ne dit plus que
+ * la charge du tendon. Le chevron annonce que la carte s'ouvre.
  */
 import type { Session } from '../data/types'
 import { formatNumber } from '../lib/dates'
 import { estimateDuration, formatDuration } from '../lib/paces'
 import { Icon } from './Icon'
+import { EchelleIntensite, MarqueSeance } from './MarqueSeance'
+import { styleSeance } from '../lib/seanceStyle'
 
 interface Props {
   session: Session
@@ -25,6 +28,7 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick }: Pro
   // d'elle-même, « 40 min - 45 min · 40 min ». Une séance sans distance n'en
   // a pas, et la ligne s'arrête à la durée.
   const volume = s.dist ? `${formatNumber(s.dist)} km` : null
+  const st = styleSeance(s.type)
 
   return (
     <button
@@ -33,13 +37,13 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick }: Pro
       style={{
         position: 'relative',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         gap: 12,
         width: '100%',
         textAlign: 'left',
         color: 'inherit',
         borderRadius: 20,
-        padding: '16px 14px 16px 24px',
+        padding: '15px 14px',
         marginBottom: 11,
         overflow: 'hidden',
         // Une séance sautée s'efface plus qu'une séance notée : elle reste
@@ -48,17 +52,10 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick }: Pro
         transition: 'transform var(--dur-fast), background var(--dur-fast)',
       }}
     >
-      <span
-        aria-hidden
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: 9,
-          background: `var(--g-${s.type})`,
-        }}
-      />
+      {/* L'icône est alignée en haut et non centrée : les cartes n'ont pas
+          toutes la même hauteur (étiquettes d'écart, ressenti noté), et une
+          marque centrée sautait d'une ligne à l'autre en balayant la semaine. */}
+      <MarqueSeance type={s.type} />
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <h3
@@ -84,32 +81,26 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick }: Pro
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+          {/* L'échelle a remplacé la pastille de couleur : la pastille ne
+              faisait que redire le type déjà écrit à côté d'elle, l'échelle
+              ajoute l'effort, qui ne l'est nulle part. */}
           <span
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 6,
-              padding: '4px 10px 4px 8px',
+              gap: 8,
+              padding: '4px 10px',
               borderRadius: 'var(--pill)',
-              background: `color-mix(in srgb, var(--c-${s.type}) 16%, transparent)`,
-              border: `1px solid color-mix(in srgb, var(--c-${s.type}) 34%, transparent)`,
+              background: 'rgba(255,255,255,.07)',
+              border: '1px solid rgba(255,255,255,.12)',
               fontSize: 11.5,
               fontWeight: 650,
               letterSpacing: '.2px',
               whiteSpace: 'nowrap',
             }}
           >
-            <span
-              aria-hidden
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                background: `var(--c-${s.type})`,
-                flex: 'none',
-              }}
-            />
             {s.cat}
+            {st.intensite > 0 && <EchelleIntensite niveau={st.intensite} hauteur={11} />}
           </span>
         </div>
 
@@ -133,7 +124,7 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick }: Pro
         <Icon
           name="chevronRight"
           size={19}
-          style={{ color: 'var(--sur-ink-3)', flex: 'none', strokeWidth: 1.7 }}
+          style={{ color: 'var(--sur-ink-3)', flex: 'none', strokeWidth: 1.7, marginTop: 13 }}
         />
       )}
     </button>

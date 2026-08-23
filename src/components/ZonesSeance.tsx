@@ -1,13 +1,14 @@
 /**
  * Où part le temps de la séance, zone par zone : libellé, barre, part et durée.
  *
- * La barre porte le dégradé de la zone, la piste reste sombre — c'est la même
- * convention que partout ailleurs, la couleur dit la nature de l'effort, pas
- * sa gravité.
+ * Les six zones sont ordonnées : leur rang se lit dans l'intensité de l'encre,
+ * de la récupération presque effacée aux répétitions en blanc plein. Une
+ * échelle plutôt qu'une palette — six teintes ne se classent pas de mémoire.
  */
 import planJson from '../data/plan.json'
 import type { Plan } from '../data/types'
 import type { PartZone } from '../lib/repartition'
+import { encreZone } from '../lib/seanceStyle'
 
 const plan = planJson as unknown as Plan
 
@@ -78,7 +79,7 @@ export function ZonesSeance({ parts }: { parts: PartZone[] }) {
                     width: `${Math.max(3, p.part * 100)}%`,
                     height: '100%',
                     borderRadius: 'var(--pill)',
-                    background: `var(--g-${z.color})`,
+                    background: encreZone(p.zone),
                   }}
                 />
               </div>

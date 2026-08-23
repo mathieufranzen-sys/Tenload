@@ -506,7 +506,7 @@ function BandeauErreur() {
         maxWidth: 'var(--shell-max)',
         margin: '0 auto',
         background: 'var(--surface)',
-        border: '1px solid var(--c-inter)',
+        border: '1px solid var(--c-erreur)',
         borderRadius: 'var(--radius-sm)',
         padding: '13px 14px',
         fontSize: 13.5,
