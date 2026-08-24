@@ -16,3 +16,6 @@ coverage
 
 # Sortie de reference/build_plan.py : la référence versionnée est src/data/plan.json
 reference/plan.json
+
+# Cache local de la CLI Supabase.
+supabase/.temp/
