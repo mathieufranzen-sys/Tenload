@@ -19,3 +19,6 @@ reference/plan.json
 
 # Cache local de la CLI Supabase.
 supabase/.temp/
+
+# Scripts préparés avec des valeurs sensibles, à supprimer après usage.
+A-COLLER-*.sql
