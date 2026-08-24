@@ -5,6 +5,17 @@
  * Elle montre les six termes avec leur valeur réelle, pas une explication
  * générique : c'est ce qui évite l'effet boîte noire un jour où l'indice
  * interdit une séance. L'explication du modèle, elle, vit dans Profil.
+ *
+ * Présentée comme un ticket de caisse, parce que c'est une addition : les
+ * six termes, leur sous-total, l'ajustement éventuel, puis l'indice. Avant,
+ * le total tombait du ciel sous une liste de valeurs qu'on ne pouvait pas
+ * vérifier. Ici l'arithmétique est posée à l'écran et elle tombe juste, y
+ * compris quand un plancher ou un arrondi la déplace.
+ *
+ * Plus de pastille de couleur en tête de ligne : les teintes n'étaient
+ * choisies que pour distinguer les lignes entre elles, sans rien dire de la
+ * gravité du terme. Seul l'indice final garde la couleur de sa bande, qui,
+ * elle, veut dire quelque chose.
  */
 import { useEffect } from 'react'
 import type { Band, IndexBreakdown } from '../lib/tendonIndex'
@@ -14,7 +25,6 @@ interface Terme {
   label: string
   valeur: number
   plafond: number
-  couleur: string
   detail: string
 }
 
@@ -45,48 +55,61 @@ export function ChargeSheet({
       label: 'Douleur déclarée',
       valeur: b.pain,
       plafond: 85,
-      couleur: 'var(--critical)',
       detail: 'Réveil 45 %, fin de journée 35 %, effort 20 %',
     },
     {
       label: 'Emballement de la charge',
       valeur: b.ratio,
       plafond: 30,
-      couleur: 'var(--series-1)',
       detail: `Rapport aigu sur chronique : ${b.acr.toFixed(2)}`,
     },
     {
       label: 'Fraîcheur immédiate',
       valeur: b.freshness,
       plafond: 20,
-      couleur: 'var(--series-1)',
       detail: 'Ce que tu as encaissé hier et avant-hier',
     },
     {
       label: 'Tendance',
       valeur: b.trend,
       plafond: 6,
-      couleur: 'var(--warning)',
       detail: 'Pente de la raideur matinale sur quatre jours',
     },
     {
       label: 'Monotonie',
       valeur: b.monotony,
       plafond: 8,
-      couleur: 'var(--warning)',
       detail: 'Une semaine sans jour léger use le tendon',
     },
     {
       label: 'Gestes protecteurs',
       valeur: -b.credits,
       plafond: -15,
-      couleur: 'var(--series-3)',
       detail: 'Excentrique −6, repos −5, sauts −2, hydratation −2',
     },
   ]
 
-  const brut = termes.reduce((total, t) => total + t.valeur, 0)
-  const plancherApplique = b.floor > 0 && b.idx > Math.round(brut)
+  // Le sous-total est la somme des valeurs AFFICHÉES, pas celle des valeurs
+  // internes : c'est la seule façon qu'une addition posée à l'écran tombe
+  // juste quand on la refait de tête.
+  const sousTotal = termes.reduce((total, t) => total + t.valeur, 0)
+  const ecart = b.idx - sousTotal
+  const plancherApplique = b.floor > 0 && b.idx > sousTotal
+
+  /**
+   * Ce qui sépare le sous-total de l'indice, nommé par sa cause. Quatre
+   * seulement : un plancher de sécurité, les deux bornes de l'échelle, et le
+   * reliquat d'arrondi des six termes arrondis un à un. Sans cette ligne le
+   * ticket ne tomberait pas juste, et un ticket qui ne tombe pas juste est
+   * pire que pas de ticket du tout.
+   */
+  const causeEcart = plancherApplique
+    ? `Plancher de sécurité à ${b.floor}`
+    : sousTotal < 0
+      ? 'Ramené au plancher de l’échelle'
+      : sousTotal > 100
+        ? 'Ramené au plafond de l’échelle'
+        : 'Arrondi'
 
   return (
     <div
@@ -154,45 +177,62 @@ export function ChargeSheet({
 
         <div style={{ marginTop: 20 }}>
           {termes.map((t) => (
-            <div key={t.label} style={{ padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14.5, fontWeight: 600 }}>
-                  <b style={{ width: 8, height: 8, borderRadius: 2, background: t.couleur, flex: 'none' }} />
-                  {t.label}
-                </span>
-                <span
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 650,
-                    fontVariantNumeric: 'tabular-nums',
-                    color: t.valeur === 0 ? 'var(--ink-3)' : 'var(--ink)',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {t.valeur > 0 ? '+' : ''}
-                  {t.valeur}
-                  <small style={{ color: 'var(--ink-3)', fontWeight: 600, fontSize: 12 }}> / {t.plafond}</small>
-                </span>
-              </div>
-              <div style={{ fontSize: 12.5, color: 'var(--ink-2)', marginTop: 3, paddingLeft: 16, lineHeight: 1.4 }}>
+            <div key={t.label} style={{ padding: '11px 0' }}>
+              <LigneTicket
+                libelle={t.label}
+                valeur={t.valeur}
+                plafond={t.plafond}
+              />
+              <div style={{ fontSize: 12.5, color: 'var(--ink-2)', marginTop: 3, lineHeight: 1.4 }}>
                 {t.detail}
               </div>
             </div>
           ))}
+
+          {/* Le trait pointillé du ticket : il annonce que ce qui suit est une
+              addition et non une ligne de plus. */}
+          <div
+            aria-hidden
+            style={{ borderTop: '1px dashed var(--border-2)', margin: '6px 0 0' }}
+          />
+
+          <div style={{ padding: '13px 0 0' }}>
+            <LigneTicket libelle="Sous-total" valeur={sousTotal} sourd />
+          </div>
+
+          {ecart !== 0 && (
+            <div style={{ padding: '9px 0 0' }}>
+              <LigneTicket libelle={causeEcart} valeur={ecart} sourd />
+            </div>
+          )}
+
+          <div
+            aria-hidden
+            style={{ borderTop: '1px solid var(--border-2)', margin: '13px 0 0' }}
+          />
 
           <div
             style={{
               display: 'flex',
               alignItems: 'baseline',
               justifyContent: 'space-between',
-              padding: '14px 0 0',
+              padding: '13px 0 0',
               gap: 12,
             }}
           >
-            <span style={{ fontSize: 15, fontWeight: 650 }}>Indice</span>
             <span
               style={{
-                fontSize: 24,
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: '1.4px',
+                textTransform: 'uppercase',
+              }}
+            >
+              Indice
+            </span>
+            <span
+              style={{
+                fontSize: 26,
                 fontWeight: 650,
                 letterSpacing: '-.6px',
                 color: band.color,
@@ -200,6 +240,7 @@ export function ChargeSheet({
               }}
             >
               {b.idx}
+              <small style={{ color: 'var(--ink-3)', fontWeight: 600, fontSize: 13 }}> / 100</small>
             </span>
           </div>
 
@@ -257,6 +298,57 @@ export function ChargeSheet({
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+/**
+ * Une ligne d'addition : libellé à gauche, montant à droite, et entre les deux
+ * la ligne de conduite pointillée qui rattache l'un à l'autre. C'est elle qui
+ * fait lire la colonne de droite comme des montants alignés plutôt que comme
+ * des valeurs éparpillées.
+ */
+function LigneTicket({
+  libelle,
+  valeur,
+  plafond,
+  sourd = false,
+}: {
+  libelle: string
+  valeur: number
+  plafond?: number
+  /** Les lignes d'addition sont moins fortes que les termes qu'elles totalisent. */
+  sourd?: boolean
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+      <span style={{ fontSize: 14.5, fontWeight: sourd ? 500 : 600, color: sourd ? 'var(--ink-2)' : 'var(--ink)' }}>
+        {libelle}
+      </span>
+      <span
+        aria-hidden
+        style={{
+          flex: 1,
+          minWidth: 12,
+          borderBottom: '1px dotted var(--border-2)',
+          transform: 'translateY(-4px)',
+        }}
+      />
+      <span
+        style={{
+          fontSize: 15,
+          fontWeight: 650,
+          fontVariantNumeric: 'tabular-nums',
+          color: valeur === 0 ? 'var(--ink-3)' : 'var(--ink)',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {valeur > 0 ? '+' : ''}
+        {valeur}
+        {plafond != null && (
+          <small style={{ color: 'var(--ink-3)', fontWeight: 600, fontSize: 12 }}> / {plafond}</small>
+        )}
+      </span>
     </div>
   )
 }

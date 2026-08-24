@@ -189,6 +189,44 @@ input[type='range']::-moz-range-thumb {
   opacity: 0.9;
 }
 
+/* Variante « bords » : mêmes masses, rabattues contre les côtés et le haut.
+   Sur Suivi le fond passe derrière quatre graphiques ; une masse au centre
+   se lisait comme une donnée de plus. Les formes sont élargies et sorties du
+   cadre pour ne laisser que leur frange, et la pastille d'accent, qui était
+   la seule vraiment centrée, disparaît. */
+.mesh--bords {
+  filter: blur(96px) saturate(1.15);
+  opacity: 0.72;
+}
+.mesh--bords .s1 {
+  left: -170px;
+  top: -80px;
+}
+.mesh--bords .s2 {
+  right: -130px;
+  top: -30px;
+}
+.mesh--bords .s3 {
+  width: 300px;
+  left: -190px;
+  top: 220px;
+}
+.mesh--bords .s4 {
+  right: -200px;
+  top: 330px;
+}
+.mesh--bords .s5 {
+  left: -210px;
+  top: 560px;
+}
+.mesh--bords .s6 {
+  display: none;
+}
+.mesh--bords .s7 {
+  top: 700px;
+  opacity: 0.55;
+}
+
 /* Voile de lisibilité. Les arrêts sont en pixels et non en pourcentages :
    le dégradé court sur toute la page, mais sa composition doit rester celle
    du premier écran, quelle que soit la longueur du scroll en dessous. */

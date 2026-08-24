@@ -259,7 +259,7 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
 
   return (
     <div style={{ position: 'relative', maxWidth: 'var(--shell-max)', margin: '0 auto', paddingBottom: 90 }}>
-      <MeshBackground band={A.band.key} />
+      <MeshBackground band={A.band.key} disposition="bords" />
 
       <div style={{
         position: 'relative',

@@ -7,9 +7,24 @@
  */
 import type { BandKey } from '../lib/tendonIndex'
 
-/** `formes=false` garde le camaïeu et le voile de lisibilité, sans les masses
- *  floutées — pour un écran de lecture (Allures) plutôt qu'un écran hero. */
-export function MeshBackground({ band, formes = true }: { band: BandKey; formes?: boolean }) {
+/**
+ * `formes=false` garde le camaïeu et le voile de lisibilité, sans les masses
+ * floutées : pour un écran de lecture (Allures) plutôt qu'un écran hero.
+ *
+ * `disposition="bords"` garde les masses mais les rabat contre les bords et
+ * le haut de page. Sur Aujourd'hui la composition est le sujet, on la voit ;
+ * sur Suivi elle passe derrière quatre graphiques, et une masse en plein
+ * milieu de l'écran se lisait comme une donnée de plus.
+ */
+export function MeshBackground({
+  band,
+  formes = true,
+  disposition = 'hero',
+}: {
+  band: BandKey
+  formes?: boolean
+  disposition?: 'hero' | 'bords'
+}) {
   return (
     <div
       data-band={band}
@@ -17,7 +32,7 @@ export function MeshBackground({ band, formes = true }: { band: BandKey; formes?
       style={{ position: 'absolute', inset: 0, zIndex: 0, background: 'var(--m6)' }}
     >
       {formes && (
-        <div className="mesh">
+        <div className={disposition === 'bords' ? 'mesh mesh--bords' : 'mesh'}>
           <i className="s1" />
           <i className="s2" />
           <i className="s3" />
