@@ -21,10 +21,11 @@ import { TendonIndexInfo } from './profile/TendonIndexInfo'
 import { HeartRateZones } from './profile/HeartRateZones'
 import { PlanStructure } from './profile/PlanStructure'
 import { PaceSettings } from './profile/PaceSettings'
+import { Reminders } from './profile/Reminders'
 
-type SectionKey = 'contraintes' | 'indice' | 'coeur' | 'structure' | 'allure'
+type SectionKey = 'contraintes' | 'indice' | 'coeur' | 'structure' | 'allure' | 'rappels'
 
-type IconeRubrique = 'alert' | 'clip' | 'chart' | 'heart' | 'gauge' | 'run'
+type IconeRubrique = 'alert' | 'clip' | 'chart' | 'heart' | 'gauge' | 'run' | 'sun'
 
 interface Rubrique {
   key: SectionKey
@@ -52,6 +53,7 @@ const GROUPES: Array<{ titre: string; rubriques: Rubrique[] }> = [
     titre: 'Réglages',
     rubriques: [
       { key: 'allure', titre: 'Réglages d’allure', description: 'Recalibrer ta forme, changer l’objectif', icone: 'gauge' },
+      { key: 'rappels', titre: 'Rappels du carnet', description: 'Raideur à 8 h, point du soir à 23 h', icone: 'sun' },
     ],
   },
 ]
@@ -68,6 +70,8 @@ interface ProfilPatch {
 }
 
 interface Props {
+  /** Absent en démo et en mode instantanés : rien à abonner alors. */
+  userId?: string
   load: LoadMap
   pain: PainMap
   feedback: FeedbackRow[]
@@ -81,7 +85,7 @@ interface Props {
   onDeconnexion?: () => void
 }
 
-export function Profile({ load, pain, feedback, marathonPace, test3k, hrMax, onSaveProfil, onDeconnexion }: Props) {
+export function Profile({ userId, load, pain, feedback, marathonPace, test3k, hrMax, onSaveProfil, onDeconnexion }: Props) {
   const [section, setSection] = useState<SectionKey | null>(null)
   const now = todayISO()
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
@@ -192,6 +196,7 @@ export function Profile({ load, pain, feedback, marathonPace, test3k, hrMax, onS
         {section === 'allure' && <PaceSettings marathonPace={marathonPace} test3k={test3k} onSave={onSaveProfil} />}
         {section === 'coeur' && <HeartRateZones hrMax={hrMax} onSave={onSaveProfil} />}
         {section === 'structure' && <PlanStructure />}
+        {section === 'rappels' && <Reminders userId={userId} />}
       </SubPage>
     </>
   )

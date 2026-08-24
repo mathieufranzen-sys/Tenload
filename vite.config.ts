@@ -34,6 +34,10 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Le service worker est généré par le plugin : on ne peut pas y écrire,
+        // mais on peut y greffer un fichier. C'est là que vivent les
+        // gestionnaires `push` et `notificationclick`, voir public/push-sw.js.
+        importScripts: ['/push-sw.js'],
         // L'app doit s'ouvrir hors ligne : le plan des 35 semaines est statique,
         // seules les saisies ont besoin du réseau (et sont mises en file d'attente).
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],

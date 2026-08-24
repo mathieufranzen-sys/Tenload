@@ -67,7 +67,7 @@ export function App() {
   if (auth.state === 'signedOut') return <Login auth={auth} onDemo={() => setDemo(true)} />
   return (
     <DataProvider userId={auth.user!.id}>
-      <CoquilleConnectee onDeconnexion={auth.deconnexion} />
+      <CoquilleConnectee userId={auth.user!.id} onDeconnexion={auth.deconnexion} />
     </DataProvider>
   )
 }
@@ -134,7 +134,13 @@ function CoquilleDemoInterne({
   )
 }
 
-function CoquilleConnectee({ onDeconnexion }: { onDeconnexion: () => void }) {
+function CoquilleConnectee({
+  userId,
+  onDeconnexion,
+}: {
+  userId: string
+  onDeconnexion: () => void
+}) {
   const { logs, chargement: chargeLogs, erreur } = useLogs()
   const { feedback, chargement: chargeFeedback } = useFeedback()
   const { activites, chargement: chargeActivites } = useActivities()
@@ -161,6 +167,7 @@ function CoquilleConnectee({ onDeconnexion }: { onDeconnexion: () => void }) {
 
   return (
     <Coquille
+      userId={userId}
       activities={activities}
       pain={pain}
       logs={logs}
@@ -234,6 +241,7 @@ interface SeanceOuverte {
 }
 
 function Coquille({
+  userId,
   activities,
   pain,
   logs,
@@ -249,6 +257,8 @@ function Coquille({
   onSaveEcart,
   onDeconnexion,
 }: {
+  /** Absent en démo et en mode instantanés : rien à abonner aux rappels alors. */
+  userId?: string
   /** Vrai en démonstration : bannière dédiée, et rien n'est enregistré. */
   demo?: boolean
   onQuitterDemo?: () => void
@@ -408,6 +418,7 @@ function Coquille({
       )}
       {onglet === 'profile' && (
         <Profile
+          userId={userId}
           load={load}
           pain={data.pain}
           feedback={feedback}

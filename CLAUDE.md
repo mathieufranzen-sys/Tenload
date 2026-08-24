@@ -388,6 +388,32 @@ un ordre de valeur : raideur au réveil, puis observance de l'excentrique, puis
 régularité, puis l'indice — qui vient en dernier parce que c'est un agrégat et
 non une observation.
 
+## Les rappels du carnet
+
+`src/lib/push.ts` (client), `supabase/functions/rappels/` (envoi, dont
+`logique.ts` testé par 14 tests), `supabase/notifications.sql` (table et cron).
+
+Deux rappels, en heure de Paris : **8 h la raideur au réveil**, **23 h l'effort
+perçu, la douleur à l'effort et la douleur de fin de journée**.
+
+- **La règle est la même que pour le mot du coach : ne jamais redemander ce
+  qui est déjà saisi.** Une notification qui répète une valeur déjà donnée se
+  fait couper en trois jours, et emporte avec elle celle qui servait. Un zéro
+  compte comme une mesure.
+- **Le cron tourne toutes les heures, pas deux fois par jour.** pg_cron
+  raisonne en UTC ; à heure fixe le rappel de 8 h glisserait d'une heure deux
+  fois par an. C'est `momentParis` qui décide si c'en est une.
+- **Le dimanche, seul le point du soir part** : c'est le repos jambes de la
+  contrainte 4, il n'y a pas de séance à noter. Un écart volontaire pourrait le
+  démentir et le rappel se tairait à tort, ce qui est le bon sens de l'erreur.
+- **Sur iPhone, rien ne marche hors PWA installée.** L'écran de réglage le dit
+  avant de proposer le bouton, plutôt que de laisser croire à une panne.
+- Les gestionnaires `push` et `notificationclick` vivent dans
+  `public/push-sw.js`, greffé au service worker généré par
+  `workbox.importScripts`. Ce fichier est mis en cache pour un temps qu'on ne
+  maîtrise pas : **il ne doit porter aucune règle métier**, tout le texte vient
+  du message envoyé.
+
 ## Pistes connues
 
 - Le bundle passe 600 Ko, essentiellement `plan.json` embarqué. Sans
