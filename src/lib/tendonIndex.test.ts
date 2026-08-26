@@ -171,6 +171,44 @@ describe('bascules garanties après une séance douloureuse', () => {
   })
 })
 
+describe('le plancher tient plein le lendemain', () => {
+  /**
+   * Une seule journée douloureuse, puis un carnet calme. Ce qui est vérifié
+   * ici, c'est la bande du LENDEMAIN : le plancher valait 92 % dès J+1, ce qui
+   * le faisait passer sous le seuil de sa propre bande. Le bilan net du
+   * collagène restant négatif pendant 24 à 36 heures, c'est le jour où le
+   * plancher doit tenir, pas celui où il doit lâcher.
+   */
+  const pic = (niveau: number): PainMap => ({
+    ...flat(0),
+    '2026-08-11': { wake: 0, effort: niveau, evening: niveau },
+  })
+
+  const bandeDu = (jour: string, niveau: number) =>
+    bandOf(tendonIndex(jour, WEEK1, pic(niveau)).idx).key
+
+  it('4/10 garde l’orange le lendemain', () => {
+    expect(bandeDu('2026-08-11', 4)).toBe('orange')
+    expect(bandeDu('2026-08-12', 4)).toBe('orange')
+  })
+
+  it('6/10 garde le rouge le lendemain', () => {
+    expect(bandeDu('2026-08-11', 6)).toBe('rouge')
+    expect(bandeDu('2026-08-12', 6)).toBe('rouge')
+  })
+
+  it('8/10 garde le noir le lendemain', () => {
+    expect(bandeDu('2026-08-11', 8)).toBe('noir')
+    expect(bandeDu('2026-08-12', 8)).toBe('noir')
+  })
+
+  it('le plancher relâche au surlendemain', () => {
+    // Le plancher couvre 48 heures, pas davantage : au-delà c'est la mémoire
+    // d'épisode qui prend le relais, et seulement au-dessus de 60.
+    expect(tendonIndex('2026-08-13', WEEK1, pic(4)).idx).toBeLessThan(50)
+  })
+})
+
 describe('mémoire d’épisode', () => {
   it('ne repasse pas au vert dès le lendemain d’un pic, même douleur retombée', () => {
     const pain: PainMap = {

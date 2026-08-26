@@ -370,15 +370,24 @@ export function tendonIndex(
 
   // Planchers garantis : les seuils posés par Mathieu ne peuvent pas être
   // contournés par un indice bas ailleurs.
+  //
+  // Le plancher tient PLEIN le lendemain, sans décroissance. Il valait
+  // auparavant 92 % dès J+1, ce qui était un accident d'arithmétique et non
+  // une décision : 50 × 0,92 = 46, juste sous le seuil de l'orange. Le
+  // plancher perdait donc systématiquement une bande le lendemain (le rouge
+  // à 59,8, le noir à 73,6), c'est-à-dire exactement le jour où le tendon est
+  // le plus fragile. Le bilan net du collagène reste négatif pendant 24 à
+  // 36 heures après une charge tendineuse importante, et c'est ce que ce
+  // plancher existe pour couvrir. Il relâche au surlendemain, où la mémoire
+  // d'épisode prend le relais au-delà de 60.
   let floor = 0
   for (let k = 0; k < 2; k++) {
     const vs = painValues(pain[shiftDay(day, -k)])
     if (!vs.length) continue
     const mx = Math.max(...vs)
-    const dec = k === 0 ? 1 : 0.92
-    if (mx >= 8) floor = Math.max(floor, 80 * dec)
-    else if (mx >= 6) floor = Math.max(floor, 65 * dec)
-    else if (mx >= 4) floor = Math.max(floor, 50 * dec)
+    if (mx >= 8) floor = Math.max(floor, 80)
+    else if (mx >= 6) floor = Math.max(floor, 65)
+    else if (mx >= 4) floor = Math.max(floor, 50)
   }
 
   // Mémoire d'épisode.

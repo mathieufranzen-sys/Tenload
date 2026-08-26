@@ -210,7 +210,13 @@ Six termes s'additionnent, moins ce qui protège :
 
 - **Planchers garantis** : douleur déclarée ≥ 4 impose l'orange, ≥ 6 le rouge,
   ≥ 8 le noir, quoi que dise le reste du calcul. Ce sont les seuils que Mathieu a
-  posés, ils ne se contournent pas.
+  posés, ils ne se contournent pas. **Le plancher tient plein le lendemain**,
+  sans décroissance, puis relâche au surlendemain. Il valait 92 % dès J+1, ce
+  qui était un accident d'arithmétique et non une décision : 50 × 0,92 = 46,
+  juste sous le seuil de l'orange, donc le plancher perdait une bande
+  exactement le jour où le tendon est le plus fragile. Le bilan net du collagène
+  reste négatif pendant 24 à 36 h après une charge importante, c'est cette
+  fenêtre que le plancher couvre.
 - **Mémoire d'épisode** : après un pic au-dessus de 60, un plancher décroissant
   (facteur 0,74 par jour) tient cinq jours. Un tendon réactif reste fragile même
   quand la douleur est retombée.
