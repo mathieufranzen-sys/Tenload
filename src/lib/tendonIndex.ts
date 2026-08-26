@@ -219,6 +219,35 @@ export function ewma(load: LoadMap, day: string, halfLife: number, window = 60):
 }
 const halFix = (h: number) => (h > 0 ? h : 1)
 
+/**
+ * Deux échelles de plancher, parce que les trois mesures ne disent pas la même
+ * chose.
+ *
+ * La douleur **pendant l'effort** est le coût de la séance. Elle est tolérable
+ * jusqu'à 5/10 tant que le lendemain matin est calme : c'est le pain-monitoring
+ * model, et c'est ce que `palier.ts` encode de son côté.
+ *
+ * La **raideur au réveil** est l'état du tendon. Prise à froid, sans
+ * échauffement ni adrénaline, c'est la mesure diagnostique de la tendinopathie.
+ * Un 5/10 au réveil ne dit pas « la séance d'hier a coûté cher », il dit « le
+ * tendon est réactif maintenant ». Elle bascule donc au rouge un cran plus tôt,
+ * et au noir aussi.
+ *
+ * Les deux échelles ont partagé les mêmes seuils jusqu'au 26 août 2026 : un
+ * 5/10 au réveil laissait alors le plan en orange, c'est-à-dire autorisait
+ * encore la course facile.
+ */
+type Seuils = ReadonlyArray<readonly [douleur: number, plancher: number]>
+
+/** Décroissants : le premier seuil atteint gagne. */
+const SEUILS_REVEIL: Seuils = [[7, 80], [5, 65], [4, 50]]
+const SEUILS_EFFORT: Seuils = [[8, 80], [6, 65], [4, 50]]
+
+const plancher = (v: number, seuils: Seuils): number => {
+  for (const [seuil, valeur] of seuils) if (v >= seuil) return valeur
+  return 0
+}
+
 const painValues = (p?: PainDay): number[] =>
   p ? [p.wake, p.effort, p.evening].filter((x): x is number => x != null) : []
 
@@ -382,12 +411,11 @@ export function tendonIndex(
   // d'épisode prend le relais au-delà de 60.
   let floor = 0
   for (let k = 0; k < 2; k++) {
-    const vs = painValues(pain[shiftDay(day, -k)])
-    if (!vs.length) continue
-    const mx = Math.max(...vs)
-    if (mx >= 8) floor = Math.max(floor, 80)
-    else if (mx >= 6) floor = Math.max(floor, 65)
-    else if (mx >= 4) floor = Math.max(floor, 50)
+    const p = pain[shiftDay(day, -k)]
+    if (!p) continue
+    if (p.wake != null) floor = Math.max(floor, plancher(p.wake, SEUILS_REVEIL))
+    const autres = [p.effort, p.evening].filter((x): x is number => x != null)
+    if (autres.length) floor = Math.max(floor, plancher(Math.max(...autres), SEUILS_EFFORT))
   }
 
   // Mémoire d'épisode.

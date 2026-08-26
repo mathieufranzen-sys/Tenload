@@ -208,9 +208,18 @@ Six termes s'additionnent, moins ce qui protège :
 
 ### Garde-fous
 
-- **Planchers garantis** : douleur déclarée ≥ 4 impose l'orange, ≥ 6 le rouge,
-  ≥ 8 le noir, quoi que dise le reste du calcul. Ce sont les seuils que Mathieu a
-  posés, ils ne se contournent pas. **Le plancher tient plein le lendemain**,
+- **Planchers garantis, sur deux échelles.** La raideur au réveil bascule plus
+  tôt que la douleur à l'effort, parce que les deux ne disent pas la même chose :
+  l'effort mesure le coût de la séance, le réveil mesure l'état du tendon, pris
+  à froid. Une seule échelle laissait un 5/10 au réveil en orange, donc
+  autorisait encore la course facile.
+
+  | Mesure | Orange | Rouge | Noir |
+  |---|---|---|---|
+  | Raideur au réveil | ≥ 4 | ≥ 5 | ≥ 7 |
+  | Douleur à l'effort ou du soir | ≥ 4 | ≥ 6 | ≥ 8 |
+
+  Ce sont les seuils que Mathieu a posés, ils ne se contournent pas. **Le plancher tient plein le lendemain**,
   sans décroissance, puis relâche au surlendemain. Il valait 92 % dès J+1, ce
   qui était un accident d'arithmétique et non une décision : 50 × 0,92 = 46,
   juste sous le seuil de l'orange, donc le plancher perdait une bande

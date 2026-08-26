@@ -171,6 +171,57 @@ describe('bascules garanties après une séance douloureuse', () => {
   })
 })
 
+describe('la raideur au réveil bascule plus tôt que la douleur à l’effort', () => {
+  /**
+   * Les deux échelles ont partagé les mêmes seuils jusqu'au 26 août 2026. Un
+   * 5/10 au réveil laissait alors le plan en orange, donc autorisait la course
+   * facile, alors que la raideur matinale est la mesure de l'état du tendon.
+   */
+  const auReveil = (v: number): PainMap => ({
+    ...flat(0),
+    '2026-08-11': { wake: v, effort: 0, evening: 0 },
+  })
+  const aLEffort = (v: number): PainMap => ({
+    ...flat(0),
+    '2026-08-11': { wake: 0, effort: v, evening: 0 },
+  })
+  const bande = (pain: PainMap) => bandOf(tendonIndex('2026-08-11', WEEK1, pain).idx).key
+
+  it('4/10 au réveil comme à l’effort donne l’orange', () => {
+    expect(bande(auReveil(4))).toBe('orange')
+    expect(bande(aLEffort(4))).toBe('orange')
+  })
+
+  it('5/10 au réveil donne le rouge, 5/10 à l’effort reste orange', () => {
+    // C'est le cas qui a motivé la séparation : à 5 au réveil, plus de course.
+    expect(bande(auReveil(5))).toBe('rouge')
+    expect(bande(aLEffort(5))).toBe('orange')
+  })
+
+  it('7/10 au réveil donne le noir, 7/10 à l’effort reste rouge', () => {
+    expect(bande(auReveil(7))).toBe('noir')
+    expect(bande(aLEffort(7))).toBe('rouge')
+  })
+
+  it('la douleur du soir suit l’échelle de l’effort, pas celle du réveil', () => {
+    // Elle se mesure après la journée, pas à froid : c'est un coût, pas un état.
+    const soir = (v: number): PainMap => ({
+      ...flat(0),
+      '2026-08-11': { wake: 0, effort: 0, evening: v },
+    })
+    expect(bande(soir(5))).toBe('orange')
+    expect(bande(soir(6))).toBe('rouge')
+  })
+
+  it('l’échelle la plus sévère l’emporte quand les deux sont saisies', () => {
+    const melange: PainMap = {
+      ...flat(0),
+      '2026-08-11': { wake: 5, effort: 2, evening: 2 },
+    }
+    expect(bande(melange)).toBe('rouge')
+  })
+})
+
 describe('le plancher tient plein le lendemain', () => {
   /**
    * Une seule journée douloureuse, puis un carnet calme. Ce qui est vérifié
