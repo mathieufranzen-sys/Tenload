@@ -4,7 +4,7 @@
  * Le premier écran est un dégradé plein cadre piloté par la bande de charge :
  * insights en verre, indice en arc fin, puis la séance du jour qui dépasse
  * volontairement sous la ligne de flottaison — c'est elle qui appelle le
- * scroll. Le reste (règles d'adaptation, carnet, suite de la semaine) suit
+ * scroll. Le reste (règles d'adaptation, carnet, mot du coach) suit
  * en dessous, sur le fond sombre habituel.
  */
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
@@ -132,7 +132,6 @@ export function Today({
    */
   const restantes = duJour.filter((x) => !feedbackDe(x))
   const faites = duJour.filter((x) => feedbackDe(x))
-  const suite = seances.filter((x) => x.day > jour).slice(0, 4)
 
   /** La semaine en cours, pour les compteurs et le coach : eux parlent du
    *  présent, pas du jour qu'on est en train de relire. */
@@ -403,24 +402,6 @@ export function Today({
 
         {estAujourdhui && <CarteCoach texte={mot.texte} style={{ marginBottom: 14 }} />}
 
-        {suite.length > 0 && (
-          <>
-            <Pretitle>{estAujourdhui ? 'La suite de la semaine' : 'La suite de cette semaine-là'}</Pretitle>
-            {suite.map((x, i) => (
-              <div key={i}>
-                {/* La carte ne porte plus sa date : ici elle change de jour
-                    d'une ligne à l'autre, il faut donc la redonner au-dessus. */}
-                {(i === 0 || suite[i - 1].day !== x.day) && <JourSuite jour={x.day} />}
-                <SessionCard
-                  session={x.s}
-                  marathonPace={marathonPace}
-                  feedback={feedbackDe(x)}
-                  onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, x))}
-                />
-              </div>
-            ))}
-          </>
-        )}
       </div>
 
       {calculOuvert && (
@@ -456,24 +437,6 @@ function Note({ children }: { children: ReactNode }) {
  *  valeur en chiffres tabulaires, précision en dessous. */
 
 /** Même grammaire que l'en-tête de jour de l'écran Programme. */
-function JourSuite({ jour }: { jour: string }) {
-  const j = DAYS_LONG[weekdayIndex(jour)]
-  return (
-    <div
-      style={{
-        fontSize: 11,
-        fontWeight: 700,
-        letterSpacing: '1.2px',
-        textTransform: 'uppercase',
-        color: 'var(--sur-ink-3)',
-        margin: '16px 0 9px 2px',
-      }}
-    >
-      {j} {formatDay(jour)}
-    </div>
-  )
-}
-
 function Pretitle({ children }: { children: ReactNode }) {
   return (
     <h2
