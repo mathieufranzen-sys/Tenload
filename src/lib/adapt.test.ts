@@ -123,18 +123,29 @@ describe('applyFx', () => {
     expect(r.title).toContain('la course')
   })
 
-  it('tuesdayToBike seul (sans runStop) donne le message spécifique du mardi', () => {
+  it('tuesdayToBike seul (sans runStop) bascule l’EF du lendemain en vélo', () => {
     // Combinaison qu'aucune bande ne produit aujourd'hui via fxForDate — runStop
     // est toujours vrai en même temps que tuesdayToBike — mais applyFx doit
     // rester correct si un jour une bande intermédiaire l'isole.
     const fx: Fx = { ...FX_AUCUN, tuesdayToBike: true }
-    const r = applyFx(seance({ type: 'ef', day: 1, dist: 10 }), fx)
+    const r = applyFx(seance({ type: 'ef', day: 1, dist: 10 }), fx, { lendemainDeLongue: true })
     expect(r.type).toBe('velo')
     expect(r.title).toContain('EF')
     expect(r.dist).toBeUndefined()
   })
 
-  it('tuesdayToBike ne touche pas l’EF d’un autre jour que le mardi', () => {
+  it('tuesdayToBike vise la séance, pas la case du calendrier', () => {
+    // La règle protège le lendemain de la sortie longue. Le mardi n'était
+    // qu'un raccourci de la semaine type : dès que la longue se déplace, c'est
+    // le contexte qui tranche, pas `day`.
+    const fx: Fx = { ...FX_AUCUN, tuesdayToBike: true }
+    // Mardi, mais la sortie longue est ailleurs : on n'y touche pas.
+    expect(applyFx(seance({ type: 'ef', day: 1 }), fx, { lendemainDeLongue: false }).type).toBe('ef')
+    // Mercredi, mais c'est bien le lendemain de la longue : on bascule.
+    expect(applyFx(seance({ type: 'ef', day: 2 }), fx, { lendemainDeLongue: true }).type).toBe('velo')
+  })
+
+  it('tuesdayToBike ne touche pas une EF qui ne suit pas la longue', () => {
     const fx: Fx = { ...FX_AUCUN, tuesdayToBike: true }
     const r = applyFx(seance({ type: 'ef', day: 4 }), fx)
     expect(r.type).toBe('ef')

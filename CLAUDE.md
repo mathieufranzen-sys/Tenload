@@ -356,6 +356,50 @@ discipline, la déplacer d'un jour, corriger sa distance ou sa durée.
   d'être supprimée : c'est ce qui garde toutes les écritures idempotentes, donc
   rejouables telles quelles par la file d'attente.
 
+### Le palier de la sortie longue
+
+`src/lib/palier.ts` (+ 19 tests), plus 26 tests de placement dans
+`src/lib/placement.test.ts`.
+
+L'indice est un **état du jour, pas une mémoire** : il retombe en trois jours,
+et la sortie longue de la semaine suivante s'affichait donc en entier même
+quand la précédente avait fait mal. La progression n'apprenait jamais du
+résultat de la séance qui charge le plus le tendon.
+
+- **Le verdict appartient au lendemain matin.** C'est la règle des 24 heures :
+  une douleur pendant l'effort est tolérable si elle redescend au niveau
+  habituel le lendemain et si la raideur au réveil n'est pas aggravée. Une
+  douleur de 5/10 pendant la séance ne conclut rien à elle seule.
+- **Quatre conditions, toutes nécessaires** pour que le tendon ait encaissé :
+  douleur de séance < 6, raideur du lendemain saisie, sous 4, et pas plus de
+  1,5 point au-dessus de la moyenne des sept jours précédents.
+- **Le palier répète, il ne réduit jamais.** Réduire est le travail de
+  l'indice (orange, −20 %) ; ici on refuse seulement d'augmenter, ce qui est la
+  même règle que `painInconnue` : on ne dégrade pas sur une absence
+  d'information, on refuse de monter dessus. Une raideur du lendemain non
+  saisie plafonne donc aussi.
+- **Une seule séance est plafonnée**, la prochaine dans le temps. Dès qu'elle
+  est faite et notée, un nouveau verdict se calcule sur elle. Plafonner toute
+  la suite aplatirait les 35 semaines sur un seul mauvais matin.
+
+### Ce qui est fait ne se réécrit plus
+
+**Le ressenti, et non la date, atteste qu'une séance a eu lieu.** `fxForDate`
+n'excluait que les jours strictement antérieurs : une sortie longue faite dans
+la journée puis notée le soir se faisait raccourcir de 20 % par le ressenti
+qu'on venait d'en saisir. La mesure réécrivait son propre objet, et `buildLoad`
+comptait ensuite les kilomètres réduits au lieu des kilomètres courus.
+
+`ContextePlan.faites` gèle toute séance notée, exactement comme une séance
+sautée : dans les deux cas il n'y a plus rien à protéger.
+
+**Les règles visent la séance, jamais la case du calendrier.** « Le lendemain
+de la sortie longue » était codé en dur au mardi ; déplacer la sortie longue au
+mardi faisait viser le mardi, c'est-à-dire le jour de la sortie longue
+elle-même, et la règle ne protégeait plus rien. Il se calcule maintenant sur la
+semaine réelle, écarts appliqués. **Toute nouvelle règle doit se tester sur les
+sept jours**, c'est ce que fait `placement.test.ts`.
+
 ### Quand la douleur n'est plus saisie
 
 Arbitré : l'app **dit qu'elle ne sait pas** plutôt que d'afficher un chiffre

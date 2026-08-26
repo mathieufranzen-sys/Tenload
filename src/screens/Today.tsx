@@ -19,7 +19,7 @@ import {
   today as todayISO,
   weekdayIndex,
 } from '../lib/dates'
-import { adapt, weekSessions, type SeancePlanifiee } from '../lib/adapt'
+import { adapt, construireContexte, weekSessions, type SeancePlanifiee } from '../lib/adapt'
 import { construireInsights } from '../lib/insights'
 import { motDuCoach } from '../lib/coach'
 import { bandOf, type LoadMap, type PainMap } from '../lib/tendonIndex'
@@ -111,9 +111,15 @@ export function Today({
   // L'adaptation reste ancrée sur AUJOURD'HUI, même en consultant une autre
   // date : `fxForDate` ne s'applique que dans la fenêtre de dix jours à partir
   // du présent, et remonter le temps ne doit pas réécrire le passé.
+  // Séances figées et palier de la sortie longue : ils se lisent sur tout le
+  // plan, pas sur une semaine, donc ils se calculent une fois ici.
+  const contexte = useMemo(
+    () => construireContexte(plan.weeks, feedback, pain, now, ecarts),
+    [feedback, pain, now, ecarts],
+  )
   const seances = useMemo(
-    () => weekSessions(semaine, now, A.byDate, ecarts),
-    [semaine, now, A.byDate, ecarts],
+    () => weekSessions(semaine, now, A.byDate, ecarts, contexte),
+    [semaine, now, A.byDate, ecarts, contexte],
   )
   const feedbackDe = ({ jourOrigine, slot }: SeancePlanifiee) =>
     feedback.find((f) => f.week === semaine.n && f.day_index === jourOrigine && f.slot === slot) ?? null
@@ -136,8 +142,8 @@ export function Today({
   }, [now, debutPlan])
 
   const seancesCourantes = useMemo(
-    () => weekSessions(semaineCourante, now, A.byDate, ecarts),
-    [semaineCourante, now, A.byDate, ecarts],
+    () => weekSessions(semaineCourante, now, A.byDate, ecarts, contexte),
+    [semaineCourante, now, A.byDate, ecarts, contexte],
   )
 
   const insights = useMemo(

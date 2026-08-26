@@ -5,7 +5,7 @@ import { useMemo, type CSSProperties } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan as PlanType, Session, Week } from '../data/types'
 import { DAYS_LONG, addDays, formatDay, formatNumber, today as todayISO } from '../lib/dates'
-import { adapt, weekSessions, type SeancePlanifiee } from '../lib/adapt'
+import { adapt, construireContexte, weekSessions, type SeancePlanifiee } from '../lib/adapt'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { FeedbackRow } from '../lib/buildPain'
 import type { EcartRow } from '../lib/overrides'
@@ -50,9 +50,14 @@ export function Plan({
   // `adapt` a besoin d'une fenêtre autour d'aujourd'hui, pas de la semaine affichée :
   // consulter le programme d'une semaine passée ou future ne doit pas la recalculer.
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
+  // Séances figées et palier de la sortie longue, calculés sur tout le plan.
+  const contexte = useMemo(
+    () => construireContexte(plan.weeks, feedback, pain, now, ecarts),
+    [feedback, pain, now, ecarts],
+  )
   const seances = useMemo(
-    () => weekSessions(semaine, now, A.byDate, ecarts),
-    [semaine, now, A.byDate, ecarts],
+    () => weekSessions(semaine, now, A.byDate, ecarts, contexte),
+    [semaine, now, A.byDate, ecarts, contexte],
   )
 
   // Une séance déclarée non faite ne compte plus dans le décompte de la semaine.

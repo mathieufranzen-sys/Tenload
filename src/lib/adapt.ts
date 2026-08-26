@@ -19,6 +19,12 @@ import {
 } from './tendonIndex'
 import type { Session, SessionType, Week } from '../data/types'
 import { cleEcart, seancesAvecEcarts, slotsParJour, type EcartRow } from './overrides'
+import {
+  appliquerPalier,
+  arrangerPlan,
+  palierProchaineLongue,
+  type PalierLongue,
+} from './palier'
 
 export interface Fx {
   slCut: number
@@ -90,8 +96,23 @@ const TYPES_JAMBES: SessionType[] = [
 const TYPES_COURSE: SessionType[] = ['long', 'ef', 'inter', 'tempo', 'test', 'course']
 const TYPES_QUALITE: SessionType[] = ['inter', 'tempo', 'test']
 
+/**
+ * Contexte de la séance dans sa semaine RÉELLE, une fois les écarts appliqués.
+ *
+ * Sans lui, les règles visaient une case du calendrier au lieu de viser la
+ * séance : « le lendemain de la sortie longue » était codé en dur au mardi, et
+ * déplacer la sortie longue au mardi faisait viser le mardi, c'est-à-dire le
+ * jour de la sortie longue elle-même. La règle ne protégeait alors plus rien.
+ */
+export interface ContexteSeance {
+  /** Vrai si cette séance tombe le lendemain de la sortie longue de la semaine. */
+  lendemainDeLongue: boolean
+}
+
+const CONTEXTE_NEUTRE: ContexteSeance = { lendemainDeLongue: false }
+
 /** Applique les effets d'adaptation à une séance. Ne mute pas l'original. */
-export function applyFx(s: Session, fx: Fx): Session {
+export function applyFx(s: Session, fx: Fx, ctx: ContexteSeance = CONTEXTE_NEUTRE): Session {
   if (fx.legStop && TYPES_JAMBES.includes(s.type)) {
     return {
       ...s,
@@ -174,7 +195,7 @@ export function applyFx(s: Session, fx: Fx): Session {
         : 'Intensité conservée mais sans impact : 5 x 6 min en Z3 sur le vélo, 3 min de récupération souple entre les blocs.',
     }
   }
-  if (s.type === 'ef' && s.day === 1 && fx.tuesdayToBike) {
+  if (s.type === 'ef' && ctx.lendemainDeLongue && fx.tuesdayToBike) {
     return {
       ...s,
       type: 'velo',
@@ -208,31 +229,102 @@ export interface SeancePlanifiee {
 }
 
 /**
- * Les séances de la semaine : écart volontaire d'abord, puis adaptation
- * d'après l'indice projeté du jour où la séance atterrit réellement.
+ * Ce que le moteur doit savoir en plus du plan et de l'indice.
+ */
+export interface ContextePlan {
+  /**
+   * Clés `semaine-jourOrigine-slot` des séances déjà notées. Elles sont figées.
+   *
+   * C'est le ressenti, et non la date, qui atteste qu'une séance a eu lieu.
+   * Sans ce gel, une sortie longue faite dans la journée puis notée le soir se
+   * faisait raccourcir de 20 % par le ressenti qu'on venait d'en saisir : la
+   * mesure réécrivait son propre objet, et la charge comptait ensuite les
+   * kilomètres réduits au lieu des kilomètres courus.
+   */
+  faites?: Set<string>
+  /** Plafond imposé à la prochaine sortie longue, voir `palier.ts`. */
+  palier?: PalierLongue | null
+}
+
+/**
+ * Le contexte du plan, calculé une fois par écran et passé à `weekSessions`.
+ *
+ * Les deux informations qu'il porte se lisent hors d'une semaine donnée : la
+ * liste des séances notées vaut pour tout le plan, et le palier compare la
+ * dernière sortie longue faite à la prochaine à venir, qui n'est presque
+ * jamais dans la même semaine.
+ */
+export function construireContexte(
+  weeks: Week[],
+  feedback: FeedbackRow[],
+  pain: PainMap,
+  now: string,
+  ecarts?: Map<string, EcartRow>,
+): ContextePlan {
+  const seances = arrangerPlan(weeks, ecarts)
+  return {
+    faites: new Set(feedback.map((f) => cleEcart(f.week, f.day_index, f.slot))),
+    palier: palierProchaineLongue(seances, feedback, pain, now),
+  }
+}
+
+/**
+ * Le jour de la sortie longue dans la semaine RÉELLE, écarts compris.
+ * `null` s'il n'y en a pas, ou si elle est sautée.
+ */
+function jourDeLaLongue(seances: Session[]): number | null {
+  const longue = seances.find((s) => s.type === 'long' && !s.saute)
+  return longue ? longue.day : null
+}
+
+/**
+ * Les séances de la semaine : écart volontaire d'abord, puis palier, puis
+ * adaptation d'après l'indice projeté du jour où la séance atterrit réellement.
+ *
+ * L'ordre est celui du dépôt : la décision de Mathieu passe d'abord, les
+ * protections s'appliquent par-dessus. Le palier vient avant l'indice pour que
+ * l'éventuelle coupe de 20 % morde sur la distance déjà plafonnée, et pas
+ * l'inverse.
  */
 export function weekSessions(
   week: Week,
   now: string,
   byDate: Record<string, IndexBreakdown>,
   ecarts?: Map<string, EcartRow>,
+  contexte?: ContextePlan,
 ): SeancePlanifiee[] {
   const slots = slotsParJour(week.sessions)
   const avecEcarts = ecarts ? seancesAvecEcarts(week, ecarts) : week.sessions
+  const jourLongue = jourDeLaLongue(avecEcarts)
 
   return avecEcarts.map((s, i) => {
     const jourOrigine = week.sessions[i].day
     const slot = slots[i]
     const day = addDays(week.monday, s.day)
+    const cle = cleEcart(week.n, jourOrigine, slot)
+
+    // Une séance déclarée non faite ne reçoit aucune adaptation : il n'y a
+    // plus rien à protéger. Une séance déjà notée non plus, pour la même
+    // raison — elle est derrière lui.
+    const figee = s.saute || Boolean(contexte?.faites?.has(cle))
+
+    let vecue = s
+    if (!figee) {
+      const palier = contexte?.palier
+      if (palier && s.type === 'long' && day === palier.jour && s.dist && s.dist > palier.km) {
+        vecue = appliquerPalier(vecue, palier)
+      }
+      vecue = applyFx(vecue, fxForDate(day, now, byDate), {
+        lendemainDeLongue: jourLongue != null && s.day === jourLongue + 1,
+      })
+    }
+
     return {
-      // Une séance déclarée non faite ne reçoit pas d'adaptation : il n'y a
-      // plus rien à protéger, et la barrer en la transformant en vélo serait
-      // illisible.
-      s: s.saute ? s : applyFx(s, fxForDate(day, now, byDate)),
+      s: vecue,
       jourOrigine,
       slot,
       day,
-      ecart: ecarts?.get(cleEcart(week.n, jourOrigine, slot)) ?? null,
+      ecart: ecarts?.get(cle) ?? null,
     }
   })
 }
