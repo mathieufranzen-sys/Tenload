@@ -12,6 +12,7 @@ import type { ActivityRow } from './load'
 import type { FeedbackRow } from './buildPain'
 import type { SeancePlanifiee } from './adapt'
 import { addDays } from './dates'
+import { cleEcart, type EcartRow } from './overrides'
 
 export type Famille = 'course' | 'velo' | 'renfo'
 
@@ -74,6 +75,11 @@ export interface EntreeInsights {
   activities: ActivityRow[]
   /** Indice par jour, tel que renvoyé par `adapt`. */
   byDate: Record<string, { idx: number }>
+  /**
+   * Les écarts volontaires, indexés. Ils portent la distance corrigée à la
+   * main, qui prime sur celle figée dans le ressenti au moment de la saisie.
+   */
+  ecarts?: Map<string, EcartRow>
 }
 
 export function construireInsights({
@@ -83,6 +89,7 @@ export function construireInsights({
   feedback,
   activities,
   byDate,
+  ecarts,
 }: EntreeInsights): Insights {
   const vide = (): Compteur => ({ prevu: 0, realise: 0 })
   const compteurs: Record<Famille, Compteur> = { course: vide(), velo: vide(), renfo: vide() }
@@ -140,8 +147,16 @@ export function construireInsights({
    */
   const kmCourseParJour = new Map<string, number>()
   for (const f of feedback) {
-    if (familleDe(f.session_type as SessionType) !== 'course' || f.distance_km == null) continue
-    kmCourseParJour.set(f.day, (kmCourseParJour.get(f.day) ?? 0) + f.distance_km)
+    if (familleDe(f.session_type as SessionType) !== 'course') continue
+
+    // Priorité à l'écart volontaire : c'est la dernière chose que Mathieu a
+    // déclarée sur cette séance, et elle peut arriver APRÈS la note. Le
+    // ressenti fige la distance affichée au moment de la saisie ; corriger
+    // ensuite les kilomètres dans l'écart ne le rattrapait pas, et le
+    // compteur restait sur l'ancienne valeur.
+    const km = ecarts?.get(cleEcart(f.week, f.day_index, f.slot))?.patch.dist ?? f.distance_km
+    if (km == null) continue
+    kmCourseParJour.set(f.day, (kmCourseParJour.get(f.day) ?? 0) + km)
   }
 
   const km7Jours: number[] = []

@@ -4,7 +4,7 @@ import type { Session, Week } from '../data/types'
 import type { ActivityRow } from './load'
 import type { FeedbackRow } from './buildPain'
 import type { SeancePlanifiee } from './adapt'
-import { slotsParJour } from './overrides'
+import { indexerEcarts, slotsParJour, type EcartRow } from './overrides'
 import { addDays } from './dates'
 
 const LUNDI = '2026-08-10'
@@ -191,6 +191,55 @@ describe('volume de course', () => {
   it('la compte dès que le ressenti arrive', () => {
     const seances = planifiees([seance({ day: 3, type: 'ef', dist: 12 })])
     const r = construireInsights({ ...base, seances, feedback: [note('2026-08-13', 12)] })
+    expect(r.km7).toBe(12)
+  })
+
+  it('suit l’écart quand il corrige les kilomètres après la note', () => {
+    // Le ressenti fige la distance affichée au moment de la saisie. Corriger
+    // ensuite les kilomètres dans l'écart ne le rattrapait pas : le compteur
+    // restait sur l'ancienne valeur, alors que l'écart est la dernière chose
+    // que Mathieu ait déclarée sur cette séance.
+    const seances = planifiees([seance({ day: 3, type: 'ef', dist: 12 })])
+    const ecarts = indexerEcarts([
+      { week: 1, day_index: 0, slot: 0, patch: { dist: 8 }, reason: null } as EcartRow,
+    ])
+    const r = construireInsights({
+      ...base,
+      seances,
+      feedback: [note('2026-08-13', 12)],
+      ecarts,
+    })
+    expect(r.km7).toBe(8)
+  })
+
+  it('compte aussi les kilomètres ajoutés par un écart', () => {
+    const seances = planifiees([seance({ day: 3, type: 'ef', dist: 12 })])
+    const ecarts = indexerEcarts([
+      { week: 1, day_index: 0, slot: 0, patch: { dist: 15 }, reason: null } as EcartRow,
+    ])
+    const r = construireInsights({
+      ...base,
+      seances,
+      feedback: [note('2026-08-13', 12)],
+      ecarts,
+    })
+    expect(r.km7).toBe(15)
+  })
+
+  it('garde la distance notée quand l’écart ne touche pas aux kilomètres', () => {
+    // Un écart qui ne fait que déplacer la séance ne doit pas effacer la
+    // distance : sans le `?? f.distance_km`, la séance disparaîtrait du
+    // compteur.
+    const seances = planifiees([seance({ day: 3, type: 'ef', dist: 12 })])
+    const ecarts = indexerEcarts([
+      { week: 1, day_index: 0, slot: 0, patch: { day: 4 }, reason: null } as EcartRow,
+    ])
+    const r = construireInsights({
+      ...base,
+      seances,
+      feedback: [note('2026-08-13', 12)],
+      ecarts,
+    })
     expect(r.km7).toBe(12)
   })
 
