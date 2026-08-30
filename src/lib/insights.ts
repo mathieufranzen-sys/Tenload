@@ -7,7 +7,7 @@
  * affiché qui ne correspondrait pas à ce que le modèle prend en compte serait
  * pire que pas de chiffre du tout.
  */
-import type { SessionType, Week } from '../data/types'
+import type { SessionType } from '../data/types'
 import type { ActivityRow } from './load'
 import type { FeedbackRow } from './buildPain'
 import type { SeancePlanifiee } from './adapt'
@@ -72,7 +72,6 @@ export interface Insights {
 }
 
 export interface EntreeInsights {
-  semaine: Week
   /** Les séances de la semaine, écarts et adaptation déjà appliqués. */
   seances: SeancePlanifiee[]
   now: string
@@ -88,7 +87,6 @@ export interface EntreeInsights {
 }
 
 export function construireInsights({
-  semaine,
   seances,
   now,
   feedback,
@@ -113,7 +111,7 @@ export function construireInsights({
 
   let notesEnRetard = 0
 
-  seances.forEach(({ s, jourOrigine, slot, day }) => {
+  seances.forEach(({ s, semaineOrigine, jourOrigine, slot, day }) => {
     // Une séance déclarée non faite n'est ni prévue ni réalisée : la compter
     // au dénominateur donnerait une semaine perpétuellement en retard.
     if (s.saute) return
@@ -123,7 +121,9 @@ export function construireInsights({
 
     if (day > now) return
 
-    const aUnRessenti = notees.has(`${semaine.n}-${jourOrigine}-${slot}`)
+    // La semaine d'ORIGINE de la séance, jamais celle qu'on affiche : depuis
+    // qu'un écart franchit le dimanche, les deux ne coïncident plus.
+    const aUnRessenti = notees.has(`${semaineOrigine}-${jourOrigine}-${slot}`)
     const aUneActivite = importeesParJour.get(day)?.has(f) ?? false
     if (aUnRessenti || aUneActivite) compteurs[f].realise++
 

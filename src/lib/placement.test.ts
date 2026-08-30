@@ -256,6 +256,51 @@ describe('le slot reste le rang dans la journée après déplacement', () => {
   })
 })
 
+describe('deux séances du même type réunies dans une semaine', () => {
+  /**
+   * Le cas réel : la sortie longue de la semaine 3 déplacée au mardi, et celle
+   * de la semaine 4 ramenée au dimanche précédent. Les deux ont `jourOrigine`
+   * 0 et `slot` 0 ; seule la semaine d'origine les distingue. Passer la semaine
+   * AFFICHÉE plutôt que celle d'origine faisait écrire l'écart de l'une sur
+   * l'autre.
+   */
+  const weeks: Week[] = [
+    { ...semaine([seance({ day: 0, type: 'long', dist: 24 })]), n: 3, monday: LUNDI },
+    {
+      ...semaine([seance({ day: 0, type: 'long', dist: 26 })]),
+      n: 4,
+      monday: addDays(LUNDI, 7),
+    },
+  ]
+  const ecarts = indexerEcarts([
+    { week: 3, day_index: 0, slot: 0, patch: { day: 1 }, reason: null } as EcartRow,
+    { week: 4, day_index: 0, slot: 0, patch: { day: 6, semaines: -1 }, reason: null } as EcartRow,
+  ])
+
+  it('les deux atterrissent dans la même semaine de calendrier', () => {
+    const out = seancesDeLaSemaine(weeks, weeks[0], LUNDI, indice(10), ecarts)
+    expect(out).toHaveLength(2)
+    expect(out.map((x) => x.day)).toEqual([addDays(LUNDI, 1), addDays(LUNDI, 6)])
+  })
+
+  it('mais gardent chacune leur semaine d’origine, donc leur clé', () => {
+    const out = seancesDeLaSemaine(weeks, weeks[0], LUNDI, indice(10), ecarts)
+    expect(out.map((x) => x.semaineOrigine)).toEqual([3, 4])
+    // Même jour d'origine et même slot : sans la semaine, les deux clés
+    // seraient identiques et un écart écraserait l'autre.
+    expect(out.map((x) => `${x.jourOrigine}-${x.slot}`)).toEqual(['0-0', '0-0'])
+  })
+
+  it('un écart de distance ne touche que la sienne', () => {
+    const avecDist = indexerEcarts([
+      { week: 3, day_index: 0, slot: 0, patch: { day: 1, dist: 20 }, reason: null } as EcartRow,
+      { week: 4, day_index: 0, slot: 0, patch: { day: 6, semaines: -1 }, reason: null } as EcartRow,
+    ])
+    const out = seancesDeLaSemaine(weeks, weeks[0], LUNDI, indice(10), avecDist)
+    expect(out.map((x) => x.s.dist)).toEqual([20, 26])
+  })
+})
+
 describe('porteUneDistance', () => {
   const s = (extra: Partial<Session>): Session => seance(extra)
 

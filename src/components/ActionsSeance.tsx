@@ -185,18 +185,6 @@ export function ActionsSeance({
               >
                 <MarqueType type={r.type} />
                 <span style={{ flex: 1 }}>{r.label}</span>
-                {r.type === 'marche' && (
-                  <em
-                    style={{
-                      fontStyle: 'normal',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: 'var(--ink-3)',
-                    }}
-                  >
-                    moitié moins de charge
-                  </em>
-                )}
               </button>
             ))}
           </div>

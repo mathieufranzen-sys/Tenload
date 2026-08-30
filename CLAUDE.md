@@ -398,7 +398,13 @@ en-têtes de semaine.
   date : depuis qu'un écart franchit le dimanche, la semaine du plan et la
   semaine du calendrier ne coïncident plus.
 - **`SeancePlanifiee.semaineOrigine`** existe pour ça : la clé de l'écart ne se
-  déduit plus de la date affichée.
+  déduit plus de la date affichée. **Rien ne doit être clé sur la semaine
+  AFFICHÉE.** Deux sorties longues peuvent désormais se retrouver dans la même
+  semaine de calendrier — celle de la semaine N poussée au mardi, celle de N+1
+  ramenée au dimanche — avec le même `jourOrigine` et le même `slot`. Seule la
+  semaine d'origine les distingue, et un écart enregistré sur l'une écrasait
+  l'autre. `onOuvrirSeance` ne reçoit donc plus de semaine du tout : la séance
+  porte la sienne.
 - **« Voir initial »** montre le plan de référence nu, sans écart ni
   adaptation. C'est le seul sens non ambigu de « avant toute modification ».
 

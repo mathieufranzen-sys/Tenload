@@ -15,9 +15,17 @@ export function StatsSeance({
   session: s,
   marathonPace,
   distanceNotee = null,
+  allureReelle = null,
 }: {
   session: Session
   marathonPace: number
+  /**
+   * Allure calculée sur ce qui a vraiment été fait, quand la distance ET la
+   * durée réelles sont saisies. Elle prime sur l'allure du plan : afficher
+   * 5:27 sous un 20 km couru en 2 h ferait mentir les trois chiffres à la
+   * fois, puisque les deux autres sont déjà les vrais.
+   */
+  allureReelle?: number | null
   /**
    * Distance notée dans le ressenti, quand le plan n'en fixe aucune : le vélo,
    * dont ce n'est jamais le cas, ou une séance qu'un écart a convertie en
@@ -31,7 +39,7 @@ export function StatsSeance({
   // Une seule allure, ou aucune : à côté de la distance et de la durée
   // TOTALES, l'allure d'un seul bloc invite à une division qui ne tombe pas
   // juste et fait douter des trois chiffres à la fois.
-  const allureCible = estCourse ? allureUnique(s, marathonPace) : null
+  const allureCible = allureReelle ?? (estCourse ? allureUnique(s, marathonPace) : null)
 
   const duree = dmin === dmax ? `${dmin}` : `${dmin}-${dmax}`
 

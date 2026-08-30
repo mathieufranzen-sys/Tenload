@@ -3,7 +3,7 @@
  */
 import { useMemo, useState, type CSSProperties } from 'react'
 import planJson from '../data/plan.json'
-import type { Plan as PlanType, Session, Week } from '../data/types'
+import type { Plan as PlanType, Session } from '../data/types'
 import { DAYS_LONG, addDays, formatDay, formatNumber, today as todayISO } from '../lib/dates'
 import {
   adapt,
@@ -35,7 +35,12 @@ interface Props {
   marathonPace: number
   numeroSemaine: number
   onChangerSemaine: (n: number) => void
-  onOuvrirSeance?: (semaine: Week, seance: SeancePlanifiee) => void
+  /**
+   * La séance porte sa semaine d'ORIGINE : la passer séparément invitait à
+   * passer celle qui est affichée, et deux sorties longues réunies dans la
+   * même semaine par un déplacement partageaient alors la même clé.
+   */
+  onOuvrirSeance?: (seance: SeancePlanifiee) => void
   /** Absent en lecture seule : le calendrier reste alors consultable. */
   onSaveEcart?: (
     week: number,
@@ -87,8 +92,10 @@ export function Plan({
   // volume qui parle au tendon, pas la seule ligne d'endurance facile.
   const kmCourse = courses.reduce((total, x) => total + (x.s.dist ?? 0), 0)
 
-  const feedbackDe = ({ jourOrigine, slot }: SeancePlanifiee) =>
-    feedback.find((f) => f.week === semaine.n && f.day_index === jourOrigine && f.slot === slot) ?? null
+  const feedbackDe = ({ semaineOrigine, jourOrigine, slot }: SeancePlanifiee) =>
+    feedback.find(
+      (f) => f.week === semaineOrigine && f.day_index === jourOrigine && f.slot === slot,
+    ) ?? null
 
   // La vue calendrier montre tout le plan : elle a donc besoin de toutes les
   // semaines, pas de la seule semaine affichée.
@@ -119,29 +126,29 @@ export function Plan({
         zIndex: 5,
         padding: '0 var(--page-x) 0',
       }}>
-        <EnteteEcran
-          titre="Programme"
-          contexte={<>Marathon de Paris · dimanche 11 avril 2027</>}
-          onOuvrirProfil={onOuvrirProfil}
-        />
 
-        {/* Le sélecteur reste accroché en haut : la vue calendrier fait 245
-            jours, et revenir chercher le bouton tout en haut à chaque
-            changement d'avis n'aurait pas de sens. Le retrait négatif compense
-            le padding horizontal de la page pour que le voile couvre toute la
-            largeur. */}
+        {/* L'en-tête entier reste accroché en haut, sélecteur compris : la vue
+            calendrier fait 245 jours, et laisser le titre partir pendant que le
+            sélecteur reste donnait un bandeau orphelin. Le retrait négatif
+            compense le padding horizontal de la page pour que le voile couvre
+            toute la largeur. */}
         <div
           style={{
             position: 'sticky',
             top: 0,
             zIndex: 20,
             margin: '0 calc(var(--page-x) * -1) 14px',
-            padding: '8px var(--page-x) 10px',
-            background: 'rgba(8,9,11,.72)',
+            padding: '0 var(--page-x) 10px',
+            background: 'rgba(8,9,11,.82)',
             backdropFilter: 'var(--glass-blur)',
             WebkitBackdropFilter: 'var(--glass-blur)',
           }}
         >
+          <EnteteEcran
+            titre="Programme"
+            contexte={<>Marathon de Paris · dimanche 11 avril 2027</>}
+            onOuvrirProfil={onOuvrirProfil}
+          />
           <Segmented
             label="Vue du programme"
             valeur={vue}
@@ -320,7 +327,7 @@ export function Plan({
                   session={x.s}
                   marathonPace={marathonPace}
                   feedback={feedbackDe(x)}
-                  onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, x))}
+                  onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
                 />
               ))}
             </div>

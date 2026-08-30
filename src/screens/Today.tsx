@@ -53,7 +53,12 @@ interface Props {
   journalActif: boolean
   onVoirSuivi: () => void
   /** Absent en mode instantanés : les séances ne s'ouvrent alors pas au clic. */
-  onOuvrirSeance?: (semaine: Week, seance: SeancePlanifiee) => void
+  /**
+   * La séance porte sa semaine d'ORIGINE : la passer séparément invitait à
+   * passer celle qui est affichée, et deux sorties longues réunies dans la
+   * même semaine par un déplacement partageaient alors la même clé.
+   */
+  onOuvrirSeance?: (seance: SeancePlanifiee) => void
   onOuvrirProfil: () => void
 }
 
@@ -121,8 +126,10 @@ export function Today({
     () => seancesDeLaSemaine(plan.weeks, semaine, now, A.byDate, ecarts, contexte),
     [semaine, now, A.byDate, ecarts, contexte],
   )
-  const feedbackDe = ({ jourOrigine, slot }: SeancePlanifiee) =>
-    feedback.find((f) => f.week === semaine.n && f.day_index === jourOrigine && f.slot === slot) ?? null
+  const feedbackDe = ({ semaineOrigine, jourOrigine, slot }: SeancePlanifiee) =>
+    feedback.find(
+      (f) => f.week === semaineOrigine && f.day_index === jourOrigine && f.slot === slot,
+    ) ?? null
 
   const duJour = avantPlan ? [] : seances.filter((x) => x.day === jour)
   /**
@@ -148,7 +155,6 @@ export function Today({
   const insights = useMemo(
     () =>
       construireInsights({
-        semaine: semaineCourante,
         seances: seancesCourantes,
         now,
         feedback,
@@ -315,7 +321,7 @@ export function Today({
                 session={restantes[0].s}
                 marathonPace={marathonPace}
                 quand={estAujourdhui ? "Aujourd'hui" : formatDay(jour)}
-                onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, restantes[0]))}
+                onClick={onOuvrirSeance && (() => onOuvrirSeance(restantes[0]))}
               />
             ) : (
               <div
@@ -380,7 +386,7 @@ export function Today({
             key={i}
             session={x.s}
             marathonPace={marathonPace}
-            onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, x))}
+            onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
           />
         ))}
 
@@ -393,7 +399,7 @@ export function Today({
                 session={x.s}
                 marathonPace={marathonPace}
                 feedback={feedbackDe(x)}
-                onClick={onOuvrirSeance && (() => onOuvrirSeance(semaine, x))}
+                onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
               />
             ))}
           </>

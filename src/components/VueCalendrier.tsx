@@ -55,7 +55,7 @@ interface Props {
   semaineVisee: number
   /** Clé `semaine-jour-slot` de la séance à mettre en avant, après « Déplacer ». */
   focus?: string | null
-  onOuvrirSeance?: (semaine: Week, seance: SeancePlanifiee) => void
+  onOuvrirSeance?: (seance: SeancePlanifiee) => void
   /** Absent en lecture seule : le calendrier reste alors consultable. */
   onDeplacer?: (seance: SeancePlanifiee, jour: number, semaines: number) => void
 }
@@ -269,14 +269,7 @@ export function VueCalendrier({
                       seance={x}
                       priseEnCours={prise?.day === x.day && prise?.slot === x.slot}
                       misEnAvant={focus === cleEcart(x.semaineOrigine, x.jourOrigine, x.slot)}
-                      onOuvrir={
-                        onOuvrirSeance && !prise
-                          ? () => {
-                              const w2 = semaineDe(plan, x)
-                              if (w2) onOuvrirSeance(w2, x)
-                            }
-                          : undefined
-                      }
+                      onOuvrir={onOuvrirSeance && !prise ? () => onOuvrirSeance(x) : undefined}
                       onPrise={
                         onDeplacer && !initial
                           ? (e) => {
@@ -350,11 +343,6 @@ function fondCible(enCours: boolean, cible: CibleDrop | undefined, survole: bool
   return survole ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.05)'
 }
 
-/** La semaine du plan de référence à laquelle la séance appartient. */
-function semaineDe(plan: Plan, x: SeancePlanifiee): Week | undefined {
-  return plan.weeks.find((w) => w.n === x.semaineOrigine)
-}
-
 function EnteteSemaine({ semaine, courante }: { semaine: Week; courante: boolean }) {
   return (
     <div
@@ -381,7 +369,11 @@ function EnteteSemaine({ semaine, courante }: { semaine: Week; courante: boolean
             textTransform: 'uppercase',
             padding: '3px 8px',
             borderRadius: 'var(--pill)',
-            background: 'rgba(255,255,255,.14)',
+            // Même teinte que le tag « aujourd'hui » de la vue semaine : les
+            // deux disent la même chose, le présent.
+            background: 'rgba(52,211,153,.18)',
+            border: '1px solid rgba(52,211,153,.3)',
+            color: '#6ee7b7',
           }}
         >
           en cours

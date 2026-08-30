@@ -139,6 +139,14 @@ export function SessionSheet({
 
   const deroule = useMemo(() => deroulerSeance(s, marathonPace), [s, marathonPace])
 
+  /**
+   * L'allure réellement tenue, dès que la durée réelle est saisie et que la
+   * séance porte une distance. `appliquerEcart` pose `dur` à une valeur unique
+   * dans ce cas, ce qui la distingue de la fourchette estimée par le plan.
+   */
+  const allureReelle =
+    seance.ecart?.patch.durMin != null && s.dist ? (seance.ecart.patch.durMin * 60) / s.dist : null
+
   return (
     <div
       role="dialog"
@@ -257,6 +265,7 @@ export function SessionSheet({
             session={s}
             marathonPace={marathonPace}
             distanceNotee={demandeDistance ? (feedback?.distance_km ?? null) : null}
+            allureReelle={allureReelle}
           />
 
           {/* La ligne d'actions vient AVANT le détail : ce qu'on fait de la

@@ -402,8 +402,8 @@ function Coquille({
           marathonPace={marathonPace}
           journalActif={journalActif}
           onVoirSuivi={() => setOnglet('track')}
-          onOuvrirSeance={(semaine, x) =>
-            setSeance({ semaineN: semaine.n, jourOrigine: x.jourOrigine, slot: x.slot })
+          onOuvrirSeance={(x) =>
+            setSeance({ semaineN: x.semaineOrigine, jourOrigine: x.jourOrigine, slot: x.slot })
           }
           onOuvrirProfil={() => setOnglet('profile')}
         />
@@ -417,8 +417,8 @@ function Coquille({
           marathonPace={marathonPace}
           numeroSemaine={numeroSemaine}
           onChangerSemaine={(n) => setNumeroSemaine(Math.max(1, Math.min(35, n)))}
-          onOuvrirSeance={(semaine, x) =>
-            setSeance({ semaineN: semaine.n, jourOrigine: x.jourOrigine, slot: x.slot })
+          onOuvrirSeance={(x) =>
+            setSeance({ semaineN: x.semaineOrigine, jourOrigine: x.jourOrigine, slot: x.slot })
           }
           onSaveEcart={onSaveEcart}
           focusSeance={focusSeance}
