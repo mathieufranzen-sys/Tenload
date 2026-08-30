@@ -12,7 +12,7 @@ import { HR_MAX } from './lib/paces'
 import { ajusterForme } from './lib/forme'
 import { buildPain, type DailyLogRow, type FeedbackRow } from './lib/buildPain'
 import { NOTE_DEMO, construireDemo } from './data/demo'
-import { indexerEcarts, type EcartPatch, type EcartRow } from './lib/overrides'
+import { cleEcart, indexerEcarts, type EcartPatch, type EcartRow } from './lib/overrides'
 import type { SeancePlanifiee } from './lib/adapt'
 import type { PainMap } from './lib/tendonIndex'
 import { addDays, today } from './lib/dates'
@@ -348,6 +348,8 @@ function Coquille({
 
   const [onglet, setOnglet] = useState<Onglet>('today')
   const [seance, setSeance] = useState<SeanceOuverte | null>(null)
+  /** Séance à mettre en avant dans la vue calendrier, après « Déplacer ». */
+  const [focusSeance, setFocusSeance] = useState<string | null>(null)
   const [numeroSemaine, setNumeroSemaine] = useState(
     () => (plan.weeks.find((w) => now >= w.monday && now <= addDays(w.monday, 6)) ?? plan.weeks[0]).n,
   )
@@ -390,6 +392,8 @@ function Coquille({
           numeroSemaine={numeroSemaine}
           onChangerSemaine={(n) => setNumeroSemaine(Math.max(1, Math.min(35, n)))}
           onOuvrirSeance={(semaine, seance) => setSeance({ semaine, seance })}
+          onSaveEcart={onSaveEcart}
+          focusSeance={focusSeance}
           onOuvrirProfil={() => setOnglet('profile')}
         />
       )}
@@ -441,6 +445,12 @@ function Coquille({
           marathonPace={marathonPace}
           onSave={onSaveFeedback}
           onSaveEcart={onSaveEcart}
+          onDeplacer={(x) => {
+            setFocusSeance(cleEcart(x.semaineOrigine, x.jourOrigine, x.slot))
+            setNumeroSemaine(x.semaineOrigine)
+            setSeance(null)
+            setOnglet('plan')
+          }}
           onClose={() => setSeance(null)}
         />
       )}

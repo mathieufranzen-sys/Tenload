@@ -6,7 +6,8 @@
  * réelle. Cette batterie balaie les sept jours pour chaque règle sensible.
  */
 import { describe, expect, it } from 'vitest'
-import { weekSessions } from './adapt'
+import { seancesDeLaSemaine, weekSessions } from './adapt'
+import { ciblesPossibles } from '../components/VueCalendrier'
 import { addDays } from './dates'
 import { indexerEcarts, type EcartRow } from './overrides'
 import type { Session, Week } from '../data/types'
@@ -156,6 +157,82 @@ describe('le palier plafonne la prochaine longue, où qu’elle soit', () => {
       palier: { ...palier, jour: LUNDI },
     })
     expect(out[0].s.dist).toBe(26)
+  })
+})
+
+describe('un écart peut franchir la frontière du dimanche', () => {
+  const deuxSemaines = (): Week[] => [
+    { ...semaine([seance({ day: 4, type: 'velo' })]), n: 3, monday: LUNDI },
+    { ...semaine([seance({ day: 3, type: 'muscu-bas' })]), n: 4, monday: addDays(LUNDI, 7) },
+  ]
+
+  it('pousse la séance de sept jours par semaine de décalage', () => {
+    const [w] = deuxSemaines()
+    const out = weekSessions(w, LUNDI, indice(10), ecart(4, { day: 3, semaines: 1 }))
+    expect(out[0].day).toBe(addDays(LUNDI, 10))
+    // La clé Supabase ne bouge pas : c'est ce qui garde l'écriture rejouable.
+    expect(out[0].semaineOrigine).toBe(3)
+    expect(out[0].jourOrigine).toBe(4)
+  })
+
+  it('la ramène aussi d’une semaine en arrière', () => {
+    const [w] = deuxSemaines()
+    const out = weekSessions(w, LUNDI, indice(10), ecart(4, { day: 6, semaines: -1 }))
+    expect(out[0].day).toBe(addDays(LUNDI, -1))
+  })
+
+  it('la semaine d’accueil la voit, la semaine d’origine ne la voit plus', () => {
+    const weeks = deuxSemaines()
+    const ecarts = ecart(4, { day: 3, semaines: 1 })
+    const s3 = seancesDeLaSemaine(weeks, weeks[0], LUNDI, indice(10), ecarts)
+    const s4 = seancesDeLaSemaine(weeks, weeks[1], LUNDI, indice(10), ecarts)
+    expect(s3.map((x) => x.s.type)).toEqual([])
+    expect(s4.map((x) => x.s.type).sort()).toEqual(['muscu-bas', 'velo'])
+  })
+
+  it('sans écart, chaque semaine ne voit que la sienne', () => {
+    const weeks = deuxSemaines()
+    expect(seancesDeLaSemaine(weeks, weeks[0], LUNDI, indice(10)).map((x) => x.s.type)).toEqual([
+      'velo',
+    ])
+  })
+})
+
+describe('ciblesPossibles', () => {
+  const weeks: Week[] = [
+    { ...semaine([seance({ day: 0, type: 'ef', dist: 7 })]), n: 2, monday: addDays(LUNDI, -7) },
+    {
+      ...semaine([
+        seance({ day: 1, type: 'ef', dist: 7 }),
+        seance({ day: 2, type: 'escalade' }),
+      ]),
+      n: 3,
+      monday: LUNDI,
+    },
+    { ...semaine([seance({ day: 0, type: 'long', dist: 24 })]), n: 4, monday: addDays(LUNDI, 7) },
+  ]
+  const prise = weekSessions(weeks[1], LUNDI, indice(10))[0]
+
+  it('ouvre les trois semaines, et seulement elles', () => {
+    const c = ciblesPossibles(weeks, prise)
+    expect(c.size).toBe(21)
+    expect(c.get(addDays(LUNDI, -7))?.semaines).toBe(-1)
+    expect(c.get(LUNDI)?.semaines).toBe(0)
+    expect(c.get(addDays(LUNDI, 7))?.semaines).toBe(1)
+  })
+
+  it('signale le mercredi d’escalade comme conflit, sans l’interdire', () => {
+    const c = ciblesPossibles(weeks, prise)
+    const mercredi = c.get(addDays(LUNDI, 2))!
+    expect(mercredi.conflits.length).toBeGreaterThan(0)
+    expect(mercredi.conflits[0]).toContain('mercredi')
+    // La cible existe quand même : on avertit, on ne bloque pas.
+    expect(mercredi.jour).toBe(2)
+  })
+
+  it('ne signale rien sur un jour libre de la même semaine', () => {
+    const c = ciblesPossibles(weeks, prise)
+    expect(c.get(addDays(LUNDI, 3))?.conflits).toEqual([])
   })
 })
 

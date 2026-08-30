@@ -371,6 +371,49 @@ discipline, la déplacer d'un jour, corriger sa distance ou sa durée.
   d'être supprimée : c'est ce qui garde toutes les écritures idempotentes, donc
   rejouables telles quelles par la file d'attente.
 
+### La vue calendrier et le déplacement des séances
+
+`src/components/VueCalendrier.tsx`, `src/components/ActionsSeance.tsx`, plus
+7 tests de placement et de cibles.
+
+L'écran Programme porte deux vues, sous un même sélecteur : **semaine**
+(inchangée) et **calendrier**, qui déroule les 245 jours du plan avec leurs
+en-têtes de semaine.
+
+- **Le déplacement se fait au doigt, dans le calendrier.** Le menu déroulant de
+  sept jours qui vivait dans la feuille de séance ne disait rien de la semaine
+  qu'il fabriquait : on choisissait « jeudi » sans voir ce que jeudi portait
+  déjà. Cet accès est supprimé.
+- **Le geste est en événements de pointeur, pas en drag-and-drop HTML5**, qui
+  n'existe pas sur iPhone. Appui de 220 ms pour ouvrir la prise, capture du
+  pointeur pendant tout le geste — sans elle, un doigt qui sort de la carte
+  perd le déplacement, ce qui est le cas normal quand on vise un jour éloigné.
+- **Les conflits se signalent pendant le geste, ils n'interdisent rien.** Même
+  règle que partout : on avertit, c'est le tendon de Mathieu qui tranche.
+- **`EcartPatch.semaines`** porte le franchissement du dimanche, borné à ±1.
+  La clé Supabase reste celle du plan de référence (semaine, jour, slot) : une
+  séance déplacée ne change jamais de ligne, elle porte seulement l'offset de
+  sa nouvelle date. C'est ce qui garde les écritures idempotentes.
+- **`seancesDeLaSemaine`** balaie les trois semaines voisines et filtre par
+  date : depuis qu'un écart franchit le dimanche, la semaine du plan et la
+  semaine du calendrier ne coïncident plus.
+- **`SeancePlanifiee.semaineOrigine`** existe pour ça : la clé de l'écart ne se
+  déduit plus de la date affichée.
+- **« Voir initial »** montre le plan de référence nu, sans écart ni
+  adaptation. C'est le seul sens non ambigu de « avant toute modification ».
+
+La feuille de séance porte désormais quatre actions au-dessus du détail :
+sauter, déplacer (qui ouvre le calendrier sur la séance), le réel (distance et
+durée), remplacer. Le sélecteur extérieur / tapis est supprimé : tout est
+dehors.
+
+**La marche est un type de séance**, à `0,5` point par kilomètre, soit deux
+fois moins que la course : pas de phase aérienne, donc pas de choc à la
+réception. Elle charge les jambes (le noir l'arrête) mais n'est pas de la
+course : le rouge, qui interdit la course, la laisse passer. C'est tout son
+intérêt comme repli. Ses kilomètres restent hors du volume de course, qui
+mesure l'impact au sol.
+
 ### Le palier de la sortie longue
 
 `src/lib/palier.ts` (+ 19 tests), plus 26 tests de placement dans

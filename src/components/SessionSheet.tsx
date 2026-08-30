@@ -13,7 +13,7 @@ import {
   type EcartPatch,
   type EcartRow,
 } from '../lib/overrides'
-import { EcartEditor } from './EcartEditor'
+import { ActionsSeance } from './ActionsSeance'
 import { CarteCoach } from './CarteCoach'
 import { butDeLaSeance } from '../lib/coach'
 import { formatDayLong } from '../lib/dates'
@@ -61,6 +61,8 @@ interface Props {
     patch: EcartPatch,
     reason?: string | null,
   ) => void
+  /** Ouvre la vue calendrier de Programme sur cette séance. */
+  onDeplacer?: (seance: SeancePlanifiee) => void
   onClose: () => void
 }
 
@@ -72,10 +74,10 @@ export function SessionSheet({
   marathonPace,
   onSave,
   onSaveEcart,
+  onDeplacer,
   onClose,
 }: Props) {
   const { s, jourOrigine, slot, day } = seance
-  const [surface, setSurface] = useState<'out' | 'mill'>('out')
   const [modifie, setModifie] = useState(false)
 
   // L'éditeur compare toujours au plan de référence, pas à la séance affichée :
@@ -108,7 +110,6 @@ export function SessionSheet({
   }, [onClose])
 
   const estCourse = TYPES_COURSE_SANS_MUR.includes(s.type)
-  const afficherToggleSurface = estCourse && !['race', 'course'].includes(s.type)
   const afficherDetails = estCourse || Boolean(s.ex)
 
   /**
@@ -256,44 +257,38 @@ export function SessionSheet({
             distanceNotee={demandeDistance ? (feedback?.distance_km ?? null) : null}
           />
 
-          <div style={{ height: 1, background: 'var(--border)', margin: '24px 0 20px' }} />
+          {/* La ligne d'actions vient AVANT le détail : ce qu'on fait de la
+              séance se décide en la regardant de haut, pas après avoir lu ses
+              allures. */}
+          {onSaveEcart && (
+            <div style={{ marginTop: 24 }}>
+              <ActionsSeance
+                origine={origine}
+                actuel={seance.ecart?.patch ?? null}
+                actuelRaison={seance.ecart?.reason ?? null}
+                semaineAvant={semaineAvant}
+                simuler={(patch) =>
+                  seancesAvecEcarts(week, new Map(ecartsBase).set(cle, {
+                    week: week.n,
+                    day_index: jourOrigine,
+                    slot,
+                    patch,
+                    reason: null,
+                  }))
+                }
+                onSave={(patch, reason) => onSaveEcart(week.n, jourOrigine, slot, patch, reason)}
+                onDeplacer={onDeplacer && (() => onDeplacer(seance))}
+              />
+            </div>
+          )}
+
+          {!onSaveEcart && (
+            <div style={{ height: 1, background: 'var(--border)', margin: '24px 0 20px' }} />
+          )}
 
           {afficherDetails && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14 }}>
               <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-.6px' }}>Détails</div>
-              {afficherToggleSurface && (
-                <div
-                  className="glass"
-                  style={{
-                    display: 'flex',
-                    borderRadius: 'var(--pill)',
-                    padding: 3,
-                    gap: 2,
-                    flex: 1,
-                    maxWidth: 206,
-                  }}
-                >
-                  {(['out', 'mill'] as const).map((v) => (
-                    <button
-                      key={v}
-                      aria-pressed={surface === v}
-                      onClick={() => setSurface(v)}
-                      style={{
-                        flex: 1,
-                        padding: '8px 0',
-                        borderRadius: 'var(--pill)',
-                        fontSize: 13,
-                        fontWeight: 700,
-                        background: surface === v ? 'rgba(255,255,255,.92)' : 'transparent',
-                        color: surface === v ? '#0b0c0e' : 'var(--sur-ink-2)',
-                        transition: 'background var(--dur-fast) var(--ease-out), color var(--dur-fast)',
-                      }}
-                    >
-                      {v === 'out' ? 'Extérieur' : 'Tapis'}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           )}
 
@@ -355,24 +350,6 @@ export function SessionSheet({
                 marathonPace={marathonPace}
               />
             </>
-          )}
-
-          {surface === 'mill' && estCourse && (
-            <div
-              className="glass"
-              style={{
-                borderRadius: 'var(--radius)',
-                padding: '15px 16px',
-                marginTop: 18,
-              }}
-            >
-              <h4 style={{ margin: '0 0 6px', fontSize: 15.5, fontWeight: 800 }}>Sur tapis</h4>
-              <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.5, color: '#D6D9DE' }}>
-                Règle l'inclinaison à 1 % pour compenser l'absence de résistance de l'air. Le tapis
-                réduit la charge excentrique sur le tendon à l'attaque du pied : c'est une bonne
-                option les jours où la douleur au réveil dépasse 2.
-              </p>
-            </div>
           )}
 
           <div
@@ -457,34 +434,6 @@ export function SessionSheet({
             />
           )}
 
-          {onSaveEcart && (
-            <>
-              <div
-                style={{
-                  height: 1,
-                  margin: '22px 0 4px',
-                  background:
-                    'repeating-linear-gradient(90deg, var(--border-2) 0 4px, transparent 4px 9px)',
-                }}
-              />
-              <EcartEditor
-                origine={origine}
-                actuel={seance.ecart?.patch ?? null}
-                actuelRaison={seance.ecart?.reason ?? null}
-                semaineAvant={semaineAvant}
-                simuler={(patch) =>
-                  seancesAvecEcarts(week, new Map(ecartsBase).set(cle, {
-                    week: week.n,
-                    day_index: jourOrigine,
-                    slot,
-                    patch,
-                    reason: null,
-                  }))
-                }
-                onSave={(patch, reason) => onSaveEcart(week.n, jourOrigine, slot, patch, reason)}
-              />
-            </>
-          )}
         </div>
       </div>
     </div>

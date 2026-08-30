@@ -1,18 +1,26 @@
 /**
  * Écran Programme, porté depuis reference/tendo-v3.html (`vPlan`).
  */
-import { useMemo, type CSSProperties } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan as PlanType, Session, Week } from '../data/types'
 import { DAYS_LONG, addDays, formatDay, formatNumber, today as todayISO } from '../lib/dates'
-import { adapt, construireContexte, weekSessions, type SeancePlanifiee } from '../lib/adapt'
+import {
+  adapt,
+  construireContexte,
+  seancesDeLaSemaine,
+  weekSessions,
+  type SeancePlanifiee,
+} from '../lib/adapt'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { FeedbackRow } from '../lib/buildPain'
-import type { EcartRow } from '../lib/overrides'
+import { cleEcart, type EcartPatch, type EcartRow } from '../lib/overrides'
 import { SessionCard } from '../components/SessionCard'
 import { Icon } from '../components/Icon'
 import { EnteteEcran } from '../components/EnteteEcran'
 import { MeshBackground } from '../components/MeshBackground'
+import { Segmented } from '../components/Segmented'
+import { VueCalendrier } from '../components/VueCalendrier'
 
 const plan = planJson as unknown as PlanType
 
@@ -28,6 +36,16 @@ interface Props {
   numeroSemaine: number
   onChangerSemaine: (n: number) => void
   onOuvrirSeance?: (semaine: Week, seance: SeancePlanifiee) => void
+  /** Absent en lecture seule : le calendrier reste alors consultable. */
+  onSaveEcart?: (
+    week: number,
+    dayIndex: number,
+    slot: number,
+    patch: EcartPatch,
+    reason?: string | null,
+  ) => void
+  /** Clé de la séance à mettre en avant, quand on arrive depuis « Déplacer ». */
+  focusSeance?: string | null
   onOuvrirProfil: () => void
 }
 
@@ -40,6 +58,8 @@ export function Plan({
   numeroSemaine,
   onChangerSemaine,
   onOuvrirSeance,
+  onSaveEcart,
+  focusSeance,
   onOuvrirProfil,
 }: Props) {
   const now = todayISO()
@@ -56,7 +76,7 @@ export function Plan({
     [feedback, pain, now, ecarts],
   )
   const seances = useMemo(
-    () => weekSessions(semaine, now, A.byDate, ecarts, contexte),
+    () => seancesDeLaSemaine(plan.weeks, semaine, now, A.byDate, ecarts, contexte),
     [semaine, now, A.byDate, ecarts, contexte],
   )
 
@@ -69,6 +89,22 @@ export function Plan({
 
   const feedbackDe = ({ jourOrigine, slot }: SeancePlanifiee) =>
     feedback.find((f) => f.week === semaine.n && f.day_index === jourOrigine && f.slot === slot) ?? null
+
+  // La vue calendrier montre tout le plan : elle a donc besoin de toutes les
+  // semaines, pas de la seule semaine affichée.
+  const toutesSeances = useMemo(
+    () => plan.weeks.flatMap((w) => weekSessions(w, now, A.byDate, ecarts, contexte)),
+    [now, A.byDate, ecarts, contexte],
+  )
+  // Le plan de référence nu : ni écart, ni adaptation. C'est ce que montre
+  // « Voir initial », et c'est le seul sens non ambigu de « avant toute
+  // modification de ma part ».
+  const seancesInitiales = useMemo(
+    () => plan.weeks.flatMap((w) => weekSessions(w, now, {})),
+    [now],
+  )
+
+  const [vue, setVue] = useState<'semaine' | 'calendrier'>(focusSeance ? 'calendrier' : 'semaine')
 
   const [premiere, derniere] = bloc.weeks
   const rangDansBloc = semaine.n - premiere + 1
@@ -89,6 +125,42 @@ export function Plan({
           onOuvrirProfil={onOuvrirProfil}
         />
 
+        <div style={{ marginBottom: 14 }}>
+          <Segmented
+            label="Vue du programme"
+            valeur={vue}
+            onChange={setVue}
+            options={[
+              { cle: 'semaine', libelle: 'Vue semaine' },
+              { cle: 'calendrier', libelle: 'Vue calendrier' },
+            ]}
+          />
+        </div>
+
+        {vue === 'calendrier' ? (
+          <VueCalendrier
+            plan={plan}
+            seances={toutesSeances}
+            seancesInitiales={seancesInitiales}
+            ecarts={ecarts}
+            now={now}
+            semaineVisee={semaine.n}
+            focus={focusSeance}
+            onOuvrirSeance={onOuvrirSeance}
+            onDeplacer={
+              onSaveEcart &&
+              ((x, jour, semaines) =>
+                // La clé reste celle du plan de référence : la semaine
+                // d'ORIGINE de la séance, jamais celle où elle atterrit.
+                onSaveEcart(x.semaineOrigine, x.jourOrigine, x.slot, {
+                  ...(ecarts?.get(cleEcart(x.semaineOrigine, x.jourOrigine, x.slot))?.patch ?? {}),
+                  day: jour,
+                  semaines: semaines || undefined,
+                }))
+            }
+          />
+        ) : (
+          <>
         {/* En-tête de bloc : ce qui situe la semaine dans les 35. Le nom du
             bloc et sa couleur restent le repère, la barre dit où on en est. */}
         <div className="glass" style={{ borderRadius: 22, padding: '16px 17px', marginBottom: 14 }}>
@@ -257,6 +329,8 @@ export function Plan({
           >
             Aller à la semaine en cours
           </button>
+        )}
+          </>
         )}
       </div>
     </div>

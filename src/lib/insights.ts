@@ -25,6 +25,11 @@ const FAMILLE_SEANCE: Partial<Record<SessionType, Famille>> = {
   course: 'course',
   race: 'course',
   velo: 'velo',
+  // La marche compte comme une séance de la famille course : elle occupe la
+  // place de celle qu'elle remplace, et le compteur de la semaine doit la
+  // voir. Ses kilomètres, eux, restent hors du volume de course : ce compteur
+  // mesure l'impact au sol, et la marche n'en a presque pas.
+  marche: 'course',
   'muscu-haut': 'renfo',
   'muscu-bas': 'renfo',
 }
@@ -148,6 +153,7 @@ export function construireInsights({
   const kmCourseParJour = new Map<string, number>()
   for (const f of feedback) {
     if (familleDe(f.session_type as SessionType) !== 'course') continue
+    if (f.session_type === 'marche') continue
 
     // Priorité à l'écart volontaire : c'est la dernière chose que Mathieu a
     // déclarée sur cette séance, et elle peut arriver APRÈS la note. Le

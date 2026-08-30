@@ -21,8 +21,18 @@ export interface EcartPatch {
   skipped?: boolean
   /** Remplacement par une autre discipline. */
   type?: SessionType
-  /** Jour de destination, 0 = lundi … 6 = dimanche. */
+  /** Jour de destination dans la semaine d'accueil, 0 = lundi … 6 = dimanche. */
   day?: number
+  /**
+   * Semaines d'écart par rapport à la semaine d'origine : −1, 0 ou +1.
+   *
+   * La clé Supabase reste celle de la séance dans le plan de référence
+   * (semaine, jour, slot). Déplacer une séance ne la change donc jamais de
+   * ligne, elle porte seulement l'offset de sa nouvelle date. C'est ce qui
+   * garde toutes les écritures idempotentes, et ce qui permet de revenir au
+   * plan en vidant le patch.
+   */
+  semaines?: number
   /** Distance réellement parcourue, en kilomètres. */
   dist?: number | null
   /** Durée réelle, en minutes. Une seule valeur, pas une fourchette. */
@@ -72,6 +82,9 @@ export function slotsParJour(sessions: Session[]): number[] {
 export const TYPES_REMPLACEMENT: ReadonlyArray<{ type: SessionType; label: string; cat: string }> = [
   { type: 'ef', label: 'Course facile', cat: 'Course facile' },
   { type: 'velo', label: 'Vélo', cat: 'Vélo' },
+  // La marche est le repli quand courir n'est plus possible mais bouger l'est
+  // encore : elle charge le tendon deux fois moins au kilomètre.
+  { type: 'marche', label: 'Marche', cat: 'Marche' },
   { type: 'muscu-haut', label: 'Renfo haut du corps', cat: 'Renforcement haut du corps' },
   { type: 'muscu-bas', label: 'Renfo bas du corps', cat: 'Renforcement bas du corps' },
   { type: 'escalade', label: 'Escalade', cat: 'Escalade' },
@@ -131,6 +144,7 @@ export function appliquerEcart(s: Session, e: EcartPatch): Session {
   }
   if (e.durMin != null) out.dur = [e.durMin, e.durMin]
   if (e.day != null) out.day = e.day
+  if (e.semaines) out.semaines = e.semaines
   if (e.skipped) out.saute = true
 
   // Le badge dit ce que la séance ÉTAIT, pas ce qu'elle est devenue : ce
@@ -138,7 +152,12 @@ export function appliquerEcart(s: Session, e: EcartPatch): Session {
   const parts: string[] = []
   if (e.skipped) parts.push('non faite')
   if (e.type) parts.push(`initialement ${s.cat.toLowerCase()}`)
-  if (e.day != null && e.day !== s.day) parts.push(`initialement ${JOURS[s.day]}`)
+  if ((e.day != null && e.day !== s.day) || e.semaines) {
+    // Le badge se lit depuis l'endroit où la séance se trouve MAINTENANT :
+    // une séance poussée d'une semaine vient donc de la semaine d'avant.
+    const semaine = !e.semaines ? '' : e.semaines > 0 ? ', semaine d’avant' : ', semaine d’après'
+    parts.push(`initialement ${JOURS[s.day]}${semaine}`)
+  }
   if (e.dist != null && s.dist != null) parts.push(`initialement ${s.dist} km`)
   if (e.durMin != null && s.dur) parts.push(`initialement ${s.dur[0]} min`)
   if (parts.length) out.ecart = parts.join(' · ')
@@ -153,7 +172,7 @@ const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dim
 const TYPES_COURSE: SessionType[] = ['long', 'ef', 'inter', 'tempo', 'test', 'course', 'race']
 const TYPES_QUALITE: SessionType[] = ['inter', 'tempo', 'test', 'course', 'race']
 const TYPES_JAMBES: SessionType[] = [
-  'long', 'ef', 'inter', 'tempo', 'test', 'course', 'race', 'velo', 'muscu-bas', 'escalade',
+  'long', 'ef', 'inter', 'tempo', 'test', 'course', 'race', 'velo', 'marche', 'muscu-bas', 'escalade',
 ]
 
 export interface Alerte {

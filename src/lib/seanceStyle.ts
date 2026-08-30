@@ -24,6 +24,7 @@
 import type { SessionType, ZoneKey } from '../data/types'
 
 export type Discipline =
+  | 'walk'
   | 'run'
   | 'runPack'
   | 'runFast'
@@ -56,6 +57,7 @@ export const STYLE_SEANCE: Record<SessionType, StyleSeance> = {
   course: { icone: 'flag', intensite: 4, famille: 'Dossard' },
   race: { icone: 'flag', intensite: 4, famille: 'Dossard' },
   velo: { icone: 'bike', intensite: 1, famille: 'Vélo' },
+  marche: { icone: 'walk', intensite: 1, famille: 'Marche' },
   'muscu-haut': { icone: 'dumb', intensite: 2, famille: 'Renforcement' },
   'muscu-bas': { icone: 'dumb', intensite: 2, famille: 'Renforcement' },
   escalade: { icone: 'climb', intensite: 3, famille: 'Escalade' },

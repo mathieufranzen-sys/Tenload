@@ -13,6 +13,7 @@ export type SessionType =
   | 'muscu-haut'
   | 'muscu-bas'
   | 'velo'
+  | 'marche'
   | 'escalade'
   | 'repos'
 
@@ -50,8 +51,13 @@ export type Exercise = [string, string, string]
 export type Step = [string | number, ZoneKey | string | null]
 
 export interface Session {
-  /** 0 = lundi … 6 = dimanche. */
+  /** 0 = lundi … 6 = dimanche, dans la semaine d'accueil. */
   day: number
+  /**
+   * Semaines d'écart par rapport à la semaine du plan, posé par un écart
+   * volontaire. La date effective vaut `lundi + 7 × semaines + day`.
+   */
+  semaines?: number
   type: SessionType
   title: string
   /** Libellé de catégorie affiché sous le titre. */

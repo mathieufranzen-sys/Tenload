@@ -19,7 +19,7 @@ import {
   today as todayISO,
   weekdayIndex,
 } from '../lib/dates'
-import { adapt, construireContexte, weekSessions, type SeancePlanifiee } from '../lib/adapt'
+import { adapt, construireContexte, seancesDeLaSemaine, type SeancePlanifiee } from '../lib/adapt'
 import { construireInsights } from '../lib/insights'
 import { motDuCoach } from '../lib/coach'
 import { bandOf, type LoadMap, type PainMap } from '../lib/tendonIndex'
@@ -118,7 +118,7 @@ export function Today({
     [feedback, pain, now, ecarts],
   )
   const seances = useMemo(
-    () => weekSessions(semaine, now, A.byDate, ecarts, contexte),
+    () => seancesDeLaSemaine(plan.weeks, semaine, now, A.byDate, ecarts, contexte),
     [semaine, now, A.byDate, ecarts, contexte],
   )
   const feedbackDe = ({ jourOrigine, slot }: SeancePlanifiee) =>
@@ -141,7 +141,7 @@ export function Today({
   }, [now, debutPlan])
 
   const seancesCourantes = useMemo(
-    () => weekSessions(semaineCourante, now, A.byDate, ecarts, contexte),
+    () => seancesDeLaSemaine(plan.weeks, semaineCourante, now, A.byDate, ecarts, contexte),
     [semaineCourante, now, A.byDate, ecarts, contexte],
   )
 

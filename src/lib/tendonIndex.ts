@@ -52,6 +52,11 @@ export const RUN_COST: Record<string, number> = {
   test: 1.5,
   course: 1.35,
   race: 1.35,
+  // La marche charge le tendon deux fois moins que la course au kilomètre :
+  // pas de phase aérienne, donc pas de choc à la réception, et la flexion
+  // dorsale reste dans une amplitude modérée. C'est ce qui en fait le repli
+  // utile quand courir n'est plus possible mais bouger l'est encore.
+  marche: 0.5,
 }
 
 // ─────────────────────────────────────────────────────────── types

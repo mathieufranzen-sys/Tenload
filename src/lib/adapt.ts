@@ -91,7 +91,7 @@ export function fxForDate(
 }
 
 const TYPES_JAMBES: SessionType[] = [
-  'long', 'ef', 'inter', 'tempo', 'test', 'course', 'velo', 'muscu-bas', 'escalade',
+  'long', 'ef', 'inter', 'tempo', 'test', 'course', 'velo', 'marche', 'muscu-bas', 'escalade',
 ]
 const TYPES_COURSE: SessionType[] = ['long', 'ef', 'inter', 'tempo', 'test', 'course']
 const TYPES_QUALITE: SessionType[] = ['inter', 'tempo', 'test']
@@ -220,6 +220,12 @@ export function applyFx(s: Session, fx: Fx, ctx: ContexteSeance = CONTEXTE_NEUTR
 export interface SeancePlanifiee {
   /** Écart volontaire appliqué, puis adaptation automatique par-dessus. */
   s: Session
+  /**
+   * Semaine d'ORIGINE dans le plan. Avec `jourOrigine` et `slot`, la clé
+   * Supabase. Depuis qu'un écart peut pousser une séance dans la semaine
+   * voisine, elle ne se déduit plus de la date affichée.
+   */
+  semaineOrigine: number
   /** Jour d'ORIGINE dans le plan, 0-6. Avec `slot`, la clé Supabase. */
   jourOrigine: number
   slot: number
@@ -300,7 +306,9 @@ export function weekSessions(
   return avecEcarts.map((s, i) => {
     const jourOrigine = week.sessions[i].day
     const slot = slots[i]
-    const day = addDays(week.monday, s.day)
+    // `semaines` porte le déplacement d'une semaine à l'autre : la clé
+    // Supabase reste celle du plan de référence, seule la date change.
+    const day = addDays(week.monday, s.day + 7 * (s.semaines ?? 0))
     const cle = cleEcart(week.n, jourOrigine, slot)
 
     // Une séance déclarée non faite ne reçoit aucune adaptation : il n'y a
@@ -321,12 +329,43 @@ export function weekSessions(
 
     return {
       s: vecue,
+      semaineOrigine: week.n,
       jourOrigine,
       slot,
       day,
       ecart: ecarts?.get(cle) ?? null,
     }
   })
+}
+
+/**
+ * Les séances qui tombent RÉELLEMENT dans cette semaine, y compris celles
+ * qu'un écart y a poussées depuis la semaine d'avant ou d'après.
+ *
+ * `weekSessions` raisonne sur une semaine du plan de référence ; depuis que
+ * les écarts peuvent franchir la frontière du dimanche, la semaine du plan et
+ * la semaine du calendrier ne coïncident plus. Un écran qui affiche des jours
+ * doit donc balayer les trois semaines voisines et filtrer par date.
+ */
+export function seancesDeLaSemaine(
+  weeks: Week[],
+  week: Week,
+  now: string,
+  byDate: Record<string, IndexBreakdown>,
+  ecarts?: Map<string, EcartRow>,
+  contexte?: ContextePlan,
+): SeancePlanifiee[] {
+  const i = weeks.findIndex((w) => w.n === week.n)
+  const fin = addDays(week.monday, 6)
+  const out: SeancePlanifiee[] = []
+  for (const k of [i - 1, i, i + 1]) {
+    const w = weeks[k]
+    if (!w) continue
+    for (const x of weekSessions(w, now, byDate, ecarts, contexte)) {
+      if (x.day >= week.monday && x.day <= fin) out.push(x)
+    }
+  }
+  return out.sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : a.slot - b.slot))
 }
 
 export interface Rule {

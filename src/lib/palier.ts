@@ -59,7 +59,7 @@ export function arrangerPlan(weeks: Week[], ecarts?: Map<string, EcartRow>): Sea
         week: w.n,
         jourOrigine: w.sessions[i].day,
         slot: slots[i],
-        day: addDays(w.monday, s.day),
+        day: addDays(w.monday, s.day + 7 * (s.semaines ?? 0)),
         type: s.type,
         dist: s.dist,
         saute: Boolean(s.saute),
