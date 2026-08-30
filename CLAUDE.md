@@ -359,9 +359,17 @@ discipline, la déplacer d'un jour, corriger sa distance ou sa durée.
 - **Une séance sautée vaut zéro dans la charge**, comme une journée sans
   activité importée.
 - **Le contrôle des contraintes avertit, il ne bloque pas.** `verifierContraintes`
-  lit les contraintes 2, 3, 4 et 6 sur la disposition de la semaine ; les 1 et 5
-  portent sur la progression du plan de référence, que les écarts ne touchent
-  pas. `alertesAjoutees` ne remonte que ce que le changement en cours introduit,
+  lit les contraintes 2, 3, 4 et 6 sur la disposition de la semaine.
+  **Chacune vise une séance, jamais une case du calendrier** : la 2 part de la
+  séance d'escalade et non du mercredi, sans quoi poser un renfo haut sur
+  l'escalade alertait mais poser l'escalade sur le renfo haut restait muet — la
+  même collision, dans l'autre sens. La 4 a deux volets : rien ne se pose sur
+  la séance de repos, et il faut un jour sans jambes dans la semaine. La 3
+  couvre aussi le jour même de la sortie longue, pire que la veille et le
+  lendemain. La 6 ajoute deux séances de course le même jour, que le plan de
+  référence ne peut pas produire mais qu'un déplacement peut créer. Ces
+  contraintes ; les 1 et 5 portent sur la progression du plan de référence, que
+  les écarts ne touchent pas. `alertesAjoutees` ne remonte que ce que le changement en cours introduit,
   sinon une semaine déjà limite crierait à chaque modification.
 - **`slot` est le rang dans la JOURNÉE, jamais l'index dans la semaine.**
   `slotsParJour` est la seule façon correcte de le calculer. La confusion entre

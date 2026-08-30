@@ -6,7 +6,8 @@
  * réelle. Cette batterie balaie les sept jours pour chaque règle sensible.
  */
 import { describe, expect, it } from 'vitest'
-import { seancesDeLaSemaine, weekSessions } from './adapt'
+import { seancesDeLaSemaine, weekSessions, type SeancePlanifiee } from './adapt'
+import planJson from '../data/plan.json'
 import { ciblesPossibles } from '../components/VueCalendrier'
 import { porteUneDistance } from '../components/ActionsSeance'
 import { addDays } from './dates'
@@ -272,6 +273,52 @@ describe('ciblesPossibles', () => {
     // propre jour ne doit créer aucune alerte.
     const c = ciblesPossibles(weeks, prise)
     expect(c.get(addDays(LUNDI, 1))?.conflits).toEqual([])
+  })
+})
+
+describe('les trois cas signalés, sur le plan réel', () => {
+  const vraiPlan = planJson as unknown as { weeks: Week[] }
+  const w = vraiPlan.weeks.find((x) => x.n === 3)!
+  const seances = weekSessions(w, w.monday, {})
+  const jourDe = (type: string) => seances.find((x) => x.s.type === type)!
+  const cibleLe = (prise: SeancePlanifiee, jour: number) =>
+    ciblesPossibles(vraiPlan.weeks, prise)!.get(addDays(w.monday, jour))!
+
+  it('l’escalade posée sur le renfo haut du corps est signalée', () => {
+    // Le cas de Mathieu : dans un sens ça alertait, dans l'autre non, parce
+    // que la contrainte visait le mercredi et non la séance d'escalade.
+    const renfoHaut = jourDe('muscu-haut')
+    const c = cibleLe(jourDe('escalade'), renfoHaut.s.day)
+    expect(c.conflits.join(' ')).toContain('escalade')
+  })
+
+  it('et le renfo haut posé sur l’escalade l’est toujours', () => {
+    const escalade = jourDe('escalade')
+    const c = cibleLe(jourDe('muscu-haut'), escalade.s.day)
+    expect(c.conflits.join(' ')).toContain('escalade')
+  })
+
+  it('rien ne peut aller sur le jour de repos', () => {
+    const repos = jourDe('repos')
+    for (const type of ['muscu-haut', 'velo', 'ef']) {
+      const c = cibleLe(jourDe(type), repos.s.day)
+      expect(c.conflits.join(' '), type).toContain('jour de repos')
+    }
+  })
+
+  it('la qualité ne peut pas rejoindre la course facile du même jour', () => {
+    const ef = jourDe('ef')
+    const qualite = seances.find((x) => ['tempo', 'inter', 'test'].includes(x.s.type))!
+    const c = cibleLe(qualite, ef.s.day)
+    expect(c.conflits.join(' ')).toContain('même jour')
+  })
+
+  it('un jour libre de la semaine reste libre', () => {
+    // Le vendredi ne porte qu'un vélo : y poser le renfo haut ne casse rien.
+    const velos = seances.filter((x) => x.s.type === 'velo')
+    const velo = velos[velos.length - 1]
+    const c = cibleLe(jourDe('muscu-haut'), velo.s.day)
+    expect(c.conflits).toEqual([])
   })
 })
 

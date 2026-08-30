@@ -197,6 +197,78 @@ describe('alertesAjoutees', () => {
     expect(a[0].contrainte).toBe(4)
   })
 
+  const s = (extra: Partial<Session>): Session => ({
+    day: 0,
+    type: 'ef',
+    title: '',
+    cat: '',
+    note: '',
+    ...extra,
+  })
+
+  describe('la contrainte 2 vise la séance d’escalade, pas le mercredi', () => {
+    it('signale un renfo haut posé SUR l’escalade', () => {
+      const a = verifierContraintes([s({ day: 2, type: 'escalade' }), s({ day: 2, type: 'muscu-haut' })])
+      expect(a.map((x) => x.contrainte)).toContain(2)
+    })
+
+    it('signale aussi l’escalade posée SUR le renfo haut', () => {
+      // Le cas qui manquait : la même collision, dans l'autre sens. Codée sur
+      // le mercredi, la règle ne voyait que le premier.
+      const a = verifierContraintes([s({ day: 1, type: 'muscu-haut' }), s({ day: 1, type: 'escalade' })])
+      expect(a.map((x) => x.contrainte)).toContain(2)
+    })
+
+    it('suit l’escalade quand elle change de jour', () => {
+      // Escalade au jeudi, course au jeudi : la règle doit viser le jeudi.
+      const a = verifierContraintes([s({ day: 3, type: 'escalade' }), s({ day: 3, type: 'ef' })])
+      expect(a.map((x) => x.texte).join(' ')).toContain('jeudi')
+    })
+
+    it('ne dit rien d’un mercredi sans escalade', () => {
+      expect(verifierContraintes([s({ day: 2, type: 'muscu-haut' })])).toEqual([])
+    })
+  })
+
+  describe('la contrainte 4 protège le jour de repos', () => {
+    it('signale toute séance posée dessus, même sans les jambes', () => {
+      const a = verifierContraintes([s({ day: 6, type: 'repos' }), s({ day: 6, type: 'muscu-haut' })])
+      expect(a.map((x) => x.contrainte)).toContain(4)
+      expect(a.map((x) => x.texte).join(' ')).toContain('jour de repos')
+    })
+
+    it('signale aussi une séance de jambes', () => {
+      const a = verifierContraintes([s({ day: 6, type: 'repos' }), s({ day: 6, type: 'velo' })])
+      expect(a.filter((x) => x.contrainte === 4).length).toBeGreaterThan(0)
+    })
+
+    it('laisse le jour de repos tranquille quand il l’est', () => {
+      expect(verifierContraintes([s({ day: 6, type: 'repos' })])).toEqual([])
+    })
+  })
+
+  describe('deux séances de course le même jour', () => {
+    it('sont signalées', () => {
+      const a = verifierContraintes([
+        s({ day: 3, type: 'ef', dist: 7 }),
+        s({ day: 3, type: 'tempo', dist: 9 }),
+      ])
+      expect(a.map((x) => x.contrainte)).toContain(6)
+      expect(a.map((x) => x.texte).join(' ')).toContain('même jour')
+    })
+
+    it('une seule course ne l’est pas', () => {
+      expect(verifierContraintes([s({ day: 3, type: 'ef' }), s({ day: 3, type: 'muscu-bas' })])).toEqual([])
+    })
+  })
+
+  describe('la contrainte 3 couvre aussi le jour de la sortie longue', () => {
+    it('signale une qualité posée le jour même', () => {
+      const a = verifierContraintes([s({ day: 0, type: 'long', dist: 24 }), s({ day: 0, type: 'tempo' })])
+      expect(a.map((x) => x.texte).join(' ')).toContain('le jour même')
+    })
+  })
+
   it('ne dit rien quand l’écart ne casse rien', () => {
     const w = plan.weeks[10]
     const apres = seancesAvecEcarts(

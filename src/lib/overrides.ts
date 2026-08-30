@@ -218,37 +218,59 @@ export function verifierContraintes(seances: Session[]): Alerte[] {
   const jour = (d: number) => actives.filter((s) => s.day === d)
   const porte = (d: number, types: SessionType[]) => jour(d).some((s) => types.includes(s.type))
 
-  // C2 — le mercredi appartient à l'escalade : avant-bras et épaules travaillent déjà.
-  if (porte(2, TYPES_COURSE))
-    alertes.push({ contrainte: 2, texte: 'Une course tombe le mercredi, jour d’escalade.' })
-  if (porte(2, ['muscu-haut']))
-    alertes.push({
-      contrainte: 2,
-      texte: 'Un renfo haut du corps tombe le mercredi : l’escalade le fait déjà.',
-    })
+  // C2 — le jour de l'escalade lui appartient : avant-bras et épaules
+  // travaillent déjà. La contrainte vise LA SÉANCE, pas le mercredi : déplacer
+  // l'escalade au mardi doit protéger le mardi. Codée sur le mercredi, elle
+  // signalait qu'on pose un renfo haut sur l'escalade, mais restait muette
+  // quand on posait l'escalade sur le renfo haut — la même collision, dans
+  // l'autre sens.
+  for (const esc of actives.filter((s) => s.type === 'escalade')) {
+    if (porte(esc.day, TYPES_COURSE))
+      alertes.push({
+        contrainte: 2,
+        texte: `Une course tombe le jour de l’escalade (${JOURS[esc.day]}).`,
+      })
+    if (porte(esc.day, ['muscu-haut']))
+      alertes.push({
+        contrainte: 2,
+        texte: `Un renfo haut du corps tombe le jour de l’escalade (${JOURS[esc.day]}) : l’escalade le fait déjà.`,
+      })
+  }
 
-  // C3 — rien de dur collé à la sortie longue, ni la veille ni le lendemain.
+  // C3 — rien de dur collé à la sortie longue, ni le jour même, ni la veille,
+  // ni le lendemain. Le jour même manquait : c'est pourtant le pire des trois.
   for (const sl of actives.filter((s) => s.type === 'long')) {
-    for (const d of [sl.day - 1, sl.day + 1]) {
+    for (const d of [sl.day - 1, sl.day, sl.day + 1]) {
       if (d < 0 || d > 6) continue
+      const ou = d === sl.day ? 'le jour même' : JOURS[d]
       if (porte(d, TYPES_QUALITE))
         alertes.push({
           contrainte: 3,
-          texte: `Une séance de qualité est accolée à la sortie longue (${JOURS[d]}).`,
+          texte: `Une séance de qualité est accolée à la sortie longue (${ou}).`,
         })
       if (porte(d, ['muscu-bas']))
         alertes.push({
           contrainte: 3,
-          texte: `Un renfo bas du corps est accolé à la sortie longue (${JOURS[d]}).`,
+          texte: `Un renfo bas du corps est accolé à la sortie longue (${ou}).`,
         })
     }
   }
 
-  // C4 — un jour de repos jambes complet dans la semaine. C'est le dimanche
-  // d'ordinaire, mais la contrainte porte sur l'existence du jour, pas sur sa
-  // place : quand une course tombe le dimanche, c'est le samedi qui le porte,
-  // et la semaine reste conforme. Chercher le dimanche nommément faisait crier
-  // le contrôle sur les deux semaines de course du plan de référence.
+  // C4 — le jour de repos est un jour vide, et il en faut un par semaine.
+  //
+  // Deux vérifications, parce que ce sont deux choses. La première porte sur
+  // la séance de repos : rien ne se pose dessus, pas même un renfo haut du
+  // corps, sinon ce n'est plus un jour de repos. La seconde porte sur la
+  // semaine : elle tolère que le repos change de place — quand une course
+  // tombe le dimanche, c'est le samedi qui le porte — mais pas qu'il
+  // disparaisse.
+  for (const repos of actives.filter((s) => s.type === 'repos')) {
+    if (jour(repos.day).some((s) => s.type !== 'repos'))
+      alertes.push({
+        contrainte: 4,
+        texte: `Une séance tombe sur le jour de repos (${JOURS[repos.day]}).`,
+      })
+  }
   const repose = (d: number) => !jour(d).some((s) => TYPES_JAMBES.includes(s.type))
   if (![0, 1, 2, 3, 4, 5, 6].some(repose))
     alertes.push({
@@ -257,7 +279,17 @@ export function verifierContraintes(seances: Session[]): Alerte[] {
     })
 
   // C6 — jamais deux jours de course d'affilée, sauf lundi-mardi où le mardi
-  // est une récupération très lente prévue pour ça.
+  // est une récupération très lente prévue pour ça. Et jamais deux courses le
+  // même jour : ce n'est pas dans les six contraintes parce que le plan de
+  // référence ne peut pas le produire, mais un déplacement le peut, et
+  // doubler une séance de course est pire que deux jours d'affilée.
+  for (let d = 0; d <= 6; d++) {
+    if (jour(d).filter((s) => TYPES_COURSE.includes(s.type)).length > 1)
+      alertes.push({
+        contrainte: 6,
+        texte: `Deux séances de course le même jour (${JOURS[d]}).`,
+      })
+  }
   for (let d = 0; d < 6; d++) {
     if (d === 0) continue
     if (porte(d, TYPES_COURSE) && porte(d + 1, TYPES_COURSE))

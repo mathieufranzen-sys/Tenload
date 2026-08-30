@@ -540,8 +540,14 @@ function FormulaireRessenti({
   estVelo?: boolean
   onSave: (pain: number, rpe: number, note: string, distanceSaisie: number | null) => void
 }) {
-  const [pain, setPain] = useState(feedback?.pain ?? 0)
-  const [rpe, setRpe] = useState(feedback?.rpe ?? 5)
+  /**
+   * `null` tant que rien n'a été saisi : la barre affiche alors 0 en gris, et
+   * non un vert de « aucune douleur » qui serait une affirmation. Même règle
+   * que le carnet de l'écran Aujourd'hui, et même règle que partout dans
+   * l'app — on ne présente pas une absence de mesure comme une mesure.
+   */
+  const [pain, setPain] = useState<number | null>(feedback?.pain ?? null)
+  const [rpe, setRpe] = useState<number | null>(feedback?.rpe ?? null)
   const [distanceSaisie, setDistanceSaisie] = useState(
     feedback?.distance_km != null ? String(feedback.distance_km) : '',
   )
@@ -558,8 +564,8 @@ function FormulaireRessenti({
           valeur={pain}
           onChange={setPain}
           disabled={disabled}
-          court={DOULEUR_MOT[rangRessenti(pain)]}
-          detail={DOULEUR_DETAIL[rangRessenti(pain)]}
+          court={pain == null ? '' : DOULEUR_MOT[rangRessenti(pain)]}
+          detail={pain == null ? undefined : DOULEUR_DETAIL[rangRessenti(pain)]}
           teinte="douleur"
         />
       </div>
@@ -570,8 +576,8 @@ function FormulaireRessenti({
           valeur={rpe}
           onChange={setRpe}
           disabled={disabled}
-          court={EFFORT_MOT[rangRessenti(rpe)]}
-          detail={EFFORT_DETAIL[rangRessenti(rpe)]}
+          court={rpe == null ? '' : EFFORT_MOT[rangRessenti(rpe)]}
+          detail={rpe == null ? undefined : EFFORT_DETAIL[rangRessenti(rpe)]}
           teinte="neutre"
         />
       </div>
@@ -628,7 +634,9 @@ function FormulaireRessenti({
       <button
         onClick={() => {
           const d = distanceSaisie.trim() === '' ? null : Number(distanceSaisie.replace(',', '.'))
-          onSave(pain, rpe, '', d != null && Number.isFinite(d) && d >= 0 ? d : null)
+          // Valider sans avoir touché un curseur vaut zéro : c'est une
+          // affirmation volontaire, contrairement à l'affichage d'avant.
+          onSave(pain ?? 0, rpe ?? 0, '', d != null && Number.isFinite(d) && d >= 0 ? d : null)
         }}
         disabled={disabled}
         style={{
