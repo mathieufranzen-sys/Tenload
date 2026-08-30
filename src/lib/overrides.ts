@@ -281,6 +281,41 @@ export function alertesAjoutees(avant: Session[], apres: Session[]): Alerte[] {
 }
 
 /** Les séances d'une semaine, écarts appliqués, sans adaptation. */
+/**
+ * La disposition RÉELLE d'une semaine de calendrier : ce qui y tombe une fois
+ * les écarts appliqués, y compris les séances venues de la semaine d'avant ou
+ * d'après, et sans celles qui l'ont quittée.
+ *
+ * `seancesAvecEcarts` ne connaît que les séances déclarées dans la semaine :
+ * elle suffisait tant qu'un écart ne pouvait pas franchir le dimanche. Depuis,
+ * contrôler les contraintes sur elle seule regardait une semaine qui n'existe
+ * plus — une sortie longue posée le dimanche depuis la semaine suivante y était
+ * invisible, et deux jours de course d'affilée passaient sans un mot.
+ *
+ * Le `day` renvoyé est le rang dans la semaine DEMANDÉE, ce qu'attend
+ * `verifierContraintes`.
+ */
+export function dispositionSemaine(
+  weeks: Week[],
+  semaine: Week,
+  ecarts: Map<string, EcartRow>,
+): Session[] {
+  const i = weeks.findIndex((w) => w.n === semaine.n)
+  const out: Session[] = []
+  for (const k of [i - 1, i, i + 1]) {
+    const w = weeks[k]
+    if (!w) continue
+    seancesAvecEcarts(w, ecarts).forEach((s) => {
+      // `semaines` porte le franchissement du dimanche : sans lui, une séance
+      // déplacée d'une semaine resterait comptée dans la sienne.
+      const decalage = (k - i) * 7 + s.day + 7 * (s.semaines ?? 0)
+      if (decalage < 0 || decalage > 6) return
+      out.push({ ...s, day: decalage })
+    })
+  }
+  return out
+}
+
 export function seancesAvecEcarts(week: Week, ecarts: Map<string, EcartRow>): Session[] {
   const slots = slotsParJour(week.sessions)
   return week.sessions.map((s, i) => {

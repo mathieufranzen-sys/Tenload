@@ -8,7 +8,7 @@
  */
 import type { Session } from '../data/types'
 import { formatNumber } from '../lib/dates'
-import { allureUnique, estimateDuration, formatPace } from '../lib/paces'
+import { allureUnique, estimateDuration, formatDuration, formatPace } from '../lib/paces'
 import { familleDe } from '../lib/insights'
 
 export function StatsSeance({
@@ -41,7 +41,19 @@ export function StatsSeance({
   // juste et fait douter des trois chiffres à la fois.
   const allureCible = allureReelle ?? (estCourse ? allureUnique(s, marathonPace) : null)
 
-  const duree = dmin === dmax ? `${dmin}` : `${dmin}-${dmax}`
+  /**
+   * Au-delà de l'heure, les minutes seules ne se lisent plus : 138 se traduit
+   * mentalement en 2 h 18, autant l'écrire. En dessous, la minute reste
+   * l'unité naturelle d'une séance.
+   */
+  const enHeures = dmax >= 60
+  const duree = enHeures
+    ? dmin === dmax
+      ? formatDuration(dmin)
+      : `${formatDuration(dmin)} - ${formatDuration(dmax)}`
+    : dmin === dmax
+      ? `${dmin}`
+      : `${dmin}-${dmax}`
 
   if (s.type === 'repos') {
     return (
@@ -64,11 +76,11 @@ export function StatsSeance({
       {s.dist ? (
         <>
           <Chiffre valeur={formatNumber(s.dist)} unite="km" taille="cle" />
-          {dmin > 0 && <Chiffre valeur={duree} unite="min" taille="appui" />}
+          {dmin > 0 && <Chiffre valeur={duree} unite={enHeures ? '' : 'min'} taille="appui" />}
         </>
       ) : (
         <>
-          <Chiffre valeur={duree} unite="min" taille="cle" />
+          <Chiffre valeur={duree} unite={enHeures ? '' : 'min'} taille="cle" />
           {/* Même disposition que la course, rôles inversés : la durée reste
               le chiffre clé, la distance notée l'accompagne. */}
           {distanceNotee != null && (

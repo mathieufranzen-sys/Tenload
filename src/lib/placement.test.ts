@@ -10,7 +10,12 @@ import { seancesDeLaSemaine, weekSessions } from './adapt'
 import { ciblesPossibles } from '../components/VueCalendrier'
 import { porteUneDistance } from '../components/ActionsSeance'
 import { addDays } from './dates'
-import { indexerEcarts, titreAvecDistance, type EcartRow } from './overrides'
+import {
+  dispositionSemaine,
+  indexerEcarts,
+  titreAvecDistance,
+  type EcartRow,
+} from './overrides'
 import type { Session, Week } from '../data/types'
 import type { IndexBreakdown } from './tendonIndex'
 
@@ -234,6 +239,70 @@ describe('ciblesPossibles', () => {
   it('ne signale rien sur un jour libre de la même semaine', () => {
     const c = ciblesPossibles(weeks, prise)
     expect(c.get(addDays(LUNDI, 3))?.conflits).toEqual([])
+  })
+
+  it('signale aussi les conflits des semaines voisines', () => {
+    // Le contrôle ne portait que sur la semaine d'origine : les quatorze jours
+    // des semaines voisines n'annonçaient jamais rien, alors qu'y poser une
+    // course peut casser leurs contraintes tout autant.
+    const c = ciblesPossibles(weeks, prise)
+    // Mercredi de la semaine 4 : c'est aussi un jour d'escalade dans le plan
+    // type, mais ici la semaine 4 n'en a pas — en revanche le lundi porte sa
+    // sortie longue, donc y coller la course de mardi la rend adjacente.
+    const mardiSuivant = c.get(addDays(LUNDI, 8))!
+    expect(mardiSuivant.semaines).toBe(1)
+    // Une EF n'est pas une séance de qualité : la contrainte 3 ne tombe pas.
+    expect(mardiSuivant.conflits).toEqual([])
+  })
+
+  it('voit les séances venues d’ailleurs dans la semaine d’accueil', () => {
+    // La sortie longue de la semaine 4 ramenée au dimanche de la semaine 3 :
+    // y poser une course le samedi fait deux jours de course d'affilée. Sans
+    // `dispositionSemaine`, cette longue était invisible et rien n'était dit.
+    const ecarts = indexerEcarts([
+      { week: 4, day_index: 0, slot: 0, patch: { day: 6, semaines: -1 }, reason: null } as EcartRow,
+    ])
+    const c = ciblesPossibles(weeks, prise, ecarts)
+    const samedi = c.get(addDays(LUNDI, 5))!
+    expect(samedi.conflits.join(' ')).toContain('jours de course')
+  })
+
+  it('ne compte pas la séance déplacée deux fois', () => {
+    // Elle quitte sa case d'origine avant d'atterrir : la reposer sur son
+    // propre jour ne doit créer aucune alerte.
+    const c = ciblesPossibles(weeks, prise)
+    expect(c.get(addDays(LUNDI, 1))?.conflits).toEqual([])
+  })
+})
+
+describe('dispositionSemaine', () => {
+  const weeks: Week[] = [
+    { ...semaine([seance({ day: 0, type: 'long', dist: 24 })]), n: 3, monday: LUNDI },
+    {
+      ...semaine([seance({ day: 0, type: 'long', dist: 26 })]),
+      n: 4,
+      monday: addDays(LUNDI, 7),
+    },
+  ]
+
+  it('rend la semaine telle quelle sans écart', () => {
+    const d = dispositionSemaine(weeks, weeks[0], new Map())
+    expect(d.map((x) => `${x.day}:${x.type}`)).toEqual(['0:long'])
+  })
+
+  it('accueille la séance venue de la semaine suivante', () => {
+    const ecarts = indexerEcarts([
+      { week: 4, day_index: 0, slot: 0, patch: { day: 6, semaines: -1 }, reason: null } as EcartRow,
+    ])
+    const d = dispositionSemaine(weeks, weeks[0], ecarts)
+    expect(d.map((x) => `${x.day}:${x.type}`).sort()).toEqual(['0:long', '6:long'])
+  })
+
+  it('et la retire de la semaine qu’elle a quittée', () => {
+    const ecarts = indexerEcarts([
+      { week: 4, day_index: 0, slot: 0, patch: { day: 6, semaines: -1 }, reason: null } as EcartRow,
+    ])
+    expect(dispositionSemaine(weeks, weeks[1], ecarts)).toEqual([])
   })
 })
 

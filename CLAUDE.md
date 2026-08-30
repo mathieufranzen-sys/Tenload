@@ -389,7 +389,12 @@ en-têtes de semaine.
   pointeur pendant tout le geste — sans elle, un doigt qui sort de la carte
   perd le déplacement, ce qui est le cas normal quand on vise un jour éloigné.
 - **Les conflits se signalent pendant le geste, ils n'interdisent rien.** Même
-  règle que partout : on avertit, c'est le tendon de Mathieu qui tranche.
+  règle que partout : on avertit, c'est le tendon de Mathieu qui tranche. Le
+  contrôle porte sur la semaine d'**accueil**, sur sa disposition réelle
+  (`dispositionSemaine`) : celle qui compte les séances venues des semaines
+  voisines et retire celles qui sont parties. Quitter une semaine ne peut
+  qu'y retirer des alertes, jamais en ajouter — aucune des contraintes
+  vérifiées ne se casse en enlevant une séance.
 - **`EcartPatch.semaines`** porte le franchissement du dimanche, borné à ±1.
   La clé Supabase reste celle du plan de référence (semaine, jour, slot) : une
   séance déplacée ne change jamais de ligne, elle porte seulement l'offset de

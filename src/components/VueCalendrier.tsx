@@ -21,7 +21,7 @@ import { DAYS_LONG, addDays, formatDay, weekdayIndex } from '../lib/dates'
 import {
   alertesAjoutees,
   cleEcart,
-  seancesAvecEcarts,
+  dispositionSemaine,
   type EcartRow,
 } from '../lib/overrides'
 import { styleSeance } from '../lib/seanceStyle'
@@ -265,7 +265,7 @@ export function VueCalendrier({
                 <div style={{ flex: 1, minWidth: 0, display: 'grid', gap: 6 }}>
                   {(parJour.get(jour) ?? []).map((x) => (
                     <CarteJour
-                      key={`${x.jourOrigine}-${x.slot}-${x.s.title}`}
+                      key={`${x.semaineOrigine}-${x.jourOrigine}-${x.slot}`}
                       seance={x}
                       priseEnCours={prise?.day === x.day && prise?.slot === x.slot}
                       misEnAvant={focus === cleEcart(x.semaineOrigine, x.jourOrigine, x.slot)}
@@ -459,18 +459,23 @@ export function ciblesPossibles(
   const i = weeks.findIndex((w) => w.n === origine.n)
   const cle = cleEcart(origine.n, seance.jourOrigine, seance.slot)
   const patchActuel = ecarts?.get(cle)?.patch ?? {}
-  const base = seancesAvecEcarts(origine, retirer(ecarts, cle))
+  const sans = retirer(ecarts, cle)
 
   for (const decalage of [-1, 0, 1]) {
-    const w = weeks[i + decalage]
-    if (!w) continue
+    const accueil = weeks[i + decalage]
+    if (!accueil) continue
+
+    // Le contrôle porte sur la semaine d'ACCUEIL, celle où la séance atterrit.
+    // Quitter une semaine ne peut qu'y retirer des alertes, jamais en ajouter :
+    // aucune des contraintes vérifiées ne se casse en enlevant une séance.
+    const avant = dispositionSemaine(weeks, accueil, sans)
+
     for (let j = 0; j < 7; j++) {
-      const day = addDays(w.monday, j)
-      // Le contrôle porte sur la semaine d'origine : c'est celle dont la
-      // disposition change, et la seule que `verifierContraintes` sait lire.
-      const simulee = seancesAvecEcarts(
-        origine,
-        new Map(retirer(ecarts, cle)).set(cle, {
+      const day = addDays(accueil.monday, j)
+      const apres = dispositionSemaine(
+        weeks,
+        accueil,
+        new Map(sans).set(cle, {
           week: origine.n,
           day_index: seance.jourOrigine,
           slot: seance.slot,
@@ -478,8 +483,12 @@ export function ciblesPossibles(
           reason: null,
         }),
       )
-      const conflits = decalage === 0 ? alertesAjoutees(base, simulee).map((a) => a.texte) : []
-      out.set(day, { day, jour: j, semaines: decalage, conflits })
+      out.set(day, {
+        day,
+        jour: j,
+        semaines: decalage,
+        conflits: alertesAjoutees(avant, apres).map((a) => a.texte),
+      })
     }
   }
   return out
