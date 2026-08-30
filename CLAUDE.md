@@ -403,9 +403,26 @@ en-têtes de semaine.
   adaptation. C'est le seul sens non ambigu de « avant toute modification ».
 
 La feuille de séance porte désormais quatre actions au-dessus du détail :
-sauter, déplacer (qui ouvre le calendrier sur la séance), le réel (distance et
-durée), remplacer. Le sélecteur extérieur / tapis est supprimé : tout est
-dehors.
+sauter, déplacer (qui ouvre le calendrier sur la séance), donnée réelle
+(distance et durée), remplacer. Le sélecteur extérieur / tapis est supprimé :
+tout est dehors.
+
+- **La feuille ne retient que l'IDENTITÉ de la séance**, jamais la séance
+  elle-même. Un instantané se figeait : enregistrer une donnée réelle mettait à
+  jour les écarts, et la feuille continuait d'afficher la distance d'avant.
+  `App` la recalcule à chaque rendu depuis les données courantes.
+- **Une distance ne se saisit que là où elle a un sens** (`porteUneDistance`) :
+  le vélo oui, même si le plan ne lui en fixe aucune ; l'escalade, le renfo et
+  le repos non. Elle a quitté le formulaire de ressenti : deux champs pour la
+  même valeur en font toujours un qui ment.
+- **Le titre suit la distance** (`titreAvecDistance`). Corriger les kilomètres
+  sans corriger le titre laissait la feuille se contredire d'une ligne à
+  l'autre. Le remplacement n'a lieu que si le titre annonce bien l'ancienne
+  distance : sinon le nombre désigne autre chose, « 8 x 400 m » ou
+  « 2 x 2 km », et le réécrire inventerait une séance.
+- **Pas de raison ni de contrôle de contraintes dans « donnée réelle »** :
+  corriger une distance ne déplace rien dans la semaine, il n'y a aucune
+  contrainte à faire tomber.
 
 **La marche est un type de séance**, à `0,5` point par kilomètre, soit deux
 fois moins que la course : pas de phase aérienne, donc pas de choc à la

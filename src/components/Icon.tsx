@@ -27,7 +27,7 @@ const PATHS: Record<string, string> = {
   // Le même bonhomme que `run`, redressé et le pas plus court : c'est ce qui
   // distingue une marche d'une course, et rien d'autre.
   grip: '<path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/>',
-  skip: '<path d="M5 5v14l9-7Z"/><path d="M18.5 5v14"/>',
+  skip: '<circle cx="12" cy="12" r="8.6"/><path d="M6 18 18 6"/>',
   calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.6"/><path d="M3.5 9.5h17M8 3.2v3.4M16 3.2v3.4"/>',
   swap: '<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
   walk: '<circle cx="13" cy="4" r="2"/><path d="M12.4 8.4 10 10.2l1.2 3.8L8.8 21M11.2 14l3.6 1.2 1.4 5.8M12.4 8.4c1.4-.6 3 0 3.6 1.4l.7 1.5 2.1.7"/>',

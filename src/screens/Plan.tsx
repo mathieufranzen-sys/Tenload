@@ -125,7 +125,23 @@ export function Plan({
           onOuvrirProfil={onOuvrirProfil}
         />
 
-        <div style={{ marginBottom: 14 }}>
+        {/* Le sélecteur reste accroché en haut : la vue calendrier fait 245
+            jours, et revenir chercher le bouton tout en haut à chaque
+            changement d'avis n'aurait pas de sens. Le retrait négatif compense
+            le padding horizontal de la page pour que le voile couvre toute la
+            largeur. */}
+        <div
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 20,
+            margin: '0 calc(var(--page-x) * -1) 14px',
+            padding: '8px var(--page-x) 10px',
+            background: 'rgba(8,9,11,.72)',
+            backdropFilter: 'var(--glass-blur)',
+            WebkitBackdropFilter: 'var(--glass-blur)',
+          }}
+        >
           <Segmented
             label="Vue du programme"
             valeur={vue}

@@ -113,12 +113,14 @@ export function SessionSheet({
   const afficherDetails = estCourse || Boolean(s.ex)
 
   /**
-   * Le vélo n'a jamais de distance dans le plan. Et une séance qu'un écart a
-   * convertie en course sans fournir de distance de remplacement — `versType`
-   * efface `dist` avec le reste de l'ancienne séance — se retrouve dans le
-   * même vide : ni l'une ni l'autre n'a d'endroit où la saisir sans ce champ.
+   * La distance ne se saisit plus dans le ressenti quand la séance en porte
+   * une : « Donnée réelle » est le seul endroit où l'on corrige ce qu'on a
+   * vraiment fait, et deux champs pour la même valeur en font toujours un qui
+   * ment. Reste ici le seul cas orphelin : une séance qu'un écart a convertie
+   * en course sans fournir de distance de remplacement, `versType` effaçant
+   * `dist` avec le reste de l'ancienne séance.
    */
-  const demandeDistance = s.type === 'velo' || (familleDe(s.type) === 'course' && s.dist == null)
+  const demandeDistance = familleDe(s.type) === 'course' && s.dist == null
 
   /**
    * Un repos jambes complet n'a pas de ressenti à saisir : douleur à l'effort 0

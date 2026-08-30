@@ -140,6 +140,7 @@ export function appliquerEcart(s: Session, e: EcartPatch): Session {
       const facteur = e.dist / out.dist
       out.struct = out.struct.map((seg) => ({ ...seg, km: Math.round(seg.km * facteur * 10) / 10 }))
     }
+    out.title = titreAvecDistance(out.title, out.dist, e.dist)
     out.dist = e.dist
   }
   if (e.durMin != null) out.dur = [e.durMin, e.durMin]
@@ -166,6 +167,24 @@ export function appliquerEcart(s: Session, e: EcartPatch): Session {
 }
 
 const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+
+/**
+ * Le titre porte la distance : « Sortie longue de 24 km ». Corriger les
+ * kilomètres sans corriger le titre laissait la feuille se contredire d'une
+ * ligne à l'autre, 24 en titre et 20 en chiffre juste en dessous.
+ *
+ * Le remplacement ne se fait que si le titre annonce bien l'ANCIENNE distance :
+ * sinon le nombre trouvé désigne autre chose — « 6 x 400 m », « 2 x 2 km » —
+ * et le réécrire inventerait une séance.
+ */
+export function titreAvecDistance(titre: string, avant: number | undefined, apres: number): string {
+  if (avant == null) return titre
+  const motif = new RegExp(`\\b${String(avant).replace('.', '[.,]')}\\s*km\\b`)
+  if (!motif.test(titre)) return titre
+  return titre.replace(motif, `${formatKm(apres)} km`)
+}
+
+const formatKm = (v: number) => String(Math.round(v * 10) / 10).replace('.', ',')
 
 // ─────────────────────────────────────────────── contrôle des six contraintes
 

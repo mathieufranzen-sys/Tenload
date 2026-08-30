@@ -6,14 +6,14 @@ import { useMemo, useState } from 'react'
 import planJson from './data/plan.json'
 import notionSeed from './data/notion-seed.json'
 import stravaSeed from './data/strava-seed.json'
-import type { Plan, Week } from './data/types'
+import type { Plan } from './data/types'
 import { buildLoad, buildLoadParDiscipline, type ActivityRow } from './lib/load'
 import { HR_MAX } from './lib/paces'
 import { ajusterForme } from './lib/forme'
 import { buildPain, type DailyLogRow, type FeedbackRow } from './lib/buildPain'
 import { NOTE_DEMO, construireDemo } from './data/demo'
 import { cleEcart, indexerEcarts, type EcartPatch, type EcartRow } from './lib/overrides'
-import type { SeancePlanifiee } from './lib/adapt'
+import { adapt, construireContexte, weekSessions } from './lib/adapt'
 import type { PainMap } from './lib/tendonIndex'
 import { addDays, today } from './lib/dates'
 import { isConfigured } from './lib/supabase'
@@ -235,9 +235,16 @@ function seedData() {
   return { activities, pain, logs }
 }
 
+/**
+ * La feuille de séance ne retient que l'IDENTITÉ de la séance, jamais la
+ * séance elle-même. Un instantané se serait figé : enregistrer une donnée
+ * réelle met à jour les écarts, et la feuille aurait continué d'afficher la
+ * distance d'avant.
+ */
 interface SeanceOuverte {
-  semaine: Week
-  seance: SeancePlanifiee
+  semaineN: number
+  jourOrigine: number
+  slot: number
 }
 
 function Coquille({
@@ -353,12 +360,29 @@ function Coquille({
   const [numeroSemaine, setNumeroSemaine] = useState(
     () => (plan.weeks.find((w) => now >= w.monday && now <= addDays(w.monday, 6)) ?? plan.weeks[0]).n,
   )
+  // Recalculée à chaque rendu depuis les données courantes : c'est ce qui fait
+  // que la feuille suit un écart enregistré depuis elle-même.
+  const A = useMemo(() => adapt(load, data.pain, feedback, now), [load, data.pain, feedback, now])
+  const contexte = useMemo(
+    () => construireContexte(plan.weeks, feedback, data.pain, now, ecarts),
+    [feedback, data.pain, now, ecarts],
+  )
+  const ouverte = useMemo(() => {
+    if (!seance) return null
+    const semaine = plan.weeks.find((w) => w.n === seance.semaineN)
+    if (!semaine) return null
+    const x = weekSessions(semaine, now, A.byDate, ecarts, contexte).find(
+      (v) => v.jourOrigine === seance.jourOrigine && v.slot === seance.slot,
+    )
+    return x ? { semaine, seance: x } : null
+  }, [seance, now, A.byDate, ecarts, contexte])
+
   const feedbackOuvert = seance
     ? (feedback.find(
         (f) =>
-          f.week === seance.semaine.n &&
-          f.day_index === seance.seance.jourOrigine &&
-          f.slot === seance.seance.slot,
+          f.week === seance.semaineN &&
+          f.day_index === seance.jourOrigine &&
+          f.slot === seance.slot,
       ) ?? null)
     : null
 
@@ -378,7 +402,9 @@ function Coquille({
           marathonPace={marathonPace}
           journalActif={journalActif}
           onVoirSuivi={() => setOnglet('track')}
-          onOuvrirSeance={(semaine, seance) => setSeance({ semaine, seance })}
+          onOuvrirSeance={(semaine, x) =>
+            setSeance({ semaineN: semaine.n, jourOrigine: x.jourOrigine, slot: x.slot })
+          }
           onOuvrirProfil={() => setOnglet('profile')}
         />
       )}
@@ -391,7 +417,9 @@ function Coquille({
           marathonPace={marathonPace}
           numeroSemaine={numeroSemaine}
           onChangerSemaine={(n) => setNumeroSemaine(Math.max(1, Math.min(35, n)))}
-          onOuvrirSeance={(semaine, seance) => setSeance({ semaine, seance })}
+          onOuvrirSeance={(semaine, x) =>
+            setSeance({ semaineN: semaine.n, jourOrigine: x.jourOrigine, slot: x.slot })
+          }
           onSaveEcart={onSaveEcart}
           focusSeance={focusSeance}
           onOuvrirProfil={() => setOnglet('profile')}
@@ -436,10 +464,10 @@ function Coquille({
 
       <BottomNav actif={onglet} onChange={setOnglet} />
 
-      {seance && (
+      {ouverte && (
         <SessionSheet
-          week={seance.semaine}
-          seance={seance.seance}
+          week={ouverte.semaine}
+          seance={ouverte.seance}
           ecarts={ecarts}
           feedback={feedbackOuvert}
           marathonPace={marathonPace}

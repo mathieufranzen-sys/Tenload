@@ -86,7 +86,7 @@ export function ActionsSeance({
         <Action icone="calendar" label="Déplacer" onClick={onDeplacer} />
         <Action
           icone="clip"
-          label="Le réel"
+          label="Donnée réelle"
           actif={patch.dist != null || patch.durMin != null}
           onClick={() => setPanneau((p) => (p === 'reel' ? null : 'reel'))}
         />
@@ -105,8 +105,11 @@ export function ActionsSeance({
               `versType` efface `dist` avec le reste de l'ancienne séance. Sans
               ce second cas, la distance réellement courue n'aurait nulle part
               où se saisir. */}
-          {(origine.dist != null ||
-            (patch.type != null && familleDe(patch.type) === 'course')) && (
+          {/* Une distance ne se saisit que là où elle a un sens. L'escalade et
+              le renfo n'en ont pas ; le vélo si, même si le plan ne lui en
+              fixe aucune — c'est ici qu'elle se saisit désormais, et plus dans
+              le formulaire de ressenti. */}
+          {porteUneDistance(origine, patch) && (
             <Champ label="Distance réelle">
               <input
                 type="number"
@@ -136,12 +139,10 @@ export function ActionsSeance({
               style={styleChamp}
             />
           </Champ>
-          <Pied
-            patch={patch}
-            raison={raison}
-            setRaison={setRaison}
-            semaineAvant={semaineAvant}
-            simuler={simuler}
+          {/* Ni raison ni contrôle de contraintes ici : corriger une distance ou
+              une durée ne déplace rien dans la semaine, il n'y a aucune
+              contrainte à faire tomber. */}
+          <Boutons
             onValider={() => {
               onSave(patch, raison.trim() || null)
               setPanneau(null)
@@ -359,39 +360,76 @@ function Pied({
 
       {alertes.length > 0 && <Alertes alertes={alertes} />}
 
-      <div style={{ display: 'flex', gap: 9 }}>
+      <Boutons
+        onValider={onValider}
+        onEffacer={onEffacer}
+        effacerLabel={effacerLabel}
+        effacerVisible={effacerVisible}
+      />
+    </>
+  )
+}
+
+function Boutons({
+  onValider,
+  onEffacer,
+  effacerLabel,
+  effacerVisible,
+}: {
+  onValider: () => void
+  onEffacer: () => void
+  effacerLabel: string
+  effacerVisible: boolean
+}) {
+  return (
+    <div style={{ display: 'flex', gap: 9 }}>
+      <button
+        onClick={onValider}
+        style={{
+          flex: 1,
+          padding: 14,
+          borderRadius: 'var(--pill)',
+          fontWeight: 700,
+          fontSize: 15.5,
+          background: '#fff',
+          color: '#08090b',
+        }}
+      >
+        Enregistrer
+      </button>
+      {effacerVisible && (
         <button
-          onClick={onValider}
+          onClick={onEffacer}
           style={{
-            flex: 1,
-            padding: 14,
+            padding: '14px 18px',
             borderRadius: 'var(--pill)',
             fontWeight: 700,
             fontSize: 15.5,
-            background: '#fff',
-            color: '#08090b',
+            color: 'var(--ink-2)',
+            border: '1px solid var(--border-2)',
           }}
         >
-          Enregistrer
+          {effacerLabel}
         </button>
-        {effacerVisible && (
-          <button
-            onClick={onEffacer}
-            style={{
-              padding: '14px 18px',
-              borderRadius: 'var(--pill)',
-              fontWeight: 700,
-              fontSize: 15.5,
-              color: 'var(--ink-2)',
-              border: '1px solid var(--border-2)',
-            }}
-          >
-            {effacerLabel}
-          </button>
-        )}
-      </div>
-    </>
+      )}
+    </div>
   )
+}
+
+/**
+ * Une distance ne se saisit que là où elle a un sens.
+ *
+ * Le plan en fixe une à toute séance de course. Le vélo n'en a pas, et pourtant
+ * il en parcourt : elle se saisit ici. L'escalade, le renfo et le repos n'en
+ * ont aucune, et un champ vide de plus ne fait qu'inviter à écrire n'importe
+ * quoi. Un écart qui CONVERTIT une autre discipline en course n'hérite d'aucune
+ * distance non plus : `versType` efface `dist` avec le reste de l'ancienne
+ * séance, d'où le second cas.
+ */
+export function porteUneDistance(origine: Session, patch: EcartPatch): boolean {
+  const type = patch.type ?? origine.type
+  if (type === 'velo') return true
+  return origine.dist != null || familleDe(type) === 'course'
 }
 
 export function Alertes({ alertes }: { alertes: Alerte[] }) {

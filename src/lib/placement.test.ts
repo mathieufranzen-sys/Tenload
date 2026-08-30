@@ -8,8 +8,9 @@
 import { describe, expect, it } from 'vitest'
 import { seancesDeLaSemaine, weekSessions } from './adapt'
 import { ciblesPossibles } from '../components/VueCalendrier'
+import { porteUneDistance } from '../components/ActionsSeance'
 import { addDays } from './dates'
-import { indexerEcarts, type EcartRow } from './overrides'
+import { indexerEcarts, titreAvecDistance, type EcartRow } from './overrides'
 import type { Session, Week } from '../data/types'
 import type { IndexBreakdown } from './tendonIndex'
 
@@ -252,5 +253,50 @@ describe('le slot reste le rang dans la journée après déplacement', () => {
       addDays(LUNDI, 1),
       addDays(LUNDI, 1),
     ])
+  })
+})
+
+describe('porteUneDistance', () => {
+  const s = (extra: Partial<Session>): Session => seance(extra)
+
+  it('accepte le vélo, qui en parcourt sans que le plan en fixe', () => {
+    expect(porteUneDistance(s({ type: 'velo' }), {})).toBe(true)
+  })
+
+  it('refuse l’escalade, le renfo et le repos', () => {
+    for (const type of ['escalade', 'muscu-haut', 'muscu-bas', 'repos'] as const) {
+      expect(porteUneDistance(s({ type }), {})).toBe(false)
+    }
+  })
+
+  it('accepte toute course, avec ou sans distance au plan', () => {
+    expect(porteUneDistance(s({ type: 'ef', dist: 7 }), {})).toBe(true)
+    expect(porteUneDistance(s({ type: 'long' }), {})).toBe(true)
+  })
+
+  it('suit le remplacement plutôt que le type d’origine', () => {
+    // Une escalade convertie en course facile doit pouvoir porter sa distance.
+    expect(porteUneDistance(s({ type: 'escalade' }), { type: 'ef' })).toBe(true)
+    // Et l'inverse : une EF convertie en escalade n'en a plus besoin. Elle
+    // garde toutefois la distance du plan, qui reste une information juste.
+    expect(porteUneDistance(s({ type: 'ef' }), { type: 'escalade' })).toBe(false)
+  })
+})
+
+describe('titreAvecDistance', () => {
+  it('suit la distance corrigée', () => {
+    expect(titreAvecDistance('Sortie longue de 24 km', 24, 20)).toBe('Sortie longue de 20 km')
+    expect(titreAvecDistance('Course facile de 7 km', 7, 8.5)).toBe('Course facile de 8,5 km')
+  })
+
+  it('ne touche pas un titre qui n’annonce pas cette distance', () => {
+    // « 400 m » et « 2 x 2 km » désignent la structure, pas le volume total :
+    // les réécrire inventerait une séance.
+    expect(titreAvecDistance('8 x 400 m', 9, 7)).toBe('8 x 400 m')
+    expect(titreAvecDistance('Reprise 2 x 2 km au seuil', 9, 7)).toBe('Reprise 2 x 2 km au seuil')
+  })
+
+  it('laisse le titre tel quel sans distance d’origine', () => {
+    expect(titreAvecDistance('Vélo Z2 55 min', undefined, 20)).toBe('Vélo Z2 55 min')
   })
 })
