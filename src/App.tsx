@@ -7,7 +7,7 @@ import planJson from './data/plan.json'
 import notionSeed from './data/notion-seed.json'
 import stravaSeed from './data/strava-seed.json'
 import type { Plan } from './data/types'
-import { buildLoad, buildLoadParDiscipline, type ActivityRow } from './lib/load'
+import { buildLoad, buildLoadParDiscipline, joursAttestes, type ActivityRow } from './lib/load'
 import { HR_MAX } from './lib/paces'
 import { ajusterForme } from './lib/forme'
 import { buildPain, type DailyLogRow, type FeedbackRow } from './lib/buildPain'
@@ -325,32 +325,24 @@ function Coquille({
   // séance déplacée pèse sur son nouveau jour. L'indice projeté suit.
   const ecarts = useMemo(() => indexerEcarts(ecartsRows), [ecartsRows])
 
-  const load = useMemo(
-    () =>
-      buildLoad({
-        weeks: plan.weeks,
-        activities: data.activities,
-        completed,
-        today: now,
-        ecarts,
-      }),
+  const entreeCharge = useMemo(
+    () => ({ weeks: plan.weeks, activities: data.activities, completed, today: now, ecarts }),
     [data.activities, completed, now, ecarts],
   )
+
+  const load = useMemo(() => buildLoad(entreeCharge), [entreeCharge])
+
+  // Les jours dont la charge est une mesure, et non un silence. Sans eux,
+  // l'indice lit un carnet muet comme une semaine légère.
+  const attestes = useMemo(() => joursAttestes(entreeCharge), [entreeCharge])
 
   // Même modèle que l'indice, réparti par discipline : le graphique « Charge
   // d'entraînement par semaine » de Suivi ne doit pas lire l'effort relatif de
   // Strava, un chiffre que Strava calcule à sa façon et sans rapport avec le
   // coût que l'app donne à chaque séance.
   const loadParDiscipline = useMemo(
-    () =>
-      buildLoadParDiscipline({
-        weeks: plan.weeks,
-        activities: data.activities,
-        completed,
-        today: now,
-        ecarts,
-      }),
-    [data.activities, completed, now, ecarts],
+    () => buildLoadParDiscipline(entreeCharge),
+    [entreeCharge],
   )
 
   const [onglet, setOnglet] = useState<Onglet>('today')
@@ -362,7 +354,10 @@ function Coquille({
   )
   // Recalculée à chaque rendu depuis les données courantes : c'est ce qui fait
   // que la feuille suit un écart enregistré depuis elle-même.
-  const A = useMemo(() => adapt(load, data.pain, feedback, now), [load, data.pain, feedback, now])
+  const A = useMemo(
+    () => adapt(load, data.pain, feedback, now, attestes),
+    [load, data.pain, feedback, now, attestes],
+  )
   const contexte = useMemo(
     () => construireContexte(plan.weeks, feedback, data.pain, now, ecarts),
     [feedback, data.pain, now, ecarts],

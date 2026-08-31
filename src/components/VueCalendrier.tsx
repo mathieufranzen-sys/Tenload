@@ -114,12 +114,21 @@ export function VueCalendrier({
 
   // Amène la semaine visée à l'écran à l'ouverture, et la séance mise en avant
   // quand on arrive ici depuis le bouton « Déplacer » d'une feuille de séance.
+  //
+  // On vise le jour que la séance occupe MAINTENANT, pas sa case d'origine.
+  // `focus` est son identité dans le plan de référence, qui ne bouge jamais :
+  // la chercher telle quelle dans les lignes du calendrier, qui sont indexées
+  // par date, ne trouvait rien et retombait sur le lundi de la semaine
+  // d'origine. Une séance déjà déplacée renvoyait donc à l'endroit d'où elle
+  // était partie.
   useEffect(() => {
+    const cible = focus
+      ? seances.find((x) => cleEcart(x.semaineOrigine, x.jourOrigine, x.slot) === focus)
+      : null
     const semaine = plan.weeks.find((w) => w.n === semaineVisee)
-    const cle = focus ?? (semaine ? `jour-${semaine.monday}` : null)
-    const el = lignes.current.get(cle ?? '') ?? lignes.current.get(`jour-${semaine?.monday}`)
-    el?.scrollIntoView({ block: 'center' })
-  }, [semaineVisee, focus, plan.weeks])
+    const jour = cible?.day ?? semaine?.monday
+    lignes.current.get(`jour-${jour}`)?.scrollIntoView({ block: 'center' })
+  }, [semaineVisee, focus, seances, plan.weeks])
 
   const jourSousLePointeur = (x: number, y: number): string | null => {
     for (const [cle, el] of lignes.current) {

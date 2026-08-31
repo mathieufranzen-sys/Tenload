@@ -59,12 +59,22 @@ export function activityLoad(a: ActivityRow): number {
   }
 }
 
-/** Charge d'une séance planifiée. */
+/**
+ * Charge d'une séance planifiée.
+ *
+ * Le coût au kilomètre n'existe que pour ce qui se court. Une distance ne
+ * suffit donc pas à basculer sur ce tarif : depuis que « Donnée réelle »
+ * accepte des kilomètres sur le vélo, une sortie de 40 km à vélo tombait sur
+ * le repli `?? 1` et coûtait 40 points de charge, contre 4 pour ses 40 minutes.
+ * Dix fois trop, sur la seule discipline que le plan utilise justement pour
+ * porter du volume sans charger le tendon.
+ */
 export function sessionLoad(s: Session): number {
   if (s.struct?.length) {
     return s.struct.reduce((acc, seg) => acc + seg.km * (KM_COST[seg.zone] ?? 1), 0)
   }
-  if (s.dist) return s.dist * (RUN_COST[s.type] ?? 1)
+  const auKm = RUN_COST[s.type]
+  if (auKm != null && s.dist) return s.dist * auKm
   const minutes = s.dur?.[0] ?? 0
   return minutes * (MIN_COST[s.type] ?? 0)
 }
@@ -158,6 +168,56 @@ export function buildLoadParDiscipline({
   }
 
   return load
+}
+
+/**
+ * Les jours dont la charge est une MESURE, et non un silence.
+ *
+ * `buildLoad` ne peut pas les distinguer : un dimanche de repos et un mardi de
+ * 24 km non noté valent tous les deux zéro. L'indice lisait donc un carnet
+ * muet comme une semaine légère, c'est-à-dire dans le sens rassurant, qui est
+ * le seul dangereux. C'est le même angle mort que `painInconnue` du côté de la
+ * douleur, et il n'avait pas d'équivalent côté charge.
+ *
+ * Un jour est attesté quand :
+ *   - une activité importée le couvre — l'historique Strava jusqu'au 9 août ;
+ *   - ou toutes ses séances sont notées, sautées, ou du repos, qui n'a rien à
+ *     noter (contrainte 4 : le dimanche est un repos jambes complet) ;
+ *   - ou il est dans le futur, où le plan EST la projection.
+ *
+ * Une seule séance oubliée suffit à retirer le jour : la charge d'un jour est
+ * la somme de ses séances, pas la plus grosse.
+ */
+export function joursAttestes({
+  weeks,
+  activities,
+  completed,
+  today,
+  horizon = 21,
+  ecarts,
+}: BuildLoadInput): Set<string> {
+  const parActivite = new Set(activities.map((a) => a.day))
+  const vus = new Set<string>()
+  const manquants = new Set<string>()
+
+  const limit = addDays(today, horizon)
+  for (const w of weeks) {
+    const slots = slotsParJour(w.sessions)
+    const seances = ecarts ? seancesAvecEcarts(w, ecarts) : w.sessions
+
+    seances.forEach((s, i) => {
+      const day = addDays(w.monday, s.day + 7 * (s.semaines ?? 0))
+      if (day > limit) return
+      vus.add(day)
+      if (day > today || parActivite.has(day)) return
+      if (s.saute || s.type === 'repos') return
+      if (!completed.has(`${w.n}-${w.sessions[i].day}-${slots[i]}`)) manquants.add(day)
+    })
+  }
+
+  const attestes = new Set(parActivite)
+  for (const d of vus) if (!manquants.has(d)) attestes.add(d)
+  return attestes
 }
 
 export function buildLoad(input: BuildLoadInput): LoadMap {

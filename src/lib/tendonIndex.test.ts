@@ -520,3 +520,56 @@ describe('la tendance compte en jours, pas en relevés', () => {
     expect(painTrend('2026-08-13', plein)).toBeCloseTo(1, 5)
   })
 })
+
+describe('charge inconnue', () => {
+  /** Charge régulière sur 60 jours, tous les jours attestés sauf indication. */
+  const regulier = (): LoadMap => {
+    const out: LoadMap = {}
+    for (let k = 1; k <= 60; k++) out[shiftDay('2026-09-01', -k)] = 10
+    return out
+  }
+  const tous = (): Set<string> => {
+    const out = new Set<string>()
+    for (let k = 1; k <= 60; k++) out.add(shiftDay('2026-09-01', -k))
+    return out
+  }
+
+  it('une semaine entièrement notée ne lève pas le drapeau', () => {
+    expect(tendonIndex('2026-09-01', regulier(), {}, undefined, tous()).chargeInconnue).toBe(false)
+  })
+
+  it('trois jours notés sur sept le lèvent', () => {
+    const a = tous()
+    for (let k = 1; k <= 4; k++) a.delete(shiftDay('2026-09-01', -k))
+    expect(tendonIndex('2026-09-01', regulier(), {}, undefined, a).chargeInconnue).toBe(true)
+  })
+
+  it('un jour de repos reste une mesure', () => {
+    // L'ancien test « charge > 0 » comptait le dimanche comme une absence,
+    // alors que zéro y est la valeur juste.
+    const load = regulier()
+    for (let k = 1; k <= 60; k++) {
+      const d = shiftDay('2026-09-01', -k)
+      if (new Date(`${d}T12:00:00Z`).getUTCDay() === 0) load[d] = 0
+    }
+    const b = tendonIndex('2026-09-01', load, {}, undefined, tous())
+    expect(b.chargeInconnue).toBe(false)
+    expect(b.confidence).toBe(1)
+  })
+
+  it('un historique ancien ne tient plus la confiance à bout de bras', () => {
+    // Strava s'arrête au 9 août, l'app prend le relais. Trois semaines plus
+    // tard, sans rien de noté, la fenêtre de 28 jours gardait la confiance à 1
+    // grâce à des journées dont plus rien n'était su.
+    const load: LoadMap = {}
+    const attestes = new Set<string>()
+    for (let k = 22; k <= 60; k++) {
+      const d = shiftDay('2026-09-01', -k)
+      load[d] = 10
+      attestes.add(d)
+    }
+    const b = tendonIndex('2026-09-01', load, {}, undefined, attestes)
+    expect(b.confidence).toBe(0)
+    expect(b.chargeInconnue).toBe(true)
+  })
+})

@@ -119,7 +119,13 @@ export function TendonGauge({ breakdown: b, onDetail }: Props) {
           charge mécanique.
         </p>
       )}
-      {b.confidence < 1 && (
+      {b.chargeInconnue && (
+        <p style={{ color: 'var(--warning)', fontSize: 12.5, fontWeight: 600, margin: '12px 0 0' }}>
+          Trop de séances non notées ces sept derniers jours : la part mécanique de l'indice suppose plus qu'elle ne
+          mesure.
+        </p>
+      )}
+      {b.confidence < 1 && !b.chargeInconnue && (
         <p style={{ color: 'var(--ink-3)', fontSize: 12.5, fontWeight: 600, margin: '10px 0 0' }}>
           Historique de charge encore court : la part mécanique de l'indice est plafonnée.
         </p>

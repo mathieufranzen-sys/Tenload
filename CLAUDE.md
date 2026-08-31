@@ -229,9 +229,19 @@ Six termes s'additionnent, moins ce qui protège :
 - **Mémoire d'épisode** : après un pic au-dessus de 60, un plancher décroissant
   (facteur 0,74 par jour) tient cinq jours. Un tendon réactif reste fragile même
   quand la douleur est retombée.
-- **Confiance** : en dessous de dix jours de charge connue sur 28, la
+- **Confiance** : en dessous de dix jours de charge **attestée sur 14**, la
   contribution mécanique est plafonnée. Sans ça, un historique court fait
-  exploser le rapport aigu/chronique pour rien.
+  exploser le rapport aigu/chronique pour rien. La fenêtre était de 28 jours et
+  « connu » y voulait dire « charge > 0 » : un dimanche de repos comptait comme
+  une absence, et surtout l'historique Strava arrêté au 9 août tenait la
+  confiance à bout de bras trois semaines après que l'app est devenue la seule
+  source. Quatorze jours, c'est la demi-vie de la charge chronique, donc
+  l'horizon sur lequel elle se décide.
+- **Le coût au kilomètre ne vaut que pour ce qui se court.** Une distance ne
+  suffit pas à y basculer : depuis que « Donnée réelle » accepte des kilomètres
+  sur le vélo, une sortie de 40 km tombait sur le repli `?? 1` de `RUN_COST` et
+  coûtait 40 points au lieu de 4. Dix fois trop, sur la seule discipline que le
+  plan utilise justement pour porter du volume sans charger le tendon.
 
 ### Les cinq bandes
 
@@ -514,6 +524,28 @@ zéro, et l'indice tombe dans le vert alors qu'il ne mesure plus rien.
   existe pour éviter.
 - Le plan reste nominal : on ne dégrade pas les séances sur une absence
   d'information, on refuse seulement de les augmenter.
+
+### Quand la charge n'est plus attestée
+
+Le même angle mort, du côté mécanique. `buildLoad` rend un nombre par jour et
+ne peut pas dire d'où il vient : un dimanche de repos et un mardi de 24 km non
+noté valent tous les deux zéro. L'indice lisait donc un carnet muet comme une
+semaine légère, c'est-à-dire dans le sens rassurant, qui est le seul dangereux.
+
+- **`joursAttestes` (`load.ts`) sépare la mesure du silence.** Un jour est
+  attesté quand une activité importée le couvre, ou quand toutes ses séances
+  sont notées, sautées, ou du repos, qui n'a rien à noter. Le futur l'est par
+  définition : le plan EST la projection. **Une seule séance oubliée retire
+  tout le jour**, parce que la charge d'un jour est la somme de ses séances et
+  non la plus grosse.
+- `chargeInconnue` passe à vrai sous cinq jours attestés sur les sept derniers.
+  L'emballement compare alors une charge aiguë trouée à une charge chronique
+  qui, elle, tient encore sur des jours plus anciens, et conclut au calme. La
+  jauge et la feuille de charge le disent.
+- **Le feu vert est bloqué tant que `chargeInconnue` est vrai**, exactement
+  comme pour `painInconnue`. Les deux absences se valent.
+- Le chiffre, lui, ne bouge pas : c'est le plafond de confiance qui fait le
+  travail numérique. On ne dégrade toujours pas sur une absence d'information.
 
 ### Le mot du coach
 

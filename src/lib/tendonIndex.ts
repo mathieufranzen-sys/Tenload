@@ -121,9 +121,18 @@ export interface IndexBreakdown {
   joursSansDouleur: number | null
   /** Plancher appliqué (seuils garantis ou mémoire d'épisode). */
   floor: number
-  /** 0 à 1 : part d'historique de charge disponible sur 28 jours. En dessous de 1,
-   *  la contribution mécanique est plafonnée faute de référence fiable. */
+  /** 0 à 1 : part des quatorze derniers jours dont la charge est attestée. En
+   *  dessous de 1, la contribution mécanique est plafonnée faute de référence. */
   confidence: number
+  /**
+   * true quand moins de cinq des sept derniers jours portent une charge
+   * attestée. Les deux termes mécaniques deviennent alors des suppositions :
+   * l'emballement compare une charge aiguë pleine de trous à une charge
+   * chronique qui, elle, tient encore sur des jours plus anciens, et il conclut
+   * au calme. C'est le pendant de `painInconnue` pour la charge, et il penche
+   * du même côté : celui qui rassure.
+   */
+  chargeInconnue: boolean
 }
 
 export type BandKey = 'vert' | 'jaune' | 'orange' | 'rouge' | 'noir'
@@ -379,6 +388,7 @@ export function tendonIndex(
   load: LoadMap,
   pain: PainMap,
   memo?: Record<string, number>,
+  attestes?: Set<string>,
 ): IndexBreakdown {
   const acute = ewma(load, day, 3.5)
   const chronic = ewma(load, day, 14)
@@ -389,13 +399,26 @@ export function tendonIndex(
   const sansReference = chronic <= 0.5
   const acr = sansReference ? 1 : acute / chronic
 
-  // Combien de jours des 28 derniers portent une charge connue ? En dessous de
-  // 10, la charge chronique est artificiellement basse et le rapport aigu/chronique
-  // s'emballe pour rien — typiquement au tout début d'un historique. On plafonne
-  // alors la contribution mécanique au lieu de crier au loup.
-  let known = 0
-  for (let k = 1; k <= 28; k++) if ((load[shiftDay(day, -k)] ?? 0) > 0) known++
-  const confidence = clamp(known / 10, 0, 1)
+  // Combien des quatorze derniers jours portent une charge attestée ? En
+  // dessous de 10, la charge chronique n'a pas de quoi se former et le rapport
+  // aigu/chronique s'emballe pour rien. On plafonne alors la contribution
+  // mécanique au lieu de crier au loup.
+  //
+  // La fenêtre était de 28 jours, et « connu » y voulait dire « charge > 0 ».
+  // Deux erreurs. Un jour de repos, qui est une mesure et vaut zéro, comptait
+  // comme une absence. Et surtout, 28 jours laissaient l'historique Strava,
+  // arrêté au 9 août, tenir la confiance à bout de bras trois semaines après
+  // que l'app est devenue la seule source : le modèle se croyait bien informé
+  // sur des journées dont il ne savait rien. Quatorze jours, c'est la demi-vie
+  // de la charge chronique, donc l'horizon sur lequel elle se décide.
+  const estAtteste = (d: string) => (attestes ? attestes.has(d) : (load[d] ?? 0) > 0)
+  let connus = 0
+  for (let k = 1; k <= 14; k++) if (estAtteste(shiftDay(day, -k))) connus++
+  const confidence = clamp(connus / 10, 0, 1)
+
+  let recents = 0
+  for (let k = 1; k <= 7; k++) if (estAtteste(shiftDay(day, -k))) recents++
+  const chargeInconnue = recents < 5
 
   // Charge : emballement du rapport aigu/chronique, puis fraîcheur immédiate.
   let ratio = sansReference ? 0 : 30 * clamp((acr - 0.9) / 0.7, 0, 1)
@@ -490,6 +513,7 @@ export function tendonIndex(
     joursSansDouleur: joursSansDouleur(day, pain),
     floor: Math.round(floor),
     confidence: Math.round(confidence * 100) / 100,
+    chargeInconnue,
   }
 }
 
@@ -502,13 +526,14 @@ export function indexSeries(
   to: string,
   load: LoadMap,
   pain: PainMap,
+  attestes?: Set<string>,
 ): Array<IndexBreakdown & { day: string; load: number }> {
   const out: Array<IndexBreakdown & { day: string; load: number }> = []
   const memo: Record<string, number> = {}
   let day = from
   let guard = 0
   while (day <= to && guard++ < 2000) {
-    const r = tendonIndex(day, load, pain, memo)
+    const r = tendonIndex(day, load, pain, memo, attestes)
     memo[day] = r.idx
     out.push({ day, load: Math.round((load[day] ?? 0) * 10) / 10, ...r })
     day = shiftDay(day, 1)

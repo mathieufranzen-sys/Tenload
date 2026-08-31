@@ -264,10 +264,17 @@ export function ChargeSheet({
               100 points, est absente du total : ce qui reste ci-dessus ne mesure que la charge mécanique.
             </p>
           )}
-          {b.confidence < 1 && (
+          {b.chargeInconnue && (
+            <p style={{ fontSize: 12.5, color: 'var(--warning)', lineHeight: 1.45, margin: '10px 0 0', fontWeight: 500 }}>
+              Moins de cinq des sept derniers jours portent une charge attestée. L'emballement et la fraîcheur comparent
+              donc une semaine trouée à un historique plus ancien, et concluent au calme : note tes séances pour que ces
+              deux lignes redeviennent des mesures.
+            </p>
+          )}
+          {b.confidence < 1 && !b.chargeInconnue && (
             <p style={{ fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.45, margin: '10px 0 0', fontWeight: 500 }}>
-              Historique de charge encore court : la contribution mécanique est plafonnée tant que moins de dix jours
-              sur vingt-huit portent une charge connue.
+              Historique de charge encore court : la contribution mécanique est plafonnée tant que moins de dix des
+              quatorze derniers jours portent une charge attestée.
             </p>
           )}
 

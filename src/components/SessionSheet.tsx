@@ -24,7 +24,6 @@ import {
   EFFORT_MOT,
   rangRessenti,
 } from '../lib/ressenti'
-import { familleDe } from '../lib/insights'
 import { formatPace, zonePace } from '../lib/paces'
 import type { FeedbackRow } from '../lib/buildPain'
 import { Icon } from './Icon'
@@ -111,16 +110,6 @@ export function SessionSheet({
 
   const estCourse = TYPES_COURSE_SANS_MUR.includes(s.type)
   const afficherDetails = estCourse || Boolean(s.ex)
-
-  /**
-   * La distance ne se saisit plus dans le ressenti quand la séance en porte
-   * une : « Donnée réelle » est le seul endroit où l'on corrige ce qu'on a
-   * vraiment fait, et deux champs pour la même valeur en font toujours un qui
-   * ment. Reste ici le seul cas orphelin : une séance qu'un écart a convertie
-   * en course sans fournir de distance de remplacement, `versType` effaçant
-   * `dist` avec le reste de l'ancienne séance.
-   */
-  const demandeDistance = familleDe(s.type) === 'course' && s.dist == null
 
   /**
    * Un repos jambes complet n'a pas de ressenti à saisir : douleur à l'effort 0
@@ -264,7 +253,6 @@ export function SessionSheet({
           <StatsSeance
             session={s}
             marathonPace={marathonPace}
-            distanceNotee={demandeDistance ? (feedback?.distance_km ?? null) : null}
             allureReelle={allureReelle}
           />
 
@@ -426,9 +414,7 @@ export function SessionSheet({
               // avec le reste de l'ancienne séance) se retrouve dans le même
               // cas : sans ce champ, ni l'une ni l'autre ne comptait dans le
               // volume hebdomadaire de l'écran Suivi.
-              demanderDistance={demandeDistance}
-              estVelo={s.type === 'velo'}
-              onSave={(pain, rpe, note, distanceSaisie) => {
+              onSave={(pain, rpe, note) => {
                 onSave?.({
                   week: week.n,
                   day_index: jourOrigine,
@@ -437,7 +423,7 @@ export function SessionSheet({
                   session_type: s.type,
                   pain,
                   rpe,
-                  distance_km: demandeDistance ? distanceSaisie : (s.dist ?? null),
+                  distance_km: s.dist ?? null,
                   note: note || null,
                 })
                 setModifie(false)
@@ -521,24 +507,22 @@ function StepView({
   )
 }
 
+/**
+ * Le ressenti ne recueille que ce que seul Mathieu peut dire : la douleur et
+ * l'effort. La distance parcourue a quitté ce formulaire pour « Donnée
+ * réelle », où vivent déjà les kilomètres et la durée. Deux champs pour la
+ * même valeur en font toujours un qui ment, et c'est celui-ci qui mentait :
+ * il se posait sous le curseur d'effort, loin de la distance affichée en tête
+ * de feuille, sans dire laquelle des deux comptait.
+ */
 function FormulaireRessenti({
   feedback,
   disabled,
-  demanderDistance = false,
-  estVelo = false,
   onSave,
 }: {
   feedback: FeedbackRow | null
   disabled: boolean
-  /**
-   * Le vélo n'a jamais de distance dans le plan ; une séance qu'un écart a
-   * convertie en course sans distance de remplacement non plus. Dans les
-   * deux cas, un champ dédié recueille ce que le plan ne fixe pas.
-   */
-  demanderDistance?: boolean
-  /** Choisit le texte d'explication : vélo, ou course sans distance de plan. */
-  estVelo?: boolean
-  onSave: (pain: number, rpe: number, note: string, distanceSaisie: number | null) => void
+  onSave: (pain: number, rpe: number, note: string) => void
 }) {
   /**
    * `null` tant que rien n'a été saisi : la barre affiche alors 0 en gris, et
@@ -548,9 +532,6 @@ function FormulaireRessenti({
    */
   const [pain, setPain] = useState<number | null>(feedback?.pain ?? null)
   const [rpe, setRpe] = useState<number | null>(feedback?.rpe ?? null)
-  const [distanceSaisie, setDistanceSaisie] = useState(
-    feedback?.distance_km != null ? String(feedback.distance_km) : '',
-  )
 
   return (
     <div>
@@ -582,61 +563,11 @@ function FormulaireRessenti({
         />
       </div>
 
-      {demanderDistance && (
-        <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px', marginBottom: 12 }}>
-          <label
-            htmlFor="distance-notee"
-            style={{
-              display: 'block',
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: '1.1px',
-              textTransform: 'uppercase',
-              color: 'var(--sur-ink-3)',
-              marginBottom: 8,
-            }}
-          >
-            Distance parcourue
-          </label>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <input
-              id="distance-notee"
-              type="number"
-              inputMode="decimal"
-              step="0.5"
-              min="0"
-              placeholder="0"
-              disabled={disabled}
-              value={distanceSaisie}
-              onChange={(e) => setDistanceSaisie(e.target.value)}
-              style={{
-                width: 90,
-                background: 'var(--surface-2)',
-                border: '1px solid var(--border-2)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '10px 12px',
-                fontSize: 20,
-                fontWeight: 700,
-                color: 'var(--ink)',
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            />
-            <span style={{ color: 'var(--sur-ink-2)', fontSize: 14, fontWeight: 600 }}>km</span>
-          </div>
-          <p style={{ color: 'var(--sur-ink-3)', fontSize: 12, lineHeight: 1.5, margin: '10px 0 0' }}>
-            {estVelo
-              ? "Le plan ne fixe pas de distance pour le vélo. Celle-ci alimente le volume hebdomadaire de l'écran Suivi ; la charge du tendon, elle, reste calculée sur la durée."
-              : "L'écart qui a changé cette séance ne portait pas de distance de remplacement. Celle-ci alimente le kilométrage de course de l'écran Aujourd'hui et le volume de l'écran Suivi."}
-          </p>
-        </div>
-      )}
-
       <button
         onClick={() => {
-          const d = distanceSaisie.trim() === '' ? null : Number(distanceSaisie.replace(',', '.'))
           // Valider sans avoir touché un curseur vaut zéro : c'est une
           // affirmation volontaire, contrairement à l'affichage d'avant.
-          onSave(pain ?? 0, rpe ?? 0, '', d != null && Number.isFinite(d) && d >= 0 ? d : null)
+          onSave(pain ?? 0, rpe ?? 0, '')
         }}
         disabled={disabled}
         style={{

@@ -403,8 +403,14 @@ function estQualite(sessionType: string): boolean {
   return ['inter', 'tempo', 'test', 'course', 'race'].includes(sessionType)
 }
 
-export function adapt(load: LoadMap, pain: PainMap, feedback: FeedbackRow[], now: string): AdaptResult {
-  const series = indexSeries(addDays(now, -56), addDays(now, 10), load, pain)
+export function adapt(
+  load: LoadMap,
+  pain: PainMap,
+  feedback: FeedbackRow[],
+  now: string,
+  attestes?: Set<string>,
+): AdaptResult {
+  const series = indexSeries(addDays(now, -56), addDays(now, 10), load, pain, attestes)
   const byDate = Object.fromEntries(series.map((r) => [r.day, r])) as Record<
     string,
     IndexBreakdown & { day: string; load: number }
@@ -440,12 +446,15 @@ export function adapt(load: LoadMap, pain: PainMap, feedback: FeedbackRow[], now
 
   // Feu vert : deux semaines sous 25 sans à-coup.
   //
-  // Jamais sans douleur saisie récemment : un indice bas obtenu par absence de
-  // données n'est pas un feu vert, c'est un angle mort. Autoriser une hausse de
-  // volume là-dessus serait exactement l'erreur que l'indice existe pour éviter.
+  // Jamais sans douleur saisie récemment, ni sans charge attestée : un indice
+  // bas obtenu par absence de données n'est pas un feu vert, c'est un angle
+  // mort. Autoriser une hausse de volume là-dessus serait exactement l'erreur
+  // que l'indice existe pour éviter, et les deux absences s'y prêtent autant
+  // l'une que l'autre.
   const last14 = series.filter((r) => r.day <= now && r.day > addDays(now, -14))
   if (
     !detail.painInconnue &&
+    !detail.chargeInconnue &&
     band.key === 'vert' &&
     last14.length >= 10 &&
     Math.max(...last14.map((r) => r.idx)) <= 25

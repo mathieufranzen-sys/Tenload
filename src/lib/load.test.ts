@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import planJson from '../data/plan.json'
 import type { Plan } from '../data/types'
-import { activityLoad, buildLoad, buildLoadParDiscipline, sessionLoad, type ActivityRow } from './load'
+import {
+  activityLoad,
+  buildLoad,
+  buildLoadParDiscipline,
+  joursAttestes,
+  sessionLoad,
+  type ActivityRow,
+} from './load'
 import { cleEcart, indexerEcarts, slotsParJour, type EcartRow } from './overrides'
 
 const plan = planJson as unknown as Plan
@@ -170,5 +177,75 @@ describe('buildLoadParDiscipline', () => {
       today: jour(6),
     })
     expect(detail[jour(-1)]).toBeUndefined()
+  })
+})
+
+describe('sessionLoad — le tarif au kilomètre ne vaut que pour la course', () => {
+  const velo = semaine.sessions.find((s) => s.type === 'velo')!
+
+  it('un vélo se compte en minutes, même avec une distance saisie', () => {
+    // « Donnée réelle » accepte des kilomètres sur le vélo. Sans garde, ils
+    // tombaient sur le repli `?? 1` du coût au kilomètre : 40 km à vélo
+    // coûtaient 40 points de charge contre 4 pour leurs 40 minutes, soit dix
+    // fois trop sur la discipline même que le plan utilise pour porter du
+    // volume sans charger le tendon.
+    expect(sessionLoad({ ...velo, dist: 40 })).toBeCloseTo(sessionLoad(velo), 6)
+  })
+
+  it('une marche, elle, se compte bien au kilomètre', () => {
+    expect(sessionLoad({ ...velo, type: 'marche', dist: 10, struct: null })).toBeCloseTo(5, 6)
+  })
+})
+
+describe('joursAttestes', () => {
+  const toutesLesCles = new Set(
+    semaine.sessions.map((s, i) => `${semaine.n}-${s.day}-${slotsParJour(semaine.sessions)[i]}`),
+  )
+  const base = { weeks: [semaine], activities: [] as ActivityRow[], today: jour(6) }
+
+  it('un jour dont toutes les séances sont notées est attesté', () => {
+    const a = joursAttestes({ ...base, completed: toutesLesCles })
+    expect(a.has(jour(3))).toBe(true)
+  })
+
+  it('une seule séance oubliée retire tout le jour', () => {
+    // Le jeudi porte le renfo bas ET le vélo : noter l'un des deux ne dit rien
+    // de la charge du jour, qui est la somme des deux.
+    const i = semaine.sessions.findIndex((s) => s.day === 3 && s.type === 'muscu-bas')
+    const cle = `${semaine.n}-3-${slotsParJour(semaine.sessions)[i]}`
+    const a = joursAttestes({ ...base, completed: new Set([cle]) })
+    expect(a.has(jour(3))).toBe(false)
+  })
+
+  it('le repos du dimanche est attesté sans rien noter', () => {
+    // Contrainte 4 : le dimanche est un repos jambes complet, il n'a pas de
+    // ressenti à saisir. L'exiger aurait rendu toute semaine incomplète.
+    const a = joursAttestes({ ...base, completed: new Set<string>() })
+    expect(a.has(jour(6))).toBe(true)
+  })
+
+  it('une séance sautée atteste le jour : on sait qu’elle n’a pas eu lieu', () => {
+    const i = semaine.sessions.findIndex((s) => s.day === 0)
+    const cle = cleEcart(semaine.n, 0, slotsParJour(semaine.sessions)[i])
+    const a = joursAttestes({
+      ...base,
+      completed: new Set<string>(),
+      ecarts: new Map([[cle, { week: semaine.n, day_index: 0, slot: 0, patch: { skipped: true }, reason: null }]]),
+    })
+    expect(a.has(jour(0))).toBe(true)
+  })
+
+  it('une activité importée atteste le jour à elle seule', () => {
+    const a = joursAttestes({
+      ...base,
+      activities: [{ day: jour(1), sport: 'Run', distance_m: 7000, moving_s: 2100 }],
+      completed: new Set<string>(),
+    })
+    expect(a.has(jour(1))).toBe(true)
+  })
+
+  it('le futur est attesté : le plan EST la projection', () => {
+    const a = joursAttestes({ ...base, completed: new Set<string>(), today: jour(-1) })
+    expect(a.has(jour(3))).toBe(true)
   })
 })
