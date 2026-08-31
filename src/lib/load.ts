@@ -139,7 +139,10 @@ export function buildLoadParDiscipline({
       // encaissé, exactement comme une journée sans activité importée.
       if (s.saute) return
 
-      const day = addDays(w.monday, s.day)
+      // `semaines` porte le franchissement du dimanche : sans lui, une séance
+      // déplacée d'une semaine chargeait le mauvais jour, sept jours trop tôt
+      // ou trop tard.
+      const day = addDays(w.monday, s.day + 7 * (s.semaines ?? 0))
       if (day > limit) return
       if (day <= today) {
         // Le passé appartient aux activités enregistrées. On ne complète avec le
