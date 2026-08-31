@@ -222,9 +222,13 @@ export function VueCalendrier({
         </button>
       </div>
 
-      {plan.weeks.map((w) => (
+      {plan.weeks.map((w, i) => (
         <section key={w.n} style={{ marginBottom: 8 }}>
-          <EnteteSemaine semaine={w} courante={now >= w.monday && now <= addDays(w.monday, 6)} />
+          <EnteteSemaine
+            semaine={w}
+            courante={now >= w.monday && now <= addDays(w.monday, 6)}
+            premiere={i === 0}
+          />
           {Array.from({ length: 7 }, (_, i) => {
             const jour = addDays(w.monday, i)
             const cible = cibles.get(jour)
@@ -352,21 +356,56 @@ function fondCible(enCours: boolean, cible: CibleDrop | undefined, survole: bool
   return survole ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.05)'
 }
 
-function EnteteSemaine({ semaine, courante }: { semaine: Week; courante: boolean }) {
+/**
+ * La coupure entre deux semaines, et non plus seulement leur titre.
+ *
+ * Le calendrier déroule 245 jours d'affilée : une ligne de texte un peu plus
+ * grasse ne suffisait pas à faire voir où une semaine s'arrête, et on perdait
+ * le compte en défilant. Trois choses la marquent maintenant, toutes en encre
+ * neutre puisque la couleur appartient à la charge : un filet pleine largeur,
+ * un vrai blanc au-dessus, et le bloc de périodisation rappelé à droite, qui
+ * est la seule information d'orientation absente du reste de l'écran.
+ */
+function EnteteSemaine({
+  semaine,
+  courante,
+  premiere,
+}: {
+  semaine: Week
+  courante: boolean
+  premiere: boolean
+}) {
   return (
     <div
       style={{
         display: 'flex',
         alignItems: 'baseline',
         gap: 9,
-        padding: '18px 2px 8px',
+        // Le filet remonte pleine largeur au-delà du padding de la page : une
+        // coupure qui s'arrête avant le bord se lit comme une bordure de bloc,
+        // pas comme une fin de semaine.
+        margin: premiere ? 0 : '30px calc(var(--page-x) * -1) 0',
+        padding: premiere ? '2px 2px 10px' : '16px var(--page-x) 10px',
+        borderTop: premiere ? 'none' : '1px solid var(--border-2)',
       }}
     >
-      <span style={{ fontSize: 14.5, fontWeight: 750, letterSpacing: '-.3px' }}>
+      <span style={{ fontSize: 15.5, fontWeight: 750, letterSpacing: '-.3px' }}>
         Semaine {semaine.n}
       </span>
-      <span style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--sur-ink-3)' }}>
+      <span
+        style={{
+          fontSize: 12.5,
+          fontWeight: 500,
+          color: 'var(--sur-ink-3)',
+          minWidth: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
         {formatDay(semaine.monday)} — {formatDay(addDays(semaine.monday, 6))}
+        {' · '}
+        {semaine.deload ? 'décharge' : semaine.blocName}
       </span>
       {courante && (
         <span

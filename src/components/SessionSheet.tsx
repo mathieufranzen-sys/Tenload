@@ -121,10 +121,16 @@ export function SessionSheet({
    * un jour de repos ne dit rien de la raideur au réveil, qui pèse 45 % du
    * signal. L'injecter dans le modèle ferait retomber l'indice dans le vert sur
    * un carnet muet, soit exactement l'angle mort que `painInconnue` existe pour
-   * signaler. Dès qu'un écart change la journée, elle redevient une séance
-   * comme une autre et le formulaire réapparaît.
+   * signaler.
+   *
+   * La règle porte sur le TYPE de la séance, écarts appliqués, et sur rien
+   * d'autre. Elle regardait aussi l'absence d'écart et l'absence de ressenti :
+   * déplacer le repos d'un jour, ou avoir noté un dimanche par le passé,
+   * suffisait à faire réapparaître deux curseurs sur une journée qui n'a rien
+   * à noter. Un repos remplacé par une vraie séance n'est plus de type
+   * `repos`, et retrouve son formulaire par ce seul fait.
    */
-  const ressentiImplicite = s.type === 'repos' && !seance.ecart && !feedback
+  const ressentiImplicite = s.type === 'repos'
 
   const deroule = useMemo(() => deroulerSeance(s, marathonPace), [s, marathonPace])
 
@@ -408,12 +414,6 @@ export function SessionSheet({
             <FormulaireRessenti
               feedback={feedback}
               disabled={!onSave}
-              // Le vélo n'a jamais de distance dans le plan, seulement une
-              // durée. Et une séance qu'un écart a convertie en course sans
-              // fournir de distance de remplacement (`versType` efface `dist`
-              // avec le reste de l'ancienne séance) se retrouve dans le même
-              // cas : sans ce champ, ni l'une ni l'autre ne comptait dans le
-              // volume hebdomadaire de l'écran Suivi.
               onSave={(pain, rpe, note) => {
                 onSave?.({
                   week: week.n,

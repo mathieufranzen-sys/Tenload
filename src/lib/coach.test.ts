@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { butDeLaSeance, motDuCoach } from './coach'
+import { butDeLaSeance, motDuCoach, type SeanceDuJour } from './coach'
 import { addDays } from './dates'
 import type { PainMap } from './tendonIndex'
 
@@ -127,5 +127,105 @@ describe('butDeLaSeance', () => {
     for (const t of ['inter', 'tempo', 'long', 'ef', 'test', 'race'] as const) {
       expect(butDeLaSeance(t)!.replace(/VO2max/g, '')).not.toMatch(/\d/)
     }
+  })
+})
+
+describe('motDuCoach — la séance du jour', () => {
+  const seance = (p: Partial<SeanceDuJour> = {}): SeanceDuJour => ({
+    type: 'ef',
+    typePlan: 'ef',
+    titre: 'Endurance facile 7 km',
+    ecart: false,
+    adaptee: false,
+    faite: false,
+    saute: false,
+    ...p,
+  })
+  const calme = { idx: 20, painInconnue: false, chargeInconnue: false }
+
+  it('déconseille la course quand l’indice l’a neutralisée', () => {
+    const m = motDuCoach({
+      pain: {},
+      byDate: {},
+      now: NOW,
+      seancesTotal: TOTAL,
+      duJour: [seance({ type: 'velo', typePlan: 'long', adaptee: true })],
+      indice: { idx: 71, painInconnue: false, chargeInconnue: false },
+    })
+    expect(m.ton).toBe('vigilance')
+    expect(m.texte).toContain('71 sur 100')
+    expect(m.texte).toContain('sortie longue')
+  })
+
+  it('dit que l’indice est amputé quand la douleur n’est pas saisie', () => {
+    const m = motDuCoach({
+      pain: {},
+      byDate: {},
+      now: NOW,
+      seancesTotal: TOTAL,
+      duJour: [seance({ type: 'velo', typePlan: 'tempo', adaptee: true })],
+      indice: { idx: 68, painInconnue: true, chargeInconnue: false },
+    })
+    expect(m.texte).toContain('sans ta douleur')
+  })
+
+  it('félicite un allègement décidé par Mathieu sur un indice haut', () => {
+    const m = motDuCoach({
+      pain: {},
+      byDate: {},
+      now: NOW,
+      seancesTotal: TOTAL,
+      duJour: [seance({ type: 'velo', typePlan: 'tempo', ecart: true })],
+      indice: { idx: 56, painInconnue: false, chargeInconnue: false },
+    })
+    expect(m.ton).toBe('bravo')
+    expect(m.texte).toContain('56')
+  })
+
+  it('relaie la contrainte cassée par un déplacement', () => {
+    const m = motDuCoach({
+      pain: {},
+      byDate: {},
+      now: NOW,
+      seancesTotal: TOTAL,
+      duJour: [seance({ type: 'tempo', typePlan: 'tempo', ecart: true })],
+      indice: calme,
+      alertes: ['Séance de qualité accolée à la sortie longue.'],
+    })
+    expect(m.ton).toBe('vigilance')
+    expect(m.texte).toContain('accolée à la sortie longue')
+  })
+
+  it('se tait sur une séance déjà notée', () => {
+    const m = motDuCoach({
+      pain: {},
+      byDate: {},
+      now: NOW,
+      seancesTotal: TOTAL,
+      duJour: [seance({ type: 'velo', typePlan: 'long', adaptee: true, faite: true })],
+      indice: { idx: 71, painInconnue: false, chargeInconnue: false },
+    })
+    expect(m.texte).not.toContain('71 sur 100')
+  })
+
+  it('relance l’allure quand la raideur baisse et qu’une qualité est au programme', () => {
+    const pain = carnet([...serie(14, 0.8), ...serie(14, 2)])
+    const m = motDuCoach({
+      pain,
+      byDate: {},
+      now: NOW,
+      seancesTotal: TOTAL,
+      duJour: [seance({ type: 'tempo', typePlan: 'tempo' })],
+      indice: calme,
+    })
+    expect(m.ton).toBe('bravo')
+    expect(m.texte).toContain("Tiens l'allure prévue")
+  })
+
+  it('n’invente rien sans séance ni indice : les règles d’avant tiennent', () => {
+    const pain = carnet([...serie(14, 0.8), ...serie(14, 2)])
+    const m = motDuCoach({ pain, byDate: {}, now: NOW, seancesTotal: TOTAL })
+    expect(m.ton).toBe('bravo')
+    expect(m.texte).not.toContain("Tiens l'allure")
   })
 })

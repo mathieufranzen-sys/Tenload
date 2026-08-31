@@ -56,6 +56,7 @@ const planifiees = (sessions: Session[]): SeancePlanifiee[] => {
   const slots = slotsParJour(sessions)
   return sessions.map((s, i) => ({
     s,
+    typePlan: s.type,
     semaineOrigine: 1,
     jourOrigine: s.day,
     slot: slots[i],

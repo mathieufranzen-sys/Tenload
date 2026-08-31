@@ -440,6 +440,12 @@ tout est dehors.
   elle-même. Un instantané se figeait : enregistrer une donnée réelle mettait à
   jour les écarts, et la feuille continuait d'afficher la distance d'avant.
   `App` la recalcule à chaque rendu depuis les données courantes.
+- **Le repos n'a que deux actions : déplacer et remplacer.** Sauter un repos
+  ne veut rien dire, il n'y a rien à ne pas faire, et une donnée réelle non
+  plus. Il n'a pas non plus de ressenti : la règle porte sur le TYPE de la
+  séance, écarts appliqués, et sur rien d'autre. Elle regardait aussi l'absence
+  d'écart et l'absence de ressenti, si bien que déplacer le repos d'un jour
+  faisait réapparaître deux curseurs sur la seule journée qui n'a rien à noter.
 - **Une distance ne se saisit que là où elle a un sens** (`porteUneDistance`) :
   le vélo oui, même si le plan ne lui en fixe aucune ; l'escalade, le renfo et
   le repos non. Elle a quitté le formulaire de ressenti : deux champs pour la
@@ -550,7 +556,18 @@ semaine légère, c'est-à-dire dans le sens rassurant, qui est le seul dangereu
 ### Le mot du coach
 
 `src/lib/coach.ts` produit l'encouragement du bas de l'écran Aujourd'hui.
-**Règle unique : ne jamais affirmer un chiffre absent des données.** Chaque
+**Règle unique : ne jamais affirmer un chiffre absent des données.**
+
+**Il parle d'abord de la séance du jour.** `motSurLaSeance` passe avant toutes
+les autres règles : le jour où l'indice retire la course, féliciter pour
+l'excentrique de la quinzaine n'est pas un coach, c'est un bandeau. Cinq cas,
+et le silence sinon : l'indice a neutralisé la course, il a raccourci la
+sortie longue, un écart de Mathieu a cassé une contrainte de la semaine, il a
+lui-même allégé sur un indice haut, ou la charge n'est plus attestée. Le
+chiffre cité est toujours l'indice réellement calculé et le fait cité est
+toujours un changement réellement appliqué. `SeancePlanifiee.typePlan` existe
+pour ça : dire « ta sortie longue est devenue du vélo » plutôt que « tu as du
+vélo », qui n'apprend rien. Chaque
 message exige un minimum de saisies (quatre raideurs matinales de chaque côté
 de la fenêtre, par exemple) et se tait sinon. Un encouragement inventé se
 repère en une semaine et discrédite l'indice avec lui. L'ordre des règles est

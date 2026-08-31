@@ -221,6 +221,12 @@ export interface SeancePlanifiee {
   /** Écart volontaire appliqué, puis adaptation automatique par-dessus. */
   s: Session
   /**
+   * Type de la séance dans le plan de référence, avant tout écart et toute
+   * adaptation. C'est ce qui permet de dire « ta sortie longue est devenue du
+   * vélo » plutôt que « tu as du vélo », qui n'apprend rien.
+   */
+  typePlan: SessionType
+  /**
    * Semaine d'ORIGINE dans le plan. Avec `jourOrigine` et `slot`, la clé
    * Supabase. Depuis qu'un écart peut pousser une séance dans la semaine
    * voisine, elle ne se déduit plus de la date affichée.
@@ -329,6 +335,7 @@ export function weekSessions(
 
     return {
       s: vecue,
+      typePlan: week.sessions[i].type,
       semaineOrigine: week.n,
       jourOrigine,
       slot,

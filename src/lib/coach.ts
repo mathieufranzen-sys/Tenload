@@ -55,15 +55,145 @@ function indiceMoyen(
   return vs.length >= jours - 2 ? moyenne(vs) : null
 }
 
+/**
+ * Une séance du jour, réduite à ce dont le coach a besoin pour en parler.
+ *
+ * `type` est ce qui sera vécu, `typePlan` ce que le plan de référence
+ * prévoyait : c'est l'écart entre les deux qui porte l'information. Dire « tu
+ * as du vélo » n'apprend rien, dire « ta sortie longue est devenue du vélo »
+ * dit ce qui s'est passé et pourquoi il faut le lire.
+ */
+export interface SeanceDuJour {
+  type: SessionType
+  typePlan: SessionType
+  titre: string
+  /** Mathieu a changé cette séance lui-même. */
+  ecart: boolean
+  /** L'indice de charge l'a changée. */
+  adaptee: boolean
+  faite: boolean
+  saute: boolean
+}
+
 export interface EntreeCoach {
   pain: PainMap
   byDate: Record<string, { idx: number }>
   now: string
   /** Séances prévues et réalisées de la semaine en cours. */
   seancesTotal: { prevu: number; realise: number }
+  /** Ce qui est au programme aujourd'hui, écarts et adaptation compris. */
+  duJour?: SeanceDuJour[]
+  /** L'indice du jour, avec ses deux angles morts. */
+  indice?: { idx: number; painInconnue: boolean; chargeInconnue: boolean }
+  /** Les contraintes que la disposition réelle de la semaine ne respecte pas. */
+  alertes?: string[]
 }
 
-export function motDuCoach({ pain, byDate, now, seancesTotal }: EntreeCoach): MotCoach {
+const COURSE: SessionType[] = ['ef', 'long', 'tempo', 'inter', 'test', 'course', 'race']
+const PLUS_DOUX: SessionType[] = ['velo', 'marche', 'repos']
+
+/** Comment nommer une séance sans répéter son titre entier. */
+function nomCourt(t: SessionType): string {
+  if (t === 'long') return 'sortie longue'
+  if (t === 'ef') return 'endurance facile'
+  if (t === 'tempo' || t === 'inter' || t === 'test') return 'séance de qualité'
+  if (t === 'course' || t === 'race') return 'course'
+  if (t === 'velo') return 'vélo'
+  if (t === 'marche') return 'marche'
+  if (t === 'muscu-bas') return 'renfo bas du corps'
+  if (t === 'muscu-haut') return 'renfo haut du corps'
+  if (t === 'escalade') return 'escalade'
+  return 'séance'
+}
+
+/**
+ * Ce que le coach dit de la séance du jour, quand il a quelque chose à en
+ * dire. Vient AVANT tout le reste : un encouragement sur la raideur de la
+ * quinzaine ne vaut rien le jour où le plan vient de retirer la course.
+ *
+ * Même règle de silence qu'ailleurs. Le chiffre cité est toujours l'indice
+ * réellement calculé, et le fait cité est toujours un changement réellement
+ * appliqué — jamais une recommandation inventée pour meubler.
+ */
+function motSurLaSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach | null {
+  if (!duJour || !indice) return null
+  const vivantes = duJour.filter((x) => !x.faite && !x.saute)
+  if (vivantes.length === 0) return null
+
+  // L'indice ne mesure plus tout : le citer comme un verdict serait le
+  // présenter comme une mesure alors qu'il lui manque sa moitié.
+  const surIndice = indice.painInconnue
+    ? `indice à ${indice.idx} sur 100, calculé sans ta douleur qui n'est pas saisie`
+    : `indice à ${indice.idx} sur 100`
+
+  // ── L'indice a retiré la course du jour ────────────────────────────────
+  const neutralisee = vivantes.find(
+    (x) => x.adaptee && COURSE.includes(x.typePlan) && !COURSE.includes(x.type),
+  )
+  if (neutralisee) {
+    return {
+      ton: 'vigilance',
+      texte:
+        neutralisee.type === 'repos'
+          ? `Je ne te recommande rien sur les jambes aujourd'hui : ${surIndice}. Ta ${nomCourt(neutralisee.typePlan)} saute, mobilité de cheville et glaçage à la place. Trois jours ici et tu appelles ton kiné.`
+          : `Je ne te recommande pas de courir aujourd'hui : ${surIndice}. Ta ${nomCourt(neutralisee.typePlan)} passe au vélo. Ce n'est pas une séance perdue, c'est le même volume aérobie sans impact au sol, et c'est ce qui raccourcit l'épisode plutôt que de le prolonger.`,
+    }
+  }
+
+  // ── L'indice a raccourci la sortie longue ──────────────────────────────
+  const raccourcie = vivantes.find((x) => x.adaptee && x.type === 'long')
+  if (raccourcie) {
+    return {
+      ton: 'vigilance',
+      texte: `${raccourcie.titre.toLowerCase().startsWith('sortie') ? raccourcie.titre : `Sortie longue : ${raccourcie.titre}`} aujourd'hui, raccourcie par l'${surIndice}. Le kilométrage encaissé compte, celui qu'on paie trois jours ne compte pas.`,
+    }
+  }
+
+  // ── Une contrainte tombe dans la semaine, et c'est un écart qui l'a posée ─
+  const modifiee = vivantes.find((x) => x.ecart)
+  if (modifiee && alertes && alertes.length > 0) {
+    return {
+      ton: 'vigilance',
+      texte: `Attention à la semaine que tes déplacements ont formée : ${alertes[0].toLowerCase()} Ta ${nomCourt(modifiee.type)} d'aujourd'hui en fait partie. Rien ne t'en empêche, mais c'est une contrainte que ton tendon a posée, pas le plan.`,
+    }
+  }
+
+  // ── Tu as allégé toi-même, alors que l'indice montait ──────────────────
+  const allegee = vivantes.find(
+    (x) => x.ecart && COURSE.includes(x.typePlan) && PLUS_DOUX.includes(x.type),
+  )
+  if (allegee && indice.idx >= 50) {
+    return {
+      ton: 'bravo',
+      texte: `Bon réflexe : tu as remplacé ta ${nomCourt(allegee.typePlan)} par ${nomCourt(allegee.type) === 'vélo' ? 'du vélo' : `de la ${nomCourt(allegee.type)}`} avec un ${surIndice}. C'est exactement la décision que le plan aurait prise à ta place.`,
+    }
+  }
+
+  // ── La charge n'est plus attestée : on ne commente pas une séance sur un
+  //    carnet muet, on demande de le remplir ───────────────────────────────
+  if (indice.chargeInconnue) {
+    return {
+      ton: 'vigilance',
+      texte:
+        'Trop de séances non notées cette semaine : la part mécanique de ton indice suppose plus qu\'elle ne mesure, et elle se trompe toujours du côté rassurant. Note-les et je pourrai te dire quelque chose de ta séance du jour.',
+    }
+  }
+
+  return null
+}
+
+export function motDuCoach(entree: EntreeCoach): MotCoach {
+  const { pain, byDate, now, seancesTotal, duJour } = entree
+
+  const surLaSeance = motSurLaSeance(entree)
+  if (surLaSeance) return surLaSeance
+
+  /** La séance du jour qui mérite qu'on l'encourage nommément. */
+  const aVenir = (duJour ?? []).find(
+    (x) => !x.faite && !x.saute && ['long', 'tempo', 'inter', 'test'].includes(x.type),
+  )
+  const relance = aVenir ? ` Tiens l'allure prévue sur ta ${nomCourt(aVenir.type)} d'aujourd'hui.` : ''
+
   const recent = reveils(pain, now, 14)
   const avant = reveils(pain, addDays(now, -14), 14)
   const excentrique = joursExcentrique(pain, now, 28)
@@ -82,8 +212,8 @@ export function motDuCoach({ pain, byDate, now, seancesTotal }: EntreeCoach): Mo
         ton: 'bravo',
         texte:
           excentrique >= 8
-            ? `Bien joué. Ton excentrique ${excentrique} jours sur les 28 derniers a payé : ta raideur au réveil est passée ${chiffres}.`
-            : `Ça descend. Ta raideur au réveil est passée ${chiffres} en deux semaines. Continue exactement comme ça.`,
+            ? `Bien joué. Ton excentrique ${excentrique} jours sur les 28 derniers a payé : ta raideur au réveil est passée ${chiffres}.${relance}`
+            : `Ça descend. Ta raideur au réveil est passée ${chiffres} en deux semaines. Continue exactement comme ça.${relance}`,
       }
     }
 
@@ -97,7 +227,7 @@ export function motDuCoach({ pain, byDate, now, seancesTotal }: EntreeCoach): Mo
     if (excentrique >= 12) {
       return {
         ton: 'bravo',
-        texte: `Raideur au réveil stable à ${formatNumber(b)} sur dix, avec l'excentrique fait ${excentrique} jours sur 28. C'est exactement ce qu'on cherche : de la charge encaissée sans que le tendon proteste.`,
+        texte: `Raideur au réveil stable à ${formatNumber(b)} sur dix, avec l'excentrique fait ${excentrique} jours sur 28. C'est exactement ce qu'on cherche : de la charge encaissée sans que le tendon proteste.${relance}`,
       }
     }
 
@@ -129,7 +259,7 @@ export function motDuCoach({ pain, byDate, now, seancesTotal }: EntreeCoach): Mo
   if (idxRecent != null && idxAvant != null && idxAvant - idxRecent >= 3) {
     return {
       ton: 'bravo',
-      texte: `Ton indice de charge moyen est passé de ${Math.round(idxAvant)} à ${Math.round(idxRecent)} en une semaine. Le tendon récupère plus vite qu'il ne se charge.`,
+      texte: `Ton indice de charge moyen est passé de ${Math.round(idxAvant)} à ${Math.round(idxRecent)} en une semaine. Le tendon récupère plus vite qu'il ne se charge.${relance}`,
     }
   }
 

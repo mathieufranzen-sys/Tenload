@@ -60,6 +60,16 @@ export function ActionsSeance({
   const maj = (p: Partial<EcartPatch>) => setPatch((v) => ({ ...v, ...p }))
   const saute = Boolean(patch.skipped)
 
+  /**
+   * Le repos jambes de la contrainte 4 n'a que deux actions : le déplacer dans
+   * la semaine, ou mettre autre chose à sa place. Sauter un repos ne veut rien
+   * dire — il n'y a rien à ne pas faire — et une donnée réelle non plus, un
+   * repos n'ayant ni distance ni durée. Les proposer donnait deux boutons qui
+   * fabriquaient des écarts vides sur la seule journée du plan qui n'en
+   * demande aucun.
+   */
+  const estRepos = (patch.type ?? origine.type) === 'repos'
+
   const enregistrer = (p: EcartPatch) => {
     setPatch(p)
     onSave(p, raison.trim() || null)
@@ -70,26 +80,30 @@ export function ActionsSeance({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
+          gridTemplateColumns: `repeat(${estRepos ? 2 : 4}, 1fr)`,
           gap: 4,
           padding: '14px 0',
           borderTop: '1px solid var(--border)',
           borderBottom: '1px solid var(--border)',
         }}
       >
-        <Action
-          icone="skip"
-          label={saute ? 'Rétablir' : 'Sauter'}
-          actif={saute}
-          onClick={() => enregistrer({ ...patch, skipped: saute ? undefined : true })}
-        />
+        {!estRepos && (
+          <Action
+            icone="skip"
+            label={saute ? 'Rétablir' : 'Sauter'}
+            actif={saute}
+            onClick={() => enregistrer({ ...patch, skipped: saute ? undefined : true })}
+          />
+        )}
         <Action icone="calendar" label="Déplacer" onClick={onDeplacer} />
-        <Action
-          icone="clip"
-          label="Donnée réelle"
-          actif={patch.dist != null || patch.durMin != null}
-          onClick={() => setPanneau((p) => (p === 'reel' ? null : 'reel'))}
-        />
+        {!estRepos && (
+          <Action
+            icone="clip"
+            label="Donnée réelle"
+            actif={patch.dist != null || patch.durMin != null}
+            onClick={() => setPanneau((p) => (p === 'reel' ? null : 'reel'))}
+          />
+        )}
         <Action
           icone="swap"
           label="Remplacer"

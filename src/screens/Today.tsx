@@ -21,11 +21,11 @@ import {
 } from '../lib/dates'
 import { adapt, construireContexte, seancesDeLaSemaine, type SeancePlanifiee } from '../lib/adapt'
 import { construireInsights } from '../lib/insights'
-import { motDuCoach } from '../lib/coach'
+import { motDuCoach, type SeanceDuJour } from '../lib/coach'
 import { bandOf, type LoadMap, type PainMap } from '../lib/tendonIndex'
 import type { ActivityRow } from '../lib/load'
 import type { FeedbackRow } from '../lib/buildPain'
-import type { EcartRow } from '../lib/overrides'
+import { verifierContraintes, type EcartRow } from '../lib/overrides'
 import { SessionCard } from '../components/SessionCard'
 import { AlertBox } from '../components/AlertBox'
 import { JournalDuJour } from '../components/JournalDuJour'
@@ -165,9 +165,53 @@ export function Today({
     [semaineCourante, seancesCourantes, now, feedback, activities, A.byDate, ecarts],
   )
 
+  /**
+   * Ce que le coach doit savoir de la journée. Il parlait jusqu'ici de la
+   * quinzaine écoulée et de rien d'autre : le jour où l'indice retirait la
+   * course, il félicitait pour l'excentrique. Un mot qui ignore ce qui est
+   * affiché juste au-dessus de lui n'est pas un coach, c'est un bandeau.
+   */
+  const duJourPourCoach = useMemo<SeanceDuJour[]>(
+    () =>
+      duJour.map((x) => ({
+        type: x.s.type,
+        typePlan: x.typePlan,
+        titre: x.s.title,
+        ecart: Boolean(x.s.ecart),
+        adaptee: Boolean(x.s.adapted),
+        faite: Boolean(feedbackDe(x)),
+        saute: Boolean(x.s.saute),
+      })),
+    // `feedbackDe` se recrée à chaque rendu : c'est `feedback` qui décide.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [duJour, feedback],
+  )
+
+  /** Les contraintes que la semaine RÉELLEMENT formée ne respecte pas. */
+  const alertesSemaine = useMemo(
+    () =>
+      verifierContraintes(
+        seancesCourantes.map((x) => ({ ...x.s, day: weekdayIndex(x.day) })),
+      ).map((a) => a.texte),
+    [seancesCourantes],
+  )
+
   const mot = useMemo(
-    () => motDuCoach({ pain, byDate: A.byDate, now, seancesTotal: insights.seancesTotal }),
-    [pain, A.byDate, now, insights.seancesTotal],
+    () =>
+      motDuCoach({
+        pain,
+        byDate: A.byDate,
+        now,
+        seancesTotal: insights.seancesTotal,
+        duJour: duJourPourCoach,
+        indice: {
+          idx: A.detail.idx,
+          painInconnue: A.detail.painInconnue,
+          chargeInconnue: A.detail.chargeInconnue,
+        },
+        alertes: alertesSemaine,
+      }),
+    [pain, A.byDate, A.detail, now, insights.seancesTotal, duJourPourCoach, alertesSemaine],
   )
 
   /** L'indice du jour consulté. `A.detail` ne vaut que pour aujourd'hui. */
