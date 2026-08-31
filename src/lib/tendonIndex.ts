@@ -213,14 +213,28 @@ export function shiftDay(iso: string, n: number): string {
 /**
  * Moyenne exponentielle de la charge jusqu'à `day` inclus.
  * `halfLife` en jours : 3,5 pour l'aigu, 14 pour le chronique.
+ *
+ * La récurrence part de zéro, ce qui revient à poser une charge nulle avant le
+ * début de la fenêtre — un a priori qui n'est ni mesuré ni voulu. Sur 60 jours
+ * il reste (1 − λ)^60 de ce zéro : négligeable pour l'aigu (0,001 %), mais
+ * 5,1 % pour le chronique, dont la demi-vie est quatre fois plus longue. La
+ * charge chronique sortait donc systématiquement 5 % trop basse, et comme
+ * l'emballement est un RAPPORT à cette charge, il sortait 5 % trop haut tous
+ * les jours de l'année : environ deux points d'indice inventés.
+ *
+ * Diviser par le poids réellement accumulé retire cet a priori exactement, et
+ * rend le résultat indépendant de la longueur de la fenêtre. Les vrais zéros
+ * de la fenêtre, eux, restent comptés : un jour de repos est une mesure.
  */
 export function ewma(load: LoadMap, day: string, halfLife: number, window = 60): number {
   const lambda = 1 - Math.exp(-Math.LN2 / halFix(halfLife))
   let v = 0
+  let poids = 0
   for (let k = window - 1; k >= 0; k--) {
     v += lambda * ((load[shiftDay(day, -k)] ?? 0) - v)
+    poids += lambda * (1 - poids)
   }
-  return v
+  return poids > 0 ? v / poids : 0
 }
 const halFix = (h: number) => (h > 0 ? h : 1)
 
@@ -317,22 +331,35 @@ export function joursSansDouleur(day: string, pain: PainMap): number | null {
   return null
 }
 
-/** Pente de la raideur matinale sur quatre jours. Seule une hausse compte. */
+/**
+ * Pente de la raideur matinale sur quatre jours, en points par JOUR. Seule une
+ * hausse compte.
+ *
+ * La régression porte sur la date réelle de chaque relevé, pas sur son rang
+ * dans la liste. Un jour non saisi tassait auparavant les mesures restantes
+ * comme si elles étaient consécutives : 2 lundi et 4 jeudi donnaient une pente
+ * de 2 points par jour au lieu de 0,67, c'est-à-dire le maximum du terme sur
+ * une hausse trois fois plus lente qu'annoncé.
+ */
 export function painTrend(day: string, pain: PainMap): number {
+  const xs: number[] = []
   const vs: number[] = []
   for (let k = 3; k >= 0; k--) {
     const w = pain[shiftDay(day, -k)]?.wake
-    if (w != null) vs.push(w)
+    if (w != null) {
+      xs.push(3 - k)
+      vs.push(w)
+    }
   }
   if (vs.length < 3) return 0
   const n = vs.length
-  const mx = (n - 1) / 2
+  const mx = xs.reduce((a, b) => a + b, 0) / n
   const mu = vs.reduce((a, b) => a + b, 0) / n
   let num = 0
   let den = 0
   vs.forEach((v, i) => {
-    num += (i - mx) * (v - mu)
-    den += (i - mx) ** 2
+    num += (xs[i] - mx) * (v - mu)
+    den += (xs[i] - mx) ** 2
   })
   return den ? Math.max(0, num / den) : 0
 }
@@ -355,7 +382,12 @@ export function tendonIndex(
 ): IndexBreakdown {
   const acute = ewma(load, day, 3.5)
   const chronic = ewma(load, day, 14)
-  const acr = chronic > 0.5 ? acute / chronic : 1
+  // Sous 0,5 de charge chronique il n'y a pas de référence : le rapport ne veut
+  // rien dire. On affiche 1 par convention, mais le terme vaut zéro plus bas —
+  // 1 n'est pas neutre dans la formule, qui démarre à 0,9 et aurait donc ajouté
+  // quatre points sur une absence de mesure.
+  const sansReference = chronic <= 0.5
+  const acr = sansReference ? 1 : acute / chronic
 
   // Combien de jours des 28 derniers portent une charge connue ? En dessous de
   // 10, la charge chronique est artificiellement basse et le rapport aigu/chronique
@@ -366,7 +398,7 @@ export function tendonIndex(
   const confidence = clamp(known / 10, 0, 1)
 
   // Charge : emballement du rapport aigu/chronique, puis fraîcheur immédiate.
-  let ratio = 30 * clamp((acr - 0.9) / 0.7, 0, 1)
+  let ratio = sansReference ? 0 : 30 * clamp((acr - 0.9) / 0.7, 0, 1)
   const recent = (load[shiftDay(day, -1)] ?? 0) + 0.55 * (load[shiftDay(day, -2)] ?? 0)
   let freshness = chronic > 0.5 ? 20 * clamp(recent / (2.6 * chronic), 0, 1) : 0
   if (confidence < 1) {
@@ -385,11 +417,19 @@ export function tendonIndex(
   const trendPts = 6 * clamp(painTrend(day, pain) / 1.5, 0, 1)
 
   // Monotonie (Foster) : une semaine sans jour vraiment léger use le tendon.
+  // Le rapport moyenne / écart-type monte quand les sept jours se ressemblent.
+  //
+  // Le garde-fou était inversé. Un écart-type nul, c'est SEPT JOURS
+  // IDENTIQUES : la monotonie maximale, celle que le terme existe pour
+  // attraper. L'ancien `sd > 0.3` lui donnait zéro, soit exactement l'inverse.
+  // Il confondait les deux situations qui annulent l'écart-type — sept jours
+  // égaux, et sept jours vides. C'est la moyenne qui les sépare, pas
+  // l'écart-type : sans charge, il n'y a rien à user.
   const week: number[] = []
   for (let k = 0; k < 7; k++) week.push(load[shiftDay(day, -k)] ?? 0)
   const mu = week.reduce((a, b) => a + b, 0) / 7
   const sd = Math.sqrt(week.reduce((a, x) => a + (x - mu) ** 2, 0) / 7)
-  const monotony = sd > 0.3 ? 8 * clamp((mu / sd - 1.3) / 1.2, 0, 1) : 0
+  const monotony = mu < 0.5 ? 0 : 8 * clamp((mu / Math.max(sd, 1e-9) - 1.3) / 1.2, 0, 1)
 
   // Crédits : faire son excentrique fait BAISSER l'indice. C'est le traitement,
   // pas une agression — et ça récompense l'observance.

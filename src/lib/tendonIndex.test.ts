@@ -8,6 +8,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   bandOf,
+  ewma,
   indexSeries,
   painScore,
   painTrend,
@@ -410,10 +411,112 @@ describe('douleur inconnue', () => {
   it('n’altère pas le calcul : c’est un drapeau, pas un terme', () => {
     // Le même indice qu'avant l'ajout du drapeau. Si ce test casse, c'est que
     // la composante douleur a bougé, ce qui n'était pas l'intention.
+    //
+    // L'égalité est à un point près : `idx` arrondit la somme des termes bruts,
+    // alors que les termes sont arrondis un à un pour l'affichage. C'est le
+    // même reliquat que la ligne « Arrondi » du ticket de charge, et il ne dit
+    // rien de la composante douleur, qui est ce que ce test surveille.
     const load: LoadMap = {}
     for (let k = 0; k < 28; k++) load[shiftDay(jour, -k)] = 8
     const b = tendonIndex(jour, load, {})
     expect(b.pain).toBe(0)
-    expect(b.idx).toBe(Math.max(0, b.ratio + b.freshness + b.monotony - b.credits))
+    const somme = Math.max(0, b.ratio + b.freshness + b.trend + b.monotony - b.credits)
+    expect(Math.abs(b.idx - somme)).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('la charge chronique n’a pas d’a priori', () => {
+  it('sur une charge constante, les deux moyennes valent cette constante', () => {
+    // La récurrence part de zéro : sans normalisation par le poids accumulé, il
+    // en reste 5,1 % au bout de 60 jours sur une demi-vie de 14. La charge
+    // chronique sortait donc 5 % trop basse — et l'emballement, qui est un
+    // rapport à elle, 5 % trop haut tous les jours.
+    const load: LoadMap = {}
+    for (let k = 0; k < 200; k++) load[shiftDay('2026-09-01', -k)] = 10
+    expect(ewma(load, '2026-09-01', 3.5)).toBeCloseTo(10, 6)
+    expect(ewma(load, '2026-09-01', 14)).toBeCloseTo(10, 6)
+  })
+
+  it('la fenêtre ne change plus le résultat', () => {
+    const load: LoadMap = {}
+    for (let k = 0; k < 200; k++) load[shiftDay('2026-09-01', -k)] = 10
+    expect(ewma(load, '2026-09-01', 14, 30)).toBeCloseTo(ewma(load, '2026-09-01', 14, 90), 6)
+  })
+
+  it('sans référence chronique, l’emballement ne vaut rien', () => {
+    // Le rapport valait 1 par convention, et 1 n'est pas neutre dans une
+    // formule qui démarre à 0,9 : quatre points d'emballement apparaissaient
+    // sur un historique vide, c'est-à-dire sur une absence de mesure.
+    const b = tendonIndex('2026-09-01', {}, {})
+    expect(b.ratio).toBe(0)
+    expect(b.freshness).toBe(0)
+  })
+})
+
+describe('monotonie', () => {
+  /** Sept jours de charge identique, répétés assez longtemps pour la fenêtre. */
+  const uniforme = (valeur: number): LoadMap => {
+    const out: LoadMap = {}
+    for (let k = 0; k < 30; k++) out[shiftDay('2026-09-01', -k)] = valeur
+    return out
+  }
+
+  it('une semaine parfaitement régulière est le cas le plus monotone', () => {
+    // C'est la définition même du terme, et l'ancien garde-fou `sd > 0.3` lui
+    // donnait zéro : l'écart-type nul basculait dans la branche « pas assez de
+    // dispersion pour conclure », alors qu'il n'y a rien de plus concluant.
+    expect(tendonIndex('2026-09-01', uniforme(10), {}).monotony).toBe(8)
+  })
+
+  it('une semaine vide ne vaut rien : sans charge, rien ne s’use', () => {
+    // L'autre situation qui annule l'écart-type. C'est la moyenne qui la
+    // sépare de la précédente.
+    expect(tendonIndex('2026-09-01', uniforme(0), {}).monotony).toBe(0)
+  })
+
+  it('la semaine type du plan ne déclenche pas le terme', () => {
+    // Sortie longue, EF, escalade, renfo + vélo, vélo, qualité, repos : elle
+    // est délibérément dissemblable d'un jour à l'autre, c'est même le sens de
+    // la contrainte 4. Le terme existe pour attraper sa disparition.
+    const load: LoadMap = {}
+    const semaine = [27.6, 7, 2.4, 14.5, 4, 12.7, 0] // lundi → dimanche
+    for (let k = 0; k < 30; k++) {
+      const d = shiftDay('2026-09-01', -k)
+      load[d] = semaine[(new Date(`${d}T12:00:00Z`).getUTCDay() + 6) % 7]
+    }
+    expect(tendonIndex('2026-09-01', load, {}).monotony).toBe(0)
+  })
+
+  it('la même semaine sans son jour de repos déclenche le terme', () => {
+    const load: LoadMap = {}
+    const semaine = [27.6, 7, 2.4, 14.5, 4, 12.7, 12] // le dimanche n'est plus vide
+    for (let k = 0; k < 30; k++) {
+      const d = shiftDay('2026-09-01', -k)
+      load[d] = semaine[(new Date(`${d}T12:00:00Z`).getUTCDay() + 6) % 7]
+    }
+    expect(tendonIndex('2026-09-01', load, {}).monotony).toBeGreaterThan(0)
+  })
+})
+
+describe('la tendance compte en jours, pas en relevés', () => {
+  it('un trou dans le carnet n’accélère pas la pente', () => {
+    // 2 le lundi puis 4 le jeudi, c'est 0,67 point par jour. Tassées comme si
+    // elles étaient consécutives, les trois mesures donnaient 1 point par jour.
+    const troue: PainMap = {
+      '2026-08-10': { wake: 2 },
+      '2026-08-11': { wake: 3 },
+      '2026-08-13': { wake: 4 },
+    }
+    expect(painTrend('2026-08-13', troue)).toBeCloseTo(0.643, 3)
+  })
+
+  it('quatre jours consécutifs sont inchangés', () => {
+    const plein: PainMap = {
+      '2026-08-10': { wake: 1 },
+      '2026-08-11': { wake: 2 },
+      '2026-08-12': { wake: 3 },
+      '2026-08-13': { wake: 4 },
+    }
+    expect(painTrend('2026-08-13', plein)).toBeCloseTo(1, 5)
   })
 })
