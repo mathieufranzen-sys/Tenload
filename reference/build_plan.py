@@ -37,23 +37,49 @@ BLOCS = [
      "color": "#E5484D"},
 ]
 
-# Sortie longue : jamais +2 km d'une semaine sur l'autre (règle tendon).
-# Les décharges sont des baisses libres, mais la remontée se refait à +2 max.
+# Sortie longue : jamais +2 km d'une SEMAINE DE CHARGE à la suivante.
+#
+# La contrainte 1 saute les semaines de décharge et les semaines de course.
+# Elle porte sur la progression, et une décharge n'est pas une étape de la
+# progression : c'est son interruption. La compter dans la chaîne obligeait à
+# remonter à +2 km depuis le creux, donc à ne creuser que de 4 km sous peine de
+# perdre des semaines entières de périodisation. Résultat, la décharge de S5
+# valait −5 % de charge tendineuse : elle ne déchargeait rien.
+#
+# Les décharges coupent donc la sortie longue d'environ 30 % de la dernière
+# semaine de charge, et la remontée se refait à +2 km depuis cette semaine-là,
+# pas depuis le creux.
 SL = {
     # S1 : semaine d'amorce, pas de sortie longue (25 km couru le dimanche 9 août)
     1: 0,
     # Bloc A — réathlétisation
-    2: 22, 3: 24, 4: 26, 5: 22, 6: 24, 7: 26, 8: 28,
+    2: 22, 3: 24, 4: 26, 5: 18, 6: 24, 7: 26, 8: 28,
     # Bloc B — base aérobie
-    9: 24, 10: 26, 11: 28, 12: 30, 13: 26, 14: 28, 15: 30, 16: 32,
+    9: 24, 10: 22, 11: 28, 12: 30, 13: 22, 14: 28, 15: 30, 16: 32,
     # Bloc C — développement (S25 = semi-marathon test, il fait office de sortie longue)
-    17: 26, 18: 28, 19: 30, 20: 32, 21: 26, 22: 28, 23: 30, 24: 32, 25: 21.1,
+    17: 22, 18: 28, 19: 30, 20: 32, 21: 22, 22: 28, 23: 30, 24: 32, 25: 21.1,
     # Bloc D — spécifique marathon
-    26: 22, 27: 24, 28: 26, 29: 28, 30: 30, 31: 32, 32: 26,
+    26: 18, 27: 24, 28: 26, 29: 28, 30: 30, 31: 32, 32: 22,
     # Bloc E — affûtage
     33: 28, 34: 20, 35: 12,
 }
-DELOAD = {5, 9, 13, 17, 21, 25, 32, 34}
+
+# Les VRAIES décharges : celles qui existent pour laisser le tendon récupérer.
+# Le bilan net du collagène reste négatif 24 à 36 h après une charge importante
+# et la synthèse plafonne à charge cumulée élevée : c'est cette fenêtre-là que
+# la semaine de décharge ouvre, et elle ne s'ouvre pas à −5 %.
+DELOAD = {5, 10, 13, 17, 21, 26, 32, 34}
+
+# Semaines allégées pour arriver frais sur une échéance. Elles ressemblent à
+# une décharge — moins de vélo, EF plus courte, sortie longue sans bloc à
+# allure marathon — mais elles n'en sont pas une : la charge de compétition
+# tombe dedans. La vraie décharge est la semaine d'APRÈS, une fois la course
+# encaissée. C'est pour ça que S9, S14 et S25 ne portent pas le drapeau.
+ALLEGEE_COURSE = {9, 14, 25}
+
+# Ce qui s'allège dans les deux cas.
+ALLEGEE = DELOAD | ALLEGEE_COURSE
+
 NO_LONG_MONDAY = {1, 25, 35}   # amorce / semi test / marathon
 
 # ---------------------------------------------------------------- courses
@@ -111,11 +137,11 @@ for w, km in SL.items():
     if w <= 8:                      # bloc A : 100 % conversationnel
         SL_STRUCT[w] = [("all", "ef")]
     elif w <= 16:                   # bloc B : finish à allure marathon
-        SL_STRUCT[w] = [("all", "ef")] if w in DELOAD else [("all-4", "ef"), (4, "am")]
+        SL_STRUCT[w] = [("all", "ef")] if w in ALLEGEE else [("all-4", "ef"), (4, "am")]
     elif w <= 25:                   # bloc C : bloc AM au milieu
-        SL_STRUCT[w] = [("all", "ef")] if w in DELOAD else [("all-6", "ef"), (6, "am")]
+        SL_STRUCT[w] = [("all", "ef")] if w in ALLEGEE else [("all-6", "ef"), (6, "am")]
     elif w <= 32:                   # bloc D : gros volume à allure marathon
-        if w in DELOAD:
+        if w in ALLEGEE:
             SL_STRUCT[w] = [("all-5", "ef"), (5, "am")]
         elif w <= 28:
             SL_STRUCT[w] = [("all-8", "ef"), (8, "am")]
@@ -142,9 +168,9 @@ QUALITE = {
  4:  {"t":"seuil","name":"Seuil 2 x 8 min","dist":9,
       "wu":[(2.5,"ef")],"main":[("2 x 8 min","seuil"),("récup 3 min souple","")],
       "cd":[(2,"recup")],"note":"Ton premier vrai seuil du bloc. À 4:17/km, c'est l'allure que tu tiendrais une heure en compétition."},
- 5:  {"t":"interval","name":"5 x 1000 m","dist":10,
-      "wu":[(2.5,"ef")],"main":[("5 x 1000 m","vo2"),("récup 90 s marche/trot","")],
-      "cd":[(2,"recup")],"note":"Semaine de décharge, mais on garde l'intensité. Récupération active entre les répétitions, jamais à l'arrêt complet : le tendon aime rester chaud."},
+ 5:  {"t":"interval","name":"3 x 1000 m","dist":8,
+      "wu":[(2.5,"ef")],"main":[("3 x 1000 m","vo2"),("récup 90 s marche/trot","")],
+      "cd":[(2,"recup")],"note":"Semaine de décharge : on garde l'intensité, on coupe le volume. C'est ce que dit la littérature d'affûtage, et c'est aussi ce qui protège le tendon — le kilomètre d'intervalle lui coûte deux fois celui d'endurance. Récupération active entre les répétitions, jamais à l'arrêt complet : le tendon aime rester chaud."},
  6:  {"t":"seuil","name":"Tempo 3 x 2 km","dist":11,
       "wu":[(2.5,"ef")],"main":[("3 x 2 km","seuil"),("récup 2 min","")],
       "cd":[(2,"recup")],"note":"Séance de seuil de référence, à comparer avec ton 2x2km du 19 juillet. Allure régulière du premier au dernier kilomètre."},
@@ -157,9 +183,9 @@ QUALITE = {
  9:  {"t":"interval","name":"8 x 400 m","dist":9,
       "wu":[(2.5,"ef")],"main":[("8 x 400 m","rep"),("récup 90 s","")],
       "cd":[(2,"recup")],"note":"Décharge. Vitesse pure et économie de course : foulée haute, appuis vifs, pas de recherche de volume."},
- 10: {"t":"seuil","name":"2 x 3 km au seuil","dist":11,
-      "wu":[(2.5,"ef")],"main":[("2 x 3 km","seuil"),("récup 3 min","")],
-      "cd":[(2,"recup")],"note":"On allonge les blocs de seuil. C'est la qualité qui construit un marathon rapide, plus que les intervalles courts."},
+ 10: {"t":"seuil","name":"2 x 2 km au seuil","dist":9,
+      "wu":[(2.5,"ef")],"main":[("2 x 2 km","seuil"),("récup 3 min","")],
+      "cd":[(2,"recup")],"note":"Vraie décharge : le 20 km de dimanche dernier est la charge de la quinzaine, celle-ci sert à garder le rythme sans rien ajouter. Les blocs de seuil s'allongeront en S12."},
  11: {"t":"interval","name":"5 x 1200 m","dist":11,
       "wu":[(2.5,"ef")],"main":[("5 x 1200 m","vo2"),("récup 2 min","")],
       "cd":[(2,"recup")],"note":"Séance exigeante. Si le mollet tire pendant l'échauffement, tu bascules sur du seuil : la VMA n'est pas le facteur limitant de ton marathon."},
@@ -207,9 +233,9 @@ QUALITE = {
       "wu":[(2,"ef")],"main":[("21,1 km","seuil")],
       "cd":[(1,"recup")],
       "note":"Le point de bascule du plan. Course officielle ou solo chronométré, peu importe, mais à fond. Objectif : 1 h 30 ou mieux, ce qui valide la trajectoire vers 3 h 15. Sous 1 h 25 avec une douleur restée sous 2, on rouvre le dossier sub-3 pour les dix dernières semaines. Au-delà de 1 h 35, on recale l'objectif sur 3 h 25 sans état d'âme."},
- 26: {"t":"seuil","name":"3 x 4 km à allure marathon","dist":15,
-      "wu":[(2,"ef")],"main":[("3 x 4 km","am"),("récup 3 min","")],
-      "cd":[(1,"recup")],"note":"Ouverture du bloc spécifique. À partir d'ici, l'allure marathon devient l'allure de référence de presque tout ce que tu fais."},
+ 26: {"t":"seuil","name":"2 x 4 km à allure marathon","dist":11,
+      "wu":[(2,"ef")],"main":[("2 x 4 km","am"),("récup 3 min","")],
+      "cd":[(1,"recup")],"note":"Décharge d'ouverture du bloc spécifique : le semi de samedi dernier était une compétition, il se paie. L'allure marathon devient l'allure de référence à partir d'ici, mais on l'installe sur deux blocs avant d'en mettre trois."},
  27: {"t":"interval","name":"6 x 1000 m","dist":11,
       "wu":[(2.5,"ef")],"main":[("6 x 1000 m","vo2"),("récup 90 s","")],
       "cd":[(2,"recup")],"note":"Entretien VMA. Ça garde la foulée vive quand le volume marathon commence à tout écraser."},
@@ -226,8 +252,8 @@ QUALITE = {
  31: {"t":"seuil","name":"3 x 3 km au seuil","dist":14,
       "wu":[(2.5,"ef")],"main":[("3 x 3 km","seuil"),("récup 3 min","")],
       "cd":[(2,"recup")],"note":"Dernière grosse séance de seuil du plan, sur la semaine du pic à 32 km. Après, tout descend."},
- 32: {"t":"interval","name":"5 x 1000 m","dist":11,
-      "wu":[(2.5,"ef")],"main":[("5 x 1000 m","vo2"),("récup 90 s","")],
+ 32: {"t":"interval","name":"3 x 1000 m","dist":8,
+      "wu":[(2.5,"ef")],"main":[("3 x 1000 m","vo2"),("récup 90 s","")],
       "cd":[(2,"recup")],"note":"Décharge. L'affûtage commence la semaine prochaine, et à partir de maintenant, moins vaut mieux que plus."},
  33: {"t":"seuil","name":"2 x 3 km au seuil + 4 x 200 m","dist":12,
       "wu":[(2.5,"ef")],"main":[("2 x 3 km","seuil"),("récup 3 min",""),("4 x 200 m","rep")],
@@ -279,6 +305,12 @@ MUSCU_BAS = {
          ("Mollets unilatéral lourd","4 x 10",""),
          ("Fentes bulgares","3 x 8","charge"),
          ("Gainage dynamique","3 x 45 s","")]},
+ "DL": {"name":"Bas du corps — décharge",
+   "ex":[("Stanish unilatéral","3 x 10","charge divisée par deux, 3 s à la descente"),
+         ("Pointes de pied genou fléchi","3 x 12","sans charge"),
+         ("Pont fessier unilatéral","3 x 12",""),
+         ("Mobilité cheville + voûte plantaire","8 min",""),
+         ("Gainage","3 x 40 s","")]},
  "E": {"name":"Bas du corps — entretien affûtage",
    "ex":[("Stanish unilatéral","2 x 10","charge légère"),
          ("Pointes de pied","2 x 15",""),
@@ -317,14 +349,14 @@ def bloc_of(w):
 def velo_min(w, second=False):
     b = bloc_of(w)["id"]
     base = {"A": 55, "B": 60, "C": 60, "D": 55, "E": 40}[b]
-    if w in DELOAD: base -= 10
+    if w in ALLEGEE: base -= 10
     return base - 15 if second else base
 
 def ef_km(w):
     """3e course : EF courte, le mardi (récup active après la sortie longue)."""
     b = bloc_of(w)["id"]
     base = {"A": 7, "B": 9, "C": 10, "D": 11, "E": 6}[b]
-    if w in DELOAD: base -= 1
+    if w in ALLEGEE: base -= 1
     if w == 35: return 5
     return base
 
@@ -447,17 +479,27 @@ for w in range(1, 36):
         "feedback": True})
 
     # --- JEUDI : muscu bas + vélo (+ sortie longue la semaine d'après une course)
+    # Semaine de décharge : le protocole excentrique RESTE, sa charge baisse.
+    # C'est le traitement de la tendinopathie, l'arrêter serait contre-productif ;
+    # le garder à pleine charge, lui, laissait 10 points de charge tendineuse
+    # dans une semaine censée en retirer un quart. Même arbitrage que `lightLegs`
+    # dans le moteur d'adaptation.
     light = w in (25, 35)
+    decharge_bas = w in DELOAD and not light
     if apres:
         sessions.append(seance_longue(3))
     # Le renfo bas remonte au mardi la semaine d'après une course : il ne peut
     # être ni le mercredi (escalade), ni collé à la sortie longue du jeudi.
     sessions.append({"day": 1 if apres else 3, "type": "muscu-bas",
-        "title": MUSCU_BAS["E"]["name"] if light else MUSCU_BAS[bid]["name"],
-        "cat": "Renforcement bas du corps", "dur": [25, 30] if light else [40, 45],
-        "ex": MUSCU_BAS["E"]["ex"] if light else MUSCU_BAS[bid]["ex"],
+        "title": MUSCU_BAS["E" if light else "DL" if decharge_bas else bid]["name"],
+        "cat": "Renforcement bas du corps",
+        "dur": [25, 30] if light or decharge_bas else [40, 45],
+        "ex": MUSCU_BAS["E" if light else "DL" if decharge_bas else bid]["ex"],
         "note": ("Version allégée : grosse échéance ce week-end, on entretient sans fatiguer. "
                  if light else "") +
+                ("Semaine de décharge : le Stanish reste, à charge divisée par deux. On enlève "
+                 "tout ce qui est lourd et pliométrique, on garde ce qui répare. "
+                 if decharge_bas else "") +
                 ("Avancé au mardi : la sortie longue est jeudi, et le renfo bas ne se met jamais "
                  "la veille ni le lendemain d'une longue. " if apres else "") +
                 "La séance la plus importante du plan pour ton tendon. Le protocole excentrique (Stanish) se fait lentement à la descente, une douleur de 3-4/10 pendant l'exercice est normale et même recherchée. Au-delà de 5, tu baisses la charge.",

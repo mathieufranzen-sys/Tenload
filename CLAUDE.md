@@ -28,9 +28,18 @@ Ces contraintes viennent de son tendon et de son emploi du temps. Elles sont
 vérifiées par `reference/check_plan.py` sur les 313 séances du plan. **Aucune
 modification du plan ne doit les casser.**
 
-1. **La sortie longue ne s'incrémente jamais de plus de 2 km d'une semaine sur
-   l'autre**, y compris pour remonter après une semaine de décharge. C'est ce qui
-   coûte le plus de semaines dans la périodisation, et c'est volontaire.
+1. **La sortie longue ne s'incrémente jamais de plus de 2 km d'une SEMAINE DE
+   CHARGE à la suivante.** La chaîne saute les semaines de décharge et les
+   semaines de course : une décharge n'est pas une étape de la progression,
+   c'est son interruption, et la remontée se mesure depuis la dernière semaine
+   de charge, pas depuis le creux. Compter le creux dans la chaîne obligeait à
+   ne creuser que de 4 km sous peine de perdre des semaines entières de
+   périodisation, ce qui avait laissé la décharge de S5 à −5 % de charge
+   tendineuse. **Une décharge, elle, coupe librement**, et `check_plan.py`
+   exige au moins −20 %, sur la sortie longue comme sur la charge de la semaine
+   entière. Deux mesures, parce qu'une seule se contourne : S5 raccourcissait
+   la longue pendant que son 5 x 1000 m du samedi coûtait 32 % de plus que le
+   seuil de la semaine d'avant.
 2. **Escalade le mercredi soir** : aucune course et aucun renfo haut du corps ce
    jour-là. Les avant-bras et les épaules travaillent déjà.
 3. **Ni séance de vitesse ni renfo bas du corps accolés à la sortie longue.**
@@ -66,6 +75,21 @@ volontaires vont dans `plan_overrides`.
 - **Semaine 1** : amorce sans sortie longue. Mathieu a couru 25 km le dimanche
   9 août ; enchaîner une longue le lendemain sur un tendon convalescent était
   exclu. Première vraie sortie longue le 17 août, à 22 km.
+Les **vraies décharges** sont S5, S10, S13, S17, S21, S26, S32 et S34. Elles
+coupent la sortie longue d'environ 30 %, allègent le vélo et l'EF, réduisent la
+séance de qualité sans toucher à son intensité, et passent le renfo bas en
+version décharge : le Stanish reste, sa charge est divisée par deux. C'est le
+traitement de la tendinopathie, on ne l'arrête pas, on le décharge. Chacune fait
+passer le rapport aigu/chronique sous 1, ce qui est la définition d'une semaine
+qui décharge.
+
+**S9, S14 et S25 ne sont PAS des décharges** même si elles s'allègent : ce sont
+les semaines de course, allégées pour arriver frais sur le 20 km, le 10 km et le
+semi test. La charge de compétition tombe dedans. La vraie décharge est la
+semaine d'après, une fois la course encaissée, d'où S10 et S26. `ALLEGEE_COURSE`
+et `DELOAD` sont donc deux ensembles distincts dans `build_plan.py`, et leur
+union `ALLEGEE` décide de ce qui s'allège dans les deux cas.
+
 - **Bloc A** (S1-8) réathlétisation, sortie longue 22 → 28 km.
 - **Bloc B** (S9-16) base aérobie, 24 → 32 km, volume vers 50 km/semaine. Deux
   courses réelles s'y invitent, voir plus bas.

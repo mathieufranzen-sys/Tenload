@@ -30,14 +30,76 @@ ATTENDUS = {
     "S15: 2 courses": "lundi en repos au lendemain de la course, l'EF saute",
 }
 
-# 1) sortie longue : increment <= 2 km
+# ---------------------------------------------------------------- décharges
+# Les semaines de course : leur sortie longue n'est pas une étape de la
+# progression, c'est une compétition ou la semaine qui la prépare.
+SEM_COURSE = {9, 14, 25, 35}
+
+# Coût tendineux, repris de src/lib/tendonIndex.ts. Le doublon est assumé :
+# check_plan.py doit pouvoir dire tout seul si une décharge décharge, sans
+# lancer l'app. Si les deux divergent, c'est le TypeScript qui fait foi.
+KM_COST = {"recup":0.9,"ef":1.0,"long":1.15,"am":1.35,"seuil":1.6,"vo2":2.1,"rep":2.1}
+RUN_COST = {"long":1.15,"ef":1.0,"recup":0.95,"tempo":1.27,"inter":1.5,"test":1.5,
+            "course":1.35,"race":1.35,"marche":0.5}
+MIN_COST = {"velo":0.10,"muscu-bas":0.25,"escalade":0.06,"muscu-haut":0.0,"repos":0.0}
+
+def cout(s):
+    if s.get("struct"):
+        return sum(seg["km"] * KM_COST.get(seg["zone"], 1) for seg in s["struct"])
+    if s["type"] in RUN_COST and s.get("dist"):
+        return s["dist"] * RUN_COST[s["type"]]
+    return (s.get("dur") or [0])[0] * MIN_COST.get(s["type"], 0)
+
+charge = {w["n"]: sum(cout(s) for s in w["sessions"]) for w in W}
+
+# 1) sortie longue : jamais +2 km d'une SEMAINE DE CHARGE à la suivante.
+#
+# La chaîne saute les décharges et les semaines de course. Une décharge n'est
+# pas une étape de la progression, c'est son interruption : la compter obligeait
+# à remonter à +2 km depuis le creux, donc à ne creuser que de 4 km sous peine
+# de perdre des semaines de périodisation. C'est ce qui avait laissé la décharge
+# de S5 à −5 % de charge tendineuse, c'est-à-dire à rien du tout.
 prev = None
 for w in W:
     if w["n"] == 35: break
     if w["sl"] == 0: continue            # S1 : semaine d'amorce, pas de sortie longue
+    if w["deload"] or w["n"] in SEM_COURSE: continue
     if prev is not None and w["sl"] - prev > 2:
         errs.append(f"S{w['n']}: sortie longue {prev} -> {w['sl']} = +{w['sl']-prev} km")
     prev = w["sl"]
+
+# 1 bis) une décharge doit décharger.
+#
+# Deux mesures, parce qu'une seule se contourne. La sortie longue coupe d'au
+# moins 20 %, et la charge tendineuse de la semaine entière d'au moins 20 %
+# elle aussi : sans ce second contrôle, il suffisait de raccourcir la longue
+# pendant que la séance de qualité du samedi montait, ce que faisait S5, dont
+# le 5 x 1000 m coûtait 32 % de plus que le seuil de la semaine d'avant.
+#
+# La référence est la dernière semaine de CHARGE, pas la précédente : une
+# décharge qui suit une semaine de course se comparerait sinon à la course.
+SEUIL_DECHARGE = 0.20
+derniere_charge = None
+for w in W:
+    if w["deload"]:
+        if derniere_charge is None:
+            continue
+        ref = derniere_charge
+        if w["sl"] > 0 and ref["sl"] > 0:
+            baisse = 1 - w["sl"] / ref["sl"]
+            if baisse < SEUIL_DECHARGE:
+                errs.append(
+                    f"S{w['n']}: décharge, sortie longue {ref['sl']:g} -> {w['sl']:g} km "
+                    f"= -{baisse*100:.0f} % seulement (min {SEUIL_DECHARGE*100:.0f} %, "
+                    f"référence S{ref['n']})")
+        baisse = 1 - charge[w["n"]] / charge[ref["n"]]
+        if baisse < SEUIL_DECHARGE:
+            errs.append(
+                f"S{w['n']}: décharge, charge tendineuse {charge[ref['n']]:.0f} -> "
+                f"{charge[w['n']]:.0f} = -{baisse*100:.0f} % seulement "
+                f"(min {SEUIL_DECHARGE*100:.0f} %, référence S{ref['n']})")
+    elif w["n"] not in SEM_COURSE:
+        derniere_charge = w
 
 # 2) mercredi : ni course ni renfo haut
 RUN = {"long", "ef", "inter", "tempo", "test", "race", "course"}
@@ -109,6 +171,8 @@ assert p["meta"]["raceDate"] == "2027-04-11"
 
 print(f"Semaines: {len(W)}  Séances: {sum(len(w['sessions']) for w in W)}")
 print(f"Sortie longue: {[w['sl'] for w in W]}")
+print("Décharges: " + ", ".join(
+    f"S{w['n']} {charge[w['n']]:.0f} pts / SL {w['sl']:g} km" for w in W if w["deload"]))
 print(f"Volume course/sem approx: bloc A {W[0]['sl']+W[0]['efKm']}km + qualité")
 print()
 
