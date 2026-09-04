@@ -223,7 +223,7 @@ export function VueCalendrier({
       </div>
 
       {plan.weeks.map((w, i) => (
-        <section key={w.n} style={{ marginBottom: 8 }}>
+        <section key={w.n} style={{ marginBottom: 8, paddingTop: 6 }}>
           <EnteteSemaine
             semaine={w}
             courante={now >= w.monday && now <= addDays(w.monday, 6)}
@@ -381,15 +381,19 @@ function EnteteSemaine({
         display: 'flex',
         alignItems: 'baseline',
         gap: 9,
-        // Le filet remonte pleine largeur au-delà du padding de la page : une
-        // coupure qui s'arrête avant le bord se lit comme une bordure de bloc,
-        // pas comme une fin de semaine.
-        margin: premiere ? 0 : '30px calc(var(--page-x) * -1) 0',
-        padding: premiere ? '2px 2px 10px' : '16px var(--page-x) 10px',
-        borderTop: premiere ? 'none' : '1px solid var(--border-2)',
+        // Le bandeau va pleine largeur, au-delà du padding de la page : une
+        // coupure qui s'arrête avant le bord se lit comme une bordure de bloc
+        // et pas comme une fin de semaine. Fond plein plutôt qu'un simple
+        // filet, parce que sur 245 jours de défilement un trait d'un pixel
+        // passe sous l'œil sans l'arrêter.
+        margin: premiere ? '0 calc(var(--page-x) * -1)' : '34px calc(var(--page-x) * -1) 0',
+        padding: '13px var(--page-x) 12px',
+        background: 'var(--surface)',
+        borderTop: premiere ? 'none' : '2px solid var(--border-2)',
+        borderBottom: '1px solid var(--border)',
       }}
     >
-      <span style={{ fontSize: 15.5, fontWeight: 750, letterSpacing: '-.3px' }}>
+      <span style={{ fontSize: 17, fontWeight: 750, letterSpacing: '-.4px' }}>
         Semaine {semaine.n}
       </span>
       <span

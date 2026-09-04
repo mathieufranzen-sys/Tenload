@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { addDays } from './dates'
-import { adapt, applyFx, fxForDate, weekSessions, type Fx } from './adapt'
-import type { LoadMap, PainMap } from './tendonIndex'
+import { adapt, applyFx, fxForDate, verdictVolume, weekSessions, type Fx } from './adapt'
+import { shiftDay, type LoadMap, type PainMap } from './tendonIndex'
 import type { Session, Week } from '../data/types'
 import type { FeedbackRow } from './buildPain'
 import { indexerEcarts } from './overrides'
@@ -346,5 +346,52 @@ describe('feu vert', () => {
     const r = adapt(loadCalme, pain, [], NOW)
     expect(r.detail.painInconnue).toBe(true)
     expect(r.rules.find((x) => x.id === 'FEUVERT')).toBeUndefined()
+  })
+})
+
+describe('ouverture du volume : la sortie de la contrainte 5', () => {
+  const JOUR = '2026-12-01'
+  /** Carnet plein sur `jours` jours, à la douleur de fond de Mathieu. */
+  const carnet = (jours: number, pic?: { a: number; valeur: number }): PainMap => {
+    const p: PainMap = {}
+    for (let k = 0; k < jours; k++) {
+      p[shiftDay(JOUR, -k)] = { wake: 1, effort: 0.5, evening: 1.5 }
+    }
+    if (pic) p[shiftDay(JOUR, -pic.a)] = { wake: pic.valeur, effort: 0.5, evening: 1.5 }
+    return p
+  }
+
+  it('ouvre après deux mois de carnet plein sans douleur', () => {
+    const v = verdictVolume(carnet(56), JOUR)
+    expect(v).not.toBeNull()
+    expect(v!.releves).toBe(56)
+  })
+
+  it('une seule journée au-dessus du seuil referme la fenêtre', () => {
+    // Le tendon a parlé une fois : les deux mois repartent de là.
+    expect(verdictVolume(carnet(56, { a: 40, valeur: 3 }), JOUR)).toBeNull()
+  })
+
+  it('la douleur de fond à 2 ne referme rien', () => {
+    // 0,8 au réveil et 1,3 le soir sont sa normale. Exiger zéro n'ouvrirait
+    // jamais, et n'aurait pas de sens clinique.
+    expect(verdictVolume(carnet(56, { a: 10, valeur: 2 }), JOUR)).not.toBeNull()
+  })
+
+  it('un carnet trop troué n’ouvre pas : l’absence de saisie n’est pas l’absence de douleur', () => {
+    // C'est le feu vert le plus dangereux de l'app : autoriser 10 km de course
+    // en plus sur un tendon dont on ne sait rien.
+    const p: PainMap = {}
+    for (let k = 0; k < 56; k += 2) p[shiftDay(JOUR, -k)] = { wake: 1 }
+    expect(verdictVolume(p, JOUR)).toBeNull()
+  })
+
+  it('un carnet vide n’ouvre pas', () => {
+    expect(verdictVolume({}, JOUR)).toBeNull()
+  })
+
+  it('deux mois moins un jour ne suffisent pas', () => {
+    expect(verdictVolume(carnet(41), JOUR)).toBeNull()
+    expect(verdictVolume(carnet(42), JOUR)).not.toBeNull()
   })
 })

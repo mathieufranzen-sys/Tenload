@@ -48,6 +48,17 @@ modification du plan ne doit les casser.**
 4. **Un jour de repos jambes complet par semaine** : le dimanche.
 5. **Deux séances de vélo remplacent les petites séances d'endurance** tant que
    le tendon n'est pas guéri. Elles portent le volume aérobie sans impact.
+   **Sa sortie est écrite** : deux mois de carnet plein sans aucune douleur
+   au-dessus de 2 sur dix, et les vélos redeviennent des courses faciles pour
+   passer au-dessus de 60 km par semaine. Décidé le 4 septembre 2026, c'est le
+   levier qui pèse le plus sur le chrono d'avril après « finir les blocs sans
+   interruption » : un plan à 55 km ne prépare pas les dix derniers kilomètres.
+   `verdictVolume` (`adapt.ts`, 6 tests) le calcule et la règle VOLUME
+   l'annonce. Elle exige **42 relevés sur 56 jours** : un carnet vide affiche
+   zéro douleur, et ce serait le feu vert le plus dangereux de l'app, celui qui
+   ouvre 10 km de course en plus sur un tendon dont on ne sait rien. Deux mois
+   et pas six semaines parce que le tendon s'adapte plus lentement que le
+   muscle, et que c'est ce décalage qui fait la tendinopathie.
 6. **Jamais deux jours de course consécutifs**, sauf la paire lundi-mardi où le
    mardi est une récupération très lente (et qui bascule en vélo si la douleur au
    réveil dépasse 2).

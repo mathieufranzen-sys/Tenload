@@ -474,5 +474,57 @@ export function adapt(
     })
   }
 
+  // Sortie de la contrainte 5 : les deux vélos redeviennent de la course.
+  //
+  // Décision de Mathieu, prise le 4 septembre 2026 : deux mois sans douleur
+  // déclarée et le volume s'ouvre au-dessus de 60 km par semaine, en
+  // remplaçant les vélos par des sorties faciles. C'est le levier qui pèse le
+  // plus sur le chrono d'avril après « finir les blocs sans interruption »,
+  // parce qu'un plan à 55 km ne prépare pas les dix derniers kilomètres.
+  //
+  // Deux mois et pas six semaines : le tendon s'adapte plus lentement que le
+  // muscle, et c'est exactement ce décalage qui fait la tendinopathie. Sur un
+  // arbitrage entre deux durées défendables, on prend la longue.
+  //
+  // La règle exige des SAISIES, pas leur absence. Un carnet vide affiche zéro
+  // douleur et déclencherait le feu vert le plus dangereux de l'app : celui
+  // qui autorise 10 km de course en plus sur un tendon dont on ne sait rien.
+  const fenetre = verdictVolume(pain, now)
+  if (fenetre) {
+    rules.push({
+      id: 'VOLUME',
+      title: `Deux mois sans douleur au-dessus de ${SEUIL_SANS_DOULEUR} sur dix`,
+      action:
+        `${fenetre.releves} relevés sur les 56 derniers jours, aucun au-dessus de ${SEUIL_SANS_DOULEUR}. ` +
+        'Le tendon a tenu la charge : tu peux ouvrir le volume au-dessus de 60 km par semaine en ' +
+        'transformant les deux vélos en courses faciles. Un seul à la fois, et tu gardes le vélo ' +
+        'de récupération du vendredi les deux premières semaines.',
+    })
+  }
+
   return { level, band, idx: detail.idx, detail, rules, fx, n: entries.length, stale: detail.stale, byDate }
+}
+
+/**
+ * « Plus de douleur » ne veut pas dire zéro : la douleur de fond de Mathieu
+ * tourne autour de 0,8 au réveil et 1,3 en fin de journée. Le seuil est donc
+ * 2, au-dessus duquel le tendon parle.
+ */
+export const SEUIL_SANS_DOULEUR = 2
+/** Deux mois. */
+const FENETRE_VOLUME = 56
+/** Trois relevés sur quatre : en dessous, c'est du silence, pas une absence de douleur. */
+const RELEVES_MINIMUM = 42
+
+export function verdictVolume(pain: PainMap, now: string): { releves: number } | null {
+  let releves = 0
+  for (let k = 0; k < FENETRE_VOLUME; k++) {
+    const p = pain[addDays(now, -k)]
+    if (!p) continue
+    const vs = [p.wake, p.effort, p.evening].filter((x): x is number => x != null)
+    if (vs.length === 0) continue
+    if (Math.max(...vs) > SEUIL_SANS_DOULEUR) return null
+    releves++
+  }
+  return releves >= RELEVES_MINIMUM ? { releves } : null
 }
