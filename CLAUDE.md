@@ -75,20 +75,31 @@ volontaires vont dans `plan_overrides`.
 - **Semaine 1** : amorce sans sortie longue. Mathieu a couru 25 km le dimanche
   9 août ; enchaîner une longue le lendemain sur un tendon convalescent était
   exclu. Première vraie sortie longue le 17 août, à 22 km.
-Les **vraies décharges** sont S5, S10, S13, S17, S21, S26, S32 et S34. Elles
-coupent la sortie longue d'environ 30 %, allègent le vélo et l'EF, réduisent la
-séance de qualité sans toucher à son intensité, et passent le renfo bas en
-version décharge : le Stanish reste, sa charge est divisée par deux. C'est le
-traitement de la tendinopathie, on ne l'arrête pas, on le décharge. Chacune fait
-passer le rapport aigu/chronique sous 1, ce qui est la définition d'une semaine
-qui décharge.
+Les **vraies décharges** sont S5, S10, S13, S17, S21, S26, S32 et S34.
+
+**La séance de qualité ne bouge pas en semaine de décharge.** Ni son intensité,
+ni son volume, ni sa place. C'est ce que dit la littérature d'affûtage et c'est
+la décision de Mathieu : on décharge le volume, pas la qualité. Tout ce volume
+sort donc d'ailleurs, et l'ordre est celui-ci : la sortie longue coupe d'environ
+30 %, le vélo perd 20 minutes sur chacune des deux séances, l'EF perd 3 km, et
+le renfo bas passe en version décharge — le Stanish reste, sa charge est divisée
+par deux. C'est le traitement de la tendinopathie, on ne l'arrête pas, on le
+décharge. Chacune fait passer le rapport aigu/chronique sous 1, ce qui est la
+définition d'une semaine qui décharge.
 
 **S9, S14 et S25 ne sont PAS des décharges** même si elles s'allègent : ce sont
 les semaines de course, allégées pour arriver frais sur le 20 km, le 10 km et le
 semi test. La charge de compétition tombe dedans. La vraie décharge est la
 semaine d'après, une fois la course encaissée, d'où S10 et S26. `ALLEGEE_COURSE`
-et `DELOAD` sont donc deux ensembles distincts dans `build_plan.py`, et leur
-union `ALLEGEE` décide de ce qui s'allège dans les deux cas.
+et `DELOAD` sont donc deux ensembles distincts dans `build_plan.py`.
+
+**Une semaine de course coupe sa sortie longue d'au moins 30 %** elle aussi,
+vérifié par `check_plan.py`. S9 portait 24 km le lundi ET les 20 km de Paris le
+dimanche, ce qui en faisait la semaine la plus lourde de son bloc, dans le rôle
+exactement inverse de celui qu'on lui demande. Elles sont à 18 km. La qualité,
+elle, s'allège dans ce cas précis et seulement dans celui-là : le 6 x 1000 m du
+mercredi de S14 devient 5 x 400 m, parce que six kilomètres d'intervalles quatre
+jours avant un 10 km se paient le dimanche.
 
 - **Bloc A** (S1-8) réathlétisation, sortie longue 22 → 28 km.
 - **Bloc B** (S9-16) base aérobie, 24 → 32 km, volume vers 50 km/semaine. Deux

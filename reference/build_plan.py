@@ -54,8 +54,10 @@ SL = {
     1: 0,
     # Bloc A — réathlétisation
     2: 22, 3: 24, 4: 26, 5: 18, 6: 24, 7: 26, 8: 28,
-    # Bloc B — base aérobie
-    9: 24, 10: 22, 11: 28, 12: 30, 13: 22, 14: 28, 15: 30, 16: 32,
+    # Bloc B — base aérobie. S9 et S14 portent une course le dimanche : leur
+    # sortie longue du lundi coupe elle aussi, sans quoi la semaine censée
+    # amener frais sur la ligne pesait plus que celle d'avant.
+    9: 18, 10: 22, 11: 28, 12: 30, 13: 22, 14: 18, 15: 30, 16: 32,
     # Bloc C — développement (S25 = semi-marathon test, il fait office de sortie longue)
     17: 22, 18: 28, 19: 30, 20: 32, 21: 22, 22: 28, 23: 30, 24: 32, 25: 21.1,
     # Bloc D — spécifique marathon
@@ -168,9 +170,9 @@ QUALITE = {
  4:  {"t":"seuil","name":"Seuil 2 x 8 min","dist":9,
       "wu":[(2.5,"ef")],"main":[("2 x 8 min","seuil"),("récup 3 min souple","")],
       "cd":[(2,"recup")],"note":"Ton premier vrai seuil du bloc. À 4:17/km, c'est l'allure que tu tiendrais une heure en compétition."},
- 5:  {"t":"interval","name":"3 x 1000 m","dist":8,
-      "wu":[(2.5,"ef")],"main":[("3 x 1000 m","vo2"),("récup 90 s marche/trot","")],
-      "cd":[(2,"recup")],"note":"Semaine de décharge : on garde l'intensité, on coupe le volume. C'est ce que dit la littérature d'affûtage, et c'est aussi ce qui protège le tendon — le kilomètre d'intervalle lui coûte deux fois celui d'endurance. Récupération active entre les répétitions, jamais à l'arrêt complet : le tendon aime rester chaud."},
+ 5:  {"t":"interval","name":"5 x 1000 m","dist":10,
+      "wu":[(2.5,"ef")],"main":[("5 x 1000 m","vo2"),("récup 90 s marche/trot","")],
+      "cd":[(2,"recup")],"note":"Semaine de décharge, mais la qualité ne bouge pas : c'est le volume qui se coupe, pas l'intensité, et c'est tout le volume AUTOUR qui se coupe. Récupération active entre les répétitions, jamais à l'arrêt complet : le tendon aime rester chaud."},
  6:  {"t":"seuil","name":"Tempo 3 x 2 km","dist":11,
       "wu":[(2.5,"ef")],"main":[("3 x 2 km","seuil"),("récup 2 min","")],
       "cd":[(2,"recup")],"note":"Séance de seuil de référence, à comparer avec ton 2x2km du 19 juillet. Allure régulière du premier au dernier kilomètre."},
@@ -183,9 +185,9 @@ QUALITE = {
  9:  {"t":"interval","name":"8 x 400 m","dist":9,
       "wu":[(2.5,"ef")],"main":[("8 x 400 m","rep"),("récup 90 s","")],
       "cd":[(2,"recup")],"note":"Décharge. Vitesse pure et économie de course : foulée haute, appuis vifs, pas de recherche de volume."},
- 10: {"t":"seuil","name":"2 x 2 km au seuil","dist":9,
-      "wu":[(2.5,"ef")],"main":[("2 x 2 km","seuil"),("récup 3 min","")],
-      "cd":[(2,"recup")],"note":"Vraie décharge : le 20 km de dimanche dernier est la charge de la quinzaine, celle-ci sert à garder le rythme sans rien ajouter. Les blocs de seuil s'allongeront en S12."},
+ 10: {"t":"seuil","name":"2 x 3 km au seuil","dist":11,
+      "wu":[(2.5,"ef")],"main":[("2 x 3 km","seuil"),("récup 3 min","")],
+      "cd":[(2,"recup")],"note":"Décharge du lendemain de course, mais la qualité tient : on allonge les blocs de seuil. C'est elle qui construit un marathon rapide, plus que les intervalles courts."},
  11: {"t":"interval","name":"5 x 1200 m","dist":11,
       "wu":[(2.5,"ef")],"main":[("5 x 1200 m","vo2"),("récup 2 min","")],
       "cd":[(2,"recup")],"note":"Séance exigeante. Si le mollet tire pendant l'échauffement, tu bascules sur du seuil : la VMA n'est pas le facteur limitant de ton marathon."},
@@ -195,9 +197,9 @@ QUALITE = {
  13: {"t":"fartlek","name":"Fartlek 10 x 1 min","dist":9,
       "wu":[(2.5,"ef")],"main":[("10 x (1 min vif + 1 min souple)","au ressenti")],
       "cd":[(2,"recup")],"note":"Décharge : du rythme sans contrainte de chrono."},
- 14: {"t":"interval","name":"6 x 1000 m","dist":11,
-      "wu":[(2.5,"ef")],"main":[("6 x 1000 m","vo2"),("récup 90 s","")],
-      "cd":[(2,"recup")],"note":"Même séance qu'en semaine 5, une répétition de plus. Vise moins de 3 s d'écart entre le premier et le dernier."},
+ 14: {"t":"interval","name":"5 x 400 m","dist":7,
+      "wu":[(2.5,"ef")],"main":[("5 x 400 m","rep"),("récup 90 s","")],
+      "cd":[(2,"recup")],"note":"Quatre jours avant le 10 km : on réveille la vitesse, on ne la travaille pas. Six kilomètres d'intervalles à ce stade se paieraient dimanche. Tu dois finir cette séance en te disant que c'était trop court."},
  15: {"t":"seuil","name":"Tempo continu 30 min","dist":12,
       "wu":[(2.5,"ef")],"main":[("30 min continu","seuil")],
       "cd":[(2,"recup")],"note":"Trente minutes au seuil : la séance la plus directement transférable vers le marathon."},
@@ -233,9 +235,9 @@ QUALITE = {
       "wu":[(2,"ef")],"main":[("21,1 km","seuil")],
       "cd":[(1,"recup")],
       "note":"Le point de bascule du plan. Course officielle ou solo chronométré, peu importe, mais à fond. Objectif : 1 h 30 ou mieux, ce qui valide la trajectoire vers 3 h 15. Sous 1 h 25 avec une douleur restée sous 2, on rouvre le dossier sub-3 pour les dix dernières semaines. Au-delà de 1 h 35, on recale l'objectif sur 3 h 25 sans état d'âme."},
- 26: {"t":"seuil","name":"2 x 4 km à allure marathon","dist":11,
-      "wu":[(2,"ef")],"main":[("2 x 4 km","am"),("récup 3 min","")],
-      "cd":[(1,"recup")],"note":"Décharge d'ouverture du bloc spécifique : le semi de samedi dernier était une compétition, il se paie. L'allure marathon devient l'allure de référence à partir d'ici, mais on l'installe sur deux blocs avant d'en mettre trois."},
+ 26: {"t":"seuil","name":"3 x 4 km à allure marathon","dist":15,
+      "wu":[(2,"ef")],"main":[("3 x 4 km","am"),("récup 3 min","")],
+      "cd":[(1,"recup")],"note":"Ouverture du bloc spécifique. À partir d'ici, l'allure marathon devient l'allure de référence de presque tout ce que tu fais. La semaine décharge autour d'elle : le semi de samedi dernier était une compétition, il se paie ailleurs."},
  27: {"t":"interval","name":"6 x 1000 m","dist":11,
       "wu":[(2.5,"ef")],"main":[("6 x 1000 m","vo2"),("récup 90 s","")],
       "cd":[(2,"recup")],"note":"Entretien VMA. Ça garde la foulée vive quand le volume marathon commence à tout écraser."},
@@ -252,8 +254,8 @@ QUALITE = {
  31: {"t":"seuil","name":"3 x 3 km au seuil","dist":14,
       "wu":[(2.5,"ef")],"main":[("3 x 3 km","seuil"),("récup 3 min","")],
       "cd":[(2,"recup")],"note":"Dernière grosse séance de seuil du plan, sur la semaine du pic à 32 km. Après, tout descend."},
- 32: {"t":"interval","name":"3 x 1000 m","dist":8,
-      "wu":[(2.5,"ef")],"main":[("3 x 1000 m","vo2"),("récup 90 s","")],
+ 32: {"t":"interval","name":"5 x 1000 m","dist":11,
+      "wu":[(2.5,"ef")],"main":[("5 x 1000 m","vo2"),("récup 90 s","")],
       "cd":[(2,"recup")],"note":"Décharge. L'affûtage commence la semaine prochaine, et à partir de maintenant, moins vaut mieux que plus."},
  33: {"t":"seuil","name":"2 x 3 km au seuil + 4 x 200 m","dist":12,
       "wu":[(2.5,"ef")],"main":[("2 x 3 km","seuil"),("récup 3 min",""),("4 x 200 m","rep")],
@@ -349,14 +351,20 @@ def bloc_of(w):
 def velo_min(w, second=False):
     b = bloc_of(w)["id"]
     base = {"A": 55, "B": 60, "C": 60, "D": 55, "E": 40}[b]
-    if w in ALLEGEE: base -= 10
+    # La séance de qualité ne bouge pas en semaine de décharge : l'intensité se
+    # garde, c'est le volume qui se coupe. Tout ce volume doit donc sortir
+    # d'ailleurs, et le vélo est le premier servi — il porte du volume aérobie
+    # dont on peut se passer une semaine sans rien perdre de la filière.
+    if w in DELOAD: base -= 20
+    elif w in ALLEGEE_COURSE: base -= 10
     return base - 15 if second else base
 
 def ef_km(w):
     """3e course : EF courte, le mardi (récup active après la sortie longue)."""
     b = bloc_of(w)["id"]
     base = {"A": 7, "B": 9, "C": 10, "D": 11, "E": 6}[b]
-    if w in ALLEGEE: base -= 1
+    if w in DELOAD: base -= 3
+    elif w in ALLEGEE_COURSE: base -= 1
     if w == 35: return 5
     return base
 

@@ -18,7 +18,7 @@ errs, warns = [], []
 EXCEPTIONS = {
     "S9: mercredi contient inter (8 x 400 m)":
         "qualité avancée au mercredi, la course occupe le samedi et le dimanche",
-    "S14: mercredi contient inter (6 x 1000 m)":
+    "S14: mercredi contient inter (5 x 400 m)":
         "qualité avancée au mercredi, la course occupe le samedi et le dimanche",
     "S10: 1 vélo(s)":
         "le vélo Z2 du jeudi cède la place à la sortie longue déplacée",
@@ -101,6 +101,26 @@ for w in W:
     elif w["n"] not in SEM_COURSE:
         derniere_charge = w
 
+# 1 ter) une semaine de course amène frais.
+#
+# Sa sortie longue n'est pas une étape de la progression et ne doit donc pas
+# suivre la dernière semaine de charge : elle la coupe d'au moins 30 %. S9
+# portait 24 km le lundi ET le 20 km de Paris le dimanche, ce qui en faisait la
+# semaine la plus lourde de son bloc, dans le rôle exactement inverse.
+SEUIL_COURSE = 0.30
+derniere_charge = None
+for w in W:
+    if w["n"] in SEM_COURSE and w["n"] != 35:
+        if derniere_charge and w["sl"] > 0 and derniere_charge["sl"] > 0:
+            baisse = 1 - w["sl"] / derniere_charge["sl"]
+            if baisse < SEUIL_COURSE:
+                errs.append(
+                    f"S{w['n']}: semaine de course, sortie longue "
+                    f"{derniere_charge['sl']:g} -> {w['sl']:g} km = -{baisse*100:.0f} % "
+                    f"seulement (min {SEUIL_COURSE*100:.0f} %, référence S{derniere_charge['n']})")
+    elif not w["deload"]:
+        derniere_charge = w
+
 # 2) mercredi : ni course ni renfo haut
 RUN = {"long", "ef", "inter", "tempo", "test", "race", "course"}
 for w in W:
@@ -173,6 +193,9 @@ print(f"Semaines: {len(W)}  Séances: {sum(len(w['sessions']) for w in W)}")
 print(f"Sortie longue: {[w['sl'] for w in W]}")
 print("Décharges: " + ", ".join(
     f"S{w['n']} {charge[w['n']]:.0f} pts / SL {w['sl']:g} km" for w in W if w["deload"]))
+print("Semaines de course: " + ", ".join(
+    f"S{n} {charge[n]:.0f} pts / SL {next(w['sl'] for w in W if w['n']==n):g} km"
+    for n in sorted(SEM_COURSE)))
 print(f"Volume course/sem approx: bloc A {W[0]['sl']+W[0]['efKm']}km + qualité")
 print()
 
