@@ -7,7 +7,7 @@
  * corps, ce qui se règle. Six lignes à plat se lisaient comme un menu système,
  * sans hiérarchie.
  */
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { adapt } from '../lib/adapt'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { FeedbackRow } from '../lib/buildPain'
@@ -22,8 +22,17 @@ import { HeartRateZones } from './profile/HeartRateZones'
 import { PlanStructure } from './profile/PlanStructure'
 import { PaceSettings } from './profile/PaceSettings'
 import { Reminders } from './profile/Reminders'
+import { ANoter } from './profile/ANoter'
+import { compterEnRetard, type SeanceANoter } from '../lib/aNoter'
 
-type SectionKey = 'contraintes' | 'indice' | 'coeur' | 'structure' | 'allure' | 'rappels'
+export type SectionKey =
+  | 'contraintes'
+  | 'indice'
+  | 'coeur'
+  | 'structure'
+  | 'allure'
+  | 'rappels'
+  | 'anoter'
 
 type IconeRubrique = 'alert' | 'clip' | 'chart' | 'heart' | 'gauge' | 'run' | 'sun'
 
@@ -45,6 +54,7 @@ const GROUPES: Array<{ titre: string; rubriques: Rubrique[] }> = [
   {
     titre: 'Ton corps',
     rubriques: [
+      { key: 'anoter', titre: 'Séances à noter', description: 'Les journées que l’indice ne mesure pas', icone: 'clip' },
       { key: 'indice', titre: 'Indice de charge du tendon', description: 'Les bandes et le détail du calcul', icone: 'chart' },
       { key: 'coeur', titre: 'Fréquence cardiaque', description: 'Recalibre ta FC max et tes zones', icone: 'heart' },
     ],
@@ -83,12 +93,37 @@ interface Props {
   onSaveProfil?: (patch: ProfilPatch) => void
   /** Absent en mode instantanés : il n'y a alors pas de session à fermer. */
   onDeconnexion?: () => void
+  /** Séances en attente de ressenti, calculées une fois dans `App`. */
+  aNoter: SeanceANoter[]
+  /** Absent en mode instantanés : les séances ne s'ouvrent alors pas. */
+  onOuvrirSeance?: (x: SeanceANoter) => void
+  /**
+   * Sous-page ouverte, pilotée depuis `App` : l'écran Suivi doit pouvoir
+   * envoyer droit sur « Séances à noter », et un état local ici l'en
+   * empêchait.
+   */
+  section: SectionKey | null
+  onSection: (s: SectionKey | null) => void
 }
 
-export function Profile({ userId, load, pain, feedback, marathonPace, test3k, hrMax, onSaveProfil, onDeconnexion }: Props) {
-  const [section, setSection] = useState<SectionKey | null>(null)
+export function Profile({
+  userId,
+  load,
+  pain,
+  feedback,
+  marathonPace,
+  test3k,
+  hrMax,
+  onSaveProfil,
+  onDeconnexion,
+  aNoter,
+  onOuvrirSeance,
+  section,
+  onSection,
+}: Props) {
   const now = todayISO()
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
+  const enRetard = compterEnRetard(aNoter)
   const active = TOUTES.find((s) => s.key === section)
 
   return (
@@ -120,7 +155,7 @@ export function Profile({ userId, load, pain, feedback, marathonPace, test3k, hr
               {groupe.rubriques.map((r) => (
                 <button
                   key={r.key}
-                  onClick={() => setSection(r.key)}
+                  onClick={() => onSection(r.key)}
                   className="glass"
                   style={{
                     display: 'flex',
@@ -153,6 +188,24 @@ export function Profile({ userId, load, pain, feedback, marathonPace, test3k, hr
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <b style={{ display: 'block', fontSize: 15, fontWeight: 650, letterSpacing: '-.25px' }}>
                       {r.titre}
+                      {r.key === 'anoter' && enRetard > 0 && (
+                        <span
+                          style={{
+                            marginLeft: 7,
+                            fontSize: 10.5,
+                            fontWeight: 800,
+                            letterSpacing: '.4px',
+                            padding: '2.5px 7px',
+                            borderRadius: 'var(--pill)',
+                            background: 'rgba(250,178,25,.18)',
+                            border: '1px solid rgba(250,178,25,.28)',
+                            color: '#FFD166',
+                            verticalAlign: 'middle',
+                          }}
+                        >
+                          {enRetard}
+                        </span>
+                      )}
                     </b>
                     <span style={{ color: 'var(--sur-ink-2)', fontSize: 12.5, fontWeight: 500 }}>
                       {r.description}
@@ -190,13 +243,14 @@ export function Profile({ userId, load, pain, feedback, marathonPace, test3k, hr
         </div>
       </div>
 
-      <SubPage ouvert={section != null} titre={active?.titre ?? ''} onBack={() => setSection(null)}>
+      <SubPage ouvert={section != null} titre={active?.titre ?? ''} onBack={() => onSection(null)}>
         {section === 'contraintes' && <Constraints />}
         {section === 'indice' && <TendonIndexInfo idx={A.detail.idx} band={A.band} />}
         {section === 'allure' && <PaceSettings marathonPace={marathonPace} test3k={test3k} onSave={onSaveProfil} />}
         {section === 'coeur' && <HeartRateZones hrMax={hrMax} onSave={onSaveProfil} />}
         {section === 'structure' && <PlanStructure />}
         {section === 'rappels' && <Reminders userId={userId} />}
+        {section === 'anoter' && <ANoter seances={aNoter} onOuvrir={onOuvrirSeance} />}
       </SubPage>
     </>
   )

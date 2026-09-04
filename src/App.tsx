@@ -8,6 +8,7 @@ import notionSeed from './data/notion-seed.json'
 import stravaSeed from './data/strava-seed.json'
 import type { Plan } from './data/types'
 import { buildLoad, buildLoadParDiscipline, joursAttestes, type ActivityRow } from './lib/load'
+import { compterEnRetard, seancesANoter } from './lib/aNoter'
 import { HR_MAX } from './lib/paces'
 import { ajusterForme } from './lib/forme'
 import { buildPain, type DailyLogRow, type FeedbackRow } from './lib/buildPain'
@@ -23,7 +24,7 @@ import { Today } from './screens/Today'
 import { Plan as ProgrammeScreen } from './screens/Plan'
 import { Track } from './screens/Track'
 import { Paces } from './screens/Paces'
-import { Profile } from './screens/Profile'
+import { Profile, type SectionKey } from './screens/Profile'
 import { BottomNav, type Onglet } from './components/BottomNav'
 import { SessionSheet } from './components/SessionSheet'
 import {
@@ -346,6 +347,24 @@ function Coquille({
   )
 
   const [onglet, setOnglet] = useState<Onglet>('today')
+  /** Sous-page du Profil, pilotée ici : Suivi doit pouvoir y envoyer droit. */
+  const [sectionProfil, setSectionProfil] = useState<SectionKey | null>(null)
+
+  // Les séances sans ressenti. Elles sont la cause directe de `chargeInconnue`
+  // et du plafond de confiance : les lister, c'est donner le chemin pour les
+  // faire disparaître.
+  const aNoter = useMemo(
+    () =>
+      seancesANoter({
+        weeks: plan.weeks,
+        notees: completed,
+        now,
+        ecarts,
+        joursAvecActivite: new Set(data.activities.map((a) => a.day)),
+      }),
+    [completed, now, ecarts, data.activities],
+  )
+  const notesEnRetard = compterEnRetard(aNoter)
   const [seance, setSeance] = useState<SeanceOuverte | null>(null)
   /** Séance à mettre en avant dans la vue calendrier, après « Déplacer ». */
   const [focusSeance, setFocusSeance] = useState<string | null>(null)
@@ -427,6 +446,11 @@ function Coquille({
           pain={data.pain}
           activities={data.activities}
           feedback={feedback}
+          notesEnRetard={notesEnRetard}
+          onVoirANoter={() => {
+            setSectionProfil('anoter')
+            setOnglet('profile')
+          }}
           onOuvrirProfil={() => setOnglet('profile')}
         />
       )}
@@ -454,6 +478,13 @@ function Coquille({
           hrMax={hrMax}
           onSaveProfil={onSaveProfil}
           onDeconnexion={onDeconnexion}
+          aNoter={aNoter}
+          section={sectionProfil}
+          onSection={setSectionProfil}
+          onOuvrirSeance={
+            onSaveFeedback &&
+            ((x) => setSeance({ semaineN: x.semaineOrigine, jourOrigine: x.jourOrigine, slot: x.slot }))
+          }
         />
       )}
 

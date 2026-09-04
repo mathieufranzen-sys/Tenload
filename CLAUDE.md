@@ -599,6 +599,29 @@ semaine légère, c'est-à-dire dans le sens rassurant, qui est le seul dangereu
 - Le chiffre, lui, ne bouge pas : c'est le plafond de confiance qui fait le
   travail numérique. On ne dégrade toujours pas sur une absence d'information.
 
+### Les séances à noter
+
+`src/lib/aNoter.ts` (+ 9 tests), page `Profil → Séances à noter`, raccourci en
+haut de l'écran Suivi dès qu'il y en a.
+
+Le décompte « 3 en retard » du KPI de Suivi disait qu'il manquait quelque chose
+sans dire quoi : il fallait remonter le calendrier à la main. Or ces trous ne
+sont pas un détail de comptage, ce sont eux qui plafonnent la confiance de
+l'indice et qui font passer `chargeInconnue` à vrai.
+
+- **La liste et le décompte viennent de la même fonction.** `seancesANoter` est
+  calculée une fois dans `App` et descend dans les deux écrans : un badge qui
+  ne correspond pas à sa liste est pire que pas de badge.
+- **Le repos et les séances sautées n'y sont pas** : il n'y a rien à noter, et
+  une tâche qui ne peut pas se terminer n'est pas une tâche.
+- **La séance du jour y figure mais n'est pas « en retard »** : une séance du
+  soir n'est pas en retard à midi. `enRetard` sépare les deux, et c'est lui que
+  compte le badge.
+- Attention, **`joursAttestes` exige TOUTES les séances du jour**. Noter la
+  course sans noter le renfo ou l'escalade laisse la journée non attestée, donc
+  la confiance plafonnée. C'est la raison la plus fréquente d'un
+  « historique de charge encore court » sur un carnet qu'on croit complet.
+
 ### Le mot du coach
 
 `src/lib/coach.ts` produit l'encouragement du bas de l'écran Aujourd'hui.

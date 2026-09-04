@@ -14,7 +14,7 @@ import type { SessionType } from '../data/types'
 import { addDays, formatDay, formatNumber, mondayOf, today as todayISO } from '../lib/dates'
 import { adapt } from '../lib/adapt'
 import { familleDe, familleDuSport } from '../lib/insights'
-import { slotsParJour } from '../lib/overrides'
+import { Icon } from '../components/Icon'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { ActivityRow, LoadParDiscipline } from '../lib/load'
 import type { FeedbackRow } from '../lib/buildPain'
@@ -35,6 +35,14 @@ interface Props {
   pain: PainMap
   activities: ActivityRow[]
   feedback: FeedbackRow[]
+  /**
+   * Séances des jours révolus qui attendent encore leur ressenti. Calculé dans
+   * `App` par `seancesANoter`, pour que le compte affiché ici et la liste de
+   * la page « Séances à noter » ne puissent pas diverger.
+   */
+  notesEnRetard: number
+  /** Ouvre la liste de ces séances. Absent en mode instantanés. */
+  onVoirANoter?: () => void
   onOuvrirProfil: () => void
 }
 
@@ -57,7 +65,16 @@ function santeDuTendon(reveil: number | null, soir: number | null): { label: str
   return { label: 'Mauvaise', couleur: 'var(--critical)' }
 }
 
-export function Track({ load, loadParDiscipline, pain, activities, feedback, onOuvrirProfil }: Props) {
+export function Track({
+  load,
+  loadParDiscipline,
+  pain,
+  activities,
+  feedback,
+  notesEnRetard,
+  onVoirANoter,
+  onOuvrirProfil,
+}: Props) {
   const now = todayISO()
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
 
@@ -115,24 +132,6 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
 
   const totalAttendu = plan.weeks.reduce((acc, w) => acc + w.sessions.filter((s) => s.feedback).length, 0)
 
-  /**
-   * Séances déjà passées qui attendent encore leur note. Le jour même en est
-   * exclu : une séance du soir n'est pas en retard à midi. C'est ce décompte,
-   * pas le total, qui appelle une action.
-   */
-  const notesEnRetard = useMemo(() => {
-    const notees = new Set(feedback.map((f) => `${f.week}-${f.day_index}-${f.slot}`))
-    let n = 0
-    for (const w of plan.weeks) {
-      const slots = slotsParJour(w.sessions)
-      w.sessions.forEach((s, i) => {
-        if (!s.feedback) return
-        if (addDays(w.monday, s.day) >= now) return
-        if (!notees.has(`${w.n}-${s.day}-${slots[i]}`)) n++
-      })
-    }
-    return n
-  }, [feedback, now])
 
   const idxRows = useMemo(
     () =>
@@ -304,6 +303,46 @@ export function Track({ load, loadParDiscipline, pain, activities, feedback, onO
             tag={notesEnRetard > 0 ? `${notesEnRetard} en retard` : undefined}
           />
         </div>
+
+        {/* Le décompte ci-dessus disait qu'il manquait quelque chose sans dire
+            quoi ni où aller. Ces trous ne sont pas un détail de comptage : ce
+            sont eux qui plafonnent la confiance de l'indice et qui font tomber
+            `chargeInconnue`, donc lire dans le sens rassurant. */}
+        {notesEnRetard > 0 && onVoirANoter && (
+          <button
+            onClick={onVoirANoter}
+            className="glass"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 11,
+              width: '100%',
+              textAlign: 'left',
+              color: 'inherit',
+              borderRadius: 18,
+              padding: '13px 14px',
+              marginBottom: 16,
+              cursor: 'pointer',
+              background: 'rgba(250,178,25,.10)',
+              border: '1px solid rgba(250,178,25,.24)',
+            }}
+          >
+            <Icon name="alert" size={19} style={{ color: '#FFD166', flex: 'none' }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <b style={{ display: 'block', fontSize: 14.5, fontWeight: 650, letterSpacing: '-.25px' }}>
+                {notesEnRetard} séance{notesEnRetard > 1 ? 's' : ''} à noter
+              </b>
+              <span style={{ color: 'var(--sur-ink-2)', fontSize: 12.5, fontWeight: 500 }}>
+                Tant qu'elles manquent, l'indice suppose au lieu de mesurer
+              </span>
+            </div>
+            <Icon
+              name="chevronRight"
+              size={18}
+              style={{ color: 'var(--sur-ink-3)', flex: 'none', strokeWidth: 1.7 }}
+            />
+          </button>
+        )}
 
         <Viz
           titre="Indice de charge du tendon"
