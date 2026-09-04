@@ -601,8 +601,12 @@ semaine légère, c'est-à-dire dans le sens rassurant, qui est le seul dangereu
 
 ### Les séances à noter
 
-`src/lib/aNoter.ts` (+ 9 tests), page `Profil → Séances à noter`, raccourci en
-haut de l'écran Suivi dès qu'il y en a.
+`src/lib/aNoter.ts` (+ 9 tests), page `Profil → Séances à noter`. **C'est le
+KPI « Séances notées » de Suivi qui y mène**, quand il y a du retard : un
+bandeau à côté aurait dit deux fois la même chose, et le chiffre qui pose le
+problème est le bon endroit d'où partir le résoudre. L'étiquette « 3 en
+retard » est sur la même ligne que le « 12 / 310 » : elle le qualifie, elle ne
+s'ajoute pas à lui.
 
 Le décompte « 3 en retard » du KPI de Suivi disait qu'il manquait quelque chose
 sans dire quoi : il fallait remonter le calendrier à la main. Or ces trous ne

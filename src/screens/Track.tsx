@@ -299,50 +299,11 @@ export function Track({
             label="Séances notées"
             valeur={`${feedback.length}`}
             suffix={` / ${totalAttendu}`}
-            detail="depuis le 10 août"
+            detail={notesEnRetard > 0 ? 'Aller les noter' : 'depuis le 10 août'}
             tag={notesEnRetard > 0 ? `${notesEnRetard} en retard` : undefined}
+            onClick={notesEnRetard > 0 ? onVoirANoter : undefined}
           />
         </div>
-
-        {/* Le décompte ci-dessus disait qu'il manquait quelque chose sans dire
-            quoi ni où aller. Ces trous ne sont pas un détail de comptage : ce
-            sont eux qui plafonnent la confiance de l'indice et qui font tomber
-            `chargeInconnue`, donc lire dans le sens rassurant. */}
-        {notesEnRetard > 0 && onVoirANoter && (
-          <button
-            onClick={onVoirANoter}
-            className="glass"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 11,
-              width: '100%',
-              textAlign: 'left',
-              color: 'inherit',
-              borderRadius: 18,
-              padding: '13px 14px',
-              marginBottom: 16,
-              cursor: 'pointer',
-              background: 'rgba(250,178,25,.10)',
-              border: '1px solid rgba(250,178,25,.24)',
-            }}
-          >
-            <Icon name="alert" size={19} style={{ color: '#FFD166', flex: 'none' }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <b style={{ display: 'block', fontSize: 14.5, fontWeight: 650, letterSpacing: '-.25px' }}>
-                {notesEnRetard} séance{notesEnRetard > 1 ? 's' : ''} à noter
-              </b>
-              <span style={{ color: 'var(--sur-ink-2)', fontSize: 12.5, fontWeight: 500 }}>
-                Tant qu'elles manquent, l'indice suppose au lieu de mesurer
-              </span>
-            </div>
-            <Icon
-              name="chevronRight"
-              size={18}
-              style={{ color: 'var(--sur-ink-3)', flex: 'none', strokeWidth: 1.7 }}
-            />
-          </button>
-        )}
 
         <Viz
           titre="Indice de charge du tendon"
@@ -435,17 +396,39 @@ function Kpi({
   detail,
   couleur,
   tag,
+  onClick,
 }: {
   label: string
   valeur: string
   suffix: string
   detail: string
   couleur?: string
-  /** Étiquette d'alerte, affichée sous le détail quand il y a lieu d'agir. */
+  /**
+   * Étiquette d'alerte, sur la MÊME ligne que le chiffre : elle le qualifie,
+   * l'empiler dessous en faisait une information de plus alors que c'en est
+   * la nuance. « 12 / 310 » et « 3 en retard » se lisent ensemble ou pas.
+   */
   tag?: string
+  /** Rend la tuile cliquable quand elle mène quelque part. */
+  onClick?: () => void
 }) {
+  const Balise = onClick ? 'button' : 'div'
   return (
-    <div className="glass" style={{ borderRadius: 17, padding: '11px 12px 10px' }}>
+    <Balise
+      className="glass"
+      onClick={onClick}
+      style={{
+        borderRadius: 17,
+        padding: '11px 12px 10px',
+        width: '100%',
+        textAlign: 'left',
+        color: 'inherit',
+        cursor: onClick ? 'pointer' : 'default',
+        // Le chevron s'aligne sur le libellé, en haut : les tuiles n'ont pas
+        // toutes la même hauteur.
+        display: 'block',
+      }}
+    >
       <div
         style={{
           fontSize: 8.5,
@@ -459,40 +442,59 @@ function Kpi({
       </div>
       <div
         style={{
-          fontSize: 19,
-          fontWeight: 650,
-          letterSpacing: '-.5px',
+          display: 'flex',
+          alignItems: 'baseline',
+          flexWrap: 'wrap',
+          gap: '4px 7px',
           marginTop: 5,
-          lineHeight: 1,
-          color: couleur,
-          fontVariantNumeric: 'tabular-nums',
         }}
       >
-        {valeur}
-        <small style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--sur-ink-2)' }}>{suffix}</small>
-      </div>
-      <div style={{ fontSize: 9, fontWeight: 500, marginTop: 5, color: 'var(--sur-ink-3)', lineHeight: 1.35 }}>
-        {detail}
-      </div>
-      {tag && (
         <span
           style={{
-            display: 'inline-block',
-            marginTop: 6,
-            padding: '2.5px 7px',
-            borderRadius: 'var(--pill)',
-            background: 'rgba(250,178,25,.18)',
-            border: '1px solid rgba(250,178,25,.28)',
-            color: '#FFD166',
-            fontSize: 9,
-            fontWeight: 700,
-            whiteSpace: 'nowrap',
+            fontSize: 19,
+            fontWeight: 650,
+            letterSpacing: '-.5px',
+            lineHeight: 1,
+            color: couleur,
+            fontVariantNumeric: 'tabular-nums',
           }}
         >
-          {tag}
+          {valeur}
+          <small style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--sur-ink-2)' }}>{suffix}</small>
         </span>
-      )}
-    </div>
+        {tag && (
+          <span
+            style={{
+              padding: '2.5px 7px',
+              borderRadius: 'var(--pill)',
+              background: 'rgba(250,178,25,.18)',
+              border: '1px solid rgba(250,178,25,.28)',
+              color: '#FFD166',
+              fontSize: 9,
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {tag}
+          </span>
+        )}
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          fontSize: 9,
+          fontWeight: 500,
+          marginTop: 5,
+          color: 'var(--sur-ink-3)',
+          lineHeight: 1.35,
+        }}
+      >
+        <span style={{ flex: 1, minWidth: 0 }}>{detail}</span>
+        {onClick && <Icon name="chevronRight" size={12} style={{ flex: 'none', strokeWidth: 2 }} />}
+      </div>
+    </Balise>
   )
 }
 
