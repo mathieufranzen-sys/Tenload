@@ -135,7 +135,9 @@ describe('motDuCoach — la séance du jour', () => {
     type: 'ef',
     typePlan: 'ef',
     titre: 'Endurance facile 7 km',
-    ecart: false,
+    dist: 7,
+    distPlan: 7,
+    ecart: null,
     adaptee: false,
     faite: false,
     saute: false,
@@ -175,7 +177,7 @@ describe('motDuCoach — la séance du jour', () => {
       byDate: {},
       now: NOW,
       seancesTotal: TOTAL,
-      duJour: [seance({ type: 'velo', typePlan: 'tempo', ecart: true })],
+      duJour: [seance({ type: 'velo', typePlan: 'tempo', dist: null, ecart: 'remplacement' })],
       indice: { idx: 56, painInconnue: false, chargeInconnue: false },
     })
     expect(m.ton).toBe('bravo')
@@ -188,7 +190,7 @@ describe('motDuCoach — la séance du jour', () => {
       byDate: {},
       now: NOW,
       seancesTotal: TOTAL,
-      duJour: [seance({ type: 'tempo', typePlan: 'tempo', ecart: true })],
+      duJour: [seance({ type: 'tempo', typePlan: 'tempo', ecart: 'deplacement' })],
       indice: calme,
       alertes: ['Séance de qualité accolée à la sortie longue.'],
     })
@@ -227,5 +229,88 @@ describe('motDuCoach — la séance du jour', () => {
     const m = motDuCoach({ pain, byDate: {}, now: NOW, seancesTotal: TOTAL })
     expect(m.ton).toBe('bravo')
     expect(m.texte).not.toContain("Tiens l'allure")
+  })
+})
+
+describe('motDuCoach — un changement à indice bas doit quand même parler', () => {
+  const seance = (p: Partial<SeanceDuJour> = {}): SeanceDuJour => ({
+    type: 'ef',
+    typePlan: 'ef',
+    titre: 'Endurance facile 7 km',
+    dist: 7,
+    distPlan: 7,
+    ecart: null,
+    adaptee: false,
+    faite: false,
+    saute: false,
+    ...p,
+  })
+  // 27 sur 100 : le vert. C'est là que les règles se taisaient toutes, parce
+  // qu'elles étaient toutes conditionnées à un indice haut ou à une contrainte
+  // cassée. Or c'est exactement le cas courant.
+  const calme = { idx: 27, painInconnue: false, chargeInconnue: false }
+  const mot = (duJour: SeanceDuJour[], alertes?: string[]) =>
+    motDuCoach({ pain: {}, byDate: {}, now: NOW, seancesTotal: TOTAL, duJour, indice: calme, alertes })
+
+  it('parle d’une séance sautée', () => {
+    const m = mot([seance({ typePlan: 'tempo', type: 'tempo', ecart: 'saut', saute: true })])
+    expect(m.texte).toContain('sauté')
+    expect(m.texte).toContain('séance de qualité')
+  })
+
+  it('parle d’un remplacement vers plus doux, sans féliciter à tort', () => {
+    // À 27, l'indice ne demandait rien : c'est son ressenti qui a tranché, et
+    // le dire « bon réflexe » laisserait croire que le modèle l'avait vu venir.
+    const m = mot([seance({ typePlan: 'long', type: 'velo', dist: null, distPlan: 26, ecart: 'remplacement' })])
+    expect(m.ton).toBe('neutre')
+    expect(m.texte).toContain('26 km')
+    expect(m.texte).toContain('du vélo')
+    expect(m.texte).not.toContain('Bon réflexe')
+  })
+
+  it('félicite le même remplacement quand l’indice, lui, était haut', () => {
+    const m = motDuCoach({
+      pain: {},
+      byDate: {},
+      now: NOW,
+      seancesTotal: TOTAL,
+      duJour: [seance({ typePlan: 'long', type: 'velo', dist: null, ecart: 'remplacement' })],
+      indice: { idx: 56, painInconnue: false, chargeInconnue: false },
+    })
+    expect(m.ton).toBe('bravo')
+    expect(m.texte).toContain('56')
+  })
+
+  it('avertit quand un vélo devient de la course', () => {
+    const m = mot([seance({ typePlan: 'velo', type: 'ef', dist: 8, distPlan: null, ecart: 'remplacement' })])
+    expect(m.ton).toBe('vigilance')
+    expect(m.texte).toContain('8 km')
+  })
+
+  it('parle d’une séance déplacée jusqu’ici', () => {
+    const m = mot([seance({ typePlan: 'long', type: 'long', dist: 26, distPlan: 26, ecart: 'deplacement' })])
+    expect(m.texte).toContain('sortie longue de 26 km')
+    expect(m.texte).toContain("arrivée sur aujourd'hui")
+  })
+
+  it('relève une distance réelle supérieure au plan', () => {
+    const m = mot([seance({ dist: 12, distPlan: 7, ecart: 'donnee' })])
+    expect(m.ton).toBe('vigilance')
+    expect(m.texte).toContain('12 km')
+    expect(m.texte).toContain('7 km')
+  })
+
+  it('la contrainte cassée passe avant le reste', () => {
+    const m = mot(
+      [seance({ typePlan: 'tempo', type: 'tempo', ecart: 'deplacement' })],
+      ['Séance de qualité accolée à la sortie longue.'],
+    )
+    expect(m.ton).toBe('vigilance')
+    expect(m.texte).toContain('accolée à la sortie longue')
+  })
+
+  it('sans aucun écart, il retombe sur les règles de fond', () => {
+    const m = mot([seance()])
+    expect(m.texte).toContain('Note ta douleur au réveil')
   })
 })

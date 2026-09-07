@@ -633,14 +633,23 @@ l'indice et qui font passer `chargeInconnue` à vrai.
 
 **Il parle d'abord de la séance du jour.** `motSurLaSeance` passe avant toutes
 les autres règles : le jour où l'indice retire la course, féliciter pour
-l'excentrique de la quinzaine n'est pas un coach, c'est un bandeau. Cinq cas,
-et le silence sinon : l'indice a neutralisé la course, il a raccourci la
-sortie longue, un écart de Mathieu a cassé une contrainte de la semaine, il a
-lui-même allégé sur un indice haut, ou la charge n'est plus attestée. Le
-chiffre cité est toujours l'indice réellement calculé et le fait cité est
-toujours un changement réellement appliqué. `SeancePlanifiee.typePlan` existe
-pour ça : dire « ta sortie longue est devenue du vélo » plutôt que « tu as du
-vélo », qui n'apprend rien. Chaque
+l'excentrique de la quinzaine n'est pas un coach, c'est un bandeau.
+
+Huit cas, dans cet ordre : ce que l'INDICE a imposé (course neutralisée,
+sortie longue raccourcie), puis ce que MATHIEU a décidé (contrainte cassée,
+séance sautée, remplacée, déplacée, distance corrigée), puis la charge non
+attestée. **Les quatre règles du milieu ne doivent jamais dépendre d'un indice
+haut** : les cinq premières versions l'étaient toutes, et à 27 sur 100,
+changer une séance ne produisait donc aucun mot — c'est-à-dire précisément
+dans le cas courant. Le seul endroit où l'indice décide encore, c'est le TON :
+un allègement volontaire est un « bon réflexe » au-dessus de 50 et une simple
+constatation en dessous, parce qu'en dessous le modèle ne l'avait pas vu venir
+et le féliciter laisserait croire l'inverse.
+
+Le chiffre cité est toujours l'indice réellement calculé et le fait cité est
+toujours un changement réellement appliqué. `SeancePlanifiee.typePlan` et
+`SeanceDuJour.distPlan` existent pour ça : dire « ta sortie longue de 26 km
+est devenue du vélo » plutôt que « tu as du vélo », qui n'apprend rien. Chaque
 message exige un minimum de saisies (quatre raideurs matinales de chaque côté
 de la fenêtre, par exemple) et se tait sinon. Un encouragement inventé se
 repère en une semaine et discrédite l'indice avec lui. L'ordre des règles est

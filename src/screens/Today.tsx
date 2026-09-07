@@ -25,7 +25,7 @@ import { motDuCoach, type SeanceDuJour } from '../lib/coach'
 import { bandOf, type LoadMap, type PainMap } from '../lib/tendonIndex'
 import type { ActivityRow } from '../lib/load'
 import type { FeedbackRow } from '../lib/buildPain'
-import { verifierContraintes, type EcartRow } from '../lib/overrides'
+import { slotsParJour, verifierContraintes, type EcartRow } from '../lib/overrides'
 import { SessionCard } from '../components/SessionCard'
 import { AlertBox } from '../components/AlertBox'
 import { JournalDuJour } from '../components/JournalDuJour'
@@ -166,6 +166,22 @@ export function Today({
   )
 
   /**
+   * La distance que le PLAN fixait, avant tout écart et toute adaptation.
+   * C'est elle qui permet de dire « 22 km au lieu de 26 » plutôt que « 22 km »,
+   * qui n'apprend rien.
+   */
+  const distDuPlan = useCallback(
+    (semaineN: number, jourOrigine: number, slot: number): number | null => {
+      const w = plan.weeks.find((x) => x.n === semaineN)
+      if (!w) return null
+      const slots = slotsParJour(w.sessions)
+      const i = w.sessions.findIndex((s, k) => s.day === jourOrigine && slots[k] === slot)
+      return i < 0 ? null : (w.sessions[i].dist ?? null)
+    },
+    [],
+  )
+
+  /**
    * Ce que le coach doit savoir de la journée. Il parlait jusqu'ici de la
    * quinzaine écoulée et de rien d'autre : le jour où l'indice retirait la
    * course, il félicitait pour l'excentrique. Un mot qui ignore ce qui est
@@ -173,18 +189,37 @@ export function Today({
    */
   const duJourPourCoach = useMemo<SeanceDuJour[]>(
     () =>
-      duJour.map((x) => ({
-        type: x.s.type,
-        typePlan: x.typePlan,
-        titre: x.s.title,
-        ecart: Boolean(x.s.ecart),
-        adaptee: Boolean(x.s.adapted),
-        faite: Boolean(feedbackDe(x)),
-        saute: Boolean(x.s.saute),
-      })),
+      duJour.map((x) => {
+        const patch = x.ecart?.patch
+        // La nature de l'écart, dans l'ordre où elle compte pour le coach :
+        // ne pas faire la séance passe avant en changer la discipline, qui
+        // passe avant la déplacer, qui passe avant corriger ses chiffres.
+        const nature: SeanceDuJour['ecart'] = !patch
+          ? null
+          : patch.skipped
+            ? 'saut'
+            : patch.type
+              ? 'remplacement'
+              : patch.day != null || patch.semaines
+                ? 'deplacement'
+                : patch.dist != null || patch.durMin != null
+                  ? 'donnee'
+                  : null
+        return {
+          type: x.s.type,
+          typePlan: x.typePlan,
+          titre: x.s.title,
+          dist: x.s.dist ?? null,
+          distPlan: distDuPlan(x.semaineOrigine, x.jourOrigine, x.slot),
+          ecart: nature,
+          adaptee: Boolean(x.s.adapted),
+          faite: Boolean(feedbackDe(x)),
+          saute: Boolean(x.s.saute),
+        }
+      }),
     // `feedbackDe` se recrée à chaque rendu : c'est `feedback` qui décide.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [duJour, feedback],
+    [duJour, feedback, distDuPlan],
   )
 
   /** Les contraintes que la semaine RÉELLEMENT formée ne respecte pas. */

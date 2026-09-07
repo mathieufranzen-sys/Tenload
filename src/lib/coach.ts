@@ -67,9 +67,12 @@ export interface SeanceDuJour {
   type: SessionType
   typePlan: SessionType
   titre: string
-  /** Mathieu a changé cette séance lui-même. */
-  ecart: boolean
-  /** L'indice de charge l'a changée. */
+  /** Distance après écart, et celle que le plan fixait. En kilomètres. */
+  dist: number | null
+  distPlan: number | null
+  /** Nature de l'écart volontaire de Mathieu, s'il y en a un. */
+  ecart: 'saut' | 'remplacement' | 'deplacement' | 'donnee' | null
+  /** L'indice de charge a changé la séance. */
   adaptee: boolean
   faite: boolean
   saute: boolean
@@ -91,6 +94,8 @@ export interface EntreeCoach {
 
 const COURSE: SessionType[] = ['ef', 'long', 'tempo', 'inter', 'test', 'course', 'race']
 const PLUS_DOUX: SessionType[] = ['velo', 'marche', 'repos']
+/** Au-delà, l'indice commence à retirer des choses de lui-même. */
+const INDICE_VIGILANCE = 50
 
 /** Comment nommer une séance sans répéter son titre entier. */
 function nomCourt(t: SessionType): string {
@@ -106,27 +111,49 @@ function nomCourt(t: SessionType): string {
   return 'séance'
 }
 
+/** « du vélo », « de la marche », « ta séance de qualité ». */
+const avecArticle = (t: SessionType): string => {
+  const n = nomCourt(t)
+  if (t === 'velo') return 'du vélo'
+  if (t === 'repos') return 'du repos'
+  if (t === 'marche') return 'de la marche'
+  return `de l'${n}`.replace("de l'sortie", 'de la sortie').replace("de l'séance", 'de la séance')
+}
+
+/** « ta sortie longue de 26 km », quand le plan fixait une distance. */
+const nomAvecKm = (t: SessionType, km: number | null): string =>
+  km != null ? `${nomCourt(t)} de ${formatNumber(km)} km` : nomCourt(t)
+
 /**
  * Ce que le coach dit de la séance du jour, quand il a quelque chose à en
  * dire. Vient AVANT tout le reste : un encouragement sur la raideur de la
- * quinzaine ne vaut rien le jour où le plan vient de retirer la course.
+ * quinzaine ne vaut rien le jour où le plan vient de retirer la course, ni le
+ * jour où Mathieu a lui-même remplacé sa sortie longue.
  *
- * Même règle de silence qu'ailleurs. Le chiffre cité est toujours l'indice
- * réellement calculé, et le fait cité est toujours un changement réellement
- * appliqué — jamais une recommandation inventée pour meubler.
+ * Les règles couvrent d'abord ce que l'INDICE a imposé, puis ce que MATHIEU a
+ * décidé. Elles se déclenchaient au départ sur cinq cas trop étroits, tous
+ * conditionnés à un indice haut ou à une contrainte cassée : à 27 sur 100,
+ * changer une séance ne produisait donc aucun mot, ce qui est exactement le
+ * moment où l'on veut en lire un.
+ *
+ * Même règle de silence qu'ailleurs. Le chiffre cité est toujours l'indice ou
+ * la distance réellement calculés, et le fait cité est toujours un changement
+ * réellement appliqué.
  */
 function motSurLaSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach | null {
   if (!duJour || !indice) return null
-  const vivantes = duJour.filter((x) => !x.faite && !x.saute)
-  if (vivantes.length === 0) return null
+  const aTraiter = duJour.filter((x) => !x.faite)
+  if (aTraiter.length === 0) return null
+  const vivantes = aTraiter.filter((x) => !x.saute)
 
   // L'indice ne mesure plus tout : le citer comme un verdict serait le
   // présenter comme une mesure alors qu'il lui manque sa moitié.
   const surIndice = indice.painInconnue
     ? `indice à ${indice.idx} sur 100, calculé sans ta douleur qui n'est pas saisie`
     : `indice à ${indice.idx} sur 100`
+  const bas = indice.idx < INDICE_VIGILANCE
 
-  // ── L'indice a retiré la course du jour ────────────────────────────────
+  // ── 1. L'indice a retiré la course du jour ──────────────────────────────
   const neutralisee = vivantes.find(
     (x) => x.adaptee && COURSE.includes(x.typePlan) && !COURSE.includes(x.type),
   )
@@ -140,42 +167,95 @@ function motSurLaSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach | nu
     }
   }
 
-  // ── L'indice a raccourci la sortie longue ──────────────────────────────
+  // ── 2. L'indice a raccourci la sortie longue ────────────────────────────
   const raccourcie = vivantes.find((x) => x.adaptee && x.type === 'long')
   if (raccourcie) {
     return {
       ton: 'vigilance',
-      texte: `${raccourcie.titre.toLowerCase().startsWith('sortie') ? raccourcie.titre : `Sortie longue : ${raccourcie.titre}`} aujourd'hui, raccourcie par l'${surIndice}. Le kilométrage encaissé compte, celui qu'on paie trois jours ne compte pas.`,
+      texte: `Sortie longue raccourcie aujourd'hui par l'${surIndice} : ${nomAvecKm('long', raccourcie.dist)} au lieu de ${formatNumber(raccourcie.distPlan ?? 0)} km. Le kilométrage encaissé compte, celui qu'on paie trois jours ne compte pas.`,
     }
   }
 
-  // ── Une contrainte tombe dans la semaine, et c'est un écart qui l'a posée ─
-  const modifiee = vivantes.find((x) => x.ecart)
+  // ── 3. Un de tes écarts a cassé une contrainte de la semaine ────────────
+  const modifiee = aTraiter.find((x) => x.ecart)
   if (modifiee && alertes && alertes.length > 0) {
     return {
       ton: 'vigilance',
-      texte: `Attention à la semaine que tes déplacements ont formée : ${alertes[0].toLowerCase()} Ta ${nomCourt(modifiee.type)} d'aujourd'hui en fait partie. Rien ne t'en empêche, mais c'est une contrainte que ton tendon a posée, pas le plan.`,
+      texte: `Attention à la semaine que tes changements ont formée : ${alertes[0].toLowerCase()} Rien ne t'en empêche, mais c'est une contrainte que ton tendon a posée, pas le plan.`,
     }
   }
 
-  // ── Tu as allégé toi-même, alors que l'indice montait ──────────────────
-  const allegee = vivantes.find(
-    (x) => x.ecart && COURSE.includes(x.typePlan) && PLUS_DOUX.includes(x.type),
-  )
-  if (allegee && indice.idx >= 50) {
+  // ── 4. Tu as sauté la séance du jour ────────────────────────────────────
+  const sautee = aTraiter.find((x) => x.saute && x.ecart === 'saut')
+  if (sautee) {
     return {
-      ton: 'bravo',
-      texte: `Bon réflexe : tu as remplacé ta ${nomCourt(allegee.typePlan)} par ${nomCourt(allegee.type) === 'vélo' ? 'du vélo' : `de la ${nomCourt(allegee.type)}`} avec un ${surIndice}. C'est exactement la décision que le plan aurait prise à ta place.`,
+      ton: 'neutre',
+      texte: `Tu as sauté ${avecArticle(sautee.typePlan)} d'aujourd'hui. Elle ne compte pas dans la charge et le plan ne la rattrape pas : la semaine prochaine reprend là où elle devait. Une séance sautée vaut mieux qu'une séance forcée, mais deux de suite sur la même famille commencent à se voir en avril.`,
     }
   }
 
-  // ── La charge n'est plus attestée : on ne commente pas une séance sur un
-  //    carnet muet, on demande de le remplir ───────────────────────────────
+  // ── 5. Tu as remplacé la séance par autre chose ─────────────────────────
+  const remplacee = vivantes.find((x) => x.ecart === 'remplacement' && x.type !== x.typePlan)
+  if (remplacee) {
+    const versDoux = COURSE.includes(remplacee.typePlan) && PLUS_DOUX.includes(remplacee.type)
+    const versDur = PLUS_DOUX.includes(remplacee.typePlan) && COURSE.includes(remplacee.type)
+
+    if (versDoux) {
+      return bas
+        ? {
+            ton: 'neutre',
+            texte: `Tu as remplacé ta ${nomAvecKm(remplacee.typePlan, remplacee.distPlan)} par ${avecArticle(remplacee.type)}. L'${surIndice} ne te le demandait pas, donc c'est ton ressenti qui tranche, et c'est le bon ordre. Ces kilomètres-là sortent du volume de la semaine : si tu peux, remets-les ailleurs plutôt que de les perdre.`,
+          }
+        : {
+            ton: 'bravo',
+            texte: `Bon réflexe : tu as remplacé ta ${nomCourt(remplacee.typePlan)} par ${avecArticle(remplacee.type)} avec un ${surIndice}. C'est exactement la décision que le plan aurait prise à ta place.`,
+          }
+    }
+
+    if (versDur) {
+      return {
+        ton: 'vigilance',
+        texte: `Tu as mis ${avecArticle(remplacee.type)} là où le plan mettait ${avecArticle(remplacee.typePlan)}${remplacee.dist != null ? `, soit ${formatNumber(remplacee.dist)} km d'impact en plus` : ''}. L'${surIndice}${bas ? ', le tendon peut l’encaisser' : ' est déjà haut'}, mais le vélo n'est pas là par hasard : il porte du volume aérobie sans choc au sol, et c'est ce qui te permet de courir le reste.`,
+      }
+    }
+
+    return {
+      ton: 'neutre',
+      texte: `Tu as remplacé ta ${nomCourt(remplacee.typePlan)} du jour par ${avecArticle(remplacee.type)}. L'${surIndice}, la semaine tient ses contraintes.`,
+    }
+  }
+
+  // ── 6. Tu as déplacé une séance jusqu'ici ───────────────────────────────
+  const deplacee = vivantes.find((x) => x.ecart === 'deplacement')
+  if (deplacee) {
+    return {
+      ton: 'neutre',
+      texte: `Ta ${nomAvecKm(deplacee.type, deplacee.dist)} est arrivée sur aujourd'hui. Aucune contrainte de la semaine ne tombe, et l'${surIndice} : la journée est jouable telle que tu l'as posée.`,
+    }
+  }
+
+  // ── 7. Tu as corrigé la distance ou la durée ────────────────────────────
+  const corrigee = vivantes.find(
+    (x) => x.ecart === 'donnee' && x.dist != null && x.distPlan != null && x.dist !== x.distPlan,
+  )
+  if (corrigee) {
+    const plus = (corrigee.dist ?? 0) > (corrigee.distPlan ?? 0)
+    return {
+      ton: plus ? 'vigilance' : 'neutre',
+      texte: `Tu as noté ${formatNumber(corrigee.dist ?? 0)} km sur ta ${nomCourt(corrigee.type)} au lieu des ${formatNumber(corrigee.distPlan ?? 0)} km prévus. ${
+        plus
+          ? "C'est du volume que le plan n'avait pas budgété : il entre dans la charge, et la sortie longue de la semaine prochaine se décidera dessus."
+          : "La charge suit ce que tu as vraiment fait, pas ce qui était écrit."
+      }`,
+    }
+  }
+
+  // ── 8. La charge n'est plus attestée ────────────────────────────────────
   if (indice.chargeInconnue) {
     return {
       ton: 'vigilance',
       texte:
-        'Trop de séances non notées cette semaine : la part mécanique de ton indice suppose plus qu\'elle ne mesure, et elle se trompe toujours du côté rassurant. Note-les et je pourrai te dire quelque chose de ta séance du jour.',
+        "Trop de séances non notées cette semaine : la part mécanique de ton indice suppose plus qu'elle ne mesure, et elle se trompe toujours du côté rassurant. Note-les et je pourrai te dire quelque chose de ta séance du jour.",
     }
   }
 
