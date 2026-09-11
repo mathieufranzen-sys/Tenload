@@ -16,14 +16,18 @@
  * pousserait à ne rien saisir, et on perdrait l'information au lieu de la
  * garder.
  */
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { Session, SessionType } from '../data/types'
+import { formatNumber } from '../lib/dates'
 import { familleDe } from '../lib/insights'
 import {
   alertesAjoutees,
+  titreQualite,
   TYPES_REMPLACEMENT,
   type Alerte,
   type EcartPatch,
+  type Qualite,
+  type ZoneQualite,
 } from '../lib/overrides'
 import { Icon } from './Icon'
 
@@ -177,7 +181,7 @@ export function ActionsSeance({
             {TYPES_REMPLACEMENT.filter((r) => r.type !== origine.type).map((r) => (
               <button
                 key={r.type}
-                onClick={() => maj({ type: r.type })}
+                onClick={() => maj({ type: r.type, qualite: undefined })}
                 aria-pressed={patch.type === r.type}
                 style={{
                   display: 'flex',
@@ -202,6 +206,13 @@ export function ActionsSeance({
               </button>
             ))}
           </div>
+          {/* Une séance spécifique n'est pas une discipline, c'est un contenu :
+              la liste au-dessus ne sait pas la produire. Trois réglages
+              suffisent à la composer, et le titre s'écrit tout seul. */}
+          <ComposeurQualite
+            valeur={patch.qualite ?? null}
+            onChange={(q) => maj({ qualite: q ?? undefined, type: undefined })}
+          />
           <Pied
             patch={patch}
             raison={raison}
@@ -213,11 +224,11 @@ export function ActionsSeance({
               setPanneau(null)
             }}
             onEffacer={() => {
-              enregistrer({ ...patch, type: undefined })
+              enregistrer({ ...patch, type: undefined, qualite: undefined })
               setPanneau(null)
             }}
             effacerLabel="Garder la séance"
-            effacerVisible={patch.type != null}
+            effacerVisible={patch.type != null || patch.qualite != null}
           />
         </Panneau>
       )}
@@ -252,6 +263,147 @@ const ICONE_TYPE: Partial<Record<SessionType, 'run' | 'walk' | 'bike' | 'dumb' |
   'muscu-bas': 'dumb',
   escalade: 'climb',
   repos: 'rest',
+}
+
+/**
+ * Le composeur de séance de qualité.
+ *
+ * Trois réglages et pas un de plus : le nombre de répétitions, leur longueur,
+ * leur zone. Un champ libre laisserait écrire « 5 x 1000 m » sans que le
+ * modèle sache ce que ça coûte au tendon, et un titre qui ne se traduit pas en
+ * segments est un titre qui ment sur la charge.
+ */
+const LONGUEURS = [0.4, 0.5, 0.8, 1, 1.5, 2, 3, 4, 5]
+const ZONES: Array<{ cle: ZoneQualite; label: string }> = [
+  { cle: 'am', label: 'Allure marathon' },
+  { cle: 'seuil', label: 'Seuil' },
+  { cle: 'vo2', label: 'VO2max' },
+]
+
+function ComposeurQualite({
+  valeur,
+  onChange,
+}: {
+  valeur: Qualite | null
+  onChange: (q: Qualite | null) => void
+}) {
+  const q: Qualite = valeur ?? { reps: 5, km: 1, zone: 'seuil' }
+  const actif = valeur != null
+
+  return (
+    <div
+      style={{
+        marginTop: 12,
+        paddingTop: 14,
+        borderTop: '1px dashed var(--border-2)',
+      }}
+    >
+      <button
+        onClick={() => onChange(actif ? null : q)}
+        aria-pressed={actif}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 11,
+          width: '100%',
+          padding: '12px 13px',
+          borderRadius: 'var(--radius-sm)',
+          textAlign: 'left',
+          fontSize: 15,
+          fontWeight: 600,
+          color: 'var(--ink)',
+          background: actif ? 'rgba(255,255,255,.11)' : 'rgba(255,255,255,.04)',
+          border: actif ? '1px solid rgba(255,255,255,.26)' : '1px solid var(--border)',
+        }}
+      >
+        {/* L'icône suit la zone : en VO2 la séance devient un intervalle, et
+            l'échelle d'intensité doit le dire avant qu'on lise le titre. */}
+        <MarqueType type={q.zone === 'vo2' ? 'inter' : 'tempo'} />
+        <span style={{ flex: 1 }}>{actif ? titreQualite(q) : 'Une séance de qualité'}</span>
+      </button>
+
+      {actif && (
+        <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
+          <Reglage label="Répétitions">
+            {[1, 2, 3, 4, 5, 6, 8, 10].map((n) => (
+              <Choix key={n} actif={q.reps === n} onClick={() => onChange({ ...q, reps: n })}>
+                {n === 1 ? 'continu' : String(n)}
+              </Choix>
+            ))}
+          </Reglage>
+          <Reglage label="Longueur d’une répétition">
+            {LONGUEURS.map((km) => (
+              <Choix key={km} actif={q.km === km} onClick={() => onChange({ ...q, km })}>
+                {km < 1 ? `${Math.round(km * 1000)} m` : `${formatNumber(km)} km`}
+              </Choix>
+            ))}
+          </Reglage>
+          <Reglage label="Zone">
+            {ZONES.map((z) => (
+              <Choix key={z.cle} actif={q.zone === z.cle} onClick={() => onChange({ ...q, zone: z.cle })}>
+                {z.label}
+              </Choix>
+            ))}
+          </Reglage>
+          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--sur-ink-3)', lineHeight: 1.45 }}>
+            {formatNumber(Math.round((q.reps * q.km + 4.5) * 10) / 10)} km au total, échauffement de
+            2,5 km et retour au calme de 2 km compris. Le contrôle des contraintes la traite comme
+            une séance de vitesse.
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Reglage({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <div
+        style={{
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: '1px',
+          textTransform: 'uppercase',
+          color: 'var(--sur-ink-3)',
+          marginBottom: 7,
+        }}
+      >
+        {label}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{children}</div>
+    </div>
+  )
+}
+
+function Choix({
+  actif,
+  onClick,
+  children,
+}: {
+  actif: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={actif}
+      style={{
+        padding: '7px 12px',
+        borderRadius: 'var(--pill)',
+        fontSize: 13,
+        fontWeight: 650,
+        fontVariantNumeric: 'tabular-nums',
+        color: actif ? '#08090b' : 'var(--ink)',
+        background: actif ? '#fff' : 'rgba(255,255,255,.05)',
+        border: actif ? '1px solid #fff' : '1px solid var(--border)',
+        cursor: 'pointer',
+      }}
+    >
+      {children}
+    </button>
+  )
 }
 
 function Action({
@@ -310,7 +462,7 @@ function Action({
   )
 }
 
-function Panneau({ titre, children }: { titre: string; children: React.ReactNode }) {
+function Panneau({ titre, children }: { titre: string; children: ReactNode }) {
   return (
     <div
       className="glass"
@@ -464,7 +616,7 @@ export function Alertes({ alertes }: { alertes: Alerte[] }) {
   )
 }
 
-function Champ({ label, children }: { label: string; children: React.ReactNode }) {
+function Champ({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div style={{ marginBottom: 13 }}>
       <div

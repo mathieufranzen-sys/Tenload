@@ -544,6 +544,17 @@ tout est dehors.
   séance, écarts appliqués, et sur rien d'autre. Elle regardait aussi l'absence
   d'écart et l'absence de ressenti, si bien que déplacer le repos d'un jour
   faisait réapparaître deux curseurs sur la seule journée qui n'a rien à noter.
+- **Un écart peut composer une séance de qualité** (`EcartPatch.qualite`).
+  Changer de discipline ne suffisait pas : une séance spécifique n'est pas une
+  discipline, c'est un contenu, et `versType` efface les allures avec le reste.
+  On pouvait donc transformer une sortie longue en course facile mais jamais
+  composer un 5 x 1000 m au seuil. Trois réglages la définissent, répétitions,
+  longueur, zone, et **le reste se déduit, `struct` compris** : c'est lui que
+  lit le coût tendineux, et une séance dont le modèle ignorerait la zone
+  coûterait le prix d'une sortie facile. La VO2 donne un `inter`, les deux
+  autres zones un `tempo`, donc `verifierContraintes` la traite comme de la
+  vitesse sans qu'on ait à le lui dire. Pas de champ libre : un titre qui ne se
+  traduit pas en segments est un titre qui ment sur la charge.
 - **Une distance ne se saisit que là où elle a un sens** (`porteUneDistance`) :
   le vélo oui, même si le plan ne lui en fixe aucune ; l'escalade, le renfo et
   le repos non. Elle a quitté le formulaire de ressenti : deux champs pour la

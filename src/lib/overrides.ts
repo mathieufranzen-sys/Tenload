@@ -37,6 +37,86 @@ export interface EcartPatch {
   dist?: number | null
   /** Durée réelle, en minutes. Une seule valeur, pas une fourchette. */
   durMin?: number | null
+  /**
+   * Séance de qualité installée à la place de celle du plan.
+   *
+   * Changer de discipline ne suffisait pas : une séance spécifique n'est pas
+   * une discipline, c'est un contenu. `versType` efface les allures avec le
+   * reste, si bien qu'on pouvait transformer une sortie longue en course
+   * facile mais jamais composer un 5 x 1000 m au seuil.
+   */
+  qualite?: Qualite
+}
+
+/** Les trois zones où se travaille une séance de qualité. */
+export type ZoneQualite = 'am' | 'seuil' | 'vo2'
+
+/**
+ * Une séance de qualité composée à la main, dans sa forme la plus simple :
+ * un nombre de répétitions, leur longueur, leur zone. Tout le reste se déduit,
+ * y compris le coût tendineux, qui lit les segments.
+ */
+export interface Qualite {
+  /** Nombre de répétitions. 1 vaut un bloc continu. */
+  reps: number
+  /** Longueur d'une répétition, en kilomètres. */
+  km: number
+  zone: ZoneQualite
+}
+
+const LIBELLE_ZONE: Record<ZoneQualite, string> = {
+  am: 'à allure marathon',
+  seuil: 'au seuil',
+  vo2: 'en VO2max',
+}
+
+/** Le type de séance que porte la zone : la VO2 est de l'intervalle, le reste du tempo. */
+const TYPE_ZONE: Record<ZoneQualite, SessionType> = { am: 'tempo', seuil: 'tempo', vo2: 'inter' }
+
+/** « 400 m » sous le kilomètre, « 1,5 km » au-dessus : c'est ainsi qu'on les nomme. */
+const longueur = (km: number): string =>
+  km < 1 ? `${Math.round(km * 1000)} m` : `${formatKm(km)} km`
+
+/** Le titre d'une séance composée, tel qu'un plan l'écrirait. */
+export function titreQualite(q: Qualite): string {
+  const corps = q.reps > 1 ? `${q.reps} x ${longueur(q.km)}` : longueur(q.km)
+  return `${corps} ${LIBELLE_ZONE[q.zone]}`
+}
+
+/** Échauffement et retour au calme, invariants : ils encadrent toute séance de qualité. */
+const ECHAUFFEMENT = 2.5
+const RETOUR_AU_CALME = 2
+
+/**
+ * Installe la séance composée. Les segments sont posés pour de vrai, pas
+ * seulement le titre : c'est `struct` que lit le coût tendineux, et une séance
+ * de qualité dont le modèle ignorerait la zone coûterait le prix d'une sortie
+ * facile.
+ */
+function versQualite(s: Session, q: Qualite): Session {
+  const travail = Math.round(q.reps * q.km * 10) / 10
+  return {
+    ...s,
+    type: TYPE_ZONE[q.zone],
+    cat: q.zone === 'vo2' ? 'Intervalles' : 'Tempo',
+    title: titreQualite(q),
+    dist: Math.round((ECHAUFFEMENT + travail + RETOUR_AU_CALME) * 10) / 10,
+    dur: null,
+    struct: [
+      { km: ECHAUFFEMENT, zone: 'ef' },
+      { km: travail, zone: q.zone },
+      { km: RETOUR_AU_CALME, zone: 'recup' },
+    ],
+    wu: [[ECHAUFFEMENT, 'ef']],
+    main: [[titreQualite(q), q.zone]],
+    cd: [[RETOUR_AU_CALME, 'recup']],
+    ex: null,
+    specifique: undefined,
+    note:
+      'Séance composée à la main. Échauffement et retour au calme compris dans la distance. ' +
+      'Le contrôle des contraintes la traite comme une séance de vitesse : elle ne se pose ni ' +
+      'la veille ni le lendemain de la sortie longue.',
+  }
 }
 
 /** Une ligne de `plan_overrides`. La clé pointe la séance dans le plan de référence. */
@@ -129,7 +209,10 @@ function versType(s: Session, type: SessionType): Session {
  * plus rien.
  */
 export function appliquerEcart(s: Session, e: EcartPatch): Session {
-  const out: Session = e.type ? versType(s, e.type) : { ...s }
+  let out: Session = e.type ? versType(s, e.type) : { ...s }
+  // La séance composée passe après le changement de discipline : elle le
+  // remplace entièrement, elle ne s'y ajoute pas.
+  if (e.qualite) out = versQualite(out, e.qualite)
 
   if (e.dist != null) {
     // `sessionLoad` lit les segments d'abord : changer la distance sans les
@@ -152,7 +235,7 @@ export function appliquerEcart(s: Session, e: EcartPatch): Session {
   // qu'elle est devenue, la carte l'affiche déjà en grand juste à côté.
   const parts: string[] = []
   if (e.skipped) parts.push('non faite')
-  if (e.type) parts.push(`initialement ${s.cat.toLowerCase()}`)
+  if (e.qualite || e.type) parts.push(`initialement ${s.cat.toLowerCase()}`)
   if ((e.day != null && e.day !== s.day) || e.semaines) {
     // Le badge se lit depuis l'endroit où la séance se trouve MAINTENANT :
     // une séance poussée d'une semaine vient donc de la semaine d'avant.

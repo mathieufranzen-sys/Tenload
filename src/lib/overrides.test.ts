@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import planJson from '../data/plan.json'
+import { sessionLoad } from './load'
 import type { Plan, Session, SessionType } from '../data/types'
 import {
   alertesAjoutees,
@@ -7,6 +8,7 @@ import {
   cleEcart,
   indexerEcarts,
   seancesAvecEcarts,
+  titreQualite,
   verifierContraintes,
   type EcartRow,
 } from './overrides'
@@ -292,5 +294,61 @@ describe('alertesAjoutees', () => {
     )
     // Mardi est le lendemain de la sortie longue : contrainte 3.
     expect(alertesAjoutees(w.sessions, apres).map((x) => x.contrainte)).toContain(3)
+  })
+})
+
+describe('une séance de qualité composée à la main', () => {
+  const longue = plan.weeks.flatMap((w) => w.sessions).find((s) => s.type === 'long')!
+
+  it('porte le titre qu’un plan écrirait', () => {
+    expect(titreQualite({ reps: 5, km: 1, zone: 'vo2' })).toBe('5 x 1 km en VO2max')
+    expect(titreQualite({ reps: 8, km: 0.4, zone: 'vo2' })).toBe('8 x 400 m en VO2max')
+    expect(titreQualite({ reps: 3, km: 1.5, zone: 'seuil' })).toBe('3 x 1,5 km au seuil')
+    expect(titreQualite({ reps: 1, km: 8, zone: 'am' })).toBe('8 km à allure marathon')
+  })
+
+  it('pose de vrais segments, pas seulement un titre', () => {
+    // C'est `struct` que lit le coût tendineux : une séance dont le modèle
+    // ignorerait la zone coûterait le prix d'une sortie facile.
+    const v = appliquerEcart(longue, { qualite: { reps: 5, km: 1, zone: 'vo2' } })
+    expect(v.struct).toEqual([
+      { km: 2.5, zone: 'ef' },
+      { km: 5, zone: 'vo2' },
+      { km: 2, zone: 'recup' },
+    ])
+    expect(v.dist).toBe(9.5)
+  })
+
+  it('coûte le prix de sa zone, pas celui d’une sortie facile', () => {
+    const facile = appliquerEcart(longue, { qualite: { reps: 5, km: 1, zone: 'am' } })
+    const dure = appliquerEcart(longue, { qualite: { reps: 5, km: 1, zone: 'vo2' } })
+    expect(sessionLoad(dure)).toBeGreaterThan(sessionLoad(facile))
+  })
+
+  it('devient un intervalle en VO2, un tempo ailleurs', () => {
+    expect(appliquerEcart(longue, { qualite: { reps: 5, km: 1, zone: 'vo2' } }).type).toBe('inter')
+    expect(appliquerEcart(longue, { qualite: { reps: 2, km: 3, zone: 'seuil' } }).type).toBe('tempo')
+  })
+
+  it('garde la trace de ce que la séance était', () => {
+    const v = appliquerEcart(longue, { qualite: { reps: 5, km: 1, zone: 'vo2' } })
+    expect(v.ecart).toContain('initialement')
+  })
+
+  it('le contrôle des contraintes la traite comme de la vitesse', () => {
+    // Contrainte 3 : ni vitesse ni renfo bas accolés à la sortie longue.
+    const sl = longue
+    const composee = appliquerEcart(
+      { ...longue, day: sl.day + 1 },
+      { qualite: { reps: 5, km: 1, zone: 'vo2' } },
+    )
+    const alertes = verifierContraintes([sl, composee])
+    expect(alertes.some((a) => a.contrainte === 3)).toBe(true)
+  })
+
+  it('remplace entièrement un changement de discipline', () => {
+    const v = appliquerEcart(longue, { type: 'velo', qualite: { reps: 4, km: 1, zone: 'seuil' } })
+    expect(v.type).toBe('tempo')
+    expect(v.title).toBe('4 x 1 km au seuil')
   })
 })
