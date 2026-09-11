@@ -361,21 +361,38 @@ describe('ouverture du volume : la sortie de la contrainte 5', () => {
     return p
   }
 
-  it('ouvre après deux mois de carnet plein sans douleur', () => {
+  it('deux mois de carnet plein ouvrent le second palier', () => {
     const v = verdictVolume(carnet(56), JOUR)
     expect(v).not.toBeNull()
+    expect(v!.palier).toBe(2)
     expect(v!.releves).toBe(56)
   })
 
-  it('une seule journée au-dessus du seuil referme la fenêtre', () => {
-    // Le tendon a parlé une fois : les deux mois repartent de là.
-    expect(verdictVolume(carnet(56, { a: 40, valeur: 3 }), JOUR)).toBeNull()
+  it('un mois seulement ouvre le premier palier', () => {
+    // Un vélo devient la séance spécifique, le second reste. Rendre les deux
+    // d'un coup ajouterait deux jours d'impact la même semaine.
+    const v = verdictVolume(carnet(30), JOUR)
+    expect(v).not.toBeNull()
+    expect(v!.palier).toBe(1)
+    expect(v!.jours).toBe(28)
+  })
+
+  it('un pic au 40e jour ferme le second palier, pas le premier', () => {
+    // Le tendon a parlé il y a plus d'un mois : les deux mois repartent de là,
+    // mais le mois écoulé, lui, est propre. Un seul palier tombe.
+    const v = verdictVolume(carnet(56, { a: 40, valeur: 3 }), JOUR)
+    expect(v).not.toBeNull()
+    expect(v!.palier).toBe(1)
+  })
+
+  it('un pic dans le mois écoulé referme tout', () => {
+    expect(verdictVolume(carnet(56, { a: 10, valeur: 3 }), JOUR)).toBeNull()
   })
 
   it('la douleur de fond à 2 ne referme rien', () => {
     // 0,8 au réveil et 1,3 le soir sont sa normale. Exiger zéro n'ouvrirait
     // jamais, et n'aurait pas de sens clinique.
-    expect(verdictVolume(carnet(56, { a: 10, valeur: 2 }), JOUR)).not.toBeNull()
+    expect(verdictVolume(carnet(56, { a: 10, valeur: 2 }), JOUR)!.palier).toBe(2)
   })
 
   it('un carnet trop troué n’ouvre pas : l’absence de saisie n’est pas l’absence de douleur', () => {
@@ -390,8 +407,11 @@ describe('ouverture du volume : la sortie de la contrainte 5', () => {
     expect(verdictVolume({}, JOUR)).toBeNull()
   })
 
-  it('deux mois moins un jour ne suffisent pas', () => {
-    expect(verdictVolume(carnet(41), JOUR)).toBeNull()
-    expect(verdictVolume(carnet(42), JOUR)).not.toBeNull()
+  it('chaque palier a son minimum de relevés', () => {
+    // Trois sur quatre dans sa fenêtre : 21 sur 28, puis 42 sur 56.
+    expect(verdictVolume(carnet(20), JOUR)).toBeNull()
+    expect(verdictVolume(carnet(21), JOUR)!.palier).toBe(1)
+    expect(verdictVolume(carnet(41), JOUR)!.palier).toBe(1)
+    expect(verdictVolume(carnet(42), JOUR)!.palier).toBe(2)
   })
 })

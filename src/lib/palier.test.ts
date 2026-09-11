@@ -5,7 +5,9 @@ import {
   HAUSSE_TOLEREE,
   arrangerPlan,
   baseRaideur,
+  appliquerPalierSpecifique,
   palierProchaineLongue,
+  palierProchaineSpecifique,
   verdictDerniereLongue,
   type SeanceArrangee,
 } from './palier'
@@ -191,5 +193,71 @@ describe('arrangerPlan', () => {
     ])
     const out = arrangerPlan(weeks, ecarts)
     expect(out.map((x) => x.type)).toEqual(['ef', 'long'])
+  })
+})
+
+describe('le palier de la séance spécifique du jeudi', () => {
+  /** Deux jeudis spécifiques, le second plus long que le premier. */
+  const seances = (): SeanceArrangee[] => [
+    {
+      week: 11, jourOrigine: 3, slot: 0, day: '2026-10-22', type: 'tempo', dist: 7,
+      saute: false, specifique: true,
+      source: { day: 3, type: 'tempo', title: '3 x 1000 m allure 10 km', cat: 'Tempo',
+        dist: 7, main: [['3 x 1000 m', 'seuil']], note: '', specifique: true } as unknown as Session,
+    },
+    {
+      week: 12, jourOrigine: 3, slot: 0, day: '2026-10-29', type: 'tempo', dist: 8,
+      saute: false, specifique: true,
+      source: { day: 3, type: 'tempo', title: '4 x 1000 m allure 10 km', cat: 'Tempo',
+        dist: 8, main: [['4 x 1000 m', 'seuil']], note: '', specifique: true } as unknown as Session,
+    },
+  ]
+  const notee = (pain: number): FeedbackRow[] => [
+    { week: 11, day_index: 3, slot: 0, day: '2026-10-22', session_type: 'tempo', pain, rpe: 7 } as FeedbackRow,
+  ]
+  /** Carnet calme sur la base, avec la raideur du lendemain au choix. */
+  const carnet = (lendemain: number | null): PainMap => {
+    const p: PainMap = {}
+    for (let k = 1; k <= 8; k++) p[addDays('2026-10-22', -k)] = { wake: 1 }
+    if (lendemain != null) p['2026-10-23'] = { wake: lendemain }
+    return p
+  }
+
+  it('ne plafonne rien quand la séance est passée', () => {
+    expect(palierProchaineSpecifique(seances(), notee(3), carnet(1), '2026-10-26')).toBeNull()
+  })
+
+  it('répète la précédente quand le lendemain est raide', () => {
+    const p = palierProchaineSpecifique(seances(), notee(3), carnet(5), '2026-10-26')
+    expect(p).not.toBeNull()
+    expect(p!.jour).toBe('2026-10-29')
+    expect(p!.modele.title).toBe('3 x 1000 m allure 10 km')
+    expect(p!.raison).toContain('Raideur')
+  })
+
+  it('plafonne aussi quand la raideur du lendemain n’est pas saisie', () => {
+    // On ne dégrade pas sur une absence d'information, on refuse de monter.
+    const p = palierProchaineSpecifique(seances(), notee(3), carnet(null), '2026-10-26')
+    expect(p).not.toBeNull()
+    expect(p!.raison).toContain('non saisie')
+  })
+
+  it('la séance répétée porte le contenu de la précédente, pas son kilométrage seul', () => {
+    const p = palierProchaineSpecifique(seances(), notee(3), carnet(5), '2026-10-26')!
+    const vecue = appliquerPalierSpecifique(seances()[1].source!, p)
+    expect(vecue.title).toBe('3 x 1000 m allure 10 km')
+    expect(vecue.dist).toBe(7)
+    expect(vecue.main).toEqual([['3 x 1000 m', 'seuil']])
+    expect(vecue.adapted).toContain('Palier tenu')
+  })
+
+  it('ne touche pas la sortie longue, et réciproquement', () => {
+    // Les deux familles se suivent séparément : une longue douloureuse ne
+    // plafonne pas la séance du jeudi, qui n'a rien à voir avec elle.
+    const avecLongue: SeanceArrangee[] = [
+      ...seances(),
+      { week: 11, jourOrigine: 0, slot: 0, day: '2026-10-19', type: 'long', dist: 28, saute: false },
+    ]
+    expect(palierProchaineSpecifique(avecLongue, notee(3), carnet(1), '2026-10-26')).toBeNull()
   })
 })

@@ -46,6 +46,10 @@ export interface SeanceArrangee {
   type: SessionType
   dist?: number
   saute: boolean
+  /** Séance spécifique du jeudi : c'est ce drapeau que le palier suit. */
+  specifique?: boolean
+  /** La séance du plan, pour pouvoir la répéter telle quelle. */
+  source?: Session
 }
 
 /** Le plan tel qu'il sera vécu, à plat et trié par date. */
@@ -63,6 +67,8 @@ export function arrangerPlan(weeks: Week[], ecarts?: Map<string, EcartRow>): Sea
         type: s.type,
         dist: s.dist,
         saute: Boolean(s.saute),
+        specifique: Boolean(s.specifique),
+        source: s,
       })
     })
   }
@@ -105,17 +111,30 @@ const nb = (v: number) => String(Math.round(v * 10) / 10).replace('.', ',')
  * eu lieu, pas la date. Une sortie longue passée mais jamais notée n'apprend
  * rien et ne bloque rien.
  */
+/**
+ * Les deux séances que le palier surveille. La sortie longue depuis le
+ * début ; la séance spécifique du jeudi depuis qu'elle existe, parce qu'elle
+ * s'ajoute à une semaine déjà pleine et qu'elle grossit d'une répétition par
+ * semaine. Les deux posent la même question : est-ce que la précédente est
+ * passée, et donc a-t-on le droit de monter ?
+ */
+export type FamillePalier = 'long' | 'specifique'
+
+const appartient = (s: SeanceArrangee, famille: FamillePalier): boolean =>
+  famille === 'long' ? s.type === 'long' : Boolean(s.specifique)
+
 export function verdictDerniereLongue(
   seances: SeanceArrangee[],
   feedback: FeedbackRow[],
   pain: PainMap,
   now: string,
+  famille: FamillePalier = 'long',
 ): VerdictLongue | null {
   const notees = new Map(feedback.map((f) => [`${f.week}-${f.day_index}-${f.slot}`, f]))
 
   let derniere: { s: SeanceArrangee; f: FeedbackRow } | null = null
   for (const s of seances) {
-    if (s.type !== 'long' || s.saute || s.day > now) continue
+    if (!appartient(s, famille) || s.saute || s.day > now) continue
     const f = notees.get(`${s.week}-${s.jourOrigine}-${s.slot}`)
     if (!f) continue
     if (!derniere || s.day >= derniere.s.day) derniere = { s, f }
@@ -173,6 +192,62 @@ export function palierProchaineLongue(
   if (!suivante?.dist || suivante.dist <= verdict.km) return null
 
   return { jour: suivante.day, km: verdict.km, raison: verdict.raison! }
+}
+
+/**
+ * Le plafond de la prochaine séance spécifique du jeudi.
+ *
+ * Elle grossit d'une répétition par semaine dans le plan. Quand la précédente
+ * n'est pas passée, on ne réduit pas : **on répète la précédente à
+ * l'identique**, exactement comme pour la sortie longue. Réduire est le
+ * travail de l'indice, refuser de monter est celui du palier.
+ *
+ * Le plafond porte la séance entière et pas seulement sa distance : « 3 x
+ * 1000 m » ne se déduit pas d'un kilométrage, et afficher 7 km sans dire
+ * comment les courir ne serait pas une séance.
+ */
+export interface PalierSpecifique {
+  jour: string
+  /** La séance précédente, à répéter telle quelle. */
+  modele: Session
+  raison: string
+}
+
+export function palierProchaineSpecifique(
+  seances: SeanceArrangee[],
+  feedback: FeedbackRow[],
+  pain: PainMap,
+  now: string,
+): PalierSpecifique | null {
+  const verdict = verdictDerniereLongue(seances, feedback, pain, now, 'specifique')
+  if (!verdict || verdict.encaisse) return null
+
+  const precedente = seances
+    .filter((s) => s.specifique && !s.saute && s.day === verdict.day)
+    .map((s) => s.source)[0]
+  const suivante = seances.find((s) => s.specifique && !s.saute && s.day > now)
+  if (!precedente || !suivante) return null
+
+  // Rien à plafonner si la suivante ne monte pas : le plan peut très bien
+  // redescendre d'un bloc à l'autre, et répéter serait alors une hausse.
+  if ((suivante.dist ?? 0) <= (precedente.dist ?? 0)) return null
+
+  return { jour: suivante.day, modele: precedente, raison: verdict.raison! }
+}
+
+/** Répète la séance précédente à la place de celle qui devait monter. */
+export function appliquerPalierSpecifique(s: Session, palier: PalierSpecifique): Session {
+  const m = palier.modele
+  return {
+    ...s,
+    title: m.title,
+    dist: m.dist,
+    wu: m.wu,
+    main: m.main,
+    cd: m.cd,
+    adapted: `Palier tenu · ${palier.raison}`,
+    note: `La séance ne monte pas cette semaine : ${palier.raison.toLowerCase()}. On répète celle de la semaine dernière au lieu d'ajouter une répétition. Si celle-ci passe sans réaction le lendemain, la progression reprend la semaine d'après.`,
+  }
 }
 
 /** Applique le plafond à une séance. Ne mute pas l'original. */

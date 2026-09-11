@@ -558,6 +558,10 @@ for w in range(1, 36):
         sessions.append({"day": 3, "type": "tempo", "title": nom,
             "cat": "Tempo", "dist": dist, "dur": None,
             "wu": [(2.5, "ef")], "main": principal, "cd": [(2, "recup")],
+            # Marquée comme spécifique : c'est ce drapeau que le palier suit,
+            # jamais « le jeudi » ni « la semaine 11 ». Une règle vise une
+            # séance, jamais une case du calendrier.
+            "specifique": True,
             "note": note, "feedback": True})
 
     sessions.append({"day": 4 if w in QUATRE_COURSES else (1 if apres else 3), "type": "muscu-bas",

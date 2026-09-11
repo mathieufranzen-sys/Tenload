@@ -21,9 +21,12 @@ import type { Session, SessionType, Week } from '../data/types'
 import { cleEcart, seancesAvecEcarts, slotsParJour, type EcartRow } from './overrides'
 import {
   appliquerPalier,
+  appliquerPalierSpecifique,
   arrangerPlan,
   palierProchaineLongue,
+  palierProchaineSpecifique,
   type PalierLongue,
+  type PalierSpecifique,
 } from './palier'
 
 export interface Fx {
@@ -256,6 +259,8 @@ export interface ContextePlan {
   faites?: Set<string>
   /** Plafond imposé à la prochaine sortie longue, voir `palier.ts`. */
   palier?: PalierLongue | null
+  /** Plafond imposé à la prochaine séance spécifique du jeudi. */
+  palierSpecifique?: PalierSpecifique | null
 }
 
 /**
@@ -277,6 +282,7 @@ export function construireContexte(
   return {
     faites: new Set(feedback.map((f) => cleEcart(f.week, f.day_index, f.slot))),
     palier: palierProchaineLongue(seances, feedback, pain, now),
+    palierSpecifique: palierProchaineSpecifique(seances, feedback, pain, now),
   }
 }
 
@@ -327,6 +333,13 @@ export function weekSessions(
       const palier = contexte?.palier
       if (palier && s.type === 'long' && day === palier.jour && s.dist && s.dist > palier.km) {
         vecue = appliquerPalier(vecue, palier)
+      }
+      // Même règle pour la séance spécifique du jeudi, qui grossit d'une
+      // répétition par semaine : si la précédente n'est pas passée, on répète
+      // au lieu de monter.
+      const ps = contexte?.palierSpecifique
+      if (ps && s.specifique && day === ps.jour) {
+        vecue = appliquerPalierSpecifique(vecue, ps)
       }
       vecue = applyFx(vecue, fxForDate(day, now, byDate), {
         lendemainDeLongue: jourLongue != null && s.day === jourLongue + 1,
@@ -491,14 +504,23 @@ export function adapt(
   // qui autorise 10 km de course en plus sur un tendon dont on ne sait rien.
   const fenetre = verdictVolume(pain, now)
   if (fenetre) {
+    const commun =
+      `${fenetre.releves} relevés sur les ${fenetre.jours} derniers jours, ` +
+      `aucun au-dessus de ${SEUIL_SANS_DOULEUR}.`
     rules.push({
       id: 'VOLUME',
-      title: `Deux mois sans douleur au-dessus de ${SEUIL_SANS_DOULEUR} sur dix`,
+      title:
+        fenetre.palier === 1
+          ? `Un mois sans douleur au-dessus de ${SEUIL_SANS_DOULEUR} sur dix`
+          : `Deux mois sans douleur au-dessus de ${SEUIL_SANS_DOULEUR} sur dix`,
       action:
-        `${fenetre.releves} relevés sur les 56 derniers jours, aucun au-dessus de ${SEUIL_SANS_DOULEUR}. ` +
-        'Le tendon a tenu la charge : tu peux ouvrir le volume au-dessus de 60 km par semaine en ' +
-        'transformant les deux vélos en courses faciles. Un seul à la fois, et tu gardes le vélo ' +
-        'de récupération du vendredi les deux premières semaines.',
+        fenetre.palier === 1
+          ? `${commun} Premier palier : le vélo du jeudi peut devenir la séance spécifique, et la ` +
+            'semaine passe à quatre jours de course. Le vélo du vendredi reste, et la séance ' +
+            'spécifique démarre courte.'
+          : `${commun} Second palier : le tendon a tenu la charge, le vélo du vendredi peut ` +
+            'devenir une course facile et la semaine passer au-dessus de 60 km. Un seul ' +
+            'changement à la fois.',
     })
   }
 
@@ -511,20 +533,46 @@ export function adapt(
  * 2, au-dessus duquel le tendon parle.
  */
 export const SEUIL_SANS_DOULEUR = 2
-/** Deux mois. */
-const FENETRE_VOLUME = 56
-/** Trois relevés sur quatre : en dessous, c'est du silence, pas une absence de douleur. */
-const RELEVES_MINIMUM = 42
 
-export function verdictVolume(pain: PainMap, now: string): { releves: number } | null {
-  let releves = 0
-  for (let k = 0; k < FENETRE_VOLUME; k++) {
-    const p = pain[addDays(now, -k)]
-    if (!p) continue
-    const vs = [p.wake, p.effort, p.evening].filter((x): x is number => x != null)
-    if (vs.length === 0) continue
-    if (Math.max(...vs) > SEUIL_SANS_DOULEUR) return null
-    releves++
+/**
+ * La sortie de la contrainte 5 se fait en deux temps, pas d'un coup.
+ *
+ * Le vélo est un substitut à la course : il part quand la course revient. Mais
+ * rendre les deux d'un seul coup ajouterait deux jours d'impact la même
+ * semaine, sur un tendon dont c'est justement le décalage d'adaptation qui
+ * l'avait blessé. Un mois ouvre le premier, deux mois le second.
+ *
+ * Trois relevés sur quatre au minimum dans chaque fenêtre : en dessous, c'est
+ * du silence et pas une absence de douleur, et ce serait le feu vert le plus
+ * dangereux de l'app.
+ */
+const PALIERS_VOLUME = [
+  { palier: 2 as const, jours: 56, releves: 42 },
+  { palier: 1 as const, jours: 28, releves: 21 },
+]
+
+export interface VerdictVolume {
+  /** 1 : un vélo devient la séance spécifique. 2 : le second devient une course. */
+  palier: 1 | 2
+  /** Relevés exploitables dans la fenêtre, pour que le message cite du réel. */
+  releves: number
+  jours: number
+}
+
+export function verdictVolume(pain: PainMap, now: string): VerdictVolume | null {
+  // Du plus exigeant au moins exigeant : le premier atteint gagne.
+  for (const { palier, jours, releves: minimum } of PALIERS_VOLUME) {
+    let releves = 0
+    let propre = true
+    for (let k = 0; k < jours && propre; k++) {
+      const p = pain[addDays(now, -k)]
+      if (!p) continue
+      const vs = [p.wake, p.effort, p.evening].filter((x): x is number => x != null)
+      if (vs.length === 0) continue
+      if (Math.max(...vs) > SEUIL_SANS_DOULEUR) propre = false
+      else releves++
+    }
+    if (propre && releves >= minimum) return { palier, releves, jours }
   }
-  return releves >= RELEVES_MINIMUM ? { releves } : null
+  return null
 }

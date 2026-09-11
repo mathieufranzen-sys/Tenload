@@ -78,6 +78,12 @@ export interface Session {
   note: string
   /** Séance facultative (le vélo du vendredi). */
   optional?: boolean
+  /**
+   * Séance spécifique du jeudi, dans la semaine à quatre courses. Le palier la
+   * suit par ce drapeau et non par son jour : une règle vise une séance,
+   * jamais une case du calendrier.
+   */
+  specifique?: boolean
   /** La séance attend un ressenti après coup. */
   feedback?: boolean
   /** Bascule proposée si la douleur au réveil dépasse le seuil. */

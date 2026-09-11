@@ -57,12 +57,20 @@ modification du plan ne doit les casser.**
    passer au-dessus de 60 km par semaine. Décidé le 4 septembre 2026, c'est le
    levier qui pèse le plus sur le chrono d'avril après « finir les blocs sans
    interruption » : un plan à 55 km ne prépare pas les dix derniers kilomètres.
-   `verdictVolume` (`adapt.ts`, 6 tests) le calcule et la règle VOLUME
-   l'annonce. Elle exige **42 relevés sur 56 jours** : un carnet vide affiche
-   zéro douleur, et ce serait le feu vert le plus dangereux de l'app, celui qui
-   ouvre 10 km de course en plus sur un tendon dont on ne sait rien. Deux mois
-   et pas six semaines parce que le tendon s'adapte plus lentement que le
-   muscle, et que c'est ce décalage qui fait la tendinopathie.
+   **La sortie se fait en deux temps**, arbitrés le 11 septembre 2026 :
+
+   | Palier | Fenêtre | Relevés | Ce qui s'ouvre |
+   |---|---|---|---|
+   | 1 | 28 jours | 21 | un vélo devient la séance spécifique, la semaine passe à quatre courses |
+   | 2 | 56 jours | 42 | le second vélo devient une course, la semaine passe au-dessus de 60 km |
+
+   Rendre les deux vélos d'un seul coup ajouterait deux jours d'impact la même
+   semaine, sur un tendon dont c'est justement le décalage d'adaptation qui
+   l'avait blessé. `verdictVolume` (`adapt.ts`) renvoie le palier atteint et la
+   règle VOLUME l'annonce. **Trois relevés sur quatre au minimum dans chaque
+   fenêtre** : un carnet vide affiche zéro douleur, et ce serait le feu vert le
+   plus dangereux de l'app, celui qui ouvre 10 km de course en plus sur un
+   tendon dont on ne sait rien.
 6. **Jamais deux jours de course consécutifs**, sauf la paire lundi-mardi où le
    mardi est une récupération très lente (et qui bascule en vélo si la douleur au
    réveil dépasse 2).
@@ -581,6 +589,17 @@ résultat de la séance qui charge le plus le tendon.
 - **Une seule séance est plafonnée**, la prochaine dans le temps. Dès qu'elle
   est faite et notée, un nouveau verdict se calcule sur elle. Plafonner toute
   la suite aplatirait les 35 semaines sur un seul mauvais matin.
+- **La séance spécifique du jeudi suit la même règle**, avec son propre
+  verdict. Elle grossit d'une répétition par semaine dans le plan ; quand la
+  précédente n'est pas passée, `palierProchaineSpecifique` **répète la
+  précédente à l'identique** au lieu de monter. Le plafond porte la séance
+  entière et pas son kilométrage : « 3 x 1000 m » ne se déduit pas de 7 km, et
+  afficher une distance sans dire comment la courir ne serait pas une séance.
+- **Les deux familles se suivent séparément.** `FamillePalier` vaut `long` ou
+  `specifique`, et une sortie longue douloureuse ne plafonne pas la séance du
+  jeudi, qui n'a rien à voir avec elle. La cible se reconnaît au drapeau
+  `Session.specifique`, jamais au jour : une règle vise une séance, jamais une
+  case du calendrier.
 
 ### Ce qui est fait ne se réécrit plus
 
