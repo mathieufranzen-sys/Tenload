@@ -25,7 +25,7 @@ quotidien.
 ## Ce qui est non négociable
 
 Ces contraintes viennent de son tendon et de son emploi du temps. Elles sont
-vérifiées par `reference/check_plan.py` sur les 313 séances du plan. **Aucune
+vérifiées par `reference/check_plan.py` sur les 304 séances du plan. **Aucune
 modification du plan ne doit les casser.**
 
 1. **La sortie longue ne s'incrémente jamais de plus de 2 km d'une SEMAINE DE
@@ -48,6 +48,10 @@ modification du plan ne doit les casser.**
 4. **Un jour de repos jambes complet par semaine** : le dimanche.
 5. **Deux séances de vélo remplacent les petites séances d'endurance** tant que
    le tendon n'est pas guéri. Elles portent le volume aérobie sans impact.
+   **Le vélo est un substitut, pas un dû** : quand la course revient, il n'a
+   plus de raison d'être. Une semaine sans aucun vélo ne casse donc pas cette
+   contrainte, elle la conclut. C'est la lecture de Mathieu, arbitrée le
+   11 septembre 2026, et c'est elle qui autorise la semaine à quatre courses.
    **Sa sortie est écrite** : deux mois de carnet plein sans aucune douleur
    au-dessus de 2 sur dix, et les vélos redeviennent des courses faciles pour
    passer au-dessus de 60 km par semaine. Décidé le 4 septembre 2026, c'est le
@@ -119,6 +123,46 @@ jours avant un 10 km se paient le dimanche.
   samedi 30 janvier 2027**.
 - **Bloc D** (S26-32) spécifique marathon, allure course en volume.
 - **Bloc E** (S33-35) affûtage. Dernière longue de 28 km trois semaines avant.
+
+### La semaine à quatre courses
+
+Arbitrée le 11 septembre 2026, quand le tendon a tenu deux mois sans crise.
+`QUATRE_COURSES = {11, 12, 16, 18, 19, 20, 22, 23, 24}` dans `build_plan.py`,
+déclaré à l'identique dans `check_plan.py`.
+
+| Jour | Contenu |
+|---|---|
+| Lundi | Sortie longue |
+| Mardi | Course facile de récupération |
+| Mercredi | Escalade |
+| Jeudi | **Séance spécifique**, 10 km jusqu'à S12, semi ensuite |
+| Vendredi | Renfo bas **et** renfo haut |
+| Samedi | Séance de qualité |
+| Dimanche | Repos jambes complet |
+
+Quatre jours de course, deux séances de qualité, **aucun vélo**. Les six
+contraintes tiennent : la seule paire de jours de course qui s'enchaîne est
+lundi-mardi, celle que la contrainte 6 autorise.
+
+**Quatre semaines ne peuvent pas la prendre, et ce ne sont pas des
+préférences :**
+
+- **S10 et S15**, lendemains de course : leur sortie longue est déjà déplacée
+  au jeudi pour laisser quatre jours après le dossard, exactement la case où
+  irait la séance spécifique.
+- **S13, S17, S21**, décharges : on y décharge le volume sans toucher à la
+  qualité, y ajouter une seconde séance serait l'inverse exact.
+- **S14 et S25**, semaines de course.
+
+`check_plan.py` attend donc **zéro vélo et quatre courses** dans ces semaines,
+et refuse le plan si l'une d'elles perd sa séance du jeudi : sans elle on
+aurait retiré deux vélos pour rien.
+
+**Un enchaînement assumé, et qui n'est pas confortable :** le renfo bas du
+vendredi tombe la veille de la qualité du samedi. La contrainte 3 ne l'interdit
+pas, elle ne protège que la sortie longue, mais un protocole excentrique lourd
+la veille d'intervalles se paie au surlendemain. Mathieu a tranché pour
+regrouper les deux renforcements. À surveiller sur le carnet.
 
 ### Les deux courses d'automne
 

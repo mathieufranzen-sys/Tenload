@@ -20,20 +20,27 @@ EXCEPTIONS = {
         "qualité avancée au mercredi, la course occupe le samedi et le dimanche",
     "S14: mercredi contient inter (5 x 400 m)":
         "qualité avancée au mercredi, la course occupe le samedi et le dimanche",
-    "S10: 1 vélo(s)":
+    "S10: 1 vélo(s), 2 attendu(s)":
         "le vélo Z2 du jeudi cède la place à la sortie longue déplacée",
-    "S15: 1 vélo(s)":
+    "S15: 1 vélo(s), 2 attendu(s)":
         "le vélo Z2 du jeudi cède la place à la sortie longue déplacée",
 }
 ATTENDUS = {
-    "S10: 2 courses": "lundi en repos au lendemain de la course, l'EF saute",
-    "S15: 2 courses": "lundi en repos au lendemain de la course, l'EF saute",
+    "S10: 2 courses, 3 attendue(s)": "lundi en repos au lendemain de la course, l'EF saute",
+    "S15: 2 courses, 3 attendue(s)": "lundi en repos au lendemain de la course, l'EF saute",
 }
 
 # ---------------------------------------------------------------- décharges
 # Les semaines de course : leur sortie longue n'est pas une étape de la
 # progression, c'est une compétition ou la semaine qui la prépare.
 SEM_COURSE = {9, 14, 25, 35}
+
+# Semaines à quatre courses, décidées le 11 septembre 2026. Le vélo est un
+# SUBSTITUT à la course : la contrainte 5 le met là « tant que le tendon n'est
+# pas guéri ». Quand la course revient, il n'a plus de raison d'être, donc
+# zéro vélo y est la valeur attendue et non un oubli. Quatre jours de course
+# aussi, la paire lundi-mardi restant la seule qui s'enchaîne.
+QUATRE_COURSES = {11, 12, 16, 18, 19, 20, 22, 23, 24}
 
 # Coût tendineux, repris de src/lib/tendonIndex.ts. Le doublon est assumé :
 # check_plan.py doit pouvoir dire tout seul si une décharge décharge, sans
@@ -168,12 +175,26 @@ for w in W:
     c = {}
     for s in w["sessions"]:
         c[s["type"]] = c.get(s["type"], 0) + 1
-    if c.get("velo", 0) != 2: errs.append(f"S{w['n']}: {c.get('velo',0)} vélo(s)")
+    velos_attendus = 0 if w["n"] in QUATRE_COURSES else 2
+    if c.get("velo", 0) != velos_attendus:
+        errs.append(f"S{w['n']}: {c.get('velo',0)} vélo(s), {velos_attendus} attendu(s)")
     if c.get("muscu-bas", 0) != 1: errs.append(f"S{w['n']}: muscu bas x{c.get('muscu-bas',0)}")
     if c.get("muscu-haut", 0) != 1: errs.append(f"S{w['n']}: muscu haut x{c.get('muscu-haut',0)}")
     if c.get("escalade", 0) != 1: errs.append(f"S{w['n']}: escalade x{c.get('escalade',0)}")
     runs = sum(v for k, v in c.items() if k in RUN)
-    if runs != 3: warns.append(f"S{w['n']}: {runs} courses")
+    attendues = 4 if w["n"] in QUATRE_COURSES else 3
+    if runs != attendues: warns.append(f"S{w['n']}: {runs} courses, {attendues} attendue(s)")
+
+# 5 bis) la semaine à quatre courses porte bien sa séance spécifique du jeudi.
+# Sans elle, la disposition n'a plus d'objet : on aurait retiré deux vélos pour
+# rien, et la semaine serait plus légère sans être plus utile.
+for w in W:
+    if w["n"] not in QUATRE_COURSES: continue
+    jeudi = [s for s in w["sessions"] if s["day"] == 3]
+    if not any(s["type"] in SPEED for s in jeudi):
+        errs.append(f"S{w['n']}: semaine à quatre courses sans séance spécifique le jeudi")
+    if any(s["type"] == "velo" for s in w["sessions"]):
+        errs.append(f"S{w['n']}: semaine à quatre courses avec un vélo")
 
 # 6) jamais 2 jours de course consécutifs sauf lun/mar (SL + récup) volontaire
 for w in W:

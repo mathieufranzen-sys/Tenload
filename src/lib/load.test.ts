@@ -13,8 +13,19 @@ import { cleEcart, indexerEcarts, slotsParJour, type EcartRow } from './override
 
 const plan = planJson as unknown as Plan
 
-/** Semaine 11 : lundi sortie longue, jeudi renfo bas + vélo, samedi intervalles. */
-const semaine = plan.weeks[10]
+/**
+ * Une semaine à la forme classique : sortie longue le lundi, renfo bas et vélo
+ * le jeudi, qualité le samedi. Elle se cherche au lieu d'être désignée par son
+ * numéro, sinon changer la disposition d'une semaine du plan casse des tests
+ * qui ne parlent pas d'elle. Ils parlent de la clé de séance et du coût au
+ * kilomètre, pas de la semaine 11.
+ */
+const semaine = plan.weeks.find(
+  (w) =>
+    w.sessions.some((s) => s.day === 0 && s.type === 'long') &&
+    w.sessions.some((s) => s.day === 3 && s.type === 'muscu-bas') &&
+    w.sessions.some((s) => s.day === 3 && s.type === 'velo'),
+)!
 const lundi = semaine.monday
 const jour = (n: number): string => {
   const d = new Date(`${lundi}T12:00:00Z`)

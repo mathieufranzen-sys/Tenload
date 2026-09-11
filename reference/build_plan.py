@@ -84,6 +84,57 @@ ALLEGEE = DELOAD | ALLEGEE_COURSE
 
 NO_LONG_MONDAY = {1, 25, 35}   # amorce / semi test / marathon
 
+# ── la semaine à quatre courses ────────────────────────────────────────────
+# Décidée le 11 septembre 2026, quand le tendon a tenu deux mois sans crise.
+# Le vélo est un SUBSTITUT à la course, pas un dû : la contrainte 5 dit qu'il
+# remplace les petites séances d'endurance « tant que le tendon n'est pas
+# guéri ». Quand la course revient, le substitut n'a plus de raison d'être, et
+# ces semaines n'ont donc aucun vélo. C'est la lecture de Mathieu, et c'est la
+# bonne : la contrainte protège le tendon, elle ne réserve pas un créneau.
+#
+#   lundi     sortie longue
+#   mardi     course facile de récupération
+#   mercredi  escalade
+#   jeudi     séance spécifique, 10 km puis semi
+#   vendredi  renfo bas ET renfo haut
+#   samedi    séance de qualité
+#   dimanche  repos jambes complet
+#
+# Quatre jours de course, jamais deux d'affilée sauf la paire lundi-mardi que
+# la contrainte 6 autorise. Les six contraintes tiennent, vérifié.
+#
+# Ce que ces semaines NE peuvent pas être :
+#   S10 et S15, lendemains de course : leur sortie longue est déjà au jeudi,
+#     exactement là où irait la séance spécifique ;
+#   S13, S17, S21, décharges : on y décharge le volume sans toucher à la
+#     qualité, y ajouter une seconde séance serait l'inverse exact ;
+#   S14 et S25, semaines de course.
+QUATRE_COURSES = {11, 12, 16, 18, 19, 20, 22, 23, 24}
+
+# La séance du jeudi. Elle démarre courte et grossit d'une répétition par
+# semaine : c'est une charge qui s'ajoute à une semaine déjà pleine, et le
+# tendon s'adapte plus lentement que la filière qu'elle développe.
+SPECIFIQUE = {
+ 11: ("3 x 1000 m allure 10 km", 7,  [("3 x 1000 m", "seuil"), ("récup 2 min", "")],
+      "Première séance spécifique du bloc 10 km. Allure de course, pas plus vite : l'objectif est d'installer le rythme du 15 novembre, pas de le battre à l'entraînement. Si le mollet tire à l'échauffement, tu la transformes en endurance et tu ne discutes pas."),
+ 12: ("4 x 1000 m allure 10 km", 8,  [("4 x 1000 m", "seuil"), ("récup 2 min", "")],
+      "Une répétition de plus que la semaine dernière. C'est la dernière séance spécifique avant la décharge : elle doit rester confortable sur les deux premières, sinon tu coupes à trois."),
+ 16: ("3 x 1500 m allure semi", 8,   [("3 x 1500 m", "seuil"), ("récup 2 min 30", "")],
+      "Ouverture du spécifique semi. Les répétitions s'allongent et l'allure descend d'un cran : le semi du 30 janvier se court plus lentement qu'un 10 km, et c'est cette allure-là qu'il faut installer."),
+ 18: ("4 x 1500 m allure semi", 9,   [("4 x 1500 m", "seuil"), ("récup 2 min 30", "")],
+      "Novembre, il fait froid : rallonge l'échauffement de cinq minutes. Un tendon froid est un tendon qui casse."),
+ 19: ("2 x 3 km allure semi", 9,     [("2 x 3 km", "seuil"), ("récup 3 min", "")],
+      "Moins de répétitions, plus longues. C'est le même volume de travail, dans une forme plus proche de la course."),
+ 20: ("3 x 2,5 km allure semi", 10,  [("3 x 2,5 km", "seuil"), ("récup 3 min", "")],
+      "Le volume de travail passe à 7,5 km. À ce stade, la séance du jeudi n'est plus un entretien, c'est une vraie séance."),
+ 22: ("2 x 4 km allure semi", 11,    [("2 x 4 km", "seuil"), ("récup 3 min", "")],
+      "Deux blocs longs. Si le second est plus lent que le premier de plus de cinq secondes au kilomètre, l'allure est trop rapide et tu la corriges dans Allures."),
+ 23: ("3 x 3 km allure semi", 11,    [("3 x 3 km", "seuil"), ("récup 3 min", "")],
+      "Neuf kilomètres à allure semi, la plus grosse séance spécifique du bloc. Elle se juge au lendemain matin, pas au chrono."),
+ 24: ("2 x 5 km allure semi", 12,    [("2 x 5 km", "seuil"), ("récup 4 min", "")],
+      "Dernière séance spécifique avant le semi test. Dix kilomètres à l'allure visée : si elle passe, l'objectif du 30 janvier est réaliste."),
+}
+
 # ---------------------------------------------------------------- courses
 # Deux courses réelles, à dates fixes, tombent un DIMANCHE : le jour de repos
 # jambes. Elles bousculent leur semaine et la suivante, et ces écarts sont
@@ -470,11 +521,15 @@ for w in range(1, 36):
             "note": "Récupération active au lendemain de la sortie longue. Vraiment lent : c'est une limite haute, pas un objectif. Si la douleur au réveil dépasse 2/10, tu remplaces par 45 min de vélo Z2.",
             "swap": {"title": "Vélo Z2 45 min", "reason": "douleur réveil > 2"},
             "feedback": True})
-    sessions.append({"day": 1, "type": "muscu-haut", "title": MUSCU_HAUT[bid]["name"],
-        "cat": "Renforcement haut du corps", "dur": [40, 45],
-        "ex": MUSCU_HAUT[bid]["ex"],
-        "note": "Pas de charge sur les jambes aujourd'hui. Le tendon récupère de la sortie longue.",
-        "feedback": True})
+    # Le renfo haut descend au vendredi dans la semaine à quatre courses : le
+    # jeudi y porte la séance spécifique, et regrouper les deux renforcements
+    # libère la journée sans rien coûter au tendon, qui ignore le haut du corps.
+    if w not in QUATRE_COURSES:
+        sessions.append({"day": 1, "type": "muscu-haut", "title": MUSCU_HAUT[bid]["name"],
+            "cat": "Renforcement haut du corps", "dur": [40, 45],
+            "ex": MUSCU_HAUT[bid]["ex"],
+            "note": "Pas de charge sur les jambes aujourd'hui. Le tendon récupère de la sortie longue.",
+            "feedback": True})
 
     # --- MERCREDI : escalade (+ la qualité avancée, en semaine de course)
     if course:
@@ -498,7 +553,14 @@ for w in range(1, 36):
         sessions.append(seance_longue(3))
     # Le renfo bas remonte au mardi la semaine d'après une course : il ne peut
     # être ni le mercredi (escalade), ni collé à la sortie longue du jeudi.
-    sessions.append({"day": 1 if apres else 3, "type": "muscu-bas",
+    if w in QUATRE_COURSES:
+        nom, dist, principal, note = SPECIFIQUE[w]
+        sessions.append({"day": 3, "type": "tempo", "title": nom,
+            "cat": "Tempo", "dist": dist, "dur": None,
+            "wu": [(2.5, "ef")], "main": principal, "cd": [(2, "recup")],
+            "note": note, "feedback": True})
+
+    sessions.append({"day": 4 if w in QUATRE_COURSES else (1 if apres else 3), "type": "muscu-bas",
         "title": MUSCU_BAS["E" if light else "DL" if decharge_bas else bid]["name"],
         "cat": "Renforcement bas du corps",
         "dur": [25, 30] if light or decharge_bas else [40, 45],
@@ -512,19 +574,30 @@ for w in range(1, 36):
                  "la veille ni le lendemain d'une longue. " if apres else "") +
                 "La séance la plus importante du plan pour ton tendon. Le protocole excentrique (Stanish) se fait lentement à la descente, une douleur de 3-4/10 pendant l'exercice est normale et même recherchée. Au-delà de 5, tu baisses la charge.",
         "feedback": True})
+    if w in QUATRE_COURSES:
+        sessions.append({"day": 4, "type": "muscu-haut", "title": MUSCU_HAUT[bid]["name"],
+            "cat": "Renforcement haut du corps", "dur": [40, 45],
+            "ex": MUSCU_HAUT[bid]["ex"],
+            "note": "Regroupé avec le bas du corps : le mardi porte la course de récupération "
+                    "et le jeudi la séance spécifique. Aucune charge sur le tendon ici.",
+            "feedback": True})
+
     # Le vélo Z2 du jeudi cède la place : à la qualité avancée en semaine de
-    # course, à la sortie longue déplacée la semaine d'après.
-    if not course and not apres:
+    # course, à la sortie longue déplacée la semaine d'après, et à la séance
+    # spécifique dans la semaine à quatre courses.
+    if not course and not apres and w not in QUATRE_COURSES:
         sessions.append({"day": 3, "type": "velo", "title": f"Vélo Z2 {velo_min(w)} min",
             "cat": "Vélo", "dur": [velo_min(w), velo_min(w) + 10],
             "note": "Volume aérobie sans impact. Cadence 85-95 rpm, respiration contrôlée, tu dois pouvoir tenir une conversation.",
             "feedback": True})
 
-    # --- VENDREDI : vélo récup
-    sessions.append({"day": 4, "type": "velo", "title": f"Vélo récupération {velo_min(w, True)} min",
-        "cat": "Vélo", "dur": [velo_min(w, True), velo_min(w, True) + 10],
-        "note": "Vélo souple, jambes qui tournent. Objectif : arriver frais sur la séance de qualité de demain. Si les jambes sont lourdes, tu coupes, c'est prévu.",
-        "optional": True, "feedback": True})
+    # --- VENDREDI : vélo récup, sauf dans la semaine à quatre courses où le
+    # quatrième jour de course a repris le rôle que le vélo tenait.
+    if w not in QUATRE_COURSES:
+        sessions.append({"day": 4, "type": "velo", "title": f"Vélo récupération {velo_min(w, True)} min",
+            "cat": "Vélo", "dur": [velo_min(w, True), velo_min(w, True) + 10],
+            "note": "Vélo souple, jambes qui tournent. Objectif : arriver frais sur la séance de qualité de demain. Si les jambes sont lourdes, tu coupes, c'est prévu.",
+            "optional": True, "feedback": True})
 
     # --- SAMEDI : qualité, ou veille de course
     if w == 35 or course:
