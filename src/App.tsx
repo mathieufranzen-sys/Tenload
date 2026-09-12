@@ -367,7 +367,7 @@ function Coquille({
   const notesEnRetard = compterEnRetard(aNoter)
   const [seance, setSeance] = useState<SeanceOuverte | null>(null)
   /** Séance à mettre en avant dans la vue calendrier, après « Déplacer ». */
-  const [focusSeance, setFocusSeance] = useState<string | null>(null)
+  const [focusSeance, setFocusSeance] = useState<{ cle: string; jeton: number } | null>(null)
   const [numeroSemaine, setNumeroSemaine] = useState(
     () => (plan.weeks.find((w) => now >= w.monday && now <= addDays(w.monday, 6)) ?? plan.weeks[0]).n,
   )
@@ -435,7 +435,8 @@ function Coquille({
             setSeance({ semaineN: x.semaineOrigine, jourOrigine: x.jourOrigine, slot: x.slot })
           }
           onSaveEcart={onSaveEcart}
-          focusSeance={focusSeance}
+          focusSeance={focusSeance?.cle ?? null}
+          jetonFocus={focusSeance?.jeton}
           onOuvrirProfil={() => setOnglet('profile')}
         />
       )}
@@ -500,7 +501,10 @@ function Coquille({
           onSave={onSaveFeedback}
           onSaveEcart={onSaveEcart}
           onDeplacer={(x) => {
-            setFocusSeance(cleEcart(x.semaineOrigine, x.jourOrigine, x.slot))
+            setFocusSeance((f) => ({
+              cle: cleEcart(x.semaineOrigine, x.jourOrigine, x.slot),
+              jeton: (f?.jeton ?? 0) + 1,
+            }))
             setNumeroSemaine(x.semaineOrigine)
             setSeance(null)
             setOnglet('plan')

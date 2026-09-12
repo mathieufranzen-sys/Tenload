@@ -1,7 +1,7 @@
 /**
  * Écran Programme, porté depuis reference/tendo-v3.html (`vPlan`).
  */
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan as PlanType, Session } from '../data/types'
 import { DAYS_LONG, addDays, formatDay, formatNumber, today as todayISO } from '../lib/dates'
@@ -51,6 +51,8 @@ interface Props {
   ) => void
   /** Clé de la séance à mettre en avant, quand on arrive depuis « Déplacer ». */
   focusSeance?: string | null
+  /** Change à chaque « Déplacer », même sur la même séance : c'est la demande qui compte, pas la clé. */
+  jetonFocus?: number
   onOuvrirProfil: () => void
 }
 
@@ -65,6 +67,7 @@ export function Plan({
   onOuvrirSeance,
   onSaveEcart,
   focusSeance,
+  jetonFocus,
   onOuvrirProfil,
 }: Props) {
   const now = todayISO()
@@ -112,6 +115,11 @@ export function Plan({
   )
 
   const [vue, setVue] = useState<'semaine' | 'calendrier'>(focusSeance ? 'calendrier' : 'semaine')
+  // L'initialiseur ne tourne qu'au montage : quand « Déplacer » part d'une
+  // séance ouverte depuis la vue semaine, Programme est déjà monté et y restait.
+  useEffect(() => {
+    if (focusSeance) setVue('calendrier')
+  }, [focusSeance, jetonFocus])
 
   const [premiere, derniere] = bloc.weeks
   const rangDansBloc = semaine.n - premiere + 1
