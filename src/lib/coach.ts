@@ -277,11 +277,18 @@ export function motDuCoach(entree: EntreeCoach): MotCoach {
   const recent = reveils(pain, now, 14)
   const avant = reveils(pain, addDays(now, -14), 14)
   const excentrique = joursExcentrique(pain, now, 28)
-
-  // ── La raideur au réveil, le marqueur de référence ──────────────────────
   // Quatre saisies de chaque côté au minimum : en dessous, une seule mauvaise
   // nuit déplacerait la moyenne et on annoncerait une tendance qui n'existe pas.
-  if (recent.length >= 4 && avant.length >= 4) {
+  const assezDeReveils = recent.length >= 4 && avant.length >= 4
+
+  // ── La raideur au réveil, le marqueur de référence ──────────────────────
+  // Elle ne passe devant que quand elle a quelque chose à annoncer : une
+  // vraie tendance, ou une stabilité tenue avec une forte observance. Une
+  // stabilité plate n'est pas cette chose-là — la renvoyer en premier
+  // revenait, un mois de saisies passé, à ne plus jamais dire autre chose :
+  // ni l'observance de l'excentrique, ni une semaine complète, ni l'indice
+  // qui baisse restaient jamais lus.
+  if (assezDeReveils) {
     const a = moyenne(avant)
     const b = moyenne(recent)
     const ecart = a - b
@@ -310,11 +317,6 @@ export function motDuCoach(entree: EntreeCoach): MotCoach {
         texte: `Raideur au réveil stable à ${formatNumber(b)} sur dix, avec l'excentrique fait ${excentrique} jours sur 28. C'est exactement ce qu'on cherche : de la charge encaissée sans que le tendon proteste.${relance}`,
       }
     }
-
-    return {
-      ton: 'neutre',
-      texte: `Raideur au réveil stable autour de ${formatNumber(b)} sur dix depuis un mois. Le tendon encaisse ce que tu lui donnes.`,
-    }
   }
 
   // ── L'observance du protocole ───────────────────────────────────────────
@@ -333,13 +335,22 @@ export function motDuCoach(entree: EntreeCoach): MotCoach {
     }
   }
 
-  // ── L'indice, en dernier recours : c'est un agrégat, pas une observation ─
+  // ── L'indice ──────────────────────────────────────────────────────────
   const idxRecent = indiceMoyen(byDate, now, 7)
   const idxAvant = indiceMoyen(byDate, addDays(now, -7), 7)
   if (idxRecent != null && idxAvant != null && idxAvant - idxRecent >= 3) {
     return {
       ton: 'bravo',
       texte: `Ton indice de charge moyen est passé de ${Math.round(idxAvant)} à ${Math.round(idxRecent)} en une semaine. Le tendon récupère plus vite qu'il ne se charge.${relance}`,
+    }
+  }
+
+  // ── La raideur stable, en dernier recours : c'est une observation plate,
+  // elle ne mérite de passer qu'une fois tout le reste épuisé ──────────────
+  if (assezDeReveils) {
+    return {
+      ton: 'neutre',
+      texte: `Raideur au réveil stable autour de ${formatNumber(moyenne(recent))} sur dix depuis un mois. Le tendon encaisse ce que tu lui donnes.`,
     }
   }
 
