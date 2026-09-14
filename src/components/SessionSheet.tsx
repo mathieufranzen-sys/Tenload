@@ -152,6 +152,9 @@ export function SessionSheet({
         zIndex: 60,
         background: 'var(--bg)',
         overflowY: 'auto',
+        // Le pictogramme filigrane déborde volontairement à droite (`right: -26`) :
+        // sans ce clip, ce débord ouvrait un scroll horizontal sur toute la feuille.
+        overflowX: 'hidden',
         maxWidth: 'var(--shell-max)',
         margin: '0 auto',
       }}

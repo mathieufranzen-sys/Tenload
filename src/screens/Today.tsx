@@ -47,6 +47,9 @@ interface Props {
   activities: ActivityRow[]
   /** Écarts volontaires, indexés par `cleEcart`. */
   ecarts?: Map<string, EcartRow>
+  /** Jours dont la charge est une mesure et non un silence. Sans elle, une
+   *  séance sautée retombe sur `load > 0` et se lit comme une absence. */
+  attestes?: Set<string>
   /** Ancre les six zones — vient du profil, `plan.meta` en repli seulement. */
   marathonPace: number
   /** Le carnet du jour n'existe qu'avec Supabase branché. */
@@ -68,6 +71,7 @@ export function Today({
   feedback,
   activities,
   ecarts,
+  attestes,
   marathonPace,
   journalActif,
   onVoirSuivi,
@@ -75,7 +79,10 @@ export function Today({
   onOuvrirProfil,
 }: Props) {
   const now = todayISO()
-  const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
+  const A = useMemo(
+    () => adapt(load, pain, feedback, now, attestes),
+    [load, pain, feedback, now, attestes],
+  )
   const [calculOuvert, setCalculOuvert] = useState(false)
 
   // Le jour consulté. Il recule jusqu'à 28 jours, la fenêtre du modèle, et ne

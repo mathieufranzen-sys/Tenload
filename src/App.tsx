@@ -413,6 +413,7 @@ function Coquille({
           feedback={feedback}
           activities={data.activities}
           ecarts={ecarts}
+          attestes={attestes}
           marathonPace={marathonPace}
           journalActif={journalActif}
           onVoirSuivi={() => setOnglet('track')}
