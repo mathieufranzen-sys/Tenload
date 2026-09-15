@@ -39,30 +39,38 @@ export const DOULEUR_DETAIL = [
 /** Effort perçu (RPE). Neutre : un 9 sur une séance de qualité est une réussite. */
 export const EFFORT_MOT = [
   'Repos',
-  'Très facile',
-  'Facile',
-  'Confortable',
-  'Modéré',
+  'Très léger',
+  'Léger',
+  'Aisé',
+  'Posé',
   'Soutenu',
-  'Difficile',
-  'Dur',
-  'Très dur',
-  'Presque maximal',
-  'Maximal',
+  'Engagé',
+  'Intense',
+  'Très intense',
+  'Quasi max',
+  'Max',
 ]
 
+/**
+ * Le test de la parole, pas un jugement. Les anciennes phrases disaient
+ * « Dur », « Tu comptes les répétitions », « Séance réussie de justesse » :
+ * elles sonnaient comme un échec et poussaient à noter plus bas que vécu,
+ * alors qu'un 9 sur un fractionné est une réussite. Ce qu'on peut dire en
+ * courant se vérifie sur le moment, et décrit l'effort vécu plutôt que la
+ * séance prévue, qui est exactement l'écart que `forme.ts` mesure.
+ */
 export const EFFORT_DETAIL = [
   'Aucun effort.',
-  'Très facile, tu pourrais recommencer tout de suite.',
-  'Facile. Conversation possible sans effort.',
-  'Confortable. Le socle de l’endurance.',
-  'Modéré. Tu sens le travail sans le subir.',
-  'Soutenu. Phrases courtes.',
-  'Difficile. Quelques mots seulement.',
-  'Dur. Allure de seuil.',
-  'Très dur. Tu comptes les répétitions.',
-  'Presque maximal. Séance réussie de justesse.',
-  'Maximal. Tu n’aurais pas pu faire plus.',
+  'Tu pourrais chanter.',
+  'Conversation facile, sans y penser.',
+  'Conversation fluide.',
+  'Tu parles en phrases complètes.',
+  'Phrases complètes, respiration marquée.',
+  'Phrases courtes.',
+  'Quelques mots à la fois.',
+  'Un ou deux mots.',
+  'Plus envie de parler.',
+  'Aucun mot, tout est dans l’effort.',
 ]
 
 /** Le rang dans les tables ci-dessus, pour une valeur qui peut être décimale. */
