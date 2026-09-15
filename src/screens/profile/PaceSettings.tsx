@@ -83,8 +83,9 @@ export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
         <b style={{ fontSize: 16 }}>Recalibrer</b>
         <p style={{ color: 'var(--ink-2)', fontSize: 14.5, lineHeight: 1.5, margin: '6px 0 14px' }}>
-          Après une séance test ou une course, entre ton temps sur 3 km. Ça met à jour ta forme
-          projetée et l'écart, sans toucher aux allures d'entraînement.
+          Après un test sur 3 km, entre ton temps. Ça met à jour ta forme projetée et l'écart, sans
+          toucher aux allures d'entraînement. Une course de 10 km ou plus se recale depuis sa
+          propre feuille de séance, avec son chrono.
         </p>
         <input
           type="text"

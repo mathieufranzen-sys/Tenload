@@ -741,12 +741,12 @@ function candidatsRecul({ pain, now, forme }: EntreeCoach): MotCoach[] {
         ? {
             cle: 'forme-long-terme',
             ton: 'bravo',
-            texte: `Ton effort perçu des quatre dernières semaines te met ${ecart} s/km plus vite que ton test de 3 km ne le disait : forme projetée à ${formatPace(forme.allure)}/km, soit ${chrono} au marathon. Le prochain test dira si c'est acquis.`,
+            texte: `Ton effort perçu des quatre dernières semaines te met ${ecart} s/km plus vite que ton dernier test ne le disait : forme projetée à ${formatPace(forme.allure)}/km, soit ${chrono} au marathon. Le prochain test dira si c'est acquis.`,
           }
         : {
             cle: 'forme-long-terme',
             ton: 'neutre',
-            texte: `Ton effort perçu des quatre dernières semaines te met ${ecart} s/km plus lent que ton test de 3 km : forme projetée à ${formatPace(forme.allure)}/km, soit ${chrono} au marathon. Plus souvent de la fatigue qu'une perte de forme, c'est le prochain test qui tranchera.`,
+            texte: `Ton effort perçu des quatre dernières semaines te met ${ecart} s/km plus lent que ton dernier test : forme projetée à ${formatPace(forme.allure)}/km, soit ${chrono} au marathon. Plus souvent de la fatigue qu'une perte de forme, c'est le prochain test qui tranchera.`,
           },
     )
   }

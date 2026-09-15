@@ -513,6 +513,8 @@ function Coquille({
             setSeance(null)
             setOnglet('plan')
           }}
+          formeActuelle={fitnessPaceTest}
+          onRecalibrerForme={onSaveProfil && ((allure) => onSaveProfil({ fitness_pace_s: allure }))}
           onClose={() => setSeance(null)}
         />
       )}

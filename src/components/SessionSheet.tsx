@@ -16,7 +16,8 @@ import {
 import { ActionsSeance } from './ActionsSeance'
 import { CarteCoach } from './CarteCoach'
 import { butDeLaSeance } from '../lib/coach'
-import { formatDayLong } from '../lib/dates'
+import { formatDayLong, today } from '../lib/dates'
+import { ChronoCourse, recalageSurCourse } from './ChronoCourse'
 import {
   DOULEUR_DETAIL,
   DOULEUR_MOT,
@@ -62,6 +63,10 @@ interface Props {
   ) => void
   /** Ouvre la vue calendrier de Programme sur cette séance. */
   onDeplacer?: (seance: SeancePlanifiee) => void
+  /** Forme projetée par le dernier test, avant ajustement par le ressenti. */
+  formeActuelle?: number
+  /** Enregistre une nouvelle forme projetée, calculée sur le chrono d'une course. */
+  onRecalibrerForme?: (allure: number) => void
   onClose: () => void
 }
 
@@ -74,6 +79,8 @@ export function SessionSheet({
   onSave,
   onSaveEcart,
   onDeplacer,
+  formeActuelle,
+  onRecalibrerForme,
   onClose,
 }: Props) {
   const { s, jourOrigine, slot, day } = seance
@@ -378,6 +385,36 @@ export function SessionSheet({
                 'repeating-linear-gradient(90deg, var(--border-2) 0 4px, transparent 4px 9px)',
             }}
           />
+          {recalageSurCourse(s) && day <= today() && formeActuelle != null && (
+            <>
+              <SectionTitre icone="up">Ton chrono</SectionTitre>
+              <ChronoCourse
+                km={s.dist!}
+                chronoSaisi={
+                  seance.ecart?.patch.durMin != null ? Math.round(seance.ecart.patch.durMin * 60) : null
+                }
+                formeActuelle={formeActuelle}
+                disabled={!onSaveEcart || !onRecalibrerForme}
+                onValider={(chrono, allure) => {
+                  // Le chrono devient la durée réelle de la course : c'est lui
+                  // qui fait foi, et aucune colonne de plus n'est à créer.
+                  onSaveEcart?.(week.n, jourOrigine, slot, {
+                    ...(seance.ecart?.patch ?? {}),
+                    durMin: chrono / 60,
+                  })
+                  onRecalibrerForme?.(allure)
+                }}
+              />
+              <div
+                style={{
+                  height: 1,
+                  margin: '18px 0',
+                  background:
+                    'repeating-linear-gradient(90deg, var(--border-2) 0 4px, transparent 4px 9px)',
+                }}
+              />
+            </>
+          )}
           <SectionTitre icone="heart">Ton ressenti</SectionTitre>
           {ressentiImplicite ? (
             <div

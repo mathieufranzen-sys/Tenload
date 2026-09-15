@@ -229,7 +229,25 @@ qui est le sien.
 
 **Test de calibrage** : 3 km le 8 août 2026 en **12:02** (4:00/km, meilleur
 kilomètre à 3:50, splits 3:59 / 3:55 / 4:05). Le test était bien maximal, voir
-la section suivante. Ne pas le refaire avant la fin du bloc A.
+la section suivante.
+
+**Le prochain recalage est le 10 km du 15 novembre**, pas un nouveau test de
+3 km : arbitré par Mathieu le 16 septembre 2026, la fin du bloc A était trop
+tôt. La feuille de toute course de 10 à 39 km (`recalageSurCourse`) porte un
+bloc « Ton chrono », une fois le jour passé : saisie, projection affichée, puis
+recalage sur confirmation. Le chrono est enregistré comme durée réelle de la
+course (`EcartPatch.durMin`), la forme dans `profiles.fitness_pace_s` : aucune
+colonne à créer.
+
+- **`projeterMarathon` (`paces.ts`) utilise les équations de Daniels et
+  Gilbert**, avec une prudence qui décroît avec la distance. L'équivalence pure
+  projette le 12:02 7 s/km plus vite que `projectFrom3k` : ce n'est pas un
+  désaccord, c'est l'endurance spécifique qu'un effort de douze minutes ne
+  mesure pas. Sans correction, le même niveau couru sur 10 km aurait affiché un
+  progrès fabriqué par le changement de méthode. La prudence vaut ces 7 s/km
+  sur 3 km et zéro sur 42 km, en échelle logarithmique ; le 12:02 retombe
+  exactement sur 289.
+- Le marathon ne recale rien : c'est l'aboutissement, pas une mesure.
 
 ### La forme projetée bouge avec le ressenti
 

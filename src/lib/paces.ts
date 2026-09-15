@@ -57,6 +57,64 @@ export const timeFor = (secPerKm: number, km: number): number => secPerKm * km
 export const projectFrom3k = (totalSeconds: number): number =>
   Math.round(totalSeconds / 3 + 48)
 
+/**
+ * Équations de Daniels et Gilbert : l'oxygène que coûte une vitesse, et la part
+ * de VO2max qu'on tient pendant une durée donnée. Leur rapport est le VDOT.
+ */
+const vo2Vitesse = (metresParMin: number): number =>
+  -4.6 + 0.182258 * metresParMin + 0.000104 * metresParMin * metresParMin
+
+const partSoutenable = (minutes: number): number =>
+  0.8 + 0.1894393 * Math.exp(-0.012778 * minutes) + 0.2989558 * Math.exp(-0.1932605 * minutes)
+
+export function vdot(metres: number, secondes: number): number {
+  const minutes = secondes / 60
+  return vo2Vitesse(metres / minutes) / partSoutenable(minutes)
+}
+
+/** Le marathon au même VDOT que la course, en s/km, sans aucune prudence. */
+function projeterEquivalent(km: number, secondes: number): number {
+  const cible = vdot(km * 1000, secondes)
+  let bas = 2 * 3600
+  let haut = 7 * 3600
+  for (let i = 0; i < 60; i++) {
+    const milieu = (bas + haut) / 2
+    // Un VDOT plus haut que la cible veut dire un marathon trop rapide.
+    if (vdot(MARATHON_KM * 1000, milieu) > cible) bas = milieu
+    else haut = milieu
+  }
+  return (bas + haut) / 2 / MARATHON_KM
+}
+
+/** Le test de 3 km du 8 août, en secondes : il calibre la prudence. */
+const TEST_REFERENCE_S = 722
+
+/**
+ * Ce que `projectFrom3k` ajoute à l'équivalence pure sur ce test : 7 s/km.
+ * Ce n'est pas une erreur de l'une ou de l'autre, c'est l'endurance spécifique
+ * qu'un effort de douze minutes ne mesure pas. Sans elle, le même niveau couru
+ * sur 10 km afficherait « 7 s/km plus vite », un progrès fabriqué par le
+ * changement de méthode.
+ */
+const PRUDENCE_3K = projectFrom3k(TEST_REFERENCE_S) - projeterEquivalent(3, TEST_REFERENCE_S)
+
+/**
+ * Allure marathon projetée par une course, en s/km.
+ *
+ * La prudence décroît avec la distance, sur une échelle logarithmique : entière
+ * sur 3 km, nulle sur 42 km. Plus la course est longue, plus elle dit de
+ * l'endurance spécifique, et moins il reste à supposer. Un 10 km en garde un
+ * peu plus de la moitié.
+ */
+export function projeterMarathon(km: number, secondes: number): number {
+  const part = Math.max(0, Math.log(MARATHON_KM / km) / Math.log(MARATHON_KM / 3))
+  return Math.round(projeterEquivalent(km, secondes) + PRUDENCE_3K * part)
+}
+
+/** Un chrono qu'on peut croire : entre 2:30 et 7:00 au kilomètre. */
+export const chronoPlausible = (km: number, secondes: number): boolean =>
+  secondes / km >= 150 && secondes / km <= 420
+
 /** Objectif marathon exprimé en secondes par kilomètre. */
 export const paceForTarget = (targetSeconds: number): number =>
   Math.round(targetSeconds / MARATHON_KM)
