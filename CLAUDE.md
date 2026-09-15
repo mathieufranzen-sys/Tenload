@@ -819,6 +819,26 @@ abus, dans l'app ou en passant les données à une IA.
   de partage iOS en repli. Aucun nom dedans.
 - Le carnet ne se calcule que quand la page est ouverte.
 
+## Le bilan de la semaine
+
+`src/lib/bilan.ts` (+ 6 tests), carte `CarteBilan` au-dessus du mot du coach
+dans Aujourd'hui. Demandé par Mathieu le 16 septembre 2026. **Le dimanche** il
+porte sur la semaine qui se referme, **le lundi** sur celle qui vient de finir :
+on ne relit pas toujours l'app le dimanche, et la semaine qui commence est
+justement celle dont la carte parle.
+
+- Séances faites, sautées, à noter ; kilomètres de course réels contre le plan
+  de référence ; charge réelle contre plan ; raideur moyenne contre la semaine
+  d'avant ; pic de douleur et son moment ; jours d'excentrique.
+- **L'écart de charge n'est pas calculé tant qu'une séance passée n'est pas
+  notée** : la charge réelle serait sous-estimée, donc l'écart rassurant à tort.
+- **Pas de moyenne de raideur sous trois matins**, une nuit ferait la moyenne.
+- « La semaine prochaine » ne dit que ce que le plan porte ou ce que le moteur
+  a déjà appliqué : décharge, dossard, sortie longue contre celle de la semaine
+  (ou tenue par le palier, avec sa raison), séances déjà changées par l'indice
+  projeté (qui ne vaut que sur dix jours, et la phrase le dit), semaine à quatre
+  courses.
+
 ## Les rappels du carnet
 
 `src/lib/push.ts` (client), `supabase/functions/rappels/` (envoi, dont

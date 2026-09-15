@@ -38,6 +38,8 @@ import { SessionHero } from '../components/SessionHero'
 import { ChargeSheet } from '../components/ChargeSheet'
 import { Icon } from '../components/Icon'
 import { CarteCoach } from '../components/CarteCoach'
+import { CarteBilan } from '../components/CarteBilan'
+import { bilanSemaine, type SeanceBilan } from '../lib/bilan'
 import { EnteteEcran } from '../components/EnteteEcran'
 
 const plan = planJson as unknown as Plan
@@ -329,6 +331,41 @@ export function Today({
     }
   }, [semaineCourante, A.byDate, now])
 
+  /**
+   * Le bilan : le dimanche sur la semaine qui se referme, le lundi sur celle
+   * qui vient de finir. « La semaine prochaine » est alors celle qui commence.
+   */
+  const bilan = useMemo(() => {
+    const jourSemaine = weekdayIndex(now)
+    if (jourSemaine !== 6 && jourSemaine !== 0) return null
+    const i = plan.weeks.findIndex((w) => w.n === semaineCourante.n)
+    const bilanee = jourSemaine === 0 ? plan.weeks[i - 1] : semaineCourante
+    const suivante = jourSemaine === 0 ? semaineCourante : plan.weeks[i + 1]
+    if (!bilanee || now < debutPlan) return null
+    const versBilan = (w: Week): SeanceBilan[] =>
+      seancesDeLaSemaine(plan.weeks, w, now, A.byDate, ecarts, contexte).map((x) => {
+        const ref = plan.weeks.find((y) => y.n === x.semaineOrigine)
+        const slots = ref ? slotsParJour(ref.sessions) : []
+        return {
+          s: x.s,
+          typePlan: x.typePlan,
+          day: x.day,
+          faite: Boolean(feedbackDe(x)),
+          reference: ref?.sessions.find((s, k) => s.day === x.jourOrigine && slots[k] === x.slot) ?? null,
+        }
+      })
+    return bilanSemaine({
+      semaine: bilanee,
+      seances: versBilan(bilanee),
+      pain,
+      charge: Object.fromEntries(Object.entries(A.byDate).map(([d, r]) => [d, r.load])),
+      now,
+      suivante: suivante ? { semaine: suivante, seances: versBilan(suivante) } : undefined,
+    })
+    // `feedbackDe` se recrée à chaque rendu : c'est `feedback` qui décide.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [now, semaineCourante, debutPlan, A.byDate, ecarts, contexte, feedback, pain])
+
   const mot = useMemo(
     () =>
       motDuCoach({
@@ -594,6 +631,8 @@ export function Today({
         )}
 
         {journalActif && <JournalDuJour day={jour} />}
+
+        {estAujourdhui && bilan && <CarteBilan bilan={bilan} style={{ marginBottom: 14 }} />}
 
         {estAujourdhui && <CarteCoach texte={mot.texte} style={{ marginBottom: 14 }} />}
 
