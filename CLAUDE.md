@@ -738,6 +738,24 @@ compteur de jours sans douleur au-dessus de 2 (trois relevés sur quatre, et le
 deux semaines pleines (jamais quand `chargeInconnue`), et la série de matins
 notés. La raideur stable, observation plate, passe après toutes.
 
+**Les lectures réfléchies**, demandées par Mathieu le 16 septembre 2026. Les
+faits sont calculés dans `Today` (`SeanceHier`, `SemaineEnCours`, `forme`) et
+le coach ne fait que les lire, pour rester pur et testable.
+
+| Règle | Ce qu'elle lit | Garde-fou |
+|---|---|---|
+| `episode-douleur` | pic d'aujourd'hui ou d'hier contre les quatre semaines d'avant | dix relevés de fond, pic ≥ 3 et +2 ; vise la course du jour, sinon le vélo |
+| `decharge-trop-chargee` | réel de lundi à hier + projection, contre la dernière semaine de charge | au-dessus de 80 %, la barre de `check_plan.py` ; jamais sur `chargeInconnue` |
+| `semaine-hors-attentes` | réel contre plan de référence sur les mêmes jours | ±20 %, deux jours écoulés, jamais sur `chargeInconnue` |
+| `seance-hier` | effort perçu contre `RPE_ATTENDU`, durée réelle contre la fourchette du plan | course seulement ; la fourchette vient du plan de référence, pas de l'écart |
+| `excentrique-serie` / `excentrique-relance` | série de jours, ou oubli d'hier | la relance exige un carnet tenu hier |
+| `jour-douloureux` | douleur du soir et d'effort par jour de semaine, six semaines | trois relevés par jour sur cinq jours, +1 point et ≥ 2,5 |
+| `douleur-long-terme` | trois premières semaines du carnet contre les deux dernières | six semaines de recul, huit relevés de chaque côté |
+| `forme-long-terme` | écart de `ajusterForme` et chrono projeté | trois séances, écart ≥ 3 s/km |
+
+Les trois lectures de vigilance passent avant la séance d'hier, qui passe
+avant les encouragements de fond.
+
 Le chiffre cité est toujours l'indice réellement calculé et le fait cité est
 toujours un changement réellement appliqué. `SeancePlanifiee.typePlan` et
 `SeanceDuJour.distPlan` existent pour ça : dire « ta sortie longue de 26 km

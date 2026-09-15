@@ -21,9 +21,11 @@ import {
 } from '../lib/dates'
 import { adapt, construireContexte, seancesDeLaSemaine, type SeancePlanifiee } from '../lib/adapt'
 import { construireInsights } from '../lib/insights'
-import { motDuCoach, type SeanceDuJour } from '../lib/coach'
+import { motDuCoach, type SeanceDuJour, type SeanceHier, type SemaineEnCours } from '../lib/coach'
+import { RPE_ATTENDU, type AjustementForme } from '../lib/forme'
+import { estimateDuration } from '../lib/paces'
 import { bandOf, type LoadMap, type PainMap } from '../lib/tendonIndex'
-import type { ActivityRow } from '../lib/load'
+import { sessionLoad, type ActivityRow } from '../lib/load'
 import type { FeedbackRow } from '../lib/buildPain'
 import { slotsParJour, verifierContraintes, type EcartRow } from '../lib/overrides'
 import { SessionCard } from '../components/SessionCard'
@@ -77,6 +79,8 @@ interface Props {
   /** Jours dont la charge est une mesure et non un silence. Sans elle, une
    *  séance sautée retombe sur `load > 0` et se lit comme une absence. */
   attestes?: Set<string>
+  /** Forme projetée par le ressenti, pour le niveau en course du coach. */
+  forme?: AjustementForme
   /** Ancre les six zones — vient du profil, `plan.meta` en repli seulement. */
   marathonPace: number
   /** Le carnet du jour n'existe qu'avec Supabase branché. */
@@ -99,6 +103,7 @@ export function Today({
   activities,
   ecarts,
   attestes,
+  forme,
   marathonPace,
   journalActif,
   onVoirSuivi,
@@ -265,6 +270,63 @@ export function Today({
     [seancesCourantes],
   )
 
+  /** La séance d'hier, jugée sur ce que le plan en attendait. */
+  const hierPourCoach = useMemo<SeanceHier[]>(() => {
+    const hier = addDays(now, -1)
+    const w = plan.weeks.find((x) => hier >= x.monday && hier <= addDays(x.monday, 6))
+    if (!w) return []
+    return seancesDeLaSemaine(plan.weeks, w, now, A.byDate, ecarts, contexte)
+      .filter((x) => x.day === hier && !x.s.saute && x.s.type !== 'repos')
+      .map((x) => {
+        const f = feedbackDe(x)
+        // La durée estimée vient du plan de référence : « donnée réelle »
+        // réécrit `dur` avec la durée saisie, qu'on comparerait à elle-même.
+        const ref = plan.weeks.find((y) => y.n === x.semaineOrigine)
+        const slots = ref ? slotsParJour(ref.sessions) : []
+        const origine = ref?.sessions.find((s, k) => s.day === x.jourOrigine && slots[k] === x.slot)
+        return {
+          type: x.s.type,
+          rpe: f?.rpe ?? null,
+          rpeAttendu: RPE_ATTENDU[x.s.type] ?? null,
+          douleur: f?.pain ?? null,
+          dureeReelle: x.ecart?.patch.durMin ?? null,
+          dureeEstimee:
+            origine && origine.type === x.s.type ? estimateDuration(origine, marathonPace) : null,
+        }
+      })
+    // `feedbackDe` se recrée à chaque rendu : c'est `feedback` qui décide.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [now, A.byDate, ecarts, contexte, feedback, marathonPace])
+
+  /** La semaine en cours en charge tendineuse, réel contre plan. */
+  const semainePourCoach = useMemo<SemaineEnCours>(() => {
+    const w = semaineCourante
+    let realisee = 0
+    let reste = 0
+    for (let k = 0; k < 7; k++) {
+      const d = addDays(w.monday, k)
+      const l = A.byDate[d]?.load ?? 0
+      if (d < now) realisee += l
+      else reste += l
+    }
+    const prevue = w.sessions
+      .filter((s) => addDays(w.monday, s.day) < now)
+      .reduce((acc, s) => acc + sessionLoad(s), 0)
+    // La référence d'une décharge est la dernière semaine de CHARGE : ni une
+    // décharge, ni une semaine de course, allégée pour d'autres raisons.
+    const reference = [...plan.weeks]
+      .reverse()
+      .find((x) => x.n < w.n && !x.deload && !x.sessions.some((s) => s.type === 'race' || s.type === 'course'))
+    return {
+      decharge: w.deload,
+      joursEcoules: daysBetween(w.monday, now),
+      realisee,
+      prevue,
+      reste,
+      referenceCharge: reference ? reference.sessions.reduce((acc, s) => acc + sessionLoad(s), 0) : null,
+    }
+  }, [semaineCourante, A.byDate, now])
+
   const mot = useMemo(
     () =>
       motDuCoach({
@@ -281,8 +343,11 @@ export function Today({
         alertes: alertesSemaine,
         exclure: lireMemoireCoach()[addDays(now, -1)],
         jusquaCourse: daysBetween(now, plan.meta.raceDate),
+        hier: hierPourCoach,
+        semaine: semainePourCoach,
+        forme,
       }),
-    [pain, A.byDate, A.detail, now, insights.seancesTotal, duJourPourCoach, alertesSemaine],
+    [pain, A.byDate, A.detail, now, insights.seancesTotal, duJourPourCoach, alertesSemaine, hierPourCoach, semainePourCoach, forme],
   )
 
   // La règle du jour devient l'exclusion de demain. Réécrite à chaque rendu :

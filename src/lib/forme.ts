@@ -31,7 +31,7 @@ import { addDays } from './dates'
  * justes. Ce sont les repères de l'échelle décrite dans la feuille de séance :
  * 4 « facile, conversation possible », 8 « dur, allure de seuil ».
  */
-const RPE_ATTENDU: Partial<Record<SessionType, number>> = {
+export const RPE_ATTENDU: Partial<Record<SessionType, number>> = {
   ef: 4,
   long: 7,
   tempo: 8,

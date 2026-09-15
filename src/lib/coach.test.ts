@@ -395,3 +395,95 @@ describe('motDuCoach — jamais le même mot deux jours de suite', () => {
     expect(muet.cle).not.toBe('charge-semaine')
   })
 })
+
+describe('motDuCoach — lectures réfléchies', () => {
+  const base = { byDate: {}, now: NOW, seancesTotal: TOTAL }
+  const calme = { idx: 20, painInconnue: false, chargeInconnue: false }
+  const hier = (p: Partial<import('./coach').SeanceHier> = {}) => ({
+    type: 'tempo' as const,
+    rpe: 8,
+    rpeAttendu: 8,
+    douleur: 1,
+    dureeReelle: null,
+    dureeEstimee: null,
+    ...p,
+  })
+
+  it('juge la séance d’hier sur l’effort attendu', () => {
+    const m = motDuCoach({ ...base, pain: {}, hier: [hier({ rpe: 10 })] })
+    expect(m.cle).toBe('seance-hier')
+    expect(m.ton).toBe('vigilance')
+    expect(m.texte).toContain('10 sur dix')
+    expect(m.texte).toContain('8 attendu')
+  })
+
+  it('lit la durée réelle contre la fourchette du plan', () => {
+    const m = motDuCoach({ ...base, pain: {}, hier: [hier({ dureeReelle: 80, dureeEstimee: [55, 60] })] })
+    expect(m.texte).toContain('plus lente que le plan')
+  })
+
+  it('se tait sur une séance sans effort attendu', () => {
+    const m = motDuCoach({ ...base, pain: {}, hier: [hier({ type: 'velo' as never, rpeAttendu: null })] })
+    expect(m.cle).not.toBe('seance-hier')
+  })
+
+  it('repère un nouvel épisode et vise la course du jour', () => {
+    const pain = carnet(serie(30, 1))
+    pain[NOW] = { ...pain[NOW], wake: 4 }
+    const m = motDuCoach({
+      ...base,
+      pain,
+      indice: calme,
+      duJour: [{ type: 'ef', typePlan: 'ef', titre: 'EF', dist: 7, distPlan: 7, ecart: null, adaptee: false, faite: false, saute: false }],
+    })
+    expect(m.cle).toBe('episode-douleur')
+    expect(m.texte).toContain('endurance facile')
+  })
+
+  it('avertit une décharge qui ne décharge pas', () => {
+    const semaine = { decharge: true, joursEcoules: 3, realisee: 60, prevue: 50, reste: 40, referenceCharge: 110 }
+    const m = motDuCoach({ ...base, pain: {}, indice: calme, semaine })
+    expect(m.cle).toBe('decharge-trop-chargee')
+    expect(m.texte).toContain('91 %')
+  })
+
+  it('ne juge jamais la semaine sur une charge non attestée', () => {
+    const semaine = { decharge: false, joursEcoules: 3, realisee: 20, prevue: 50, reste: 40, referenceCharge: 110 }
+    const muet = motDuCoach({ ...base, pain: {}, indice: { ...calme, chargeInconnue: true }, semaine })
+    expect(muet.cle).not.toBe('semaine-hors-attentes')
+    const m = motDuCoach({ ...base, pain: {}, indice: calme, semaine })
+    expect(m.cle).toBe('semaine-hors-attentes')
+    expect(m.texte).toContain('60 %')
+  })
+
+  it('pousse l’excentrique quand hier est noté sans lui', () => {
+    const pain = carnet([null, 1])
+    const m = motDuCoach({ ...base, pain, exclure: 'noter-reveil' })
+    expect(m.cle).toBe('excentrique-relance')
+  })
+
+  it('trouve le jour de la semaine qui fait mal', () => {
+    const pain: PainMap = {}
+    for (let k = 1; k <= 42; k++) {
+      const d = addDays(NOW, -k)
+      // NOW est un jeudi : le mardi porte 4, les autres jours 1.
+      pain[d] = { evening: new Date(d + 'T12:00:00Z').getUTCDay() === 2 ? 4 : 1 }
+    }
+    const m = motDuCoach({ ...base, pain, exclure: 'noter-reveil' })
+    const tous: string[] = []
+    let ex: string | undefined = 'noter-reveil'
+    for (let i = 0; i < 8; i++) {
+      const c = motDuCoach({ ...base, pain, exclure: ex })
+      tous.push(c.cle)
+      ex = c.cle
+    }
+    expect([m.cle, ...tous]).toContain('jour-douloureux')
+  })
+
+  it('suit la forme sur le long terme', () => {
+    const m = motDuCoach({ ...base, pain: {}, forme: { allure: 283, ecart: -6, seances: 5 } })
+    expect(m.cle).toBe('forme-long-terme')
+    expect(m.texte).toContain('6 s/km plus vite')
+    expect(m.texte).toContain('4:43')
+  })
+})

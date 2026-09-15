@@ -414,6 +414,7 @@ function Coquille({
           activities={data.activities}
           ecarts={ecarts}
           attestes={attestes}
+          forme={forme}
           marathonPace={marathonPace}
           journalActif={journalActif}
           onVoirSuivi={() => setOnglet('track')}
