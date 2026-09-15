@@ -99,3 +99,62 @@ describe('messageDuMoment', () => {
     }
   })
 })
+
+import {
+  HEURE_BILAN,
+  ajouterJours,
+  messageBilan,
+  semaineDuPlan,
+} from '../../supabase/functions/rappels/logique'
+
+describe('le bilan du dimanche', () => {
+  // Dimanche 20 septembre 2026 : fin de la semaine 6.
+  const DIMANCHE = '2026-09-20'
+  const releve = (k: number, pain_wake: number | null, eccentric = false) => ({
+    day: ajouterJours(DIMANCHE, -k),
+    pain_wake,
+    eccentric,
+  })
+
+  it('part à 20 h, pas avec le point du soir', () => {
+    expect(HEURE_BILAN).toBe(20)
+  })
+
+  it('situe la date dans le plan', () => {
+    expect(semaineDuPlan('2026-08-10')).toBe(1)
+    expect(semaineDuPlan(DIMANCHE)).toBe(6)
+    expect(semaineDuPlan('2027-04-11')).toBe(35)
+    expect(semaineDuPlan('2026-08-09')).toBeNull()
+    expect(semaineDuPlan('2027-04-12')).toBeNull()
+  })
+
+  it('résume la semaine et compare la raideur à la précédente', () => {
+    const releves = [
+      releve(0, 1, true), releve(1, 1), releve(2, 1.5, true),
+      releve(7, 2), releve(8, 2), releve(9, 2),
+    ]
+    const m = messageBilan(DIMANCHE, { notees: 5, sautees: 1, releves })!
+    expect(m.titre).toBe('Bilan de la semaine 6')
+    expect(m.corps).toBe(
+      '5 séances notées, 1 sautée. Raideur au réveil à 1,2, contre 2 la semaine d’avant. Excentrique 2 jours sur 7. La charge et la semaine prochaine sont dans l’app.',
+    )
+    expect(m.tag).toBe('tenload-bilan')
+  })
+
+  it('ne donne pas de moyenne sous trois matins', () => {
+    const m = messageBilan(DIMANCHE, { notees: 2, sautees: 0, releves: [releve(0, 1), releve(1, 1)] })!
+    expect(m.corps).not.toContain('Raideur')
+  })
+
+  it('se tait un autre jour que le dimanche', () => {
+    expect(messageBilan('2026-09-19', { notees: 5, sautees: 0, releves: [] })).toBeNull()
+  })
+
+  it('se tait sur une semaine sans aucune trace', () => {
+    expect(messageBilan(DIMANCHE, { notees: 0, sautees: 0, releves: [] })).toBeNull()
+  })
+
+  it('se tait hors du plan', () => {
+    expect(messageBilan('2027-04-18', { notees: 5, sautees: 0, releves: [] })).toBeNull()
+  })
+})

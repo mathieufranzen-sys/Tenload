@@ -854,8 +854,19 @@ perçu, la douleur à l'effort et la douleur de fin de journée**.
 - **Le cron tourne toutes les heures, pas deux fois par jour.** pg_cron
   raisonne en UTC ; à heure fixe le rappel de 8 h glisserait d'une heure deux
   fois par an. C'est `momentParis` qui décide si c'en est une.
-- **Le dimanche, seul le point du soir part** : c'est le repos jambes de la
-  contrainte 4, il n'y a pas de séance à noter. Un écart volontaire pourrait le
+- **Le dimanche à 20 h, le bilan de la semaine** (`messageBilan`, option
+  choisie par Mathieu le 16 septembre 2026). À 20 h et non à 23 h : il se lit
+  avant de préparer la semaine, et ne se mélange pas au point du soir. **Il ne
+  porte que ce qui se lit en base** : séances notées, séances sautées (écarts
+  de la semaine du plan), raideur moyenne contre la semaine d'avant (trois
+  matins minimum), jours d'excentrique. Les séances prévues, la charge et la
+  semaine suivante demandent le plan et le modèle, qui vivent dans l'app :
+  la notification y renvoie au lieu de les approximer. Elle se tait sur une
+  semaine sans aucune trace et hors des 35 semaines. **Toute modification de
+  `logique.ts` ou `index.ts` demande un redéploiement** :
+  `supabase functions deploy rappels`.
+- **Le dimanche, le point du soir ne réclame pas de ressenti de séance** :
+  c'est le repos jambes de la contrainte 4. Un écart volontaire pourrait le
   démentir et le rappel se tairait à tort, ce qui est le bon sens de l'erreur.
 - **Sur iPhone, rien ne marche hors PWA installée.** L'écran de réglage le dit
   avant de proposer le bouton, plutôt que de laisser croire à une panne.
