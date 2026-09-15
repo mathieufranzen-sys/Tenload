@@ -8,7 +8,7 @@
  * à part, lues depuis les ressentis de séance.
  */
 import type { FeedbackRow } from './buildPain'
-import { addDays } from './dates'
+import { addDays, formatNumber } from './dates'
 import {
   bandOf,
   indexSeries,
@@ -110,7 +110,19 @@ const TYPES_QUALITE: SessionType[] = ['inter', 'tempo', 'test']
 export interface ContexteSeance {
   /** Vrai si cette séance tombe le lendemain de la sortie longue de la semaine. */
   lendemainDeLongue: boolean
+  /** Raideur au réveil saisie pour le jour de la séance, s'il y en a une. */
+  raideurReveil?: number | null
 }
+
+/**
+ * Au-delà, la course du lendemain de sortie longue passe au vélo, quel que
+ * soit l'indice. C'est la règle de Mathieu, écrite dans la contrainte 6 : le
+ * mardi n'est autorisé que parce qu'il est une récupération, et une raideur à
+ * 3 le matin dit que la longue n'est pas digérée. L'indice ne la voyait pas :
+ * il ne coupait la course qu'en rouge, donc à 65, et une raideur à 3 sur un
+ * indice à 35 laissait courir.
+ */
+const SEUIL_RAIDEUR_LENDEMAIN = 2
 
 const CONTEXTE_NEUTRE: ContexteSeance = { lendemainDeLongue: false }
 
@@ -198,17 +210,25 @@ export function applyFx(s: Session, fx: Fx, ctx: ContexteSeance = CONTEXTE_NEUTR
         : 'Intensité conservée mais sans impact : 5 x 6 min en Z3 sur le vélo, 3 min de récupération souple entre les blocs.',
     }
   }
-  if (s.type === 'ef' && ctx.lendemainDeLongue && fx.tuesdayToBike) {
+  const raideurHaute =
+    ctx.raideurReveil != null && ctx.raideurReveil > SEUIL_RAIDEUR_LENDEMAIN
+  if (s.type === 'ef' && ctx.lendemainDeLongue && (fx.tuesdayToBike || raideurHaute)) {
+    // L'indice passe d'abord quand il coupe : c'est lui qui explique le plus.
+    const parIndice = fx.tuesdayToBike
     return {
       ...s,
       type: 'velo',
       cat: 'Vélo',
       title: 'Vélo Z2 45 min remplace l’EF',
       dur: [45, 55],
-      adapted: `Course neutralisée · indice ${fx.idx}/100`,
+      adapted: parIndice
+        ? `Course neutralisée · indice ${fx.idx}/100`
+        : `Raideur au réveil ${formatNumber(ctx.raideurReveil!)}/10 · lendemain de sortie longue`,
       dist: undefined,
       struct: null,
-      note: 'Le lendemain de la sortie longue est le pire moment pour un tendon irrité. Vélo souple à la place.',
+      note: parIndice
+        ? 'Le lendemain de la sortie longue est le pire moment pour un tendon irrité. Vélo souple à la place.'
+        : `Raideur au réveil à ${formatNumber(ctx.raideurReveil!)} sur dix le lendemain de la sortie longue : ta règle passe la course au vélo. La longue n'est pas digérée, et courir dessus l'aggrave. Vélo souple, sans résistance.`,
     }
   }
   return s
@@ -261,6 +281,8 @@ export interface ContextePlan {
   palier?: PalierLongue | null
   /** Plafond imposé à la prochaine séance spécifique du jeudi. */
   palierSpecifique?: PalierSpecifique | null
+  /** Raideur au réveil par jour : la règle du lendemain de sortie longue la lit. */
+  reveils?: Record<string, number>
 }
 
 /**
@@ -283,6 +305,11 @@ export function construireContexte(
     faites: new Set(feedback.map((f) => cleEcart(f.week, f.day_index, f.slot))),
     palier: palierProchaineLongue(seances, feedback, pain, now),
     palierSpecifique: palierProchaineSpecifique(seances, feedback, pain, now),
+    reveils: Object.fromEntries(
+      Object.entries(pain)
+        .filter(([, p]) => p?.wake != null)
+        .map(([d, p]) => [d, p.wake as number]),
+    ),
   }
 }
 
@@ -343,6 +370,7 @@ export function weekSessions(
       }
       vecue = applyFx(vecue, fxForDate(day, now, byDate), {
         lendemainDeLongue: jourLongue != null && s.day === jourLongue + 1,
+        raideurReveil: contexte?.reveils?.[day] ?? null,
       })
     }
 

@@ -78,6 +78,10 @@ export interface SeanceDuJour {
   ecart: 'saut' | 'remplacement' | 'deplacement' | 'donnee' | null
   /** L'indice de charge a changé la séance. */
   adaptee: boolean
+  /** Ce qui l'a changée : l'indice, ou la raideur du lendemain de sortie longue. */
+  motif?: 'indice' | 'raideur'
+  /** Raideur au réveil du jour, pour citer la valeur qui a coupé. */
+  raideurMatin?: number | null
   faite: boolean
   saute: boolean
 }
@@ -205,7 +209,9 @@ function candidatsSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach[] {
       obligatoire: true,
       ton: 'vigilance',
       texte:
-        neutralisee.type === 'repos'
+        neutralisee.motif === 'raideur' && neutralisee.raideurMatin != null
+          ? `Pas de course aujourd'hui : ta raideur au réveil est à ${formatNumber(neutralisee.raideurMatin)} sur dix, le lendemain de ta sortie longue. Ta règle passe ta ${nomCourt(neutralisee.typePlan)} au vélo souple : la longue n'est pas digérée, et c'est au réveil que le tendon le dit.`
+          : neutralisee.type === 'repos'
           ? `Je ne te recommande rien sur les jambes aujourd'hui : ${surIndice}. Ta ${nomCourt(neutralisee.typePlan)} saute, mobilité de cheville et glaçage à la place. Trois jours ici et tu appelles ton kiné.`
           : `Je ne te recommande pas de courir aujourd'hui : ${surIndice}. Ta ${nomCourt(neutralisee.typePlan)} passe au vélo. Ce n'est pas une séance perdue, c'est le même volume aérobie sans impact au sol, et c'est ce qui raccourcit l'épisode plutôt que de le prolonger.`,
     })

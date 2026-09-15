@@ -487,3 +487,19 @@ describe('motDuCoach — lectures réfléchies', () => {
     expect(m.texte).toContain('4:43')
   })
 })
+
+describe('motDuCoach — la règle du lendemain de sortie longue', () => {
+  it('cite la raideur et non l’indice quand c’est elle qui a coupé', () => {
+    const m = motDuCoach({
+      pain: {},
+      byDate: {},
+      now: NOW,
+      seancesTotal: TOTAL,
+      duJour: [{ type: 'velo', typePlan: 'ef', titre: 'Vélo', dist: null, distPlan: 7, ecart: null, adaptee: true, motif: 'raideur', raideurMatin: 3, faite: false, saute: false }],
+      indice: { idx: 32, painInconnue: false, chargeInconnue: false },
+    })
+    expect(m.cle).toBe('course-neutralisee')
+    expect(m.texte).toContain('3 sur dix')
+    expect(m.texte).not.toContain('32 sur 100')
+  })
+})

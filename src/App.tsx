@@ -482,6 +482,8 @@ function Coquille({
           onSaveProfil={onSaveProfil}
           onDeconnexion={onDeconnexion}
           aNoter={aNoter}
+          ecarts={ecarts}
+          activities={data.activities}
           section={sectionProfil}
           onSection={setSectionProfil}
           onOuvrirSeance={

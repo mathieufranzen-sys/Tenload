@@ -252,13 +252,15 @@ export function Today({
           distPlan: distDuPlan(x.semaineOrigine, x.jourOrigine, x.slot),
           ecart: nature,
           adaptee: Boolean(x.s.adapted),
+          motif: x.s.adapted?.startsWith('Raideur') ? 'raideur' : 'indice',
+          raideurMatin: pain[x.day]?.wake ?? null,
           faite: Boolean(feedbackDe(x)),
           saute: Boolean(x.s.saute),
         }
       }),
     // `feedbackDe` se recrée à chaque rendu : c'est `feedback` qui décide.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [duJour, feedback, distDuPlan],
+    [duJour, feedback, distDuPlan, pain],
   )
 
   /** Les contraintes que la semaine RÉELLEMENT formée ne respecte pas. */

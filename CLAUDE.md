@@ -73,7 +73,13 @@ modification du plan ne doit les casser.**
    tendon dont on ne sait rien.
 6. **Jamais deux jours de course consécutifs**, sauf la paire lundi-mardi où le
    mardi est une récupération très lente (et qui bascule en vélo si la douleur au
-   réveil dépasse 2).
+   réveil dépasse 2). **Cette bascule n'était pas codée** jusqu'au 16 septembre
+   2026 : seul l'indice rouge coupait la course du lendemain, donc une raideur à
+   3 sur un indice à 35 laissait courir. Elle vit maintenant dans `applyFx`
+   (`SEUIL_RAIDEUR_LENDEMAIN`), lit la raideur saisie du jour via
+   `ContextePlan.reveils`, vise la séance qui suit la sortie longue RÉELLE et
+   non le mardi, et ne touche jamais une séance déjà notée. Mathieu : « je ne
+   dois pas courir si la raideur du mardi matin est à 3 ».
 
 ## La semaine type
 
@@ -766,6 +772,34 @@ repère en une semaine et discrédite l'indice avec lui. L'ordre des règles est
 un ordre de valeur : raideur au réveil, puis observance de l'excentrique, puis
 régularité, puis l'indice — qui vient en dernier parce que c'est un agrégat et
 non une observation.
+
+## Le carnet de patterns
+
+`src/lib/carnet.ts` (+ 9 tests), page `Profil → Tes patterns`. Demandé par
+Mathieu le 16 septembre 2026 : utiliser l'app comme un carnet de suivi qui relie
+la douleur à ce qui a été fait, pour trouver des patterns, des manques et des
+abus, dans l'app ou en passant les données à une IA.
+
+- **`construireCarnet` met sur la même ligne l'activité et la douleur**, sur
+  90 jours : séances notées (effort perçu, douleur d'effort), historique Strava
+  avant le 10 août, réveil, soir, **réveil du lendemain** (le verdict de la
+  journée), excentrique, charge.
+- **Un jour avec une séance non notée est incomplet** : il reste dans l'export,
+  marqué, mais n'entre dans aucune comparaison. Ce qui a été fait ce jour-là est
+  inconnu, pas nul. Même règle que partout.
+- **La durée d'une séance n'est qu'une durée saisie**, jamais l'estimation du
+  plan : une estimation n'est pas une mesure.
+- **`trouverPatterns` compare la douleur des jours avec et sans** chaque
+  facteur (sortie longue, qualité, EF, vélo, renfo bas, escalade, excentrique,
+  journée sans jambes, effort ≥ 8, charge 30 % au-dessus des quatre semaines
+  d'avant), sur le soir même et le réveil du lendemain. **Quatre jours de chaque
+  côté et un demi-point d'écart au minimum**, effectifs toujours affichés : un
+  pattern affiché s'installe comme une vérité.
+- **`exporterPourIA`** produit un Markdown avec les échelles, une consigne
+  d'analyse qui exige de séparer corrélation et cause, la tenue du carnet, une
+  ligne par jour et les patterns déjà repérés. Copié au presse-papiers, feuille
+  de partage iOS en repli. Aucun nom dedans.
+- Le carnet ne se calcule que quand la page est ouverte.
 
 ## Les rappels du carnet
 

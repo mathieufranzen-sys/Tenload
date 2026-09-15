@@ -11,7 +11,7 @@ import { useMemo } from 'react'
 import { adapt } from '../lib/adapt'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { FeedbackRow } from '../lib/buildPain'
-import { today as todayISO } from '../lib/dates'
+import { addDays, today as todayISO } from '../lib/dates'
 import { Icon } from '../components/Icon'
 import { SubPage } from '../components/SubPage'
 import { MeshBackground } from '../components/MeshBackground'
@@ -23,6 +23,12 @@ import { PlanStructure } from './profile/PlanStructure'
 import { PaceSettings } from './profile/PaceSettings'
 import { Reminders } from './profile/Reminders'
 import { ANoter } from './profile/ANoter'
+import { Patterns } from './profile/Patterns'
+import { construireCarnet } from '../lib/carnet'
+import type { ActivityRow } from '../lib/load'
+import type { EcartRow } from '../lib/overrides'
+import planJson from '../data/plan.json'
+import type { Plan } from '../data/types'
 import { compterEnRetard, type SeanceANoter } from '../lib/aNoter'
 
 export type SectionKey =
@@ -33,6 +39,7 @@ export type SectionKey =
   | 'allure'
   | 'rappels'
   | 'anoter'
+  | 'patterns'
 
 type IconeRubrique = 'alert' | 'clip' | 'chart' | 'heart' | 'gauge' | 'run' | 'sun'
 
@@ -55,6 +62,7 @@ const GROUPES: Array<{ titre: string; rubriques: Rubrique[] }> = [
     titre: 'Ton corps',
     rubriques: [
       { key: 'anoter', titre: 'Séances à noter', description: 'Les journées que l’indice ne mesure pas', icone: 'clip' },
+      { key: 'patterns', titre: 'Tes patterns', description: 'Ce qui suit ta douleur, et l’export pour une IA', icone: 'chart' },
       { key: 'indice', titre: 'Indice de charge du tendon', description: 'Les bandes et le détail du calcul', icone: 'chart' },
       { key: 'coeur', titre: 'Fréquence cardiaque', description: 'Recalibre ta FC max et tes zones', icone: 'heart' },
     ],
@@ -95,6 +103,9 @@ interface Props {
   onDeconnexion?: () => void
   /** Séances en attente de ressenti, calculées une fois dans `App`. */
   aNoter: SeanceANoter[]
+  /** Pour le carnet : les écarts disent ce qui a été sauté, l'historique ce qui précède l'app. */
+  ecarts?: Map<string, EcartRow>
+  activities: ActivityRow[]
   /** Absent en mode instantanés : les séances ne s'ouvrent alors pas. */
   onOuvrirSeance?: (x: SeanceANoter) => void
   /**
@@ -117,11 +128,31 @@ export function Profile({
   onSaveProfil,
   onDeconnexion,
   aNoter,
+  ecarts,
+  activities,
   onOuvrirSeance,
   section,
   onSection,
 }: Props) {
   const now = todayISO()
+  // Quatre-vingt-dix jours : assez pour voir revenir un pattern une douzaine
+  // de fois, et le carnet ne se calcule que si la page est ouverte.
+  const carnet = useMemo(
+    () =>
+      section === 'patterns'
+        ? construireCarnet({
+            weeks: (planJson as unknown as Plan).weeks,
+            ecarts,
+            feedback,
+            pain,
+            load,
+            activities,
+            du: addDays(now, -89),
+            au: now,
+          })
+        : [],
+    [section, ecarts, feedback, pain, load, activities, now],
+  )
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
   const enRetard = compterEnRetard(aNoter)
   const active = TOUTES.find((s) => s.key === section)
@@ -251,6 +282,7 @@ export function Profile({
         {section === 'structure' && <PlanStructure />}
         {section === 'rappels' && <Reminders userId={userId} />}
         {section === 'anoter' && <ANoter seances={aNoter} onOuvrir={onOuvrirSeance} />}
+        {section === 'patterns' && <Patterns carnet={carnet} />}
       </SubPage>
     </>
   )

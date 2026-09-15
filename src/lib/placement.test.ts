@@ -461,3 +461,46 @@ describe('titreAvecDistance', () => {
     expect(titreAvecDistance('Vélo Z2 55 min', undefined, 20)).toBe('Vélo Z2 55 min')
   })
 })
+
+describe('le lendemain de la sortie longue passe au vélo si la raideur dépasse 2', () => {
+  // Indice vert : seule la raideur peut couper, c'est tout l'objet de la règle.
+  const avec = (jour: number, raideur: number, extra: Parameters<typeof weekSessions>[4] = {}) => {
+    const w = semaine([
+      seance({ day: 0, type: 'long', dist: 24 }),
+      seance({ day: 1, type: 'ef', dist: 7 }),
+    ])
+    const ecarts = indexerEcarts([
+      { week: 3, day_index: 0, slot: 0, patch: { day: jour }, reason: null } as EcartRow,
+      { week: 3, day_index: 1, slot: 0, patch: { day: jour + 1 }, reason: null } as EcartRow,
+    ])
+    return weekSessions(w, addDays(LUNDI, -1), indice(20), ecarts, {
+      reveils: { [addDays(LUNDI, jour + 1)]: raideur },
+      ...extra,
+    }).find((x) => x.jourOrigine === 1)!
+  }
+
+  it.each([0, 1, 2, 3, 4, 5])('sortie longue au jour %i, raideur à 3 le lendemain', (jour) => {
+    const ef = avec(jour, 3)
+    expect(ef.s.type).toBe('velo')
+    expect(ef.s.adapted).toContain('Raideur au réveil 3')
+  })
+
+  it.each([0, 1, 2, 3, 4, 5])('sortie longue au jour %i, raideur à 2 : on court', (jour) => {
+    expect(avec(jour, 2).s.type).toBe('ef')
+  })
+
+  it('une raideur à 3 un autre jour ne touche pas la course', () => {
+    const w = semaine([
+      seance({ day: 0, type: 'long', dist: 24 }),
+      seance({ day: 3, type: 'ef', dist: 7 }),
+    ])
+    const out = weekSessions(w, addDays(LUNDI, -1), indice(20), undefined, {
+      reveils: { [addDays(LUNDI, 3)]: 3 },
+    })
+    expect(out[1].s.type).toBe('ef')
+  })
+
+  it('ne réécrit pas une course déjà notée', () => {
+    expect(avec(0, 3, { faites: new Set(['3-1-0']) }).s.type).toBe('ef')
+  })
+})
