@@ -20,6 +20,10 @@ export interface MotCoach {
   texte: string
   /** Décide de la couleur et de l'icône. */
   ton: 'bravo' | 'neutre' | 'vigilance'
+  /** La règle qui l'a produit. C'est elle qu'on ne répète pas le lendemain. */
+  cle: string
+  /** Ce que l'indice impose se répète tant que c'est vrai. */
+  obligatoire?: boolean
 }
 
 /** Fenêtre glissante de saisies de raideur matinale, la plus récente d'abord. */
@@ -80,7 +84,7 @@ export interface SeanceDuJour {
 
 export interface EntreeCoach {
   pain: PainMap
-  byDate: Record<string, { idx: number }>
+  byDate: Record<string, { idx: number; load?: number }>
   now: string
   /** Séances prévues et réalisées de la semaine en cours. */
   seancesTotal: { prevu: number; realise: number }
@@ -90,6 +94,10 @@ export interface EntreeCoach {
   indice?: { idx: number; painInconnue: boolean; chargeInconnue: boolean }
   /** Les contraintes que la disposition réelle de la semaine ne respecte pas. */
   alertes?: string[]
+  /** La règle du mot affiché hier, à ne pas redire aujourd'hui. */
+  exclure?: string
+  /** Jours avant le marathon, pour le mot toujours disponible. */
+  jusquaCourse?: number
 }
 
 const COURSE: SessionType[] = ['ef', 'long', 'tempo', 'inter', 'test', 'course', 'race']
@@ -125,10 +133,10 @@ const nomAvecKm = (t: SessionType, km: number | null): string =>
   km != null ? `${nomCourt(t)} de ${formatNumber(km)} km` : nomCourt(t)
 
 /**
- * Ce que le coach dit de la séance du jour, quand il a quelque chose à en
- * dire. Vient AVANT tout le reste : un encouragement sur la raideur de la
- * quinzaine ne vaut rien le jour où le plan vient de retirer la course, ni le
- * jour où Mathieu a lui-même remplacé sa sortie longue.
+ * Ce que le coach peut dire de la séance du jour, dans l'ordre où ça compte.
+ * Vient AVANT tout le reste : un encouragement sur la raideur de la quinzaine
+ * ne vaut rien le jour où le plan vient de retirer la course, ni le jour où
+ * Mathieu a lui-même remplacé sa sortie longue.
  *
  * Les règles couvrent d'abord ce que l'INDICE a imposé, puis ce que MATHIEU a
  * décidé. Elles se déclenchaient au départ sur cinq cas trop étroits, tous
@@ -140,10 +148,11 @@ const nomAvecKm = (t: SessionType, km: number | null): string =>
  * la distance réellement calculés, et le fait cité est toujours un changement
  * réellement appliqué.
  */
-function motSurLaSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach | null {
-  if (!duJour || !indice) return null
+function candidatsSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach[] {
+  const out: MotCoach[] = []
+  if (!duJour || !indice) return out
   const aTraiter = duJour.filter((x) => !x.faite)
-  if (aTraiter.length === 0) return null
+  if (aTraiter.length === 0) return out
   const vivantes = aTraiter.filter((x) => !x.saute)
 
   // L'indice ne mesure plus tout : le citer comme un verdict serait le
@@ -158,40 +167,47 @@ function motSurLaSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach | nu
     (x) => x.adaptee && COURSE.includes(x.typePlan) && !COURSE.includes(x.type),
   )
   if (neutralisee) {
-    return {
+    out.push({
+      cle: 'course-neutralisee',
+      obligatoire: true,
       ton: 'vigilance',
       texte:
         neutralisee.type === 'repos'
           ? `Je ne te recommande rien sur les jambes aujourd'hui : ${surIndice}. Ta ${nomCourt(neutralisee.typePlan)} saute, mobilité de cheville et glaçage à la place. Trois jours ici et tu appelles ton kiné.`
           : `Je ne te recommande pas de courir aujourd'hui : ${surIndice}. Ta ${nomCourt(neutralisee.typePlan)} passe au vélo. Ce n'est pas une séance perdue, c'est le même volume aérobie sans impact au sol, et c'est ce qui raccourcit l'épisode plutôt que de le prolonger.`,
-    }
+    })
   }
 
   // ── 2. L'indice a raccourci la sortie longue ────────────────────────────
   const raccourcie = vivantes.find((x) => x.adaptee && x.type === 'long')
   if (raccourcie) {
-    return {
+    out.push({
+      cle: 'longue-raccourcie',
+      obligatoire: true,
       ton: 'vigilance',
       texte: `Sortie longue raccourcie aujourd'hui par l'${surIndice} : ${nomAvecKm('long', raccourcie.dist)} au lieu de ${formatNumber(raccourcie.distPlan ?? 0)} km. Le kilométrage encaissé compte, celui qu'on paie trois jours ne compte pas.`,
-    }
+    })
   }
 
   // ── 3. Un de tes écarts a cassé une contrainte de la semaine ────────────
   const modifiee = aTraiter.find((x) => x.ecart)
   if (modifiee && alertes && alertes.length > 0) {
-    return {
+    out.push({
+      cle: 'contrainte-cassee',
+      obligatoire: true,
       ton: 'vigilance',
       texte: `Attention à la semaine que tes changements ont formée : ${alertes[0].toLowerCase()} Rien ne t'en empêche, mais c'est une contrainte que ton tendon a posée, pas le plan.`,
-    }
+    })
   }
 
   // ── 4. Tu as sauté la séance du jour ────────────────────────────────────
   const sautee = aTraiter.find((x) => x.saute && x.ecart === 'saut')
   if (sautee) {
-    return {
+    out.push({
+      cle: 'seance-sautee',
       ton: 'neutre',
       texte: `Tu as sauté ${avecArticle(sautee.typePlan)} d'aujourd'hui. Elle ne compte pas dans la charge et le plan ne la rattrape pas : la semaine prochaine reprend là où elle devait. Une séance sautée vaut mieux qu'une séance forcée, mais deux de suite sur la même famille commencent à se voir en avril.`,
-    }
+    })
   }
 
   // ── 5. Tu as remplacé la séance par autre chose ─────────────────────────
@@ -201,37 +217,42 @@ function motSurLaSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach | nu
     const versDur = PLUS_DOUX.includes(remplacee.typePlan) && COURSE.includes(remplacee.type)
 
     if (versDoux) {
-      return bas
-        ? {
-            ton: 'neutre',
-            texte: `Tu as remplacé ta ${nomAvecKm(remplacee.typePlan, remplacee.distPlan)} par ${avecArticle(remplacee.type)}. L'${surIndice} ne te le demandait pas, donc c'est ton ressenti qui tranche, et c'est le bon ordre. Ces kilomètres-là sortent du volume de la semaine : si tu peux, remets-les ailleurs plutôt que de les perdre.`,
-          }
-        : {
-            ton: 'bravo',
-            texte: `Bon réflexe : tu as remplacé ta ${nomCourt(remplacee.typePlan)} par ${avecArticle(remplacee.type)} avec un ${surIndice}. C'est exactement la décision que le plan aurait prise à ta place.`,
-          }
-    }
-
-    if (versDur) {
-      return {
+      out.push(
+        bas
+          ? {
+              cle: 'remplacement',
+              ton: 'neutre',
+              texte: `Tu as remplacé ta ${nomAvecKm(remplacee.typePlan, remplacee.distPlan)} par ${avecArticle(remplacee.type)}. L'${surIndice} ne te le demandait pas, donc c'est ton ressenti qui tranche, et c'est le bon ordre. Ces kilomètres-là sortent du volume de la semaine : si tu peux, remets-les ailleurs plutôt que de les perdre.`,
+            }
+          : {
+              cle: 'remplacement',
+              ton: 'bravo',
+              texte: `Bon réflexe : tu as remplacé ta ${nomCourt(remplacee.typePlan)} par ${avecArticle(remplacee.type)} avec un ${surIndice}. C'est exactement la décision que le plan aurait prise à ta place.`,
+            },
+      )
+    } else if (versDur) {
+      out.push({
+        cle: 'remplacement',
         ton: 'vigilance',
         texte: `Tu as mis ${avecArticle(remplacee.type)} là où le plan mettait ${avecArticle(remplacee.typePlan)}${remplacee.dist != null ? `, soit ${formatNumber(remplacee.dist)} km d'impact en plus` : ''}. L'${surIndice}${bas ? ', le tendon peut l’encaisser' : ' est déjà haut'}, mais le vélo n'est pas là par hasard : il porte du volume aérobie sans choc au sol, et c'est ce qui te permet de courir le reste.`,
-      }
-    }
-
-    return {
-      ton: 'neutre',
-      texte: `Tu as remplacé ta ${nomCourt(remplacee.typePlan)} du jour par ${avecArticle(remplacee.type)}. L'${surIndice}, la semaine tient ses contraintes.`,
+      })
+    } else {
+      out.push({
+        cle: 'remplacement',
+        ton: 'neutre',
+        texte: `Tu as remplacé ta ${nomCourt(remplacee.typePlan)} du jour par ${avecArticle(remplacee.type)}. L'${surIndice}, la semaine tient ses contraintes.`,
+      })
     }
   }
 
   // ── 6. Tu as déplacé une séance jusqu'ici ───────────────────────────────
   const deplacee = vivantes.find((x) => x.ecart === 'deplacement')
   if (deplacee) {
-    return {
+    out.push({
+      cle: 'deplacement',
       ton: 'neutre',
       texte: `Ta ${nomAvecKm(deplacee.type, deplacee.dist)} est arrivée sur aujourd'hui. Aucune contrainte de la semaine ne tombe, et l'${surIndice} : la journée est jouable telle que tu l'as posée.`,
-    }
+    })
   }
 
   // ── 7. Tu as corrigé la distance ou la durée ────────────────────────────
@@ -240,33 +261,40 @@ function motSurLaSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach | nu
   )
   if (corrigee) {
     const plus = (corrigee.dist ?? 0) > (corrigee.distPlan ?? 0)
-    return {
+    out.push({
+      cle: 'donnee-corrigee',
       ton: plus ? 'vigilance' : 'neutre',
       texte: `Tu as noté ${formatNumber(corrigee.dist ?? 0)} km sur ta ${nomCourt(corrigee.type)} au lieu des ${formatNumber(corrigee.distPlan ?? 0)} km prévus. ${
         plus
           ? "C'est du volume que le plan n'avait pas budgété : il entre dans la charge, et la sortie longue de la semaine prochaine se décidera dessus."
           : "La charge suit ce que tu as vraiment fait, pas ce qui était écrit."
       }`,
-    }
+    })
   }
 
   // ── 8. La charge n'est plus attestée ────────────────────────────────────
   if (indice.chargeInconnue) {
-    return {
+    out.push({
+      cle: 'charge-inconnue',
       ton: 'vigilance',
       texte:
         "Trop de séances non notées cette semaine : la part mécanique de ton indice suppose plus qu'elle ne mesure, et elle se trompe toujours du côté rassurant. Note-les et je pourrai te dire quelque chose de ta séance du jour.",
-    }
+    })
   }
 
-  return null
+  return out
 }
 
-export function motDuCoach(entree: EntreeCoach): MotCoach {
-  const { pain, byDate, now, seancesTotal, duJour } = entree
+/** La plus forte douleur saisie un jour donné, toutes mesures confondues. */
+function douleurMax(pain: PainMap, jour: string): number | null {
+  const p = pain[jour]
+  const vs = [p?.wake, p?.evening, p?.effort].filter((v): v is number => v != null)
+  return vs.length ? Math.max(...vs) : null
+}
 
-  const surLaSeance = motSurLaSeance(entree)
-  if (surLaSeance) return surLaSeance
+/** Ce que le coach peut dire du fond, hors séance du jour. */
+function candidatsFond({ pain, byDate, now, seancesTotal, duJour, indice, jusquaCourse }: EntreeCoach): MotCoach[] {
+  const out: MotCoach[] = []
 
   /** La séance du jour qui mérite qu'on l'encourage nommément. */
   const aVenir = (duJour ?? []).find(
@@ -282,12 +310,6 @@ export function motDuCoach(entree: EntreeCoach): MotCoach {
   const assezDeReveils = recent.length >= 4 && avant.length >= 4
 
   // ── La raideur au réveil, le marqueur de référence ──────────────────────
-  // Elle ne passe devant que quand elle a quelque chose à annoncer : une
-  // vraie tendance, ou une stabilité tenue avec une forte observance. Une
-  // stabilité plate n'est pas cette chose-là — la renvoyer en premier
-  // revenait, un mois de saisies passé, à ne plus jamais dire autre chose :
-  // ni l'observance de l'excentrique, ni une semaine complète, ni l'indice
-  // qui baisse restaient jamais lus.
   if (assezDeReveils) {
     const a = moyenne(avant)
     const b = moyenne(recent)
@@ -295,70 +317,182 @@ export function motDuCoach(entree: EntreeCoach): MotCoach {
 
     if (ecart >= 0.4) {
       const chiffres = `de ${formatNumber(a)} à ${formatNumber(b)} sur dix`
-      return {
+      out.push({
+        cle: 'raideur-baisse',
         ton: 'bravo',
         texte:
           excentrique >= 8
             ? `Bien joué. Ton excentrique ${excentrique} jours sur les 28 derniers a payé : ta raideur au réveil est passée ${chiffres}.${relance}`
             : `Ça descend. Ta raideur au réveil est passée ${chiffres} en deux semaines. Continue exactement comme ça.${relance}`,
-      }
-    }
-
-    if (ecart <= -0.4) {
-      return {
+      })
+    } else if (ecart <= -0.4) {
+      out.push({
+        cle: 'raideur-hausse',
         ton: 'vigilance',
         texte: `Ta raideur au réveil remonte, de ${formatNumber(a)} à ${formatNumber(b)} sur dix. Ce n'est pas encore une alerte, mais c'est le moment de ne rien forcer et de tenir l'excentrique.`,
-      }
-    }
-
-    if (excentrique >= 12) {
-      return {
+      })
+    } else if (excentrique >= 12) {
+      out.push({
+        cle: 'raideur-stable-observance',
         ton: 'bravo',
         texte: `Raideur au réveil stable à ${formatNumber(b)} sur dix, avec l'excentrique fait ${excentrique} jours sur 28. C'est exactement ce qu'on cherche : de la charge encaissée sans que le tendon proteste.${relance}`,
-      }
+      })
     }
   }
 
   // ── L'observance du protocole ───────────────────────────────────────────
   if (excentrique >= 8) {
-    return {
+    out.push({
+      cle: 'excentrique',
       ton: 'bravo',
       texte: `Excentrique fait ${excentrique} jours sur les 28 derniers. C'est le seul geste qui répare vraiment le tendon, et c'est celui que tu tiens le mieux.`,
-    }
+    })
   }
 
   // ── La régularité de la semaine ─────────────────────────────────────────
   if (seancesTotal.prevu >= 4 && seancesTotal.realise >= seancesTotal.prevu) {
-    return {
+    out.push({
+      cle: 'semaine-complete',
       ton: 'bravo',
       texte: `Semaine complète : ${seancesTotal.realise} séances sur ${seancesTotal.prevu}. La régularité vaut mieux qu'une grosse sortie isolée, surtout sur un tendon en convalescence.`,
-    }
+    })
   }
 
-  // ── L'indice ──────────────────────────────────────────────────────────
+  // ── Le compteur qui ouvre le volume ─────────────────────────────────────
+  // Le « depuis » s'arrête au premier jour du carnet dans la fenêtre : sans
+  // ça, un carnet de vingt jours sans douleur s'annoncerait comme soixante.
+  let derniereForte: number | null = null
+  let premierReleve: number | null = null
+  for (let k = 0; k < 60; k++) {
+    const m = douleurMax(pain, addDays(now, -k))
+    if (m == null) continue
+    premierReleve = k
+    if (m > 2) {
+      derniereForte = k
+      break
+    }
+  }
+  const sansDouleur = derniereForte ?? (premierReleve != null ? premierReleve + 1 : 0)
+  let releves = 0
+  for (let k = 0; k < sansDouleur; k++) if (douleurMax(pain, addDays(now, -k)) != null) releves++
+  // Trois relevés sur quatre, la même exigence que `verdictVolume` : un
+  // carnet troué affiche zéro douleur, et ce compteur-là ouvre du volume.
+  if (sansDouleur >= 7 && releves >= 0.75 * sansDouleur) {
+    out.push({
+      cle: 'sans-douleur',
+      ton: 'bravo',
+      texte: `Aucune douleur au-dessus de 2 sur dix depuis ${sansDouleur} jours, sur ${releves} relevés. C'est ce compteur qui rend le volume : à 28 jours un vélo devient la séance spécifique, à 56 le second devient une course.`,
+    })
+  }
+
+  // ── L'indice ────────────────────────────────────────────────────────────
   const idxRecent = indiceMoyen(byDate, now, 7)
   const idxAvant = indiceMoyen(byDate, addDays(now, -7), 7)
   if (idxRecent != null && idxAvant != null && idxAvant - idxRecent >= 3) {
-    return {
+    out.push({
+      cle: 'indice-baisse',
       ton: 'bravo',
       texte: `Ton indice de charge moyen est passé de ${Math.round(idxAvant)} à ${Math.round(idxRecent)} en une semaine. Le tendon récupère plus vite qu'il ne se charge.${relance}`,
+    })
+  }
+
+  // ── La charge de la semaine écoulée ─────────────────────────────────────
+  // Hier et avant seulement : aujourd'hui porte la séance projetée, pas faite.
+  // Et jamais sur une charge non attestée, qui se lit toujours trop légère.
+  if (indice && !indice.chargeInconnue) {
+    const somme = (debut: number) => {
+      let s = 0
+      let jours = 0
+      for (let k = debut; k < debut + 7; k++) {
+        const r = byDate[addDays(now, -k)]
+        if (r?.load != null) {
+          s += r.load
+          jours++
+        }
+      }
+      return jours === 7 ? s : null
+    }
+    const cette = somme(1)
+    const precedente = somme(8)
+    if (cette != null && precedente != null && precedente > 0) {
+      const variation = Math.round(((cette - precedente) / precedente) * 100)
+      if (Math.abs(variation) >= 15) {
+        out.push({
+          cle: 'charge-semaine',
+          ton: 'neutre',
+          texte:
+            variation > 0
+              ? `Ta charge tendineuse des sept derniers jours est ${variation} % au-dessus de la semaine d'avant. Rien d'alarmant tant que la raideur au réveil ne suit pas : c'est elle qu'il faut regarder demain matin.`
+              : `Ta charge tendineuse des sept derniers jours est ${-variation} % sous celle de la semaine d'avant. C'est de la marge rendue au tendon.`,
+        })
+      }
     }
   }
 
-  // ── La raideur stable, en dernier recours : c'est une observation plate,
-  // elle ne mérite de passer qu'une fois tout le reste épuisé ──────────────
+  // ── La tenue du carnet ──────────────────────────────────────────────────
+  // Le matin même peut ne pas être saisi encore : la série part d'hier dans ce cas.
+  let serie = 0
+  for (let k = pain[now]?.wake != null ? 0 : 1; k < 60; k++) {
+    if (pain[addDays(now, -k)]?.wake == null) break
+    serie++
+  }
+  if (serie >= 5) {
+    out.push({
+      cle: 'carnet-tenu',
+      ton: 'bravo',
+      texte: `${serie} matins de suite notés. C'est ce qui garde l'indice honnête : trois matins sans saisie et il cesse de savoir.`,
+    })
+  }
+
+  // ── La raideur stable : une observation plate, elle passe après tout ────
   if (assezDeReveils) {
-    return {
+    out.push({
+      cle: 'raideur-stable',
       ton: 'neutre',
       texte: `Raideur au réveil stable autour de ${formatNumber(moyenne(recent))} sur dix depuis un mois. Le tendon encaisse ce que tu lui donnes.`,
-    }
+    })
+  } else {
+    out.push({
+      cle: 'noter-reveil',
+      ton: 'neutre',
+      texte:
+        'Note ta douleur au réveil chaque matin : c’est à partir de quatre semaines de saisies que le coach peut te dire si ça progresse vraiment.',
+    })
   }
 
-  return {
-    ton: 'neutre',
-    texte:
-      'Note ta douleur au réveil chaque matin : c’est à partir de quatre semaines de saisies que le coach peut te dire si ça progresse vraiment.',
+  // ── Toujours vrai, toujours disponible : c'est lui qui garantit qu'il y a
+  // un autre mot que celui d'hier ─────────────────────────────────────────
+  if (jusquaCourse != null && jusquaCourse > 0) {
+    out.push({
+      cle: 'compte-a-rebours',
+      ton: 'neutre',
+      texte: `J-${jusquaCourse} avant Paris. Ce qui déplace le chrono d'avril, ce n'est pas une grosse séance réussie, c'est d'enchaîner les blocs sans interruption.`,
+    })
   }
+
+  return out
+}
+
+/**
+ * Le mot du jour.
+ *
+ * **Jamais le même mot deux jours de suite.** Un message qui revient chaque
+ * matin cesse d'être lu au troisième, et emporte avec lui celui qui aurait
+ * compté. `exclure` porte la règle affichée la veille : on prend la première
+ * autre. La comparaison se fait sur la RÈGLE et pas sur le texte, sinon
+ * « de 1,2 à 0,7 » puis « de 1,2 à 0,6 » passeraient pour deux messages.
+ *
+ * Seule exception, ce que l'indice impose ou ce qu'une contrainte cassée
+ * signale : ça se répète tant que c'est vrai. Taire le deuxième jour d'une
+ * course retirée serait le laisser croire levé.
+ */
+export function motDuCoach(entree: EntreeCoach): MotCoach {
+  const candidats = [...candidatsSeance(entree), ...candidatsFond(entree)]
+  return (
+    candidats.find((c) => c.obligatoire) ??
+    candidats.find((c) => c.cle !== entree.exclure) ??
+    candidats[0]
+  )
 }
 
 /**

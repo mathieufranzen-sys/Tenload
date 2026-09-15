@@ -7,7 +7,7 @@
  * scroll. Le reste (règles d'adaptation, carnet, mot du coach) suit
  * en dessous, sur le fond sombre habituel.
  */
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan, Week } from '../data/types'
 import {
@@ -39,6 +39,33 @@ import { CarteCoach } from '../components/CarteCoach'
 import { EnteteEcran } from '../components/EnteteEcran'
 
 const plan = planJson as unknown as Plan
+
+/**
+ * Le mot affiché chaque jour, par règle, sur les trois derniers jours.
+ * Sur l'appareil et pas en base : c'est ce que CET écran a montré qu'il ne
+ * faut pas remontrer. Safari en navigation privée refuse le stockage, d'où
+ * les try : sans mémoire, le coach peut se répéter, il ne doit pas planter.
+ */
+const CLE_MEMOIRE_COACH = 'tenload-coach'
+
+function lireMemoireCoach(): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(CLE_MEMOIRE_COACH) ?? '{}') as Record<string, string>
+  } catch {
+    return {}
+  }
+}
+
+function ecrireMemoireCoach(jour: string, cle: string) {
+  try {
+    const garde = Object.entries({ ...lireMemoireCoach(), [jour]: cle })
+      .sort(([a], [b]) => (a < b ? 1 : -1))
+      .slice(0, 3)
+    localStorage.setItem(CLE_MEMOIRE_COACH, JSON.stringify(Object.fromEntries(garde)))
+  } catch {
+    // Stockage refusé : on vit sans mémoire.
+  }
+}
 
 interface Props {
   load: LoadMap
@@ -252,9 +279,17 @@ export function Today({
           chargeInconnue: A.detail.chargeInconnue,
         },
         alertes: alertesSemaine,
+        exclure: lireMemoireCoach()[addDays(now, -1)],
+        jusquaCourse: daysBetween(now, plan.meta.raceDate),
       }),
     [pain, A.byDate, A.detail, now, insights.seancesTotal, duJourPourCoach, alertesSemaine],
   )
+
+  // La règle du jour devient l'exclusion de demain. Réécrite à chaque rendu :
+  // c'est le dernier mot affiché qu'il ne faut pas redire, pas le premier.
+  useEffect(() => {
+    ecrireMemoireCoach(now, mot.cle)
+  }, [now, mot.cle])
 
   /** L'indice du jour consulté. `A.detail` ne vaut que pour aujourd'hui. */
   const detail = A.byDate[jour] ?? A.detail

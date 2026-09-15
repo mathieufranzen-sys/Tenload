@@ -720,6 +720,24 @@ un allègement volontaire est un « bon réflexe » au-dessus de 50 et une simpl
 constatation en dessous, parce qu'en dessous le modèle ne l'avait pas vu venir
 et le féliciter laisserait croire l'inverse.
 
+**Jamais le même mot deux jours de suite.** Arbitré par Mathieu le
+15 septembre 2026, après une semaine de « raideur au réveil » chaque matin.
+Toutes les règles produisent des candidats portant une `cle`, et `motDuCoach`
+prend le premier dont la clé n'est pas celle d'hier (`exclure`). La comparaison
+porte sur la RÈGLE et non sur le texte : « de 1,2 à 0,7 » puis « de 1,2 à 0,6 »
+seraient sinon deux messages. La mémoire vit dans `localStorage`
+(`tenload-coach`, trois jours) : c'est ce que CET écran a montré. **Trois
+règles sont `obligatoire`** et se répètent tant qu'elles sont vraies : course
+neutralisée, sortie longue raccourcie, contrainte cassée. Taire le deuxième
+jour d'une course retirée serait la laisser croire levée. Le compte à rebours
+est toujours disponible, c'est lui qui garantit qu'un autre mot existe.
+
+Trois règles de fond s'ajoutent, avec les mêmes exigences de saisie : le
+compteur de jours sans douleur au-dessus de 2 (trois relevés sur quatre, et le
+« depuis » s'arrête au premier jour du carnet), la variation de charge entre
+deux semaines pleines (jamais quand `chargeInconnue`), et la série de matins
+notés. La raideur stable, observation plate, passe après toutes.
+
 Le chiffre cité est toujours l'indice réellement calculé et le fait cité est
 toujours un changement réellement appliqué. `SeancePlanifiee.typePlan` et
 `SeanceDuJour.distPlan` existent pour ça : dire « ta sortie longue de 26 km

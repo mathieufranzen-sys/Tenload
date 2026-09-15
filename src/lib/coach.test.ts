@@ -44,9 +44,16 @@ describe('motDuCoach — raideur au réveil', () => {
     expect(m.ton).toBe('vigilance')
   })
 
-  it('reste neutre sur une raideur stable', () => {
+  it('reste neutre sur une raideur stable, une fois le reste dit', () => {
+    // Le même carnet ouvre aussi le compteur sans douleur et la série de
+    // matins notés, qui passent devant : la stabilité plate vient après.
     const pain = carnet([...serie(14, 1.2), ...serie(14, 1.2)])
-    const m = motDuCoach({ pain, byDate: {}, now: NOW, seancesTotal: TOTAL })
+    const avant = motDuCoach({ pain, byDate: {}, now: NOW, seancesTotal: TOTAL })
+    expect(avant.cle).toBe('sans-douleur')
+    // Un 3 le soir même coupe le compteur, un matin manquant coupe la série.
+    const plat = carnet([1.2, null, ...serie(26, 1.2)])
+    plat[NOW] = { ...plat[NOW], evening: 3 }
+    const m = motDuCoach({ pain: plat, byDate: {}, now: NOW, seancesTotal: TOTAL })
     expect(m.ton).toBe('neutre')
     expect(m.texte).toContain('stable')
   })
@@ -312,5 +319,79 @@ describe('motDuCoach — un changement à indice bas doit quand même parler', (
   it('sans aucun écart, il retombe sur les règles de fond', () => {
     const m = mot([seance()])
     expect(m.texte).toContain('Note ta douleur au réveil')
+  })
+})
+
+describe('motDuCoach — jamais le même mot deux jours de suite', () => {
+  const seance = (p: Partial<SeanceDuJour> = {}): SeanceDuJour => ({
+    type: 'ef',
+    typePlan: 'ef',
+    titre: 'Endurance facile 7 km',
+    dist: 7,
+    distPlan: 7,
+    ecart: null,
+    adaptee: false,
+    faite: false,
+    saute: false,
+    ...p,
+  })
+
+  it('passe à la règle suivante quand celle d’hier revient', () => {
+    const pain = carnet([...serie(14, 0.8), ...serie(14, 2)])
+    const hier = motDuCoach({ pain, byDate: {}, now: NOW, seancesTotal: TOTAL, jusquaCourse: 190 })
+    expect(hier.cle).toBe('raideur-baisse')
+    const m = motDuCoach({ pain, byDate: {}, now: NOW, seancesTotal: TOTAL, jusquaCourse: 190, exclure: hier.cle })
+    expect(m.cle).not.toBe('raideur-baisse')
+  })
+
+  it('compare la règle et non le texte : un chiffre qui bouge ne fait pas un autre mot', () => {
+    const a = motDuCoach({ pain: carnet([...serie(14, 0.8), ...serie(14, 2)]), byDate: {}, now: NOW, seancesTotal: TOTAL, jusquaCourse: 190 })
+    const b = motDuCoach({ pain: carnet([...serie(14, 0.7), ...serie(14, 2)]), byDate: {}, now: NOW, seancesTotal: TOTAL, jusquaCourse: 190, exclure: a.cle })
+    expect(b.cle).not.toBe(a.cle)
+  })
+
+  it('a toujours un autre mot, grâce au compte à rebours', () => {
+    const m = motDuCoach({ pain: {}, byDate: {}, now: NOW, seancesTotal: TOTAL, jusquaCourse: 190, exclure: 'noter-reveil' })
+    expect(m.cle).toBe('compte-a-rebours')
+    expect(m.texte).toContain('J-190')
+  })
+
+  it('répète ce que l’indice impose, même dit la veille', () => {
+    const m = motDuCoach({
+      pain: {},
+      byDate: {},
+      now: NOW,
+      seancesTotal: TOTAL,
+      duJour: [seance({ type: 'velo', typePlan: 'long', adaptee: true })],
+      indice: { idx: 71, painInconnue: false, chargeInconnue: false },
+      exclure: 'course-neutralisee',
+    })
+    expect(m.cle).toBe('course-neutralisee')
+  })
+
+  it('ne compte pas des jours sans douleur avant le début du carnet', () => {
+    // Dix jours notés à 1 : dix jours sans douleur, pas soixante.
+    const m = motDuCoach({ pain: carnet(serie(10, 1)), byDate: {}, now: NOW, seancesTotal: TOTAL })
+    expect(m.cle).toBe('sans-douleur')
+    expect(m.texte).toContain('depuis 10 jours')
+  })
+
+  it('se tait sur un compteur sans douleur troué', () => {
+    // Trois relevés sur quatorze jours : zéro douleur affichée, rien de mesuré.
+    const pain = carnet([1, null, null, null, 1, null, null, null, null, 1, null, null, null, null, 5])
+    const m = motDuCoach({ pain, byDate: {}, now: NOW, seancesTotal: TOTAL })
+    expect(m.cle).not.toBe('sans-douleur')
+  })
+
+  it('compare la charge de deux semaines pleines, jamais sur une charge non attestée', () => {
+    const byDate: Record<string, { idx: number; load: number }> = {}
+    for (let k = 1; k <= 7; k++) byDate[addDays(NOW, -k)] = { idx: 20, load: 13 }
+    for (let k = 8; k <= 14; k++) byDate[addDays(NOW, -k)] = { idx: 20, load: 10 }
+    const base = { pain: {}, byDate, now: NOW, seancesTotal: TOTAL, duJour: [] }
+    const m = motDuCoach({ ...base, indice: { idx: 20, painInconnue: false, chargeInconnue: false }, exclure: 'noter-reveil' })
+    expect(m.cle).toBe('charge-semaine')
+    expect(m.texte).toContain('30 %')
+    const muet = motDuCoach({ ...base, indice: { idx: 20, painInconnue: false, chargeInconnue: true }, exclure: 'noter-reveil' })
+    expect(muet.cle).not.toBe('charge-semaine')
   })
 })
