@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react'
 import {
   activerRappels,
   desactiverRappels,
+  cleConfiguree,
   estInstallee,
   etatRappels,
   type EtatRappels,
@@ -115,8 +116,11 @@ export function Reminders({ userId }: Props) {
 
         {etat === 'indisponible' ? (
           <p style={{ color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, margin: 0 }}>
-            Ce navigateur ne sait pas recevoir de notifications, ou la clé d'envoi n'est pas
-            configurée.
+            {!cleConfiguree()
+              ? "La clé d'envoi manque à cette version de l'app : ajoute VITE_VAPID_PUBLIC_KEY aux variables de Netlify, puis redéploie."
+              : !installee
+                ? "Sur iPhone, les notifications ne marchent que depuis l'app installée : Safari, Partager, « Sur l'écran d'accueil », puis rouvre-la depuis l'icône."
+                : 'Ce navigateur ne sait pas recevoir de notifications.'}
           </p>
         ) : etat === 'refuse' ? (
           <p style={{ color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, margin: 0 }}>

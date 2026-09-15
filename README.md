@@ -145,6 +145,10 @@ inaccessible depuis le navigateur.
    |---|---|
    | `VITE_SUPABASE_URL` | ton Project URL |
    | `VITE_SUPABASE_ANON_KEY` | ta clé anon |
+   | `VITE_VAPID_PUBLIC_KEY` | la clé publique VAPID de `.env.local`, sans elle aucun rappel |
+
+   Ces variables sont lues au build : en ajouter une après coup demande un
+   redéploiement.
 
 4. Déploie. Tu obtiens une adresse en `xxx.netlify.app`.
 5. Retourne dans Supabase → **Authentication → URL Configuration** et ajoute

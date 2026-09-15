@@ -31,6 +31,14 @@ const CLE_PUBLIQUE = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
 export type EtatRappels = 'indisponible' | 'refuse' | 'inactif' | 'actif'
 
 /**
+ * La clé est lue au BUILD, pas à l'exécution : absente des variables de
+ * l'hébergeur, elle manque au site en ligne même si `.env.local` la porte.
+ * `indisponible` confondait ce cas avec un navigateur incapable, et les deux
+ * ne se réparent pas du tout au même endroit.
+ */
+export const cleConfiguree = (): boolean => Boolean(CLE_PUBLIQUE)
+
+/**
  * `Notification` existe dans Safari iOS même hors PWA installée, mais
  * `serviceWorker` et `PushManager` ne suffisent pas non plus à garantir la
  * délivrance : c'est le mode standalone qui décide. On teste les trois.
