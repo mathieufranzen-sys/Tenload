@@ -116,18 +116,13 @@ describe('seancesAvecEcarts', () => {
 
 describe('verifierContraintes', () => {
   it('ne dit rien sur le plan de référence', () => {
-    // Les 35 semaines sont déjà validées par check_plan.py : si ce test casse,
-    // c'est le contrôle qui a tort, pas le plan.
+    // Les 34 semaines sont déjà validées par check_plan_v2.py : si ce test
+    // casse, c'est le contrôle qui a tort, pas le plan.
     //
-    // Deux exceptions, les mêmes que dans check_plan.py : les semaines du
-    // 20 km de Paris et du 10 km Hoka avancent leur séance de qualité au
-    // mercredi, ce qui est un écart nommé et daté à la contrainte 2.
-    const QUALITE_MERCREDI = new Set([9, 14])
+    // Plus aucune exception depuis la refonte du 18 septembre 2026 : l'escalade
+    // est sortie du plan, et avec elle le seul écart nommé qui restait.
     for (const w of plan.weeks) {
-      const attendu = QUALITE_MERCREDI.has(w.n) ? [2] : []
-      expect(verifierContraintes(w.sessions).map((a) => a.contrainte), `semaine ${w.n}`).toEqual(
-        attendu,
-      )
+      expect(verifierContraintes(w.sessions).map((a) => a.contrainte), `semaine ${w.n}`).toEqual([])
     }
   })
 
@@ -147,16 +142,6 @@ describe('verifierContraintes', () => {
       [0, 1, 2, 3, 4, 5, 6].map((d) => seance(d, d === 2 ? 'escalade' : 'velo')),
     )
     expect(a.map((x) => x.contrainte)).toContain(4)
-  })
-
-  it('C2 — signale une course le mercredi', () => {
-    const a = verifierContraintes([seance(2, 'ef'), seance(2, 'escalade')])
-    expect(a.map((x) => x.contrainte)).toContain(2)
-  })
-
-  it('C2 — signale un renfo haut du corps le mercredi', () => {
-    const a = verifierContraintes([seance(2, 'muscu-haut'), seance(2, 'escalade')])
-    expect(a.map((x) => x.contrainte)).toContain(2)
   })
 
   it('C3 — signale une qualité accolée à la sortie longue', () => {
@@ -208,44 +193,18 @@ describe('alertesAjoutees', () => {
     ...extra,
   })
 
-  describe('la contrainte 2 vise la séance d’escalade, pas le mercredi', () => {
-    it('signale un renfo haut posé SUR l’escalade', () => {
+  describe('la contrainte 2 n’existe plus', () => {
+    // L'escalade a quitté le plan le 18 septembre 2026 : elle est devenue un
+    // remplacement possible. Signaler son jour reviendrait à crier chaque fois
+    // qu'une course est remplacée par une grimpe.
+    it('ne dit plus rien d’un renfo haut posé sur l’escalade', () => {
       const a = verifierContraintes([s({ day: 2, type: 'escalade' }), s({ day: 2, type: 'muscu-haut' })])
-      expect(a.map((x) => x.contrainte)).toContain(2)
+      expect(a.map((x) => x.contrainte)).not.toContain(2)
     })
 
-    it('signale aussi l’escalade posée SUR le renfo haut', () => {
-      // Le cas qui manquait : la même collision, dans l'autre sens. Codée sur
-      // le mercredi, la règle ne voyait que le premier.
-      const a = verifierContraintes([s({ day: 1, type: 'muscu-haut' }), s({ day: 1, type: 'escalade' })])
-      expect(a.map((x) => x.contrainte)).toContain(2)
-    })
-
-    it('suit l’escalade quand elle change de jour', () => {
-      // Escalade au jeudi, course au jeudi : la règle doit viser le jeudi.
+    it('ne dit plus rien d’une course le jour de l’escalade', () => {
       const a = verifierContraintes([s({ day: 3, type: 'escalade' }), s({ day: 3, type: 'ef' })])
-      expect(a.map((x) => x.texte).join(' ')).toContain('jeudi')
-    })
-
-    it('ne dit rien d’un mercredi sans escalade', () => {
-      expect(verifierContraintes([s({ day: 2, type: 'muscu-haut' })])).toEqual([])
-    })
-  })
-
-  describe('la contrainte 4 protège le jour de repos', () => {
-    it('signale toute séance posée dessus, même sans les jambes', () => {
-      const a = verifierContraintes([s({ day: 6, type: 'repos' }), s({ day: 6, type: 'muscu-haut' })])
-      expect(a.map((x) => x.contrainte)).toContain(4)
-      expect(a.map((x) => x.texte).join(' ')).toContain('jour de repos')
-    })
-
-    it('signale aussi une séance de jambes', () => {
-      const a = verifierContraintes([s({ day: 6, type: 'repos' }), s({ day: 6, type: 'velo' })])
-      expect(a.filter((x) => x.contrainte === 4).length).toBeGreaterThan(0)
-    })
-
-    it('laisse le jour de repos tranquille quand il l’est', () => {
-      expect(verifierContraintes([s({ day: 6, type: 'repos' })])).toEqual([])
+      expect(a.map((x) => x.contrainte)).not.toContain(2)
     })
   })
 

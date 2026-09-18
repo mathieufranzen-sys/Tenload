@@ -301,24 +301,11 @@ export function verifierContraintes(seances: Session[]): Alerte[] {
   const jour = (d: number) => actives.filter((s) => s.day === d)
   const porte = (d: number, types: SessionType[]) => jour(d).some((s) => types.includes(s.type))
 
-  // C2 — le jour de l'escalade lui appartient : avant-bras et épaules
-  // travaillent déjà. La contrainte vise LA SÉANCE, pas le mercredi : déplacer
-  // l'escalade au mardi doit protéger le mardi. Codée sur le mercredi, elle
-  // signalait qu'on pose un renfo haut sur l'escalade, mais restait muette
-  // quand on posait l'escalade sur le renfo haut — la même collision, dans
-  // l'autre sens.
-  for (const esc of actives.filter((s) => s.type === 'escalade')) {
-    if (porte(esc.day, TYPES_COURSE))
-      alertes.push({
-        contrainte: 2,
-        texte: `Une course tombe le jour de l’escalade (${JOURS[esc.day]}).`,
-      })
-    if (porte(esc.day, ['muscu-haut']))
-      alertes.push({
-        contrainte: 2,
-        texte: `Un renfo haut du corps tombe le jour de l’escalade (${JOURS[esc.day]}) : l’escalade le fait déjà.`,
-      })
-  }
+  // C2 a ete SUPPRIMEE le 18 septembre 2026 : l'escalade sort du plan. Elle
+  // n'est plus une seance hebdomadaire mais un remplacement possible, au meme
+  // titre que le velo ou la marche. Une contrainte qui protegeait son jour n'a
+  // plus d'objet, et la garder ferait crier l'app chaque fois qu'une course est
+  // remplacee par une grimpe.
 
   // C3 — rien de dur collé à la sortie longue, ni le jour même, ni la veille,
   // ni le lendemain. Le jour même manquait : c'est pourtant le pire des trois.

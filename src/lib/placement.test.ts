@@ -228,12 +228,12 @@ describe('ciblesPossibles', () => {
     expect(c.get(addDays(LUNDI, 7))?.semaines).toBe(1)
   })
 
-  it('signale le mercredi d’escalade comme conflit, sans l’interdire', () => {
+  it('ne signale plus le jour d’escalade, la contrainte 2 a été supprimée', () => {
+    // L'escalade est sortie du plan le 18 septembre 2026 : elle est devenue un
+    // remplacement possible, et son jour ne se protège plus.
     const c = ciblesPossibles(weeks, prise)
     const mercredi = c.get(addDays(LUNDI, 2))!
-    expect(mercredi.conflits.length).toBeGreaterThan(0)
-    expect(mercredi.conflits[0]).toContain('mercredi')
-    // La cible existe quand même : on avertit, on ne bloque pas.
+    expect(mercredi.conflits).toEqual([])
     expect(mercredi.jour).toBe(2)
   })
 
@@ -284,18 +284,11 @@ describe('les trois cas signalés, sur le plan réel', () => {
   const cibleLe = (prise: SeancePlanifiee, jour: number) =>
     ciblesPossibles(vraiPlan.weeks, prise)!.get(addDays(w.monday, jour))!
 
-  it('l’escalade posée sur le renfo haut du corps est signalée', () => {
-    // Le cas de Mathieu : dans un sens ça alertait, dans l'autre non, parce
-    // que la contrainte visait le mercredi et non la séance d'escalade.
-    const renfoHaut = jourDe('muscu-haut')
-    const c = cibleLe(jourDe('escalade'), renfoHaut.s.day)
-    expect(c.conflits.join(' ')).toContain('escalade')
-  })
-
-  it('et le renfo haut posé sur l’escalade l’est toujours', () => {
-    const escalade = jourDe('escalade')
-    const c = cibleLe(jourDe('muscu-haut'), escalade.s.day)
-    expect(c.conflits.join(' ')).toContain('escalade')
+  it('le renfo haut posé sur une autre séance ne dit plus rien de l’escalade', () => {
+    // La contrainte 2 n'existe plus : seules les contraintes 3, 4 et 6 parlent.
+    const velo = seances.find((x) => x.s.type === 'velo')!
+    const c = cibleLe(jourDe('muscu-haut'), velo.s.day)
+    expect(c.conflits.join(' ')).not.toContain('escalade')
   })
 
   it('rien ne peut aller sur le jour de repos', () => {
