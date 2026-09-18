@@ -1648,14 +1648,14 @@
       },
       {
        "km": 4.0,
-       "zone": "seuil"
+       "zone": "semi"
       },
       {
        "km": 2.0,
-       "zone": "semi"
+       "zone": "seuil"
       }
      ],
-     "note": "Plus courte mais plus dense : elle finit au seuil puis à l'allure semi, pour installer le rythme du 20 km. Les quatorze premiers kilomètres restent conversationnels, sinon les six derniers ne valent rien. Elle pèse 37 % de ta semaine, la limite est 48 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
+     "note": "Plus courte mais plus dense : elle accélère jusqu'au bout, allure semi puis seuil, pour installer le rythme du 20 km. Le début reste conversationnel, sinon les derniers kilomètres ne valent rien. Elle pèse 37 % de ta semaine, la limite est 48 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
@@ -1856,14 +1856,14 @@
       },
       {
        "km": 4.0,
-       "zone": "seuil"
+       "zone": "semi"
       },
       {
        "km": 2.0,
-       "zone": "semi"
+       "zone": "seuil"
       }
      ],
-     "note": "Plus courte mais plus dense : elle finit au seuil puis à l'allure semi, pour installer le rythme du 20 km. Les quatorze premiers kilomètres restent conversationnels, sinon les six derniers ne valent rien. Elle pèse 31 % de ta semaine, la limite est 48 %. Sucre avant de partir.",
+     "note": "Plus courte mais plus dense : elle accélère jusqu'au bout, allure semi puis seuil, pour installer le rythme du 20 km. Le début reste conversationnel, sinon les derniers kilomètres ne valent rien. Elle pèse 31 % de ta semaine, la limite est 48 %. Sucre avant de partir.",
      "feedback": true
     },
     {

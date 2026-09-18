@@ -138,8 +138,8 @@ plus le dossard. L'allure 10 km est la zone `vo2` du modèle, 3:57/km.
 | Date | Séance |
 |---|---|
 | Sam 19/09 (S6) | 6 x 300 m à 4:00 puis 10 min au seuil |
-| Lun 28/09 (S8) | Sortie longue de 20 km : 14 km EF + 4 km seuil + 2 km allure semi |
-| Lun 05/10 (S9) | Sortie longue de 16 km : 10 km EF + 4 km seuil + 2 km allure semi |
+| Lun 28/09 (S8) | Sortie longue de 20 km : 14 km EF, 4 km allure semi, 2 km au seuil |
+| Lun 05/10 (S9) | Sortie longue de 16 km : 10 km EF, 4 km allure semi, 2 km au seuil |
 | Jeu 24/09 (S7) | 8 x 200 m à 3:45, puis 15 min au seuil |
 | Jeu 01/10 (S8) | 10 x 300 m à 4:00 |
 | Dim 11/10 (S9) | **20 km de Paris**, chrono bonus |
@@ -156,8 +156,11 @@ classique, et c'est ce qui protège le marathon d'avril.
 
 **La sortie longue ne monte pas pendant le bloc.** Elle tient 26 km, puis 24 et
 26 pendant les séances spécifiques. **Les deux longues qui précèdent le 20 km
-raccourcissent et se densifient** : 20 puis 16 km qui finissent au seuil puis à
-l'allure semi, pour installer le rythme de la course. Elles sortent de la
+raccourcissent et se densifient** : 20 puis 16 km qui accélèrent
+jusqu'au bout, allure semi puis seuil, pour installer le rythme de la course.
+**Une sortie longue ne ralentit jamais**, et `check_plan_v2.py` le vérifie
+désormais sur toutes : le negative split est la compétence marathon numéro un,
+et un plan qui finit plus lentement qu'il n'a commencé apprend l'inverse. Elles sortent de la
 chaîne de progression, comme les décharges : ce ne sont pas des étapes du
 kilométrage : on ne développe pas deux qualités en même
 temps, et la charge nouvelle de ces semaines est la séance du jeudi. Elle

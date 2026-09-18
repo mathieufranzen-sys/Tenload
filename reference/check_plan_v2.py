@@ -104,6 +104,16 @@ for w in semaines:
             if "vo2" in zones:
                 dire(erreurs, n, f"contrainte 7 : {x['title']} travaille en vo2 hors bloc spécifique")
 
+    # 7 bis. une sortie longue accélère, elle ne ralentit jamais. Le negative
+    # split est la compétence marathon numéro un, et un plan qui finit plus
+    # lentement qu'il n'a commencé apprend l'inverse.
+    VITESSE_ZONE = {"recup": 0, "ef": 1, "am": 2, "semi": 3, "seuil": 4, "vo2": 5, "rep": 6}
+    for x in s:
+        segs = [seg["zone"] for seg in (x.get("struct") or [])]
+        rangs = [VITESSE_ZONE[z] for z in segs]
+        if any(b < a for a, b in zip(rangs, rangs[1:])):
+            dire(erreurs, n, f"{x['title']} ralentit en cours de route : {' puis '.join(segs)}")
+
     # 8. la part de la sortie longue
     if longue and n not in HORS_REGLE_PART:
         part = longue["dist"] / volume * 100

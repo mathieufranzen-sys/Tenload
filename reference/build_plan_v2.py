@@ -91,8 +91,8 @@ VOLUME = {
 # elles finissent au seuil puis à l'allure semi. Elles sortent de la chaîne de
 # progression, comme les décharges : ce ne sont pas des étapes du kilométrage.
 LONGUE_QUALITATIVE = {
-    8: [(14, "ef"), (4, "seuil"), (2, "semi")],
-    9: [(10, "ef"), (4, "seuil"), (2, "semi")],
+    8: [(14, "ef"), (4, "semi"), (2, "seuil")],
+    9: [(10, "ef"), (4, "semi"), (2, "seuil")],
 }
 
 DECHARGE = {17, 21, 26}            # les vraies décharges
@@ -281,9 +281,9 @@ def sortie_longue(w, jour, volume=None):
         notes.append("Déplacée au jeudi : la course de dimanche dernier prend la place du lundi.")
     if w in LONGUE_QUALITATIVE:
         notes.append(
-            "Plus courte mais plus dense : elle finit au seuil puis à l'allure semi, pour "
-            "installer le rythme du 20 km. Les quatorze premiers kilomètres restent "
-            "conversationnels, sinon les six derniers ne valent rien."
+            "Plus courte mais plus dense : elle accélère jusqu'au bout, allure semi puis "
+            "seuil, pour installer le rythme du 20 km. Le début reste conversationnel, "
+            "sinon les derniers kilomètres ne valent rien."
         )
     notes.append(f"Elle pèse {part} % de ta semaine, la limite est 48 %.")
     notes.append("Sucre avant de partir." if dist < 18 else
