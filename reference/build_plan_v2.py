@@ -67,8 +67,13 @@ BLOCS = [
 
 # ─── la forme de chaque semaine ────────────────────────────────────────────
 # Sortie longue, en km. 0 = pas de sortie longue (semaine de course).
+#
+# Elle NE MONTE PAS pendant le bloc 10 km (S8 à S13) : on ne développe pas deux
+# qualités en même temps. La charge nouvelle de ces semaines est la séance
+# spécifique du jeudi, la longue se contente de tenir son niveau. Elle reprend
+# sa progression en S16, une fois la course passée et le bloc de volume ouvert.
 SL = {
-    7: 26, 8: 28, 9: 16, 10: 18, 11: 24, 12: 26, 13: 18, 14: 0, 15: 18,
+    7: 26, 8: 26, 9: 16, 10: 18, 11: 24, 12: 26, 13: 18, 14: 0, 15: 18,
     16: 26, 17: 20, 18: 28, 19: 20, 20: 30, 21: 22, 22: 30, 23: 32, 24: 22,
     25: 0, 26: 20, 27: 30, 28: 32, 29: 32, 30: 24, 31: 32, 32: 28, 33: 18, 34: 0,
 }
@@ -76,7 +81,7 @@ SL = {
 # Volume de course visé, en km. Il sert aux notes et au contrôle de la part
 # que prend la sortie longue : au-delà de 45 %, une journée écrase la semaine.
 VOLUME = {
-    7: 56, 8: 60, 9: 48, 10: 46, 11: 56, 12: 58, 13: 50, 14: 36, 15: 44,
+    7: 56, 8: 58, 9: 48, 10: 46, 11: 56, 12: 58, 13: 50, 14: 36, 15: 44,
     16: 58, 17: 44, 18: 62, 19: 62, 20: 66, 21: 52, 22: 68, 23: 72, 24: 62,
     25: 48, 26: 50, 27: 68, 28: 70, 29: 72, 30: 64, 31: 72, 32: 62, 33: 46, 34: 30,
 }

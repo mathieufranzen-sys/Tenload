@@ -148,9 +148,14 @@ plus le dossard. L'allure 10 km est la zone `vo2` du modèle, 3:57/km.
 | Mer 11/11 (S14) | 5 x 400 m, rappel d'allure |
 | Dim 15/11 (S14) | **10 km Hoka**, l'objectif de l'automne |
 
-Le volume ne baisse pas pendant le bloc : 54 puis 56 km, les plus grosses
+Le volume ne baisse pas pendant le bloc : 55 puis 58 km, les plus grosses
 semaines depuis le début. C'est ce qui distingue ce bloc d'une prépa 10 km
 classique, et c'est ce qui protège le marathon d'avril.
+
+**La sortie longue ne monte pas pendant le bloc.** Elle tient 26 km, puis 24 et
+26 pendant les séances spécifiques : on ne développe pas deux qualités en même
+temps, et la charge nouvelle de ces semaines est la séance du jeudi. Elle
+reprend sa progression en S16, une fois la course passée.
 
 ### Les quatre dossards
 

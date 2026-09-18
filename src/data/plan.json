@@ -1631,23 +1631,23 @@
    "blocName": "Réathlétisation",
    "monday": "2026-09-28",
    "deload": false,
-   "sl": 28,
+   "sl": 26,
    "efKm": 10,
    "sessions": [
     {
      "day": 0,
      "type": "long",
-     "title": "Sortie longue de 28 km",
+     "title": "Sortie longue de 26 km",
      "cat": "Sortie longue",
-     "dist": 28,
+     "dist": 26,
      "dur": null,
      "struct": [
       {
-       "km": 28,
+       "km": 26,
        "zone": "ef"
       }
      ],
-     "note": "Elle pèse 47 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
+     "note": "Elle pèse 45 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
