@@ -1524,6 +1524,8 @@
      "cat": "Intervalles",
      "dist": 11,
      "dur": null,
+     "seuilMin": 15,
+     "qualite": "vitesse",
      "wu": [
       [
        3,
@@ -1726,6 +1728,8 @@
      "cat": "Intervalles",
      "dist": 12,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "specifique",
      "wu": [
       [
        3,
@@ -1924,6 +1928,8 @@
      "cat": "Tempo",
      "dist": 9,
      "dur": null,
+     "seuilMin": 16,
+     "qualite": "seuil",
      "wu": [
       [
        3,
@@ -2170,6 +2176,8 @@
      "cat": "Intervalles",
      "dist": 11,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "specifique",
      "wu": [
       [
        3,
@@ -2313,6 +2321,8 @@
      "cat": "Intervalles",
      "dist": 13,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "specifique",
      "wu": [
       [
        3,
@@ -2511,6 +2521,8 @@
      "cat": "Intervalles",
      "dist": 14,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "specifique",
      "wu": [
       [
        3,
@@ -2709,6 +2721,8 @@
      "cat": "Intervalles",
      "dist": 12,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "specifique",
      "wu": [
       [
        3,
@@ -2875,6 +2889,8 @@
      "cat": "Intervalles",
      "dist": 8,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "specifique",
      "wu": [
       [
        3,
@@ -3137,6 +3153,8 @@
      "cat": "Intervalles",
      "dist": 11,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "vitesse",
      "wu": [
       [
        3,
@@ -3284,6 +3302,8 @@
      "cat": "Tempo",
      "dist": 13,
      "dur": null,
+     "seuilMin": 30,
+     "qualite": "seuil",
      "wu": [
       [
        3,
@@ -3482,6 +3502,8 @@
      "cat": "Tempo",
      "dist": 10,
      "dur": null,
+     "seuilMin": 24,
+     "qualite": "seuil",
      "wu": [
       [
        3,
@@ -3684,6 +3706,8 @@
      "cat": "Tempo",
      "dist": 14,
      "dur": null,
+     "seuilMin": 30,
+     "qualite": "seuil",
      "wu": [
       [
        3,
@@ -3882,6 +3906,8 @@
      "cat": "Intervalles",
      "dist": 12,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "vitesse",
      "wu": [
       [
        3,
@@ -4084,6 +4110,8 @@
      "cat": "Tempo",
      "dist": 14,
      "dur": null,
+     "seuilMin": 30,
+     "qualite": "seuil",
      "wu": [
       [
        3,
@@ -4282,6 +4310,8 @@
      "cat": "Tempo",
      "dist": 10,
      "dur": null,
+     "seuilMin": 24,
+     "qualite": "seuil",
      "wu": [
       [
        3,
@@ -4484,6 +4514,8 @@
      "cat": "Tempo",
      "dist": 14,
      "dur": null,
+     "seuilMin": 30,
+     "qualite": "seuil",
      "wu": [
       [
        3,
@@ -4686,6 +4718,8 @@
      "cat": "Tempo",
      "dist": 15,
      "dur": null,
+     "seuilMin": 30,
+     "qualite": "seuil",
      "wu": [
       [
        3,
@@ -4884,6 +4918,8 @@
      "cat": "Tempo",
      "dist": 12,
      "dur": null,
+     "seuilMin": 20,
+     "qualite": "seuil",
      "wu": [
       [
        3,
@@ -5082,6 +5118,8 @@
      "cat": "Tempo",
      "dist": 8,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "allure marathon",
      "wu": [
       [
        3,
@@ -5271,6 +5309,8 @@
      "cat": "Tempo",
      "dist": 10,
      "dur": null,
+     "seuilMin": 24,
+     "qualite": "seuil",
      "wu": [
       [
        3,
@@ -5473,6 +5513,8 @@
      "cat": "Tempo",
      "dist": 15,
      "dur": null,
+     "seuilMin": 30,
+     "qualite": "seuil",
      "wu": [
       [
        3,
@@ -5679,6 +5721,8 @@
      "cat": "Tempo",
      "dist": 17,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "allure marathon",
      "wu": [
       [
        3,
@@ -5885,6 +5929,8 @@
      "cat": "Tempo",
      "dist": 16,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "allure marathon",
      "wu": [
       [
        3,
@@ -6087,6 +6133,8 @@
      "cat": "Tempo",
      "dist": 14,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "seuil",
      "wu": [
       [
        3,
@@ -6293,6 +6341,8 @@
      "cat": "Tempo",
      "dist": 21,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "allure marathon",
      "wu": [
       [
        3,
@@ -6495,6 +6545,8 @@
      "cat": "Tempo",
      "dist": 14,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "allure marathon",
      "wu": [
       [
        3,
@@ -6697,6 +6749,8 @@
      "cat": "Tempo",
      "dist": 12,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "allure marathon",
      "wu": [
       [
        3,
@@ -6833,6 +6887,8 @@
      "cat": "Tempo",
      "dist": 8,
      "dur": null,
+     "seuilMin": 0,
+     "qualite": "allure marathon",
      "wu": [
       [
        3,

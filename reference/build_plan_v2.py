@@ -21,6 +21,7 @@ Seule la séance du samedi de la semaine 6 est remplacée, à contenu près, par
 première prise de contact avec l'allure 10 km.
 """
 import json
+import re
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -284,6 +285,36 @@ def course_facile(w, jour, dist, recup=True):
     return s
 
 
+def minutes_au_seuil(principal):
+    """Les minutes passées au seuil dans une séance, calculées à la génération.
+
+    Les compter dans l'app voudrait dire relire « 3 x 8 min » au moment de
+    l'afficher : un texte libre qui décrirait mal une séance décrirait alors
+    mal le dosage. Le plan porte donc le chiffre lui-même, et le bilan du
+    dimanche le lit sans l'interpréter.
+    """
+    total = 0
+    for libelle, zone in principal:
+        if zone != "seuil":
+            continue
+        m = re.match(r"(?:(\d+)\s*x\s*)?(\d+)\s*min", str(libelle))
+        if m:
+            total += int(m.group(1) or 1) * int(m.group(2))
+    return total
+
+
+def nature_qualite(principal):
+    """Ce que la séance travaille, pour le dosage « trois seuils pour une vitesse »."""
+    zones = {z for _, z in principal if z}
+    if zones & {"vo2"}:
+        return "specifique"
+    if zones & {"rep"}:
+        return "vitesse"
+    if "am" in zones:
+        return "allure marathon"
+    return "seuil"
+
+
 def seance_qualite(w, jour):
     nom, dist, principal, note = QUALITE[w]
     if w in DECHARGE:
@@ -293,6 +324,7 @@ def seance_qualite(w, jour):
     return {"day": jour, "type": type_, "title": nom,
             "cat": "Intervalles" if type_ == "inter" else "Tempo",
             "dist": dist, "dur": None,
+            "seuilMin": minutes_au_seuil(principal), "qualite": nature_qualite(principal),
             "wu": [(3, "ef"), ("4 x 15 s en ligne droite", "rep")],
             "main": principal, "cd": [(2, "recup")],
             "note": note + " Effort 7,5 sur 10 au maximum, et trois à quatre répétitions en "

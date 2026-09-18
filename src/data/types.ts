@@ -76,6 +76,14 @@ export interface Session {
   ex?: Exercise[] | null
   /** Le mot du coach, affiché dans le détail de la séance. */
   note: string
+  /**
+   * Minutes cumulées au seuil, écrites à la génération du plan. Les recompter
+   * dans l'app voudrait dire relire « 3 x 8 min » au moment de l'afficher : un
+   * texte qui décrirait mal la séance décrirait alors mal le dosage.
+   */
+  seuilMin?: number
+  /** Ce que la séance travaille, pour le dosage « trois seuils pour une vitesse ». */
+  qualite?: 'seuil' | 'vitesse' | 'specifique' | 'allure marathon' 
   /** Séance facultative (le vélo du vendredi). */
   optional?: boolean
   /**
