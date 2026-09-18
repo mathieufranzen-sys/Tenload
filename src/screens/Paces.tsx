@@ -143,7 +143,7 @@ export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLab
               <div style={{ fontSize: 24, fontWeight: 650, letterSpacing: '-.6px', marginTop: 2 }}>
                 {gap <= 0 ? 'objectif atteint' : `−${gap} min`}
               </div>
-              <div style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 600 }}>{gap <= 0 ? '' : 'sur 35 semaines'}</div>
+              <div style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 600 }}>{gap <= 0 ? '' : 'sur 34 semaines'}</div>
             </div>
           </div>
           <div style={{ marginTop: 14 }}>

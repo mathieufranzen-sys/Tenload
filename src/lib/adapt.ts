@@ -57,7 +57,7 @@ const FX_NONE: Fx = {
  * Effets applicables à une date donnée, d'après l'indice PROJETÉ de ce jour,
  * dans une fenêtre de dix jours. Au-delà, le plan reste nominal : projeter
  * plus loin n'aurait pas de sens. Ne jamais appliquer l'état du jour à
- * l'ensemble des 35 semaines — c'était le bug de la version HTML.
+ * l'ensemble des 34 semaines — c'était le bug de la version HTML.
  */
 export function fxForDate(
   day: string,

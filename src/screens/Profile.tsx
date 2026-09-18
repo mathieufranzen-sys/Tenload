@@ -55,7 +55,7 @@ const GROUPES: Array<{ titre: string; rubriques: Rubrique[] }> = [
     titre: 'Le plan',
     rubriques: [
       { key: 'contraintes', titre: 'Tes contraintes', description: 'Les règles non négociables', icone: 'alert' },
-      { key: 'structure', titre: 'Structure des 35 semaines', description: 'Les cinq blocs du plan', icone: 'clip' },
+      { key: 'structure', titre: 'Structure des 34 semaines', description: 'Les cinq blocs du plan', icone: 'clip' },
     ],
   },
   {

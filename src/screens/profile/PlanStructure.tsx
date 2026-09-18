@@ -9,8 +9,11 @@ export function PlanStructure() {
     <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px' }}>
       {plan.blocs.map((b, i) => {
         const semaines = plan.weeks.filter((w) => w.bloc === b.id)
-        const slMin = Math.min(...semaines.map((w) => w.sl))
-        const slMax = Math.max(...semaines.map((w) => w.sl))
+        // Les semaines de dossard portent une sortie longue à zéro : c'est la
+        // course qui la remplace. Les compter afficherait « 0 à 32 km ».
+        const longues = semaines.map((w) => w.sl).filter((km) => km > 0)
+        const slMin = Math.min(...longues)
+        const slMax = Math.max(...longues)
         const derniere = semaines[semaines.length - 1]
         return (
           <div key={b.id} style={{ padding: '12px 0', borderBottom: i < plan.blocs.length - 1 ? '1px solid var(--border)' : undefined }}>

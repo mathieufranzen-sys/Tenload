@@ -177,7 +177,7 @@ export interface PalierLongue {
  *
  * Une seule séance est plafonnée, la suivante dans le temps : dès qu'elle est
  * faite et notée, un nouveau verdict se calcule sur elle. Plafonner toute la
- * suite du plan aplatirait les 35 semaines sur un seul mauvais matin.
+ * suite du plan aplatirait les 34 semaines sur un seul mauvais matin.
  */
 export function palierProchaineLongue(
   seances: SeanceArrangee[],

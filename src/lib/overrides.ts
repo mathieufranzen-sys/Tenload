@@ -1,7 +1,7 @@
 /**
  * Écarts volontaires au plan.
  *
- * Le plan des 35 semaines est une donnée de référence : versionnée dans le
+ * Le plan des 34 semaines est une donnée de référence : versionnée dans le
  * code, validée sur ses six contraintes par reference/check_plan.py. Rien ici
  * ne le modifie. Un écart est une ligne de `plan_overrides` appliquée au
  * rendu, à la volée. C'est la condition pour que le fichier validé reste le
