@@ -2,7 +2,7 @@
 
 Plan d'entraînement marathon adaptatif, piloté par un indice de charge du tendon
 d'Achille. Application personnelle de **Mathieu Franzen**, UX/UI designer chez
-Arneo, qui prépare le **Marathon de Paris du dimanche 11 avril 2027** avec une
+Arneo, qui prépare le **Marathon de Paris du dimanche 4 avril 2027** avec une
 tendinopathie du tendon d'Achille en convalescence.
 
 ## Comment travailler avec Mathieu
@@ -24,191 +24,148 @@ quotidien.
 
 ## Ce qui est non négociable
 
-Ces contraintes viennent de son tendon et de son emploi du temps. Elles sont
-vérifiées par `reference/check_plan.py` sur les 304 séances du plan. **Aucune
-modification du plan ne doit les casser.**
+Ces contraintes viennent de son tendon, de son emploi du temps et, depuis le
+18 septembre 2026, de la méthode de Maxime Lopes (RunWise) qu'il a choisie
+comme référence. Elles sont vérifiées par `reference/check_plan_v2.py` sur les
+275 séances du plan. **Aucune modification du plan ne doit les casser.**
 
 1. **La sortie longue ne s'incrémente jamais de plus de 2 km d'une SEMAINE DE
-   CHARGE à la suivante.** La chaîne saute les semaines de décharge et les
-   semaines de course : une décharge n'est pas une étape de la progression,
-   c'est son interruption, et la remontée se mesure depuis la dernière semaine
-   de charge, pas depuis le creux. Compter le creux dans la chaîne obligeait à
-   ne creuser que de 4 km sous peine de perdre des semaines entières de
-   périodisation, ce qui avait laissé la décharge de S5 à −5 % de charge
-   tendineuse. **Une décharge, elle, coupe librement**, et `check_plan.py`
+   CHARGE à la suivante.** La chaîne saute les décharges, les semaines de
+   course, leurs lendemains et les **pauses de longue** : aucune n'est une
+   étape de la progression. **Une décharge coupe librement**, et le contrôle
    exige au moins −20 %, sur la sortie longue comme sur la charge de la semaine
-   entière. Deux mesures, parce qu'une seule se contourne : S5 raccourcissait
-   la longue pendant que son 5 x 1000 m du samedi coûtait 32 % de plus que le
-   seuil de la semaine d'avant.
-2. **Escalade le mercredi soir** : aucune course et aucun renfo haut du corps ce
-   jour-là. Les avant-bras et les épaules travaillent déjà.
-3. **Ni séance de vitesse ni renfo bas du corps accolés à la sortie longue.**
-   Le lundi porte la sortie longue, donc le renfo bas est le jeudi et la qualité
-   le samedi.
+   entière. Deux mesures, parce qu'une seule se contourne.
+2. **Supprimée le 18 septembre 2026.** Elle protégeait le jour de l'escalade.
+   L'escalade est sortie du plan : elle n'est plus une séance hebdomadaire mais
+   un remplacement possible, au même titre que le vélo ou la marche. Garder la
+   contrainte aurait fait crier l'app chaque fois qu'une course est remplacée
+   par une grimpe. Le numéro n'est pas réattribué : les écarts en base et les
+   tests y font référence.
+3. **Ni séance de vitesse ni renforcement accolés à la sortie longue.** Le
+   lundi porte la sortie longue, donc les deux renforcements sont le mercredi
+   et le vendredi, et la qualité le jeudi.
 4. **Un jour de repos jambes complet par semaine** : le dimanche.
-5. **Deux séances de vélo remplacent les petites séances d'endurance** tant que
-   le tendon n'est pas guéri. Elles portent le volume aérobie sans impact.
-   **Le vélo est un substitut, pas un dû** : quand la course revient, il n'a
-   plus de raison d'être. Une semaine sans aucun vélo ne casse donc pas cette
-   contrainte, elle la conclut. C'est la lecture de Mathieu, arbitrée le
-   11 septembre 2026, et c'est elle qui autorise la semaine à quatre courses.
-   **Sa sortie est écrite** : deux mois de carnet plein sans aucune douleur
-   au-dessus de 2 sur dix, et les vélos redeviennent des courses faciles pour
-   passer au-dessus de 60 km par semaine. Décidé le 4 septembre 2026, c'est le
-   levier qui pèse le plus sur le chrono d'avril après « finir les blocs sans
-   interruption » : un plan à 55 km ne prépare pas les dix derniers kilomètres.
-   **La sortie se fait en deux temps**, arbitrés le 11 septembre 2026 :
-
-   | Palier | Fenêtre | Relevés | Ce qui s'ouvre |
-   |---|---|---|---|
-   | 1 | 28 jours | 21 | un vélo devient la séance spécifique, la semaine passe à quatre courses |
-   | 2 | 56 jours | 42 | le second vélo devient une course, la semaine passe au-dessus de 60 km |
-
-   Rendre les deux vélos d'un seul coup ajouterait deux jours d'impact la même
-   semaine, sur un tendon dont c'est justement le décalage d'adaptation qui
-   l'avait blessé. `verdictVolume` (`adapt.ts`) renvoie le palier atteint et la
-   règle VOLUME l'annonce. **Trois relevés sur quatre au minimum dans chaque
-   fenêtre** : un carnet vide affiche zéro douleur, et ce serait le feu vert le
-   plus dangereux de l'app, celui qui ouvre 10 km de course en plus sur un
-   tendon dont on ne sait rien.
+5. **Un vélo par semaine.** Il n'est plus une béquille qui remplace la course
+   mais **du volume aérobie sans impact au sol**, ce que Maxime recommande
+   d'ajouter plutôt que de retirer. Il deviendra une cinquième course quand le
+   tendon aura tenu 56 jours sans douleur au-dessus de 2 sur dix, avec 42
+   relevés dans la fenêtre.
 6. **Jamais deux jours de course consécutifs**, sauf la paire lundi-mardi où le
-   mardi est une récupération très lente (et qui bascule en vélo si la douleur au
-   réveil dépasse 2). **Cette bascule n'était pas codée** jusqu'au 16 septembre
-   2026 : seul l'indice rouge coupait la course du lendemain, donc une raideur à
-   3 sur un indice à 35 laissait courir. Elle vit maintenant dans `applyFx`
+   mardi est une récupération très lente, et qui bascule en vélo si la douleur
+   au réveil dépasse 2. Cette bascule vit dans `applyFx`
    (`SEUIL_RAIDEUR_LENDEMAIN`), lit la raideur saisie du jour via
    `ContextePlan.reveils`, vise la séance qui suit la sortie longue RÉELLE et
    non le mardi, et ne touche jamais une séance déjà notée. Mathieu : « je ne
    dois pas courir si la raideur du mardi matin est à 3 ».
+7. **Aucune séance dure hors bloc spécifique.** Effort 7,5 sur 10 au maximum,
+   trois à quatre répétitions en réserve à la fin. Le 10 sur 10 appartient aux
+   dossards et aux tests, le 8,5 à 9 aux dernières répétitions d'une séance
+   spécifique. Un seuil couru à 9 cesse d'être du seuil : il coûte le prix
+   d'une séance de VO2 pour un bénéfice moindre, et il empêche de prendre du
+   volume. C'est l'erreur la plus fréquente selon Maxime.
+8. **La sortie longue reste sous 45 % du volume de course de la semaine**, et
+   **une semaine sur trois environ elle raccourcit** (`PAUSE_LONGUE`). L'ancien
+   plan la laissait à 57 % : une journée écrasait la semaine, ce qui est le
+   profil de charge qui use un tendon. Les semaines de course et leurs
+   lendemains sortent de cette règle, elles n'ont que trois courses.
+9. **20 à 30 minutes cumulées au seuil par semaine, et trois séances de seuil
+   pour une séance de vitesse.** C'est le dosage de Maxime pour un marathonien.
+   La vitesse tient dans des répétitions courtes avec récupération généreuse :
+   des 200 m et des lignes droites ne sont pas des séances dures.
+
 
 ## La semaine type
 
-| Jour | Contenu |
-|---|---|
-| Lundi | Sortie longue |
-| Mardi | Course facile courte de récupération + renfo haut du corps 40 min |
-| Mercredi | Escalade, rien d'autre |
-| Jeudi | Renfo bas du corps 40 min + vélo Z2 |
-| Vendredi | Vélo de récupération |
-| Samedi | Séance de qualité |
-| Dimanche | Repos jambes complet |
-
-## Le plan
-
-35 semaines, du lundi 10 août 2026 au dimanche 11 avril 2027. Il vit dans
-`src/data/plan.json`, généré par `reference/build_plan.py` et validé par
-`reference/check_plan.py`. **C'est une donnée de référence, pas une donnée
-utilisateur** : elle est versionnée dans le code, pas en base. Seuls les écarts
-volontaires vont dans `plan_overrides`.
-
-- **Semaine 1** : amorce sans sortie longue. Mathieu a couru 25 km le dimanche
-  9 août ; enchaîner une longue le lendemain sur un tendon convalescent était
-  exclu. Première vraie sortie longue le 17 août, à 22 km.
-Les **vraies décharges** sont S5, S10, S13, S17, S21, S26, S32 et S34.
-
-**La séance de qualité ne bouge pas en semaine de décharge.** Ni son intensité,
-ni son volume, ni sa place. C'est ce que dit la littérature d'affûtage et c'est
-la décision de Mathieu : on décharge le volume, pas la qualité. Tout ce volume
-sort donc d'ailleurs, et l'ordre est celui-ci : la sortie longue coupe d'environ
-30 %, le vélo perd 20 minutes sur chacune des deux séances, l'EF perd 3 km, et
-le renfo bas passe en version décharge — le Stanish reste, sa charge est divisée
-par deux. C'est le traitement de la tendinopathie, on ne l'arrête pas, on le
-décharge. Chacune fait passer le rapport aigu/chronique sous 1, ce qui est la
-définition d'une semaine qui décharge.
-
-**S9, S14 et S25 ne sont PAS des décharges** même si elles s'allègent : ce sont
-les semaines de course, allégées pour arriver frais sur le 20 km, le 10 km et le
-semi test. La charge de compétition tombe dedans. La vraie décharge est la
-semaine d'après, une fois la course encaissée, d'où S10 et S26. `ALLEGEE_COURSE`
-et `DELOAD` sont donc deux ensembles distincts dans `build_plan.py`.
-
-**Une semaine de course coupe sa sortie longue d'au moins 30 %** elle aussi,
-vérifié par `check_plan.py`. S9 portait 24 km le lundi ET les 20 km de Paris le
-dimanche, ce qui en faisait la semaine la plus lourde de son bloc, dans le rôle
-exactement inverse de celui qu'on lui demande. Elles sont à 18 km. La qualité,
-elle, s'allège dans ce cas précis et seulement dans celui-là : le 6 x 1000 m du
-mercredi de S14 devient 5 x 400 m, parce que six kilomètres d'intervalles quatre
-jours avant un 10 km se paient le dimanche.
-
-- **Bloc A** (S1-8) réathlétisation, sortie longue 22 → 28 km.
-- **Bloc B** (S9-16) base aérobie, 24 → 32 km, volume vers 50 km/semaine. Deux
-  courses réelles s'y invitent, voir plus bas.
-- **Bloc C** (S17-25) développement, pic à 32 km, **semi-marathon test le
-  samedi 30 janvier 2027**.
-- **Bloc D** (S26-32) spécifique marathon, allure course en volume.
-- **Bloc E** (S33-35) affûtage. Dernière longue de 28 km trois semaines avant.
-
-### La semaine à quatre courses
-
-Arbitrée le 11 septembre 2026, quand le tendon a tenu deux mois sans crise.
-`QUATRE_COURSES = {11, 12, 16, 18, 19, 20, 22, 23, 24}` dans `build_plan.py`,
-déclaré à l'identique dans `check_plan.py`.
+Refondue le 18 septembre 2026. Quatre courses, un vélo, deux renforcements full
+body, aucun renfo un jour de course.
 
 | Jour | Contenu |
 |---|---|
 | Lundi | Sortie longue |
 | Mardi | Course facile de récupération |
-| Mercredi | Escalade |
-| Jeudi | **Séance spécifique**, 10 km jusqu'à S12, semi ensuite |
-| Vendredi | Renfo bas **et** renfo haut |
-| Samedi | Séance de qualité |
+| Mercredi | Renfo full body, jambes dominantes, + vélo Z2 |
+| Jeudi | Séance de qualité, lignes droites à l'échauffement |
+| Vendredi | Renfo full body, haut dominant |
+| Samedi | Course facile ou moyenne, allure marathon en bloc spécifique |
 | Dimanche | Repos jambes complet |
 
-Quatre jours de course, deux séances de qualité, **aucun vélo**. Les six
-contraintes tiennent : la seule paire de jours de course qui s'enchaîne est
-lundi-mardi, celle que la contrainte 6 autorise.
+Les deux renforcements tombent les jours sans course, et le Stanish est dans les
+deux : c'est un traitement, pas un complément. Le mercredi porte aussi le vélo,
+un jour sans impact au sol qui ne charge pas le tendon.
 
-**Quatre semaines ne peuvent pas la prendre, et ce ne sont pas des
-préférences :**
+## Le plan
 
-- **S10 et S15**, lendemains de course : leur sortie longue est déjà déplacée
-  au jeudi pour laisser quatre jours après le dossard, exactement la case où
-  irait la séance spécifique.
-- **S13, S17, S21**, décharges : on y décharge le volume sans toucher à la
-  qualité, y ajouter une seconde séance serait l'inverse exact.
-- **S14 et S25**, semaines de course.
+**34 semaines, du lundi 10 août 2026 au dimanche 4 avril 2027, 275 séances.**
+Il vit dans `src/data/plan.json`, généré par `reference/build_plan_v2.py` et
+validé par `reference/check_plan_v2.py`. **C'est une donnée de référence, pas
+une donnée utilisateur** : elle est versionnée dans le code, pas en base. Seuls
+les écarts volontaires vont dans `plan_overrides`.
 
-`check_plan.py` attend donc **zéro vélo et quatre courses** dans ces semaines,
-et refuse le plan si l'une d'elles perd sa séance du jeudi : sans elle on
-aurait retiré deux vélos pour rien.
+**Les semaines 1 à 6 sont reprises telles quelles de l'ancien plan**, archivé
+dans `reference/archives/`. Les ressentis déjà saisis sont rattachés à la
+position (semaine, jour, rang dans la journée) : les régénérer déplacerait le
+carnet. Seule la séance du samedi de la S6 a changé de contenu, à position
+identique. Le contrôle ne vérifie donc que les semaines 7 à 34.
 
-**Un enchaînement assumé, et qui n'est pas confortable :** le renfo bas du
-vendredi tombe la veille de la qualité du samedi. La contrainte 3 ne l'interdit
-pas, elle ne protège que la sortie longue, mais un protocole excentrique lourd
-la veille d'intervalles se paie au surlendemain. Mathieu a tranché pour
-regrouper les deux renforcements. À surveiller sur le carnet.
+| Bloc | Semaines | Rôle |
+|---|---|---|
+| A · Réathlétisation | 1-8 | Le volume monte vers 54 km, l'intensité reste basse |
+| B · Bloc 10 km | 9-15 | 20 km de Paris en rythme, cinq séances à allure 10 km, 10 km Hoka |
+| C · Volume | 16-26 | De 53 à 72 km, du seuil chaque jeudi, semi test le 30 janvier |
+| D · Spécifique marathon | 27-31 | Cinq semaines, allure marathon en volume, longues à 30 et 32 km |
+| E · Affûtage | 32-34 | Le volume tombe, l'allure marathon reste |
 
-### Les deux courses d'automne
+Les **vraies décharges** sont S17, S21 et S26 : elles creusent d'au moins 20 %
+en volume comme sur la sortie longue. Les **pauses de longue** sont S7, S13,
+S19, S24 et S30 : la longue raccourcit d'un quart, le volume ne bouge presque
+pas. C'est le conseil de Maxime, s'accorder une pause de sorties longues toutes
+les deux ou trois semaines pour assimiler la charge.
 
-Deux dossards à dates fixes, tous les deux un **dimanche**, c'est-à-dire le jour
-de repos jambes. Ils bousculent leur semaine et la suivante, et ces écarts sont
-écrits dans `COURSES` (build_plan.py) puis autorisés **nommément** dans
-`EXCEPTIONS` (check_plan.py) : un écart identique ailleurs reste une erreur.
+**La séance de qualité ne bouge pas en semaine de décharge.** Ni son intensité,
+ni sa place. C'est le volume autour qui se coupe : l'endurance du mardi perd
+2 km, celle du samedi aussi, l'échauffement raccourcit, le vélo perd un quart
+d'heure. Les planchers de chaque séance maintenaient sinon la décharge à −15 %,
+au lieu des −20 % exigés.
 
-- **20 km de Paris, dimanche 11 octobre 2026** (S9). Record à battre : 1:33:24,
-  soit 4:40/km. Le plan le fait courir à allure marathon puis au seuil, ce qui
-  donne 1:30:40 sur le papier.
-- **10 km Hoka de Paris, dimanche 15 novembre 2026** (S14). Record à battre :
-  40:12, soit 4:01/km. L'allure affichée est la cible (3:57), pas la prédiction :
-  le test de 3 km du 8 août le situe plutôt vers 41:30, et la note le dit.
+### Le bloc 10 km
 
-**Semaine de course** (S9, S14) : la qualité du samedi passe au **mercredi**,
-avec l'escalade. C'est le seul écart à une contrainte non négociable de tout le
-plan, décidé par Mathieu pour ces deux semaines. L'EF du mardi devient du vélo,
-sans quoi lundi-mardi-mercredi feraient trois jours de course d'affilée ; le
-vélo Z2 du jeudi saute pour en garder deux dans la semaine ; le samedi devient
-la veille de course et porte le repos jambes à la place du dimanche.
+Sept prises de contact avec l'allure de course, du 19 septembre au 11 novembre,
+plus le dossard. L'allure 10 km est la zone `vo2` du modèle, 3:57/km.
 
-**Semaine d'après** (S10, S15) : lundi repos, la **sortie longue passe au
-jeudi**. Le renfo bas remonte au mardi à la place de l'EF, faute de pouvoir
-être le mercredi (escalade) ou collé à la longue (contrainte 3). La semaine
-n'a donc qu'un vélo. La distance de la sortie longue ne bouge pas : la
-contrainte 1 tient, rien ne décale dans les 35 semaines.
+| Date | Séance |
+|---|---|
+| Sam 19/09 (S6) | 6 x 300 m à 4:00 puis 10 min au seuil |
+| Jeu 24/09 (S7) | 8 x 200 m à 3:45, puis 15 min au seuil |
+| Jeu 01/10 (S8) | 10 x 300 m à 4:00 |
+| Dim 11/10 (S9) | **20 km de Paris**, chrono bonus |
+| Sam 17/10 (S10) | 5 x 600 m à 4:05, semaine à début décalé |
+| Jeu 22/10 (S11) | 6 x 800 m à 4:05 |
+| Jeu 29/10 (S12) | 5 x 1000 m à 4:08 |
+| Jeu 05/11 (S13) | 8 x 600 m à 4:00 |
+| Mer 11/11 (S14) | 5 x 400 m, rappel d'allure |
+| Dim 15/11 (S14) | **10 km Hoka**, l'objectif de l'automne |
 
-Le semi test du 30 janvier est le **point de bascule de l'objectif** : sous
-1 h 25 avec douleur restée sous 2, on rouvre le dossier sub-3 ; autour de 1 h 30
-on reste sur 3 h 15 ; au-delà de 1 h 35 on recale sur 3 h 25. C'est écrit dans la
-note de la séance.
+Le volume ne baisse pas pendant le bloc : 54 puis 56 km, les plus grosses
+semaines depuis le début. C'est ce qui distingue ce bloc d'une prépa 10 km
+classique, et c'est ce qui protège le marathon d'avril.
+
+### Les quatre dossards
+
+- **20 km de Paris, dimanche 11 octobre** (S9). Bonus. Trois jours d'allègement
+  seulement, la semaine pèse encore 56 km course comprise.
+- **10 km Hoka, dimanche 15 novembre** (S14). L'objectif de l'automne. Record à
+  battre 40:12, fourchette réaliste 40:40 à 41:30. Le chrono recalera la forme
+  projetée depuis la feuille de séance (`recalageSurCourse`).
+- **Semi test, samedi 30 janvier** (S25). Le point de bascule : sous 1 h 30
+  l'objectif 3 h 15 tient, au-delà de 1 h 35 on recale sur 3 h 25.
+- **Marathon de Paris, dimanche 4 avril** (S34).
+
+**Une semaine de dossard ne porte aucune course la veille** : sinon samedi et
+dimanche s'enchaînent, ce que la contrainte 6 interdit. Les semaines qui suivent
+un dossard (S10, S15) ont un **début décalé** : lundi repos, mardi course très
+facile, la sortie longue passe au jeudi, et les deux renforcements ignorent les
+jambes pour ne pas tomber la veille de cette longue.
+
 
 ## Les allures
 
@@ -491,11 +448,10 @@ discipline, la déplacer d'un jour, corriger sa distance ou sa durée.
 - **Une séance sautée vaut zéro dans la charge**, comme une journée sans
   activité importée.
 - **Le contrôle des contraintes avertit, il ne bloque pas.** `verifierContraintes`
-  lit les contraintes 2, 3, 4 et 6 sur la disposition de la semaine.
-  **Chacune vise une séance, jamais une case du calendrier** : la 2 part de la
-  séance d'escalade et non du mercredi, sans quoi poser un renfo haut sur
-  l'escalade alertait mais poser l'escalade sur le renfo haut restait muet — la
-  même collision, dans l'autre sens. La 4 a deux volets : rien ne se pose sur
+  lit les contraintes 3, 4 et 6 sur la disposition de la semaine. La 2 a été
+  retirée le 18 septembre 2026 avec l'escalade, et son numéro reste vacant :
+  des écarts en base y font référence.
+  **Chacune vise une séance, jamais une case du calendrier.** La 4 a deux volets : rien ne se pose sur
   la séance de repos, et il faut un jour sans jambes dans la semaine. La 3
   couvre aussi le jour même de la sortie longue, pire que la veille et le
   lendemain. La 6 ajoute deux séances de course le même jour, que le plan de
@@ -790,6 +746,34 @@ repère en une semaine et discrédite l'indice avec lui. L'ordre des règles est
 un ordre de valeur : raideur au réveil, puis observance de l'excentrique, puis
 régularité, puis l'indice — qui vient en dernier parce que c'est un agrégat et
 non une observation.
+
+## La méthode de Maxime
+
+Choisie comme référence par Mathieu le 18 septembre 2026, d'après les vidéos de
+**Maxime Lopes (RunWise)** : la prépa générale, le seuil, la sortie longue, et
+le podcast « Ce qui fait stagner 80 % des coureurs ».
+
+Ce qu'elle impose au plan est dans les contraintes 7, 8 et 9. Ce qu'elle impose
+au reste :
+
+- **La prépa générale est longue, le spécifique est court.** Cinq semaines de
+  spécifique marathon, pas sept. Son athlète Johann a couru 2 h 15 avec cinq
+  semaines de spécifique, et il préfère « une prépa générale trop longue qu'une
+  prépa spécifique trop longue ».
+- **Le seuil est un état, pas une allure.** 82 à 90 % de FC max, effort 7,5 sur
+  10 au maximum, mieux vaut partir près du seuil 1 et monter. Menu : 2 à 3 x
+  10 min, 3 x 8 min, 5 x 6 min, 8 à 10 x 3 min.
+- **La sortie longue est une séance de qualité**, souvent le plus gros stress de
+  la semaine. Sucre avant, un gel dès 1 h 20, 20 g de protéines après.
+- **Compter ses erreurs, pas seulement ses kilomètres.** Maxime en comptait 45 à
+  50 en 2025 contre 10 à 20 sur une bonne année. C'est devenu un indicateur du
+  bilan du dimanche.
+- **« Pas de jambes » n'existe pas** : quand une course rate, les signaux
+  étaient là trois semaines avant. C'est ce que le carnet de patterns cherche.
+- **Ne pas s'entraîner malade** : « le kilomètre que tu penses gagner, tu le
+  perds en double derrière ».
+- **Le changement brutal de type d'effort blesse**, pas seulement le volume.
+- **Ne pas copier les pros** : ils sont 0,01 % et occupent 80 % de ce qu'on lit.
 
 ## Le carnet de patterns
 
