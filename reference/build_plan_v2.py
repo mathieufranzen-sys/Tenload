@@ -68,21 +68,21 @@ BLOCS = [
 # ─── la forme de chaque semaine ────────────────────────────────────────────
 # Sortie longue, en km. 0 = pas de sortie longue (semaine de course).
 SL = {
-    7: 18, 8: 24, 9: 16, 10: 18, 11: 22, 12: 24, 13: 16, 14: 0, 15: 18,
-    16: 24, 17: 18, 18: 26, 19: 20, 20: 28, 21: 20, 22: 28, 23: 30, 24: 22,
-    25: 0, 26: 20, 27: 28, 28: 30, 29: 32, 30: 24, 31: 32, 32: 28, 33: 18, 34: 0,
+    7: 26, 8: 28, 9: 16, 10: 18, 11: 24, 12: 26, 13: 18, 14: 0, 15: 18,
+    16: 26, 17: 20, 18: 28, 19: 20, 20: 30, 21: 22, 22: 30, 23: 32, 24: 22,
+    25: 0, 26: 20, 27: 30, 28: 32, 29: 32, 30: 24, 31: 32, 32: 28, 33: 18, 34: 0,
 }
 
 # Volume de course visé, en km. Il sert aux notes et au contrôle de la part
 # que prend la sortie longue : au-delà de 45 %, une journée écrase la semaine.
 VOLUME = {
-    7: 52, 8: 54, 9: 48, 10: 46, 11: 54, 12: 56, 13: 48, 14: 36, 15: 44,
-    16: 54, 17: 42, 18: 62, 19: 62, 20: 66, 21: 52, 22: 66, 23: 68, 24: 62,
-    25: 48, 26: 50, 27: 66, 28: 68, 29: 72, 30: 64, 31: 72, 32: 62, 33: 44, 34: 30,
+    7: 56, 8: 60, 9: 48, 10: 46, 11: 56, 12: 58, 13: 50, 14: 36, 15: 44,
+    16: 58, 17: 44, 18: 62, 19: 62, 20: 66, 21: 52, 22: 68, 23: 72, 24: 62,
+    25: 48, 26: 50, 27: 68, 28: 70, 29: 72, 30: 64, 31: 72, 32: 62, 33: 46, 34: 30,
 }
 
 DECHARGE = {17, 21, 26}            # les vraies décharges
-PAUSE_LONGUE = {7, 13, 19, 24, 30}  # la longue raccourcit, le volume tient
+PAUSE_LONGUE = {13, 19, 24, 30}  # la longue raccourcit, le volume tient
 ALLEGEE_COURSE = {9, 14, 25}       # un dossard tombe dedans
 DEBUT_DECALE = {10, 15}            # lendemain de course : rien avant mercredi
 AFFUTAGE = {32, 33, 34}

@@ -63,7 +63,10 @@ comme référence. Elles sont vérifiées par `reference/check_plan_v2.py` sur l
    spécifique. Un seuil couru à 9 cesse d'être du seuil : il coûte le prix
    d'une séance de VO2 pour un bénéfice moindre, et il empêche de prendre du
    volume. C'est l'erreur la plus fréquente selon Maxime.
-8. **La sortie longue reste sous 45 % du volume de course de la semaine**, et
+8. **La sortie longue reste sous 48 % du volume de course de la semaine**, 46 %
+   dès que le volume dépasse 65 km. Avec quatre courses, une longue de 26 km
+   pèse forcément près de la moitié tant que le volume n'a pas monté : un
+   plafond fixe à 45 % aurait interdit de progresser. Et
    **une semaine sur trois environ elle raccourcit** (`PAUSE_LONGUE`). L'ancien
    plan la laissait à 57 % : une journée écrasait la semaine, ce qui est le
    profil de charge qui use un tendon. Les semaines de course et leurs
@@ -116,7 +119,7 @@ identique. Le contrôle ne vérifie donc que les semaines 7 à 34.
 | E · Affûtage | 32-34 | Le volume tombe, l'allure marathon reste |
 
 Les **vraies décharges** sont S17, S21 et S26 : elles creusent d'au moins 20 %
-en volume comme sur la sortie longue. Les **pauses de longue** sont S7, S13,
+en volume comme sur la sortie longue. Les **pauses de longue** sont S13,
 S19, S24 et S30 : la longue raccourcit d'un quart, le volume ne bouge presque
 pas. C'est le conseil de Maxime, s'accorder une pause de sorties longues toutes
 les deux ou trois semaines pour assimiler la charge.

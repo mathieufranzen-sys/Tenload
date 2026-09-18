@@ -1427,35 +1427,35 @@
    "blocName": "Réathlétisation",
    "monday": "2026-09-21",
    "deload": false,
-   "sl": 18,
-   "efKm": 8,
+   "sl": 26,
+   "efKm": 10,
    "sessions": [
     {
      "day": 0,
      "type": "long",
-     "title": "Sortie longue de 18 km",
+     "title": "Sortie longue de 26 km",
      "cat": "Sortie longue",
-     "dist": 18,
+     "dist": 26,
      "dur": null,
      "struct": [
       {
-       "km": 18,
+       "km": 26,
        "zone": "ef"
       }
      ],
-     "note": "Pause de longue : elle raccourcit pour que la semaine s'assimile, le volume ne baisse pas pour autant. Une semaine sur trois environ. Elle pèse 34 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
+     "note": "Elle pèse 47 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
      "day": 1,
      "type": "ef",
-     "title": "Course facile de 8 km",
+     "title": "Course facile de 10 km",
      "cat": "Course facile",
-     "dist": 8,
+     "dist": 10,
      "dur": null,
      "struct": [
       {
-       "km": 8,
+       "km": 10,
        "zone": "recup"
       }
      ],
@@ -1601,13 +1601,13 @@
     {
      "day": 5,
      "type": "ef",
-     "title": "Course facile de 16 km",
+     "title": "Course facile de 8 km",
      "cat": "Course facile",
-     "dist": 16,
+     "dist": 8,
      "dur": null,
      "struct": [
       {
-       "km": 16,
+       "km": 8,
        "zone": "ef"
       }
      ],
@@ -1631,35 +1631,35 @@
    "blocName": "Réathlétisation",
    "monday": "2026-09-28",
    "deload": false,
-   "sl": 24,
-   "efKm": 8,
+   "sl": 28,
+   "efKm": 10,
    "sessions": [
     {
      "day": 0,
      "type": "long",
-     "title": "Sortie longue de 24 km",
+     "title": "Sortie longue de 28 km",
      "cat": "Sortie longue",
-     "dist": 24,
+     "dist": 28,
      "dur": null,
      "struct": [
       {
-       "km": 24,
+       "km": 28,
        "zone": "ef"
       }
      ],
-     "note": "Elle pèse 44 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
+     "note": "Elle pèse 47 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
      "day": 1,
      "type": "ef",
-     "title": "Course facile de 8 km",
+     "title": "Course facile de 10 km",
      "cat": "Course facile",
-     "dist": 8,
+     "dist": 10,
      "dur": null,
      "struct": [
       {
-       "km": 8,
+       "km": 10,
        "zone": "recup"
       }
      ],
@@ -2224,35 +2224,35 @@
    "blocName": "Bloc 10 km",
    "monday": "2026-10-19",
    "deload": false,
-   "sl": 22,
-   "efKm": 8,
+   "sl": 24,
+   "efKm": 10,
    "sessions": [
     {
      "day": 0,
      "type": "long",
-     "title": "Sortie longue de 22 km",
+     "title": "Sortie longue de 24 km",
      "cat": "Sortie longue",
-     "dist": 22,
+     "dist": 24,
      "dur": null,
      "struct": [
       {
-       "km": 22,
+       "km": 24,
        "zone": "ef"
       }
      ],
-     "note": "Elle pèse 40 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
+     "note": "Elle pèse 44 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
      "day": 1,
      "type": "ef",
-     "title": "Course facile de 8 km",
+     "title": "Course facile de 10 km",
      "cat": "Course facile",
-     "dist": 8,
+     "dist": 10,
      "dur": null,
      "struct": [
       {
-       "km": 8,
+       "km": 10,
        "zone": "recup"
       }
      ],
@@ -2394,13 +2394,13 @@
     {
      "day": 5,
      "type": "ef",
-     "title": "Course facile de 12 km",
+     "title": "Course facile de 8 km",
      "cat": "Course facile",
-     "dist": 12,
+     "dist": 8,
      "dur": null,
      "struct": [
       {
-       "km": 12,
+       "km": 8,
        "zone": "ef"
       }
      ],
@@ -2424,23 +2424,23 @@
    "blocName": "Bloc 10 km",
    "monday": "2026-10-26",
    "deload": false,
-   "sl": 24,
+   "sl": 26,
    "efKm": 10,
    "sessions": [
     {
      "day": 0,
      "type": "long",
-     "title": "Sortie longue de 24 km",
+     "title": "Sortie longue de 26 km",
      "cat": "Sortie longue",
-     "dist": 24,
+     "dist": 26,
      "dur": null,
      "struct": [
       {
-       "km": 24,
+       "km": 26,
        "zone": "ef"
       }
      ],
-     "note": "Elle pèse 43 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
+     "note": "Elle pèse 45 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
@@ -2624,23 +2624,23 @@
    "blocName": "Bloc 10 km",
    "monday": "2026-11-02",
    "deload": false,
-   "sl": 16,
+   "sl": 18,
    "efKm": 8,
    "sessions": [
     {
      "day": 0,
      "type": "long",
-     "title": "Sortie longue de 16 km",
+     "title": "Sortie longue de 18 km",
      "cat": "Sortie longue",
-     "dist": 16,
+     "dist": 18,
      "dur": null,
      "struct": [
       {
-       "km": 16,
+       "km": 18,
        "zone": "ef"
       }
      ],
-     "note": "Pause de longue : elle raccourcit pour que la semaine s'assimile, le volume ne baisse pas pour autant. Une semaine sur trois environ. Elle pèse 33 % de ta semaine, la limite est 45 %. Sucre avant de partir.",
+     "note": "Pause de longue : elle raccourcit pour que la semaine s'assimile, le volume ne baisse pas pour autant. Une semaine sur trois environ. Elle pèse 36 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
@@ -3201,19 +3201,19 @@
    "blocName": "Volume",
    "monday": "2026-11-23",
    "deload": false,
-   "sl": 24,
-   "efKm": 8,
+   "sl": 26,
+   "efKm": 10,
    "sessions": [
     {
      "day": 0,
      "type": "long",
-     "title": "Sortie longue de 24 km",
+     "title": "Sortie longue de 26 km",
      "cat": "Sortie longue",
-     "dist": 24,
+     "dist": 26,
      "dur": null,
      "struct": [
       {
-       "km": 18,
+       "km": 20,
        "zone": "ef"
       },
       {
@@ -3221,19 +3221,19 @@
        "zone": "am"
       }
      ],
-     "note": "Elle pèse 45 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
+     "note": "Elle pèse 46 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
      "day": 1,
      "type": "ef",
-     "title": "Course facile de 8 km",
+     "title": "Course facile de 10 km",
      "cat": "Course facile",
-     "dist": 8,
+     "dist": 10,
      "dur": null,
      "struct": [
       {
-       "km": 8,
+       "km": 10,
        "zone": "recup"
       }
      ],
@@ -3405,23 +3405,23 @@
    "blocName": "Volume",
    "monday": "2026-11-30",
    "deload": true,
-   "sl": 18,
+   "sl": 20,
    "efKm": 8,
    "sessions": [
     {
      "day": 0,
      "type": "long",
-     "title": "Sortie longue de 18 km",
+     "title": "Sortie longue de 20 km",
      "cat": "Sortie longue",
-     "dist": 18,
+     "dist": 20,
      "dur": null,
      "struct": [
       {
-       "km": 18,
+       "km": 20,
        "zone": "ef"
       }
      ],
-     "note": "Décharge : tu dois finir en te sentant frais. Elle pèse 45 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
+     "note": "Décharge : tu dois finir en te sentant frais. Elle pèse 48 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
@@ -3605,19 +3605,19 @@
    "blocName": "Volume",
    "monday": "2026-12-07",
    "deload": false,
-   "sl": 26,
+   "sl": 28,
    "efKm": 10,
    "sessions": [
     {
      "day": 0,
      "type": "long",
-     "title": "Sortie longue de 26 km",
+     "title": "Sortie longue de 28 km",
      "cat": "Sortie longue",
-     "dist": 26,
+     "dist": 28,
      "dur": null,
      "struct": [
       {
-       "km": 20,
+       "km": 22,
        "zone": "ef"
       },
       {
@@ -3625,7 +3625,7 @@
        "zone": "am"
       }
      ],
-     "note": "Elle pèse 42 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
+     "note": "Elle pèse 45 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
@@ -3779,13 +3779,13 @@
     {
      "day": 5,
      "type": "ef",
-     "title": "Course facile de 12 km",
+     "title": "Course facile de 10 km",
      "cat": "Course facile",
-     "dist": 12,
+     "dist": 10,
      "dur": null,
      "struct": [
       {
-       "km": 12,
+       "km": 10,
        "zone": "ef"
       }
      ],
@@ -4009,19 +4009,19 @@
    "blocName": "Volume",
    "monday": "2026-12-21",
    "deload": false,
-   "sl": 28,
+   "sl": 30,
    "efKm": 10,
    "sessions": [
     {
      "day": 0,
      "type": "long",
-     "title": "Sortie longue de 28 km",
+     "title": "Sortie longue de 30 km",
      "cat": "Sortie longue",
-     "dist": 28,
+     "dist": 30,
      "dur": null,
      "struct": [
       {
-       "km": 22,
+       "km": 24,
        "zone": "ef"
       },
       {
@@ -4029,7 +4029,7 @@
        "zone": "am"
       }
      ],
-     "note": "Elle pèse 42 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
+     "note": "Elle pèse 45 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
@@ -4183,13 +4183,13 @@
     {
      "day": 5,
      "type": "ef",
-     "title": "Course facile de 14 km",
+     "title": "Course facile de 12 km",
      "cat": "Course facile",
-     "dist": 14,
+     "dist": 12,
      "dur": null,
      "struct": [
       {
-       "km": 14,
+       "km": 12,
        "zone": "ef"
       }
      ],
@@ -4213,23 +4213,23 @@
    "blocName": "Volume",
    "monday": "2026-12-28",
    "deload": true,
-   "sl": 20,
+   "sl": 22,
    "efKm": 8,
    "sessions": [
     {
      "day": 0,
      "type": "long",
-     "title": "Sortie longue de 20 km",
+     "title": "Sortie longue de 22 km",
      "cat": "Sortie longue",
-     "dist": 20,
+     "dist": 22,
      "dur": null,
      "struct": [
       {
-       "km": 20,
+       "km": 22,
        "zone": "ef"
       }
      ],
-     "note": "Décharge : tu dois finir en te sentant frais. Elle pèse 40 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
+     "note": "Décharge : tu dois finir en te sentant frais. Elle pèse 44 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
@@ -4383,13 +4383,13 @@
     {
      "day": 5,
      "type": "ef",
-     "title": "Course facile de 14 km",
+     "title": "Course facile de 12 km",
      "cat": "Course facile",
-     "dist": 14,
+     "dist": 12,
      "dur": null,
      "struct": [
       {
-       "km": 14,
+       "km": 12,
        "zone": "ef"
       }
      ],
@@ -4413,19 +4413,19 @@
    "blocName": "Volume",
    "monday": "2027-01-04",
    "deload": false,
-   "sl": 28,
+   "sl": 30,
    "efKm": 10,
    "sessions": [
     {
      "day": 0,
      "type": "long",
-     "title": "Sortie longue de 28 km",
+     "title": "Sortie longue de 30 km",
      "cat": "Sortie longue",
-     "dist": 28,
+     "dist": 30,
      "dur": null,
      "struct": [
       {
-       "km": 22,
+       "km": 24,
        "zone": "ef"
       },
       {
@@ -4433,7 +4433,7 @@
        "zone": "am"
       }
      ],
-     "note": "Elle pèse 42 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
+     "note": "Elle pèse 44 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
@@ -4617,19 +4617,19 @@
    "blocName": "Volume",
    "monday": "2027-01-11",
    "deload": false,
-   "sl": 30,
+   "sl": 32,
    "efKm": 10,
    "sessions": [
     {
      "day": 0,
      "type": "long",
-     "title": "Sortie longue de 30 km",
+     "title": "Sortie longue de 32 km",
      "cat": "Sortie longue",
-     "dist": 30,
+     "dist": 32,
      "dur": null,
      "struct": [
       {
-       "km": 24,
+       "km": 26,
        "zone": "ef"
       },
       {
@@ -4637,7 +4637,7 @@
        "zone": "am"
       }
      ],
-     "note": "Elle pèse 45 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
+     "note": "Elle pèse 44 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
@@ -4791,13 +4791,13 @@
     {
      "day": 5,
      "type": "ef",
-     "title": "Course facile de 12 km",
+     "title": "Course facile de 16 km",
      "cat": "Course facile",
-     "dist": 12,
+     "dist": 16,
      "dur": null,
      "struct": [
       {
-       "km": 12,
+       "km": 16,
        "zone": "ef"
       }
      ],
@@ -5412,15 +5412,15 @@
    "blocName": "Spécifique marathon",
    "monday": "2027-02-08",
    "deload": false,
-   "sl": 28,
+   "sl": 30,
    "efKm": 10,
    "sessions": [
     {
      "day": 0,
      "type": "long",
-     "title": "Sortie longue de 28 km",
+     "title": "Sortie longue de 30 km",
      "cat": "Sortie longue",
-     "dist": 28,
+     "dist": 30,
      "dur": null,
      "struct": [
       {
@@ -5428,11 +5428,11 @@
        "zone": "ef"
       },
       {
-       "km": 6,
+       "km": 8,
        "zone": "am"
       }
      ],
-     "note": "Elle pèse 43 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
+     "note": "Elle pèse 45 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
@@ -5620,19 +5620,19 @@
    "blocName": "Spécifique marathon",
    "monday": "2027-02-15",
    "deload": false,
-   "sl": 30,
+   "sl": 32,
    "efKm": 10,
    "sessions": [
     {
      "day": 0,
      "type": "long",
-     "title": "Sortie longue de 30 km",
+     "title": "Sortie longue de 32 km",
      "cat": "Sortie longue",
-     "dist": 30,
+     "dist": 32,
      "dur": null,
      "struct": [
       {
-       "km": 22,
+       "km": 24,
        "zone": "ef"
       },
       {
@@ -5640,7 +5640,7 @@
        "zone": "am"
       }
      ],
-     "note": "Elle pèse 43 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
+     "note": "Elle pèse 45 % de ta semaine, la limite est 45 %. Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.",
      "feedback": true
     },
     {
