@@ -198,6 +198,7 @@ const HAUTEUR_ZONE: Record<ZoneKey, number> = {
   recup: 0.34,
   ef: 0.44,
   am: 0.66,
+  semi: 0.73,
   seuil: 0.8,
   vo2: 0.92,
   rep: 1,

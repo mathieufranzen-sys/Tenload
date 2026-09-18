@@ -23,6 +23,7 @@ export const KM_COST = {
   ef: 1.0,
   long: 1.15,
   am: 1.35,
+  semi: 1.45,
   seuil: 1.6,
   vo2: 2.1,
   rep: 2.1,

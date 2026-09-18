@@ -138,6 +138,8 @@ plus le dossard. L'allure 10 km est la zone `vo2` du modèle, 3:57/km.
 | Date | Séance |
 |---|---|
 | Sam 19/09 (S6) | 6 x 300 m à 4:00 puis 10 min au seuil |
+| Lun 28/09 (S8) | Sortie longue de 20 km : 14 km EF + 4 km seuil + 2 km allure semi |
+| Lun 05/10 (S9) | Sortie longue de 16 km : 10 km EF + 4 km seuil + 2 km allure semi |
 | Jeu 24/09 (S7) | 8 x 200 m à 3:45, puis 15 min au seuil |
 | Jeu 01/10 (S8) | 10 x 300 m à 4:00 |
 | Dim 11/10 (S9) | **20 km de Paris**, chrono bonus |
@@ -153,7 +155,11 @@ semaines depuis le début. C'est ce qui distingue ce bloc d'une prépa 10 km
 classique, et c'est ce qui protège le marathon d'avril.
 
 **La sortie longue ne monte pas pendant le bloc.** Elle tient 26 km, puis 24 et
-26 pendant les séances spécifiques : on ne développe pas deux qualités en même
+26 pendant les séances spécifiques. **Les deux longues qui précèdent le 20 km
+raccourcissent et se densifient** : 20 puis 16 km qui finissent au seuil puis à
+l'allure semi, pour installer le rythme de la course. Elles sortent de la
+chaîne de progression, comme les décharges : ce ne sont pas des étapes du
+kilométrage : on ne développe pas deux qualités en même
 temps, et la charge nouvelle de ces semaines est la séance du jeudi. Elle
 reprend sa progression en S16, une fois la course passée.
 
@@ -188,7 +194,14 @@ secondes par kilomètre. Changer l'objectif recalcule l'intégralité des séanc
   mois, pas se découvrir en avril.
 
 Écarts par rapport à l'allure marathon (`src/lib/paces.ts`) : récupération +75,
-endurance +50, allure marathon 0, seuil −20, intervalles −40, répétitions −55.
+endurance +50, allure marathon 0, **allure semi −13**, seuil −20, intervalles
+−40, répétitions −55.
+
+**L'allure semi a été ajoutée le 18 septembre 2026.** Elle manquait : les fins
+de sortie longue avant un dossard et le semi test de janvier n'avaient que le
+seuil ou l'allure marathon, deux allures qui encadrent la bonne sans la dire.
+Elle coûte 1,45 au kilomètre dans l'indice, entre l'allure marathon et le seuil,
+et se lit en Z3 haut côté cardiaque.
 Ces valeurs reproduisent les tables de Jack Daniels pour un VDOT autour de 55,
 qui est le sien.
 

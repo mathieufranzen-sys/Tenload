@@ -37,7 +37,9 @@ DECHARGE = {17, 21, 26}
 PAUSE_LONGUE = {13, 19, 24, 30}
 COURSES = {9, 14, 25, 34}
 DEBUT_DECALE = {10, 15}
-HORS_CHAINE = DECHARGE | PAUSE_LONGUE | COURSES | DEBUT_DECALE
+# Sorties longues raccourcies mais intensifiées avant le 20 km : hors chaîne.
+LONGUE_QUALITATIVE = {8, 9}
+HORS_CHAINE = DECHARGE | PAUSE_LONGUE | COURSES | DEBUT_DECALE | LONGUE_QUALITATIVE
 HORS_REGLE_PART = DEBUT_DECALE | COURSES
 # La vitesse est permise dans le bloc 10 km, dans le spécifique marathon, et
 # une fois par mois en séance courte : c'est le dosage « trois seuils pour une

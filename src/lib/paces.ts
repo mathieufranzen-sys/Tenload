@@ -16,6 +16,10 @@ export const ZONE_OFFSETS: Record<ZoneKey, number> = {
   recup: 75,
   ef: 50,
   am: 0,
+  // L'allure semi tient entre l'allure marathon et le seuil : treize secondes
+  // plus vite que le marathon, sept moins vite que le seuil. C'est l'allure de
+  // fin de sortie longue avant un dossard, et celle du semi test de janvier.
+  semi: -13,
   seuil: -20,
   vo2: -40,
   rep: -55,
@@ -153,6 +157,9 @@ const ZONE_HR: Record<ZoneKey, (typeof HR_ZONES)[number]['key']> = {
   recup: 'Z1',
   ef: 'Z2',
   am: 'Z3',
+  // L'allure semi tient la frontière haute du tempo : en course elle grimpe en
+  // Z4, mais sur deux kilomètres de fin de sortie longue elle reste en Z3.
+  semi: 'Z3',
   seuil: 'Z4',
   vo2: 'Z5',
   rep: 'Z5',

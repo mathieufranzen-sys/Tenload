@@ -21,7 +21,8 @@ const plan = planJson as unknown as Plan
 const ZONE_DESC: Record<ZoneKey, string> = {
   recup: 'Lendemain de sortie longue, footing de décrassage',
   ef: 'Le socle du plan, allure conversationnelle stricte',
-  am: "L'allure du 11 avril, à ancrer dans le corps",
+  am: "L'allure du 4 avril, à ancrer dans le corps",
+  semi: 'Allure du semi, fin de sortie longue avant un dossard',
   seuil: 'Effort soutenu tenable 40 à 60 minutes',
   vo2: 'Fractionné 800 m à 1 200 m, effort 9/10',
   rep: '400 m à 600 m, vivacité et économie de course',
@@ -31,7 +32,8 @@ const ZONE_DESC: Record<ZoneKey, string> = {
 const ZONE_DESC_VELO: Record<ZoneKey, string> = {
   recup: 'Lendemain de sortie longue, jambes qui tournent',
   ef: 'Le socle du plan, cadence confortable',
-  am: "L'effort du 11 avril, soutenu mais tenable",
+  am: "L'effort du 4 avril, soutenu mais tenable",
+  semi: 'Allure du semi, soutenue sans être dure',
   seuil: 'Effort soutenu tenable 40 à 60 minutes',
   vo2: 'Fractionné 3 à 5 minutes, effort 9/10',
   rep: '30 secondes à 1 minute, sprints courts',

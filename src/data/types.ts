@@ -1,6 +1,6 @@
 /** Types du plan d'entraînement. Le JSON de `plan.json` respecte ces formes. */
 
-export type ZoneKey = 'recup' | 'ef' | 'am' | 'seuil' | 'vo2' | 'rep'
+export type ZoneKey = 'recup' | 'ef' | 'am' | 'semi' | 'seuil' | 'vo2' | 'rep'
 
 export type SessionType =
   | 'long' // sortie longue

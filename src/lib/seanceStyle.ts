@@ -77,9 +77,10 @@ export const RANG_ZONE: Record<ZoneKey, number> = {
   recup: 0,
   ef: 1,
   am: 2,
-  seuil: 3,
-  vo2: 4,
-  rep: 5,
+  semi: 3,
+  seuil: 4,
+  vo2: 5,
+  rep: 6,
 }
 
 export function encreZone(zone: ZoneKey): string {

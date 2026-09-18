@@ -38,6 +38,7 @@ ZONES = {
     "recup": {"label": "Récupération", "off": 75, "color": "ef"},
     "ef": {"label": "Endurance facile", "off": 50, "color": "ef"},
     "am": {"label": "Allure marathon", "off": 0, "color": "long"},
+    "semi": {"label": "Allure semi", "off": -13, "color": "tempo"},
     "seuil": {"label": "Seuil", "off": -20, "color": "tempo"},
     "vo2": {"label": "Intervalles", "off": -40, "color": "inter"},
     "rep": {"label": "Répétitions", "off": -55, "color": "inter"},
@@ -73,7 +74,7 @@ BLOCS = [
 # spécifique du jeudi, la longue se contente de tenir son niveau. Elle reprend
 # sa progression en S16, une fois la course passée et le bloc de volume ouvert.
 SL = {
-    7: 26, 8: 26, 9: 16, 10: 18, 11: 24, 12: 26, 13: 18, 14: 0, 15: 18,
+    7: 26, 8: 20, 9: 16, 10: 18, 11: 24, 12: 26, 13: 18, 14: 0, 15: 18,
     16: 26, 17: 20, 18: 28, 19: 20, 20: 30, 21: 22, 22: 30, 23: 32, 24: 22,
     25: 0, 26: 20, 27: 30, 28: 32, 29: 32, 30: 24, 31: 32, 32: 28, 33: 18, 34: 0,
 }
@@ -81,9 +82,17 @@ SL = {
 # Volume de course visé, en km. Il sert aux notes et au contrôle de la part
 # que prend la sortie longue : au-delà de 45 %, une journée écrase la semaine.
 VOLUME = {
-    7: 56, 8: 58, 9: 48, 10: 46, 11: 56, 12: 58, 13: 50, 14: 36, 15: 44,
+    7: 56, 8: 54, 9: 48, 10: 46, 11: 56, 12: 58, 13: 50, 14: 36, 15: 44,
     16: 58, 17: 44, 18: 62, 19: 62, 20: 66, 21: 52, 22: 68, 23: 72, 24: 62,
     25: 48, 26: 50, 27: 68, 28: 70, 29: 72, 30: 64, 31: 72, 32: 62, 33: 46, 34: 30,
+}
+
+# Les deux sorties longues qui préparent l'allure du 20 km : plus courtes, mais
+# elles finissent au seuil puis à l'allure semi. Elles sortent de la chaîne de
+# progression, comme les décharges : ce ne sont pas des étapes du kilométrage.
+LONGUE_QUALITATIVE = {
+    8: [(14, "ef"), (4, "seuil"), (2, "semi")],
+    9: [(10, "ef"), (4, "seuil"), (2, "semi")],
 }
 
 DECHARGE = {17, 21, 26}            # les vraies décharges
@@ -249,7 +258,9 @@ def sortie_longue(w, jour, volume=None):
     """La sortie longue, avec ses blocs à allure marathon en bloc spécifique."""
     dist = SL[w]
     bid = bloc_of(w)["id"]
-    if bid in ("A", "B") or w in ALLEGEE or w in PAUSE_LONGUE:
+    if w in LONGUE_QUALITATIVE:
+        struct = [{"km": float(k), "zone": z} for k, z in LONGUE_QUALITATIVE[w]]
+    elif bid in ("A", "B") or w in ALLEGEE or w in PAUSE_LONGUE:
         struct = [{"km": dist, "zone": "ef"}]
     elif bid == "C":
         struct = [{"km": dist - 6, "zone": "ef"}, {"km": 6, "zone": "am"}]
@@ -268,7 +279,13 @@ def sortie_longue(w, jour, volume=None):
         notes.append("Décharge : tu dois finir en te sentant frais.")
     if jour == 3:
         notes.append("Déplacée au jeudi : la course de dimanche dernier prend la place du lundi.")
-    notes.append(f"Elle pèse {part} % de ta semaine, la limite est 45 %.")
+    if w in LONGUE_QUALITATIVE:
+        notes.append(
+            "Plus courte mais plus dense : elle finit au seuil puis à l'allure semi, pour "
+            "installer le rythme du 20 km. Les quatorze premiers kilomètres restent "
+            "conversationnels, sinon les six derniers ne valent rien."
+        )
+    notes.append(f"Elle pèse {part} % de ta semaine, la limite est 48 %.")
     notes.append("Sucre avant de partir." if dist < 18 else
                  "Sucre avant de partir, un gel toutes les 45 minutes, 20 g de protéines au retour.")
     return {"day": jour, "type": "long", "title": f"Sortie longue de {km(dist)} km",
