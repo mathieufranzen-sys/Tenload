@@ -319,7 +319,8 @@
      "note": "Zéro charge sur les jambes. Étirements doux, mobilité cheville, glaçage du tendon si sensible. C'est ce jour-là que le tendon se répare, pas pendant les séances.",
      "feedback": true
     }
-   ]
+   ],
+   "nature": "charge"
   },
   {
    "n": 2,
@@ -538,7 +539,8 @@
      "note": "Zéro charge sur les jambes. Étirements doux, mobilité cheville, glaçage du tendon si sensible. C'est ce jour-là que le tendon se répare, pas pendant les séances.",
      "feedback": true
     }
-   ]
+   ],
+   "nature": "charge"
   },
   {
    "n": 3,
@@ -757,7 +759,8 @@
      "note": "Zéro charge sur les jambes. Étirements doux, mobilité cheville, glaçage du tendon si sensible. C'est ce jour-là que le tendon se répare, pas pendant les séances.",
      "feedback": true
     }
-   ]
+   ],
+   "nature": "charge"
   },
   {
    "n": 4,
@@ -980,7 +983,8 @@
      "note": "Zéro charge sur les jambes. Étirements doux, mobilité cheville, glaçage du tendon si sensible. C'est ce jour-là que le tendon se répare, pas pendant les séances.",
      "feedback": true
     }
-   ]
+   ],
+   "nature": "charge"
   },
   {
    "n": 5,
@@ -1188,7 +1192,8 @@
      "note": "Zéro charge sur les jambes. Étirements doux, mobilité cheville, glaçage du tendon si sensible. C'est ce jour-là que le tendon se répare, pas pendant les séances.",
      "feedback": true
     }
-   ]
+   ],
+   "nature": "decharge"
   },
   {
    "n": 6,
@@ -1419,7 +1424,8 @@
      "note": "Zéro charge sur les jambes. Étirements doux, mobilité cheville, glaçage du tendon si sensible. C'est ce jour-là que le tendon se répare, pas pendant les séances.",
      "feedback": true
     }
-   ]
+   ],
+   "nature": "charge"
   },
   {
    "n": 7,
@@ -1427,6 +1433,7 @@
    "blocName": "Réathlétisation",
    "monday": "2026-09-21",
    "deload": false,
+   "nature": "charge",
    "sl": 26,
    "efKm": 10,
    "sessions": [
@@ -1631,6 +1638,7 @@
    "blocName": "Réathlétisation",
    "monday": "2026-09-28",
    "deload": false,
+   "nature": "longue qualitative",
    "sl": 20,
    "efKm": 8,
    "sessions": [
@@ -1839,6 +1847,7 @@
    "blocName": "Bloc 10 km",
    "monday": "2026-10-05",
    "deload": false,
+   "nature": "course",
    "sl": 16,
    "efKm": 8,
    "sessions": [
@@ -2047,6 +2056,7 @@
    "blocName": "Bloc 10 km",
    "monday": "2026-10-12",
    "deload": false,
+   "nature": "reprise",
    "sl": 18,
    "efKm": 8,
    "sessions": [
@@ -2240,6 +2250,7 @@
    "blocName": "Bloc 10 km",
    "monday": "2026-10-19",
    "deload": false,
+   "nature": "charge",
    "sl": 24,
    "efKm": 10,
    "sessions": [
@@ -2440,6 +2451,7 @@
    "blocName": "Bloc 10 km",
    "monday": "2026-10-26",
    "deload": false,
+   "nature": "charge",
    "sl": 26,
    "efKm": 10,
    "sessions": [
@@ -2640,6 +2652,7 @@
    "blocName": "Bloc 10 km",
    "monday": "2026-11-02",
    "deload": false,
+   "nature": "pause",
    "sl": 18,
    "efKm": 8,
    "sessions": [
@@ -2840,6 +2853,7 @@
    "blocName": "Bloc 10 km",
    "monday": "2026-11-09",
    "deload": false,
+   "nature": "course",
    "sl": 0,
    "efKm": 8,
    "sessions": [
@@ -3024,6 +3038,7 @@
    "blocName": "Bloc 10 km",
    "monday": "2026-11-16",
    "deload": false,
+   "nature": "reprise",
    "sl": 18,
    "efKm": 8,
    "sessions": [
@@ -3217,6 +3232,7 @@
    "blocName": "Volume",
    "monday": "2026-11-23",
    "deload": false,
+   "nature": "charge",
    "sl": 26,
    "efKm": 10,
    "sessions": [
@@ -3421,6 +3437,7 @@
    "blocName": "Volume",
    "monday": "2026-11-30",
    "deload": true,
+   "nature": "decharge",
    "sl": 20,
    "efKm": 8,
    "sessions": [
@@ -3621,6 +3638,7 @@
    "blocName": "Volume",
    "monday": "2026-12-07",
    "deload": false,
+   "nature": "charge",
    "sl": 28,
    "efKm": 10,
    "sessions": [
@@ -3825,6 +3843,7 @@
    "blocName": "Volume",
    "monday": "2026-12-14",
    "deload": false,
+   "nature": "pause",
    "sl": 20,
    "efKm": 10,
    "sessions": [
@@ -4025,6 +4044,7 @@
    "blocName": "Volume",
    "monday": "2026-12-21",
    "deload": false,
+   "nature": "charge",
    "sl": 30,
    "efKm": 10,
    "sessions": [
@@ -4229,6 +4249,7 @@
    "blocName": "Volume",
    "monday": "2026-12-28",
    "deload": true,
+   "nature": "decharge",
    "sl": 22,
    "efKm": 8,
    "sessions": [
@@ -4429,6 +4450,7 @@
    "blocName": "Volume",
    "monday": "2027-01-04",
    "deload": false,
+   "nature": "charge",
    "sl": 30,
    "efKm": 10,
    "sessions": [
@@ -4633,6 +4655,7 @@
    "blocName": "Volume",
    "monday": "2027-01-11",
    "deload": false,
+   "nature": "charge",
    "sl": 32,
    "efKm": 10,
    "sessions": [
@@ -4837,6 +4860,7 @@
    "blocName": "Volume",
    "monday": "2027-01-18",
    "deload": false,
+   "nature": "pause",
    "sl": 22,
    "efKm": 10,
    "sessions": [
@@ -5037,6 +5061,7 @@
    "blocName": "Volume",
    "monday": "2027-01-25",
    "deload": false,
+   "nature": "course",
    "sl": 0,
    "efKm": 8,
    "sessions": [
@@ -5228,6 +5253,7 @@
    "blocName": "Volume",
    "monday": "2027-02-01",
    "deload": true,
+   "nature": "decharge",
    "sl": 20,
    "efKm": 8,
    "sessions": [
@@ -5428,6 +5454,7 @@
    "blocName": "Spécifique marathon",
    "monday": "2027-02-08",
    "deload": false,
+   "nature": "charge",
    "sl": 30,
    "efKm": 10,
    "sessions": [
@@ -5636,6 +5663,7 @@
    "blocName": "Spécifique marathon",
    "monday": "2027-02-15",
    "deload": false,
+   "nature": "charge",
    "sl": 32,
    "efKm": 10,
    "sessions": [
@@ -5844,6 +5872,7 @@
    "blocName": "Spécifique marathon",
    "monday": "2027-02-22",
    "deload": false,
+   "nature": "charge",
    "sl": 32,
    "efKm": 10,
    "sessions": [
@@ -6052,6 +6081,7 @@
    "blocName": "Spécifique marathon",
    "monday": "2027-03-01",
    "deload": false,
+   "nature": "pause",
    "sl": 24,
    "efKm": 10,
    "sessions": [
@@ -6256,6 +6286,7 @@
    "blocName": "Spécifique marathon",
    "monday": "2027-03-08",
    "deload": false,
+   "nature": "charge",
    "sl": 32,
    "efKm": 10,
    "sessions": [
@@ -6460,6 +6491,7 @@
    "blocName": "Affûtage",
    "monday": "2027-03-15",
    "deload": false,
+   "nature": "affutage",
    "sl": 28,
    "efKm": 10,
    "sessions": [
@@ -6664,6 +6696,7 @@
    "blocName": "Affûtage",
    "monday": "2027-03-22",
    "deload": false,
+   "nature": "affutage",
    "sl": 18,
    "efKm": 8,
    "sessions": [
@@ -6868,6 +6901,7 @@
    "blocName": "Affûtage",
    "monday": "2027-03-29",
    "deload": false,
+   "nature": "course",
    "sl": 0,
    "efKm": 8,
    "sessions": [

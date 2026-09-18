@@ -235,6 +235,28 @@ RENFO_HAUT = [
 ]
 
 
+def nature_de(w):
+    """Ce qu'est la semaine, pour que le calendrier puisse le dire.
+
+    « Décharge » ne suffisait plus : une pause de longue, une semaine de
+    dossard et un lendemain de course ne se ressemblent pas, et sans étiquette
+    une semaine à 18 km de sortie longue passe pour une erreur.
+    """
+    if w in COURSES:
+        return "course"
+    if w in DECHARGE:
+        return "decharge"
+    if w in DEBUT_DECALE:
+        return "reprise"
+    if w in PAUSE_LONGUE:
+        return "pause"
+    if w in LONGUE_QUALITATIVE:
+        return "longue qualitative"
+    if w in AFFUTAGE:
+        return "affutage"
+    return "charge"
+
+
 def bloc_of(w):
     for b in BLOCS:
         if b["weeks"][0] <= w <= b["weeks"][1]:
@@ -478,6 +500,7 @@ for w in range(1, 35):
         ancienne["bloc"] = b["id"]
         ancienne["blocName"] = b["name"]
         ancienne["deload"] = w in DECHARGE or ancienne.get("deload", False)
+        ancienne["nature"] = "decharge" if ancienne["deload"] else "charge"
         if w == 6:
             # La qualité du samedi devient la première prise de contact avec
             # l'allure 10 km. Même jour, même rang : le carnet ne bouge pas.
@@ -504,7 +527,7 @@ for w in range(1, 35):
             sessions[i] = sortie_longue(w, x["day"], volume=vol)
     weeks.append({
         "n": w, "bloc": b["id"], "blocName": b["name"], "monday": lundi.isoformat(),
-        "deload": w in DECHARGE, "sl": SL[w],
+        "deload": w in DECHARGE, "nature": nature_de(w), "sl": SL[w],
         "efKm": 8 if VOLUME[w] < 55 else 10,
         "sessions": sessions,
     })

@@ -6,7 +6,7 @@
 import { useMemo, useState } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan, ZoneKey } from '../data/types'
-import { addDays, today as todayISO } from '../lib/dates'
+import { addDays, formatDay, today as todayISO } from '../lib/dates'
 import { adapt } from '../lib/adapt'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { FeedbackRow } from '../lib/buildPain'
@@ -106,7 +106,7 @@ export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLab
             {formatDuration(Math.round(gt / 60))}
           </h2>
           <p style={{ color: 'var(--sur-ink-2)', fontSize: 14.5, fontWeight: 500, margin: 0 }}>
-            soit {formatPace(marathonPace)}/km sur 42,195 km, le 11 avril 2027
+            soit {formatPace(marathonPace)}/km sur 42,195 km, le {formatDay(plan.meta.raceDate)} 2027
           </p>
           {/* Les trois allures qui figuraient ici doublonnaient le tableau des
               zones, juste en dessous. */}
@@ -154,7 +154,7 @@ export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLab
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 7, color: 'var(--sur-ink-2)', fontSize: 12, fontWeight: 600 }}>
               <span>Semaine {semaineCourante?.n ?? 1} sur 35</span>
-              <span>11 avril 2027</span>
+              <span>{formatDay(plan.meta.raceDate)} 2027</span>
             </div>
           </div>
         </div>

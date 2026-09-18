@@ -4,7 +4,14 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan as PlanType, Session } from '../data/types'
-import { DAYS_LONG, addDays, formatDay, formatNumber, today as todayISO } from '../lib/dates'
+import {
+  DAYS_LONG,
+  addDays,
+  formatDay,
+  formatDayLong,
+  formatNumber,
+  today as todayISO,
+} from '../lib/dates'
 import {
   adapt,
   construireContexte,
@@ -136,7 +143,7 @@ export function Plan({
       }}>
 
         {/* L'en-tête entier reste accroché en haut, sélecteur compris : la vue
-            calendrier fait 245 jours, et laisser le titre partir pendant que le
+            calendrier fait 238 jours, et laisser le titre partir pendant que le
             sélecteur reste donnait un bandeau orphelin. Le retrait négatif
             compense le padding horizontal de la page pour que le voile couvre
             toute la largeur. */}
@@ -154,7 +161,7 @@ export function Plan({
         >
           <EnteteEcran
             titre="Programme"
-            contexte={<>Marathon de Paris · dimanche 11 avril 2027</>}
+            contexte={<>{plan.meta.goal} · {formatDayLong(plan.meta.raceDate)}</>}
             onOuvrirProfil={onOuvrirProfil}
           />
           <Segmented

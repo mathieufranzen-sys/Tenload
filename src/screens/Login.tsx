@@ -106,7 +106,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
               margin: '6px 0 0',
             }}
           >
-            Paris, 11 avril 2027.
+            Paris, 4 avril 2027.
           </p>
         </header>
 

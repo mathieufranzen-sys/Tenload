@@ -94,7 +94,7 @@ export function VueCalendrier({
    *
    * Bornés à la semaine d'origine plus ou moins une : c'est ce que Mathieu a
    * demandé, et ça borne aussi le calcul — vérifier les contraintes sur les
-   * 245 jours du plan à chaque prise serait absurde.
+   * 238 jours du plan à chaque prise serait absurde.
    */
   const cibles = useMemo(() => {
     if (!prise || !onDeplacer) return new Map<string, CibleDrop>()
@@ -359,13 +359,30 @@ function fondCible(enCours: boolean, cible: CibleDrop | undefined, survole: bool
 /**
  * La coupure entre deux semaines, et non plus seulement leur titre.
  *
- * Le calendrier déroule 245 jours d'affilée : une ligne de texte un peu plus
+ * Le calendrier déroule 238 jours d'affilée : une ligne de texte un peu plus
  * grasse ne suffisait pas à faire voir où une semaine s'arrête, et on perdait
  * le compte en défilant. Trois choses la marquent maintenant, toutes en encre
  * neutre puisque la couleur appartient à la charge : un filet pleine largeur,
  * un vrai blanc au-dessus, et le bloc de périodisation rappelé à droite, qui
  * est la seule information d'orientation absente du reste de l'écran.
  */
+/**
+ * Ce que l'en-tête annonce à droite du numéro de semaine. Une semaine à 18 km
+ * de sortie longue n'est pas une erreur de plan quand elle est étiquetée
+ * « pause de longue » ; sans étiquette, elle en a tout l'air.
+ */
+const NATURE: Record<string, string> = {
+  decharge: 'décharge',
+  pause: 'pause de longue',
+  course: 'dossard',
+  reprise: 'reprise',
+  'longue qualitative': 'longue en blocs',
+  affutage: 'affûtage',
+}
+
+const libelleNature = (semaine: Week): string =>
+  NATURE[semaine.nature ?? ''] ?? (semaine.deload ? 'décharge' : semaine.blocName)
+
 function EnteteSemaine({
   semaine,
   courante,
@@ -384,7 +401,7 @@ function EnteteSemaine({
         // Le bandeau va pleine largeur, au-delà du padding de la page : une
         // coupure qui s'arrête avant le bord se lit comme une bordure de bloc
         // et pas comme une fin de semaine. Fond plein plutôt qu'un simple
-        // filet, parce que sur 245 jours de défilement un trait d'un pixel
+        // filet, parce que sur 238 jours de défilement un trait d'un pixel
         // passe sous l'œil sans l'arrêter.
         margin: premiere ? '0 calc(var(--page-x) * -1)' : '34px calc(var(--page-x) * -1) 0',
         padding: '13px var(--page-x) 12px',
@@ -409,7 +426,7 @@ function EnteteSemaine({
       >
         {formatDay(semaine.monday)} — {formatDay(addDays(semaine.monday, 6))}
         {' · '}
-        {semaine.deload ? 'décharge' : semaine.blocName}
+        {libelleNature(semaine)}
       </span>
       {courante && (
         <span

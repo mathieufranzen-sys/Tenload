@@ -112,6 +112,13 @@ export interface Week {
   /** Date ISO du lundi. */
   monday: string
   deload: boolean
+  /**
+   * Ce qu'est la semaine, écrit par le générateur. « Décharge » ne suffisait
+   * plus : une pause de longue, un dossard et un lendemain de course ne se
+   * ressemblent pas, et sans étiquette une semaine à 18 km passe pour une
+   * erreur de plan.
+   */
+  nature?: 'charge' | 'decharge' | 'pause' | 'course' | 'reprise' | 'longue qualitative' | 'affutage' 
   /** Kilométrage de la sortie longue. 0 pour la semaine d'amorce. */
   sl: number
   /** Kilométrage de l'endurance facile du mardi. */
