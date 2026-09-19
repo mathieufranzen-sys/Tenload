@@ -111,6 +111,12 @@ export function VueCalendrier({
    * où l'on vise un jour situé loin du point de départ.
    */
   const capture = useRef<{ el: Element; id: number } | null>(null)
+  /**
+   * Le navigateur émet un `click` après le `pointerup`, même quand le geste
+   * était un déplacement : sans ce drapeau, poser une séance ouvrait aussitôt
+   * sa feuille de détail.
+   */
+  const ignorerClic = useRef(false)
 
   // Amène la semaine visée à l'écran à l'ouverture, et la séance mise en avant
   // quand on arrive ici depuis le bouton « Déplacer » d'une feuille de séance.
@@ -156,11 +162,42 @@ export function VueCalendrier({
     }
     if (prise && survol) {
       const c = cibles.get(survol)
-      if (c && c.day !== prise.day) onDeplacer?.(prise, c.jour, c.semaines)
+      if (c && c.day !== prise.day) {
+        onDeplacer?.(prise, c.jour, c.semaines)
+        ignorerClic.current = true
+        setPrise(null)
+        setSurvol(null)
+        setCurseur(null)
+        return
+      }
+    }
+    // Le doigt s'est levé sans avoir désigné un autre jour, ou le navigateur a
+    // repris le pointeur pour faire défiler la page. On GARDE la prise : la
+    // séance reste attrapée et se pose d'un simple appui sur un jour. Sans ça,
+    // sur iPhone, un défilement qui démarre pendant l'appui long annulait le
+    // geste sans rien dire, et le déplacement paraissait cassé.
+    if (prise) {
+      ignorerClic.current = true
+      setCurseur(null)
+      return
     }
     setPrise(null)
     setSurvol(null)
     setCurseur(null)
+  }
+
+  /** Abandonne la prise en cours, sans rien déplacer. */
+  const annuler = () => {
+    setPrise(null)
+    setSurvol(null)
+    setCurseur(null)
+  }
+
+  /** Pose la séance attrapée sur ce jour. */
+  const poserSur = (jour: string) => {
+    const c = cibles.get(jour)
+    if (prise && c && c.day !== prise.day) onDeplacer?.(prise, c.jour, c.semaines)
+    annuler()
   }
 
   return (
@@ -239,7 +276,19 @@ export function VueCalendrier({
                   if (el) lignes.current.set(`jour-${jour}`, el)
                   else lignes.current.delete(`jour-${jour}`)
                 }}
+                onClick={
+                  prise
+                    ? () => {
+                        if (ignorerClic.current) {
+                          ignorerClic.current = false
+                          return
+                        }
+                        poserSur(jour)
+                      }
+                    : undefined
+                }
                 style={{
+                  cursor: prise ? 'pointer' : undefined,
                   display: 'flex',
                   gap: 12,
                   padding: '9px 10px',
@@ -282,7 +331,17 @@ export function VueCalendrier({
                       seance={x}
                       priseEnCours={prise?.day === x.day && prise?.slot === x.slot}
                       misEnAvant={focus === cleEcart(x.semaineOrigine, x.jourOrigine, x.slot)}
-                      onOuvrir={onOuvrirSeance && !prise ? () => onOuvrirSeance(x) : undefined}
+                      onOuvrir={
+                        onOuvrirSeance && !prise
+                          ? () => {
+                              if (ignorerClic.current) {
+                                ignorerClic.current = false
+                                return
+                              }
+                              onOuvrirSeance(x)
+                            }
+                          : undefined
+                      }
                       onPrise={
                         onDeplacer && !initial
                           ? (e) => {
@@ -318,6 +377,48 @@ export function VueCalendrier({
           })}
         </section>
       ))}
+
+      {prise && (
+        <div
+          style={{
+            position: 'fixed',
+            left: 0,
+            right: 0,
+            bottom: 'calc(84px + env(safe-area-inset-bottom, 0px))',
+            zIndex: 90,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            maxWidth: 'var(--shell-max)',
+            margin: '0 auto',
+            padding: '12px 14px',
+            borderRadius: 14,
+            background: 'rgba(255,255,255,.94)',
+            color: '#08090b',
+            boxShadow: '0 12px 32px rgba(0,0,0,.45)',
+            fontSize: 13.5,
+            fontWeight: 650,
+          }}
+        >
+          <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {prise.s.title} · appuie sur un jour pour la poser
+          </span>
+          <button
+            onClick={annuler}
+            style={{
+              flex: 'none',
+              padding: '7px 12px',
+              borderRadius: 'var(--pill)',
+              background: '#08090b',
+              color: '#fff',
+              fontSize: 12.5,
+              fontWeight: 700,
+            }}
+          >
+            Annuler
+          </button>
+        </div>
+      )}
 
       {prise && curseur && (
         <div
