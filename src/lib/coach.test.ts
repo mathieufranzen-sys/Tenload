@@ -340,18 +340,18 @@ describe('motDuCoach — jamais le même mot deux jours de suite', () => {
     const pain = carnet([...serie(14, 0.8), ...serie(14, 2)])
     const hier = motDuCoach({ pain, byDate: {}, now: NOW, seancesTotal: TOTAL, jusquaCourse: 190 })
     expect(hier.cle).toBe('raideur-baisse')
-    const m = motDuCoach({ pain, byDate: {}, now: NOW, seancesTotal: TOTAL, jusquaCourse: 190, exclure: hier.cle })
-    expect(m.cle).not.toBe('raideur-baisse')
+    const m = motDuCoach({ pain, byDate: {}, now: NOW, seancesTotal: TOTAL, jusquaCourse: 190, exclureSujets: [hier.sujet] })
+    expect(m.sujet).not.toBe('raideur')
   })
 
   it('compare la règle et non le texte : un chiffre qui bouge ne fait pas un autre mot', () => {
     const a = motDuCoach({ pain: carnet([...serie(14, 0.8), ...serie(14, 2)]), byDate: {}, now: NOW, seancesTotal: TOTAL, jusquaCourse: 190 })
-    const b = motDuCoach({ pain: carnet([...serie(14, 0.7), ...serie(14, 2)]), byDate: {}, now: NOW, seancesTotal: TOTAL, jusquaCourse: 190, exclure: a.cle })
-    expect(b.cle).not.toBe(a.cle)
+    const b = motDuCoach({ pain: carnet([...serie(14, 0.7), ...serie(14, 2)]), byDate: {}, now: NOW, seancesTotal: TOTAL, jusquaCourse: 190, exclureSujets: [a.sujet] })
+    expect(b.sujet).not.toBe(a.sujet)
   })
 
   it('a toujours un autre mot, grâce au compte à rebours', () => {
-    const m = motDuCoach({ pain: {}, byDate: {}, now: NOW, seancesTotal: TOTAL, jusquaCourse: 190, exclure: 'noter-reveil' })
+    const m = motDuCoach({ pain: {}, byDate: {}, now: NOW, seancesTotal: TOTAL, jusquaCourse: 190, exclureSujets: ['carnet'] })
     expect(m.cle).toBe('compte-a-rebours')
     expect(m.texte).toContain('J-190')
   })
@@ -364,7 +364,7 @@ describe('motDuCoach — jamais le même mot deux jours de suite', () => {
       seancesTotal: TOTAL,
       duJour: [seance({ type: 'velo', typePlan: 'long', adaptee: true })],
       indice: { idx: 71, painInconnue: false, chargeInconnue: false },
-      exclure: 'course-neutralisee',
+      exclureSujets: ['seance'],
     })
     expect(m.cle).toBe('course-neutralisee')
   })
@@ -388,10 +388,10 @@ describe('motDuCoach — jamais le même mot deux jours de suite', () => {
     for (let k = 1; k <= 7; k++) byDate[addDays(NOW, -k)] = { idx: 20, load: 13 }
     for (let k = 8; k <= 14; k++) byDate[addDays(NOW, -k)] = { idx: 20, load: 10 }
     const base = { pain: {}, byDate, now: NOW, seancesTotal: TOTAL, duJour: [] }
-    const m = motDuCoach({ ...base, indice: { idx: 20, painInconnue: false, chargeInconnue: false }, exclure: 'noter-reveil' })
+    const m = motDuCoach({ ...base, indice: { idx: 20, painInconnue: false, chargeInconnue: false }, exclureSujets: ['carnet'] })
     expect(m.cle).toBe('charge-semaine')
     expect(m.texte).toContain('30 %')
-    const muet = motDuCoach({ ...base, indice: { idx: 20, painInconnue: false, chargeInconnue: true }, exclure: 'noter-reveil' })
+    const muet = motDuCoach({ ...base, indice: { idx: 20, painInconnue: false, chargeInconnue: true }, exclureSujets: ['carnet'] })
     expect(muet.cle).not.toBe('charge-semaine')
   })
 })
@@ -458,7 +458,7 @@ describe('motDuCoach — lectures réfléchies', () => {
 
   it('pousse l’excentrique quand hier est noté sans lui', () => {
     const pain = carnet([null, 1])
-    const m = motDuCoach({ ...base, pain, exclure: 'noter-reveil' })
+    const m = motDuCoach({ ...base, pain, exclureSujets: ['carnet'] })
     expect(m.cle).toBe('excentrique-relance')
   })
 
@@ -466,18 +466,18 @@ describe('motDuCoach — lectures réfléchies', () => {
     const pain: PainMap = {}
     for (let k = 1; k <= 42; k++) {
       const d = addDays(NOW, -k)
-      // NOW est un jeudi : le mardi porte 4, les autres jours 1.
+      // Le mardi porte 4, les autres jours 1.
       pain[d] = { evening: new Date(d + 'T12:00:00Z').getUTCDay() === 2 ? 4 : 1 }
     }
-    const m = motDuCoach({ ...base, pain, exclure: 'noter-reveil' })
-    const tous: string[] = []
-    let ex: string | undefined = 'noter-reveil'
+    // On épuise les sujets un par un : le jour douloureux doit finir par sortir.
+    const vus: string[] = []
+    const cles: string[] = []
     for (let i = 0; i < 8; i++) {
-      const c = motDuCoach({ ...base, pain, exclure: ex })
-      tous.push(c.cle)
-      ex = c.cle
+      const c = motDuCoach({ ...base, pain, exclureSujets: vus })
+      cles.push(c.cle)
+      if (!vus.includes(c.sujet)) vus.push(c.sujet)
     }
-    expect([m.cle, ...tous]).toContain('jour-douloureux')
+    expect(cles).toContain('jour-douloureux')
   })
 
   it('suit la forme sur le long terme', () => {

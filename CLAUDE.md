@@ -724,12 +724,14 @@ un allègement volontaire est un « bon réflexe » au-dessus de 50 et une simpl
 constatation en dessous, parce qu'en dessous le modèle ne l'avait pas vu venir
 et le féliciter laisserait croire l'inverse.
 
-**Jamais le même mot deux jours de suite.** Arbitré par Mathieu le
-15 septembre 2026, après une semaine de « raideur au réveil » chaque matin.
-Toutes les règles produisent des candidats portant une `cle`, et `motDuCoach`
-prend le premier dont la clé n'est pas celle d'hier (`exclure`). La comparaison
-porte sur la RÈGLE et non sur le texte : « de 1,2 à 0,7 » puis « de 1,2 à 0,6 »
-seraient sinon deux messages. La mémoire vit dans `localStorage`
+**Jamais le même SUJET trois jours de suite.** Arbitré le 15 septembre 2026,
+corrigé le 19 : la première version excluait la règle affichée la veille, mais
+« raideur en baisse », « raideur en hausse », « raideur stable » et « douleur
+sur le long terme » sont quatre règles qui parlent toutes de la même chose, et
+Mathieu a vu la raideur au réveil revenir tous les matins. Chaque candidat
+porte donc un `sujet` (raideur, douleur, excentrique, charge, séance, semaine,
+carnet, régularité, forme, échéance), et `motDuCoach` écarte les sujets des
+**deux** derniers jours (`exclureSujets`). La mémoire vit dans `localStorage`
 (`tenload-coach`, trois jours) : c'est ce que CET écran a montré. **Trois
 règles sont `obligatoire`** et se répètent tant qu'elles sont vraies : course
 neutralisée, sortie longue raccourcie, contrainte cassée. Taire le deuxième

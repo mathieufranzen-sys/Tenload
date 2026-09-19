@@ -48,7 +48,7 @@ const plan = planJson as unknown as Plan
 const DIX_KM = '2026-11-15'
 
 /**
- * Le mot affiché chaque jour, par règle, sur les trois derniers jours.
+ * Le SUJET affiché chaque jour, sur les trois derniers jours.
  * Sur l'appareil et pas en base : c'est ce que CET écran a montré qu'il ne
  * faut pas remontrer. Safari en navigation privée refuse le stockage, d'où
  * les try : sans mémoire, le coach peut se répéter, il ne doit pas planter.
@@ -467,7 +467,11 @@ export function Today({
           chargeInconnue: A.detail.chargeInconnue,
         },
         alertes: alertesSemaine,
-        exclure: lireMemoireCoach()[addDays(now, -1)],
+        // Deux jours de mémoire, sur le sujet et non sur la règle : quatre
+        // règles différentes parlent de la raideur au réveil, et les exclure
+        // une par une la laissait revenir tous les matins.
+        exclureSujets: [lireMemoireCoach()[addDays(now, -1)], lireMemoireCoach()[addDays(now, -2)]]
+          .filter((x): x is string => Boolean(x)),
         jusquaCourse: daysBetween(now, plan.meta.raceDate),
         hier: hierPourCoach,
         semaine: semainePourCoach,
@@ -476,11 +480,11 @@ export function Today({
     [pain, A.byDate, A.detail, now, insights.seancesTotal, duJourPourCoach, alertesSemaine, hierPourCoach, semainePourCoach, forme],
   )
 
-  // La règle du jour devient l'exclusion de demain. Réécrite à chaque rendu :
-  // c'est le dernier mot affiché qu'il ne faut pas redire, pas le premier.
+  // Le sujet du jour devient l'exclusion des deux jours suivants. Réécrit à
+  // chaque rendu : c'est le dernier mot affiché qui compte, pas le premier.
   useEffect(() => {
-    ecrireMemoireCoach(now, mot.cle)
-  }, [now, mot.cle])
+    ecrireMemoireCoach(now, mot.sujet)
+  }, [now, mot.sujet])
 
   /** L'indice du jour consulté. `A.detail` ne vaut que pour aujourd'hui. */
   const detail = A.byDate[jour] ?? A.detail
