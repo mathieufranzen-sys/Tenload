@@ -19,9 +19,16 @@ interface Props {
   /** Ressenti déjà enregistré. */
   feedback?: { pain: number; rpe: number } | null
   onClick?: () => void
+  /**
+   * Version de la vue semaine du Programme : la carte vit à côté de la
+   * pastille du jour, dans une colonne plus étroite. Ni icône ni chevron, la
+   * distance passe à droite du titre, comme dans la maquette.
+   */
+  compact?: boolean
 }
 
-export function SessionCard({ session: s, marathonPace, feedback, onClick }: Props) {
+export function SessionCard({ session: s, marathonPace, feedback, onClick, compact = false }: Props) {
+  if (compact) return <CarteCompacte session={s} marathonPace={marathonPace} feedback={feedback} onClick={onClick} />
   const [lo, hi] = estimateDuration(s, marathonPace)
   const duration = lo === hi ? formatDuration(lo) : `${formatDuration(lo)} - ${formatDuration(hi)}`
   // La distance seulement : le repli sur `s.dur` répétait la durée à côté
@@ -173,5 +180,75 @@ function Etiquette({
     >
       {children}
     </span>
+  )
+}
+
+function CarteCompacte({ session: s, marathonPace, feedback, onClick }: Omit<Props, 'compact'>) {
+  const [lo, hi] = estimateDuration(s, marathonPace)
+  const duree = lo === hi ? formatDuration(lo) : `${formatDuration(lo)} à ${formatDuration(hi)}`
+  const repos = s.type === 'repos'
+  const st = styleSeance(s.type)
+
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'block',
+        width: '100%',
+        textAlign: 'left',
+        color: 'inherit',
+        padding: '14px 16px',
+        borderRadius: 22,
+        // Le repos se dessine en pointillés : un jour vide n'est pas une
+        // séance, mais il se déplace et se remplace comme elle.
+        border: repos ? '1.5px dashed var(--border-2)' : '1px solid var(--glass-border)',
+        background: repos
+          ? 'transparent'
+          : s.type === 'long'
+            ? 'linear-gradient(135deg, rgba(232,116,47,.22), rgba(232,116,47,.06)), var(--surface)'
+            : 'var(--surface)',
+        opacity: s.saute ? 0.45 : 1,
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
+        <span
+          className={repos ? undefined : 'display'}
+          style={{
+            fontSize: repos ? 16 : 19,
+            lineHeight: 1.2,
+            color: repos ? 'var(--sur-ink-3)' : 'var(--ink)',
+            textDecoration: s.saute ? 'line-through' : undefined,
+          }}
+        >
+          {s.title}
+        </span>
+        {feedback ? (
+          <span style={{ fontSize: 13.5, color: 'var(--good)', flex: 'none' }}>noté</span>
+        ) : s.dist ? (
+          <span style={{ fontSize: 14, color: 'var(--accent)', flex: 'none' }}>{formatNumber(s.dist)} km</span>
+        ) : null}
+      </div>
+      {!repos && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            marginTop: 4,
+            fontSize: 13.5,
+            color: 'var(--sur-ink-2)',
+          }}
+        >
+          <span>{feedback ? `douleur ${formatNumber(feedback.pain)} · effort ${feedback.rpe}` : duree}</span>
+          {st.intensite > 0 && <EchelleIntensite niveau={st.intensite} hauteur={10} />}
+        </div>
+      )}
+      {(s.ecart || s.adapted) && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 9 }}>
+          {s.ecart && <Etiquette teinte="255,220,194" encre="var(--pale)">{s.ecart}</Etiquette>}
+          {s.adapted && <Etiquette teinte="242,207,107" encre="var(--warning)">{s.adapted}</Etiquette>}
+        </div>
+      )}
+    </button>
   )
 }

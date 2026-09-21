@@ -437,7 +437,7 @@ function Coquille({
           ecarts={ecarts}
           marathonPace={marathonPace}
           numeroSemaine={numeroSemaine}
-          onChangerSemaine={(n) => setNumeroSemaine(Math.max(1, Math.min(35, n)))}
+          onChangerSemaine={(n) => setNumeroSemaine(Math.max(1, Math.min(plan.weeks.length, n)))}
           onOuvrirSeance={(x) =>
             setSeance({ semaineN: x.semaineOrigine, jourOrigine: x.jourOrigine, slot: x.slot })
           }
