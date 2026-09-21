@@ -13,7 +13,7 @@
  * ne doit pas effacer la douleur du soir.
  */
 
-export type TableEcrivable = 'daily_logs' | 'session_feedback' | 'profiles' | 'plan_overrides'
+export type TableEcrivable = 'daily_logs' | 'session_feedback' | 'profiles' | 'plan_overrides' | 'dossards'
 
 export interface Ecriture {
   table: TableEcrivable

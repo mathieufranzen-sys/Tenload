@@ -15,6 +15,7 @@ import { buildPain, type DailyLogRow, type FeedbackRow } from './lib/buildPain'
 import { NOTE_DEMO, construireDemo } from './data/demo'
 import { cleEcart, indexerEcarts, type EcartPatch, type EcartRow } from './lib/overrides'
 import { adapt, construireContexte, weekSessions } from './lib/adapt'
+import type { DossardRow } from './lib/dossards'
 import type { PainMap } from './lib/tendonIndex'
 import { addDays, today } from './lib/dates'
 import { isConfigured } from './lib/supabase'
@@ -32,6 +33,7 @@ import {
   useActivities,
   useFeedback,
   useLogs,
+  useDossards,
   useEcarts,
   useProfile,
   useSeanceFeedback,
@@ -109,6 +111,7 @@ function CoquilleDemoInterne({
   const { enregistrerFeedback } = useSeanceFeedback()
   const { ecarts, enregistrerEcart } = useEcarts()
   const { profil, enregistrerProfil } = useProfile()
+  const { dossards, enregistrerDossard } = useDossards()
 
   // `bascule` au plus tôt : sans compte, tout le carnet de la démo est
   // considéré comme saisi dans l'app, jamais importé.
@@ -131,6 +134,8 @@ function CoquilleDemoInterne({
       onSaveFeedback={enregistrerFeedback}
       onSaveProfil={enregistrerProfil}
       onSaveEcart={enregistrerEcart}
+      dossards={dossards}
+      onSaveDossard={enregistrerDossard}
     />
   )
 }
@@ -148,6 +153,7 @@ function CoquilleConnectee({
   const { profil, enregistrerProfil } = useProfile()
   const { enregistrerFeedback } = useSeanceFeedback()
   const { ecarts, enregistrerEcart } = useEcarts()
+  const { dossards, indisponibles: dossardsIndisponibles, enregistrerDossard } = useDossards()
 
   const activities: ActivityRow[] = useMemo(
     () =>
@@ -177,6 +183,9 @@ function CoquilleConnectee({
       ecarts={ecarts}
       journalActif
       erreurSync={erreur}
+      dossards={dossards}
+      dossardsIndisponibles={dossardsIndisponibles}
+      onSaveDossard={enregistrerDossard}
       onSaveFeedback={enregistrerFeedback}
       onSaveProfil={enregistrerProfil}
       onSaveEcart={enregistrerEcart}
@@ -264,7 +273,16 @@ function Coquille({
   onSaveProfil,
   onSaveEcart,
   onDeconnexion,
+  dossards = [],
+  dossardsIndisponibles = false,
+  onSaveDossard,
 }: {
+  /** Les dossards ajoutés et les objectifs de ceux du plan. */
+  dossards?: DossardRow[]
+  /** La table `dossards` n'existe pas encore : le script SQL reste à passer. */
+  dossardsIndisponibles?: boolean
+  /** Absent en mode instantanés : la section Dossards reste alors en lecture seule. */
+  onSaveDossard?: (ligne: DossardRow) => void
   /** Absent en démo et en mode instantanés : rien à abonner aux rappels alors. */
   userId?: string
   /** Vrai en démonstration : bannière dédiée, et rien n'est enregistré. */
@@ -473,6 +491,17 @@ function Coquille({
           goalLabel={goalLabel}
           hrMax={hrMax}
           onOuvrirProfil={() => setOnglet('profile')}
+          onModifierAllure={() => {
+            setSectionProfil('allure')
+            setOnglet('profile')
+          }}
+          ecarts={ecarts}
+          dossards={dossards}
+          dossardsIndisponibles={dossardsIndisponibles}
+          onSaveDossard={onSaveDossard}
+          formeTest={fitnessPaceTest}
+          onSaveEcart={onSaveEcart}
+          onRecalibrerForme={onSaveProfil && ((allure) => onSaveProfil({ fitness_pace_s: allure }))}
         />
       )}
       {onglet === 'profile' && (

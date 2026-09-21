@@ -62,7 +62,7 @@ export function ChronoCourse({ km, chronoSaisi, formeActuelle, disabled, onValid
   const ecart = allure != null ? allure - formeActuelle : null
 
   return (
-    <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '15px 16px' }}>
+    <div className="carte" style={{ padding: '16px 16px' }}>
       <input
         type="text"
         inputMode="numeric"
@@ -78,10 +78,10 @@ export function ChronoCourse({ km, chronoSaisi, formeActuelle, disabled, onValid
           boxSizing: 'border-box',
           background: 'var(--surface-2)',
           border: `1px solid ${saisie && !valide ? 'var(--c-erreur)' : 'var(--border-2)'}`,
-          borderRadius: 14,
-          padding: 14,
-          fontSize: 19,
-          fontWeight: 700,
+          borderRadius: 'var(--pill)',
+          padding: '14px 20px',
+          fontSize: 24,
+          fontFamily: 'var(--font-display)',
           color: 'var(--ink)',
           fontVariantNumeric: 'tabular-nums',
         }}
@@ -113,14 +113,14 @@ export function ChronoCourse({ km, chronoSaisi, formeActuelle, disabled, onValid
               width: '100%',
               padding: 14,
               borderRadius: 'var(--pill)',
-              fontWeight: 700,
+              fontWeight: 600,
               fontSize: 15.5,
-              background: 'var(--surface-2)',
-              color: disabled ? 'var(--ink-3)' : 'var(--ink)',
-              border: '1px solid var(--border-2)',
+              background: applique || disabled ? 'var(--surface-2)' : 'var(--pale)',
+              color: disabled ? 'var(--ink-3)' : applique ? 'var(--ink)' : 'var(--pale-ink)',
+              border: 'none',
             }}
           >
-            {applique ? 'Forme recalée sur ce chrono' : 'Recaler ma forme sur ce chrono'}
+            {applique ? 'forme recalée sur ce chrono' : 'recaler ma forme sur ce chrono'}
           </button>
         </>
       )}
