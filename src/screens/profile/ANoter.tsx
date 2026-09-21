@@ -69,11 +69,9 @@ export function ANoter({
               display: 'flex',
               alignItems: 'baseline',
               gap: 8,
-              fontSize: 11,
-              fontWeight: 750,
-              letterSpacing: '1.1px',
-              textTransform: 'uppercase',
-              color: 'var(--ink-3)',
+              fontSize: 13.5,
+              fontWeight: 500,
+              color: 'var(--accent)',
               margin: '0 0 9px 2px',
             }}
           >

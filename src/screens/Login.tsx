@@ -75,15 +75,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
         }}
       >
         <header style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <h1
-            style={{
-              margin: 0,
-              fontSize: 46,
-              fontWeight: 300,
-              letterSpacing: '-2px',
-              lineHeight: 1,
-            }}
-          >
+          <h1 className="display" style={{ margin: 0, fontSize: 58, lineHeight: 1 }}>
             Tenload
           </h1>
           <p
@@ -167,13 +159,13 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                 style={{
                   width: '100%',
                   marginTop: 14,
-                  background: '#fff',
+                  background: 'var(--pale)',
                   color: 'var(--pale-ink)',
                   borderRadius: 'var(--pill)',
                   padding: 15,
                   font: 'inherit',
                   fontSize: 16,
-                  fontWeight: 700,
+                  fontWeight: 600,
                   opacity: verif || !codeValide(code) ? 0.55 : 1,
                 }}
               >
@@ -214,11 +206,9 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
               htmlFor="email"
               style={{
                 display: 'block',
-                fontSize: 10.5,
-                fontWeight: 700,
-                letterSpacing: '1.3px',
-                textTransform: 'uppercase',
-                color: 'var(--sur-ink-2)',
+                fontSize: 13,
+                fontWeight: 500,
+                color: 'var(--accent)',
                 marginBottom: 9,
               }}
             >
@@ -258,7 +248,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
               style={{
                 width: '100%',
                 marginTop: 14,
-                background: '#fff',
+                background: 'var(--pale)',
                 color: 'var(--pale-ink)',
                 borderRadius: 'var(--pill)',
                 padding: 15,

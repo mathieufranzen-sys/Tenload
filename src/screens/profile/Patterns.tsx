@@ -19,11 +19,9 @@ import { formatNumber } from '../../lib/dates'
 import { Icon } from '../../components/Icon'
 
 const titreSection = {
-  fontSize: 11,
-  fontWeight: 750,
-  letterSpacing: '1.1px',
-  textTransform: 'uppercase' as const,
-  color: 'var(--ink-3)',
+  fontSize: 14,
+  fontWeight: 500,
+  color: 'var(--accent)',
   margin: '24px 0 9px 2px',
 }
 
@@ -73,15 +71,13 @@ export function Patterns({ carnet }: { carnet: JourCarnet[] }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
                 <span
                   style={{
-                    fontSize: 9.5,
-                    fontWeight: 800,
-                    letterSpacing: '.9px',
-                    textTransform: 'uppercase',
-                    padding: '3px 8px',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    padding: '3px 9px',
                     borderRadius: 'var(--pill)',
-                    background: aggrave ? 'rgba(251,191,36,.16)' : 'rgba(111,224,176,.18)',
-                    border: `1px solid ${aggrave ? 'rgba(251,191,36,.32)' : 'rgba(111,224,176,.3)'}`,
-                    color: aggrave ? '#fcd34d' : 'var(--good)',
+                    background: aggrave ? 'rgba(242,207,107,.14)' : 'rgba(111,224,176,.18)',
+                    border: `1px solid ${aggrave ? 'rgba(242,207,107,.3)' : 'rgba(111,224,176,.3)'}`,
+                    color: aggrave ? 'var(--warning)' : 'var(--good)',
                   }}
                 >
                   {aggrave ? `+${formatNumber(p.ecart)}` : formatNumber(p.ecart)}

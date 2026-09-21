@@ -167,17 +167,15 @@ export function Profile({
         zIndex: 5,
         padding: '0 var(--page-x) 0',
       }}>
-          <EnteteEcran titre="Profil" contexte={<>Règles du plan, calcul de l'indice, réglages</>} />
+          <EnteteEcran titre="profil" contexte={<>Règles du plan, calcul de l'indice, réglages</>} />
 
           {GROUPES.map((groupe) => (
             <section key={groupe.titre} style={{ marginBottom: 22 }}>
               <h2
                 style={{
-                  fontSize: 10.5,
-                  fontWeight: 700,
-                  letterSpacing: '1.3px',
-                  textTransform: 'uppercase',
-                  color: 'var(--sur-ink-3)',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: 'var(--accent)',
                   margin: '0 0 10px 2px',
                 }}
               >
@@ -187,16 +185,16 @@ export function Profile({
                 <button
                   key={r.key}
                   onClick={() => onSection(r.key)}
-                  className="glass"
+                  className="carte"
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 13,
+                    gap: 14,
                     width: '100%',
                     textAlign: 'left',
                     color: 'inherit',
-                    borderRadius: 18,
-                    padding: '13px 14px',
+                    borderRadius: 22,
+                    padding: '14px 16px',
                     marginBottom: 9,
                     cursor: 'pointer',
                   }}
@@ -204,20 +202,20 @@ export function Profile({
                   <span
                     aria-hidden
                     style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 11,
+                      width: 42,
+                      height: 42,
+                      borderRadius: '50%',
                       flex: 'none',
                       display: 'grid',
                       placeItems: 'center',
-                      background: 'rgba(255,220,196,.09)',
-                      border: '1px solid var(--glass-border)',
+                      background: 'var(--surface-3)',
+                      color: 'var(--accent)',
                     }}
                   >
-                    <Icon name={r.icone} size={17} />
+                    <Icon name={r.icone} size={18} />
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <b style={{ display: 'block', fontSize: 15, fontWeight: 650, letterSpacing: '-.25px' }}>
+                    <b className="display" style={{ display: 'block', fontSize: 19, fontWeight: 400, lineHeight: 1.2 }}>
                       {r.titre}
                       {r.key === 'anoter' && enRetard > 0 && (
                         <span
@@ -238,7 +236,7 @@ export function Profile({
                         </span>
                       )}
                     </b>
-                    <span style={{ color: 'var(--sur-ink-2)', fontSize: 12.5, fontWeight: 500 }}>
+                    <span style={{ display: 'block', color: 'var(--sur-ink-2)', fontSize: 13.5, marginTop: 2 }}>
                       {r.description}
                     </span>
                   </div>
@@ -255,20 +253,19 @@ export function Profile({
           {onDeconnexion && (
             <button
               onClick={onDeconnexion}
-              className="glass"
               style={{
                 display: 'block',
                 width: '100%',
                 marginTop: 4,
                 padding: 14,
                 borderRadius: 'var(--pill)',
-                fontSize: 14.5,
-                fontWeight: 600,
+                border: '1px solid var(--border-2)',
+                fontSize: 15,
                 color: 'var(--sur-ink-2)',
                 cursor: 'pointer',
               }}
             >
-              Se déconnecter
+              se déconnecter
             </button>
           )}
         </div>

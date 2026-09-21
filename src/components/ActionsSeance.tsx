@@ -358,11 +358,9 @@ function Reglage({ label, children }: { label: string; children: ReactNode }) {
     <div>
       <div
         style={{
-          fontSize: 10.5,
-          fontWeight: 700,
-          letterSpacing: '1px',
-          textTransform: 'uppercase',
-          color: 'var(--sur-ink-3)',
+          fontSize: 13,
+          fontWeight: 500,
+          color: 'var(--accent)',
           marginBottom: 7,
         }}
       >
