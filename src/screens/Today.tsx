@@ -681,6 +681,9 @@ export function Today({
         <ChargeSheet
           breakdown={detail}
           band={bande}
+          veille={veille}
+          jourLibelle={sousTitreLong(jour)}
+          onVoirVeille={jour > plusAncien ? () => decaler(-1) : undefined}
           onVoirSuivi={onVoirSuivi}
           onClose={() => setCalculOuvert(false)}
         />
