@@ -28,10 +28,13 @@ export function JournalDuJour({ day, now }: Props) {
   const { ligne, enregistrerLog } = useJournal()
   const enAttente = useFileAttente()
   const l = ligne(day)
-  // Le soir se note dans les 24 h : plus tard, c'est de la mémoire, pas une
-  // mesure. Le curseur reste vide et dit « Non saisi », sans alerte nulle part
-  // (ni badge, ni liste). Une valeur déjà saisie reste corrigeable.
-  const soirPerime = day < addDays(now, -1) && l?.pain_evening == null
+  // Le réveil et le soir se notent dans les 24 h : plus tard, c'est de la
+  // mémoire, pas une mesure. Le curseur reste vide et dit « Non saisi », sans
+  // alerte nulle part (ni badge, ni liste). Une valeur déjà saisie reste
+  // corrigeable.
+  const perime = day < addDays(now, -1)
+  const reveilPerime = perime && l?.pain_wake == null
+  const soirPerime = perime && l?.pain_evening == null
 
   return (
     <section
@@ -70,6 +73,7 @@ export function JournalDuJour({ day, now }: Props) {
           label="Raideur au réveil"
           valeur={l?.pain_wake ?? null}
           onEcrire={(v) => enregistrerLog(day, { pain_wake: v })}
+          verrouille={reveilPerime}
         />
         <CurseurCarnet
           label="Douleur en fin de journée"
