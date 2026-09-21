@@ -894,15 +894,18 @@ c'est une consigne, pas un effet de bord. Seuls deux textes de règle ont bougé
 parce qu'ils nommaient l'onglet Allures.
 
 - **Palette** (`tokens.css`) : **Trailblazer, le design system d'AllTrails,
-  en mode clair**, valeurs exactes fournies par Mathieu. Fond Neutral-50,
-  cartes Neutral-0, texte Green-400, métadonnées Green-100, boutons et
-  sélection Green-300 (Brand) en blanc, Blue pour la courbe d'effort. Les
-  cartes de tête et le mot du coach (`.carte-braise`) sont en vert profond :
-  **elles redéfinissent les jetons pour leurs enfants** (`--ink` blanc,
-  `--accent` Neon Green…), si bien qu'un composant posé dedans s'inverse sans
-  rien savoir. Les voiles et filets passent par
-  `color-mix(in srgb, var(--ink) x%, transparent)` pour la même raison. Les
-  noms `pale` et `braise` sont restés des versions orange précédentes.
+  en mode clair**, sur ses rôles sémantiques fournis par Mathieu. Fond
+  Container/Primary (Neutral-0), cartes Container/Secondary (Neutral-100),
+  et ce qui vit dans une carte remonte en Neutral-0. Texte Dark (Green-400)
+  et Subtle (Neutral-600, qui écrit aussi les étiquettes). Filets Neutral-200
+  et 300. **Bouton d'action : Button/Accent** (NeonGreen-100, survol 200,
+  texte Green-400, `.bouton-pale` et `--neon`). **Sélection : Button/Focus**
+  (Green-300, texte blanc, `--pale`). Cartes sombres (`.carte-braise`) en
+  Tertiary vers Brand ; **elles redéfinissent les jetons pour leurs
+  enfants** (`--ink` blanc, `--accent` NeonGreen-100), si bien qu'un
+  composant posé dedans s'inverse sans rien savoir. Blue (AllTrails+) pour
+  la courbe d'effort, valeur `#4f63f2` relevée à l'œil, à confirmer. Les
+  noms `pale` et `braise` sont restés des versions précédentes.
 - **Les teintes de bande vivent dans `src/lib/teintes.ts`**, pas dans `BANDS`
   (tendonIndex.ts), qui est un fichier du modèle. La bande jaune y est enfin
   jaune. `COULEUR_DOULEUR` (ressenti.ts) suit les mêmes teintes, le noir

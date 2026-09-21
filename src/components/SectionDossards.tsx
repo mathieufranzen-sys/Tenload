@@ -84,7 +84,7 @@ export function SectionDossards({
             type="button"
             onClick={() => setAjout(true)}
             className="puce"
-            style={{ background: 'var(--pale)', color: 'var(--pale-ink)', fontWeight: 600, padding: '9px 16px' }}
+            style={{ background: 'var(--neon)', color: 'var(--ink)', fontWeight: 600, padding: '9px 16px' }}
           >
             <Icon name="plus" size={15} />
             ajouter
@@ -427,8 +427,8 @@ function FormulaireDossard({
             flex: 1,
             padding: 14,
             borderRadius: 'var(--pill)',
-            background: pret ? 'var(--pale)' : 'var(--surface-2)',
-            color: pret ? 'var(--pale-ink)' : 'var(--ink-3)',
+            background: pret ? 'var(--neon)' : 'var(--surface-3)',
+            color: pret ? 'var(--ink)' : 'var(--ink-3)',
             fontSize: 15.5,
             fontWeight: 600,
           }}

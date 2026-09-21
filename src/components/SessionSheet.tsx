@@ -526,8 +526,8 @@ function FormulaireRessenti({
           borderRadius: 'var(--pill)',
           fontWeight: 600,
           fontSize: 16,
-          background: disabled ? 'var(--surface-2)' : 'var(--pale)',
-          color: disabled ? 'var(--ink-3)' : 'var(--pale-ink)',
+          background: disabled ? 'var(--surface-3)' : 'var(--neon)',
+          color: disabled ? 'var(--ink-3)' : 'var(--ink)',
           opacity: disabled ? 0.6 : 1,
         }}
       >

@@ -523,8 +523,8 @@ function Boutons({
           borderRadius: 'var(--pill)',
           fontWeight: 600,
           fontSize: 15.5,
-          background: 'var(--pale)',
-          color: 'var(--pale-ink)',
+          background: 'var(--neon)',
+          color: 'var(--ink)',
         }}
       >
         enregistrer

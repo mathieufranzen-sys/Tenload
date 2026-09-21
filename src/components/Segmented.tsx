@@ -21,7 +21,7 @@ export function Segmented<T extends string>({
       aria-label={label}
       style={{
         display: 'flex',
-        background: 'var(--surface-2)',
+        background: 'var(--surface)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--pill)',
         padding: 3,

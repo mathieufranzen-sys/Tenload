@@ -161,8 +161,6 @@ export function ChargeSheet({
         zIndex: 70,
         overflowY: 'auto',
         background: 'var(--bg)',
-        backgroundImage:
-          'radial-gradient(110% 320px at 10% -80px, rgba(101, 246, 123, 0.1), transparent 70%)',
       }}
     >
       <div

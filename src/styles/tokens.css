@@ -13,29 +13,36 @@
 
 :root {
   /* ─── surfaces et encres ─────────────────────────────────────────────────
-     Mode clair, valeurs exactes de Trailblazer (AllTrails), fournies par
-     Mathieu le 21 septembre 2026. Le fond est Neutral-50, les cartes
-     Neutral-0 : la carte blanche se détache d'un fond à peine grisé, sans
-     ombre. Le texte est Green-400, un presque-noir vert qui tient toute l'app
-     dans la même famille. */
-  --bg: #f6f6f4;
-  --surface: #ffffff;
-  --surface-2: #efefec;
+     Rôles sémantiques de Trailblazer (AllTrails), fournis par Mathieu le
+     21 septembre 2026 :
+     - Background/Container : Primary Neutral-0 (le fond), Secondary
+       Neutral-100 (les cartes), Tertiary Green-300 et Brand Green-400 (les
+       cartes sombres, voir `.carte-braise`).
+     - Text : Dark Green-400, Subtle Neutral-600, Light Neutral-0, Accent
+       NeonGreen-100 (sur fond sombre seulement), AllTrails+ Blue.
+     - Stroke/Container : Disabled Neutral-200, Subtle Neutral-300, Strong
+       Green-400.
+     Une carte est donc un aplat Neutral-100 sur blanc, et ce qui vit dans
+     une carte (puces, champs, valeurs) remonte en Neutral-0 : `--surface-2`
+     est plus clair que `--surface`, c'est voulu. */
+  --bg: #ffffff;
+  --surface: #efefec;
+  --surface-2: #ffffff;
   --surface-3: #dbdad2;
   --ink: #142800;
-  --ink-2: #4c5c43;
+  --ink-2: #656e5e;
   --ink-3: #8b9182;
-  --border: color-mix(in srgb, var(--ink) 9%, transparent);
-  --border-2: color-mix(in srgb, var(--ink) 16%, transparent);
+  --border: #dbdad2;
+  --border-2: #c2c2b8;
 
   /* ─── accent ─────────────────────────────────────────────────────────────
-     `--accent` (Green-100) écrit les métadonnées et les chiffres
-     secondaires ; `--pale` (Green-300, la couleur Brand) remplit les boutons
-     principaux et la sélection, en blanc dessus ; `--braise` est le fond
-     vert profond des cartes de tête et du mot du coach. Le Neon Green ne
-     sert qu'à l'intérieur de ces cartes sombres : sur blanc, il ne se lit
-     pas. Les noms `pale` et `braise` sont restés des versions précédentes. */
-  --accent: #2e731a;
+     `--accent` écrit les étiquettes et les métadonnées : c'est Text/Subtle.
+     `--pale` est Background/Button/Focus (Green-300, texte Neutral-0), la
+     sélection. `--neon` est Background/Button/Accent (NeonGreen-100, survol
+     NeonGreen-200), le bouton d'action principal. `--braise` est
+     Container/Tertiary et `--braise-2` Container/Brand. Les noms `pale` et
+     `braise` sont restés des versions précédentes. */
+  --accent: #656e5e;
   --accent-2: #2c5601;
   --accent-doux: #a7a99f;
   --pale: #274312;
@@ -44,6 +51,7 @@
   --braise-2: #142800;
   --neon: #65f67b;
   --neon-2: #49de61;
+  --plus: #4f63f2;
 
   /* ─── formes ─────────────────────────────────────────────────────────── */
   --radius: 26px;
@@ -113,9 +121,9 @@
   --critical: #c8321f;
 
   /* ─── cartes ─────────────────────────────────────────────────────────── */
-  --glass: #ffffff;
-  --glass-fort: #ffffff;
-  --glass-border: color-mix(in srgb, var(--ink) 9%, transparent);
+  --glass: #efefec;
+  --glass-fort: #efefec;
+  --glass-border: #dbdad2;
   --glass-blur: blur(20px) saturate(1.2);
   --glass-lueur: none;
 
@@ -136,8 +144,9 @@
   --accent: #65f67b;
   --pale: #65f67b;
   --pale-ink: #142800;
-  --border: rgba(255, 255, 255, 0.12);
-  --border-2: rgba(255, 255, 255, 0.22);
+  --border: rgba(255, 255, 255, 0.14);
+  --border-2: rgba(255, 255, 255, 0.24);
+  --glass-border: rgba(255, 255, 255, 0.14);
   --surface-2: rgba(255, 255, 255, 0.08);
   --surface-3: rgba(255, 255, 255, 0.14);
   color: var(--ink);

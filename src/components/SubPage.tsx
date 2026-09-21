@@ -31,9 +31,6 @@ export function SubPage({
         inset: 0,
         zIndex: 55,
         background: 'var(--bg)',
-        // Une sous-page reste un écran de l'app : la même lueur en haut.
-        backgroundImage:
-          'radial-gradient(110% 320px at 10% -80px, rgba(101, 246, 123, 0.1), transparent 70%)',
         overflowY: 'auto',
         maxWidth: 'var(--shell-max)',
         margin: '0 auto',

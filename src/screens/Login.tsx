@@ -159,8 +159,8 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                 style={{
                   width: '100%',
                   marginTop: 14,
-                  background: 'var(--pale)',
-                  color: 'var(--pale-ink)',
+                  background: 'var(--neon)',
+                  color: 'var(--ink)',
                   borderRadius: 'var(--pill)',
                   padding: 15,
                   font: 'inherit',
@@ -248,8 +248,8 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
               style={{
                 width: '100%',
                 marginTop: 14,
-                background: 'var(--pale)',
-                color: 'var(--pale-ink)',
+                background: 'var(--neon)',
+                color: 'var(--ink)',
                 borderRadius: 'var(--pill)',
                 padding: 15,
                 font: 'inherit',

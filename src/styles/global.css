@@ -101,8 +101,8 @@ input[type='range']::-moz-range-thumb {
 /* ══════════════════════════════════════════════════════════════════════════
    Fond
 
-   Une seule lueur de vert néon, très diluée, en haut de l'écran, qui retombe
-   dans le Neutral-50 du fond. La classe garde son nom de la version orange (« braise »). Les sept masses colorées par bande sont parties : la maquette pose
+   Un aplat Neutral-0, Background/Container/Primary de Trailblazer. La lueur
+   des versions précédentes est partie : le design system n'en a pas. La classe garde son nom de la version orange (« braise »). Les sept masses colorées par bande sont parties : la maquette pose
    tout sur un fond uni, et la charge du tendon se lit dans la jauge, pas
    derrière elle. La lueur reste la même sur tous les écrans pour qu'on
    reconnaisse l'app avant d'en lire le contenu.
@@ -112,14 +112,10 @@ input[type='range']::-moz-range-thumb {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background:
-    radial-gradient(120% 380px at 18% -80px, rgba(101, 246, 123, 0.16), transparent 70%),
-    var(--bg);
+  background: var(--bg);
 }
 .braise--calme {
-  background:
-    radial-gradient(110% 300px at 10% -90px, rgba(101, 246, 123, 0.1), transparent 70%),
-    var(--bg);
+  background: var(--bg);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -185,10 +181,14 @@ input[type='range']::-moz-range-thumb {
   width: 100%;
   padding: 8px 8px 8px 24px;
   border-radius: var(--pill);
-  background: var(--pale);
-  color: var(--pale-ink);
+  /* Background/Button/Accent : le néon, texte Green-400. */
+  background: var(--neon);
+  color: #142800;
   font-size: 16px;
   font-weight: 600;
+}
+.bouton-pale:hover {
+  background: var(--neon-2);
 }
 .bouton-pale > .pastille {
   width: 44px;
@@ -234,7 +234,7 @@ input[type='range']::-moz-range-thumb {
    comme une carte de la maquette, assez transparente pour que la lueur du
    haut d'écran passe au travers. */
 .glass {
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--surface);
   border: 1px solid var(--glass-border);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);

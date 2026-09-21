@@ -115,8 +115,8 @@ export function ChronoCourse({ km, chronoSaisi, formeActuelle, disabled, onValid
               borderRadius: 'var(--pill)',
               fontWeight: 600,
               fontSize: 15.5,
-              background: applique || disabled ? 'var(--surface-2)' : 'var(--pale)',
-              color: disabled ? 'var(--ink-3)' : applique ? 'var(--ink)' : 'var(--pale-ink)',
+              background: applique || disabled ? 'var(--surface-3)' : 'var(--neon)',
+              color: disabled ? 'var(--ink-3)' : 'var(--ink)',
               border: 'none',
             }}
           >
