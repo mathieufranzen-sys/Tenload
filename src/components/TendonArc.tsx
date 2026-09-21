@@ -18,7 +18,7 @@ const R = 115
 /** Longueur du demi-cercle, pour le `stroke-dasharray`. */
 const ARC = Math.PI * R
 /** Encre du tracé, la même sur les cinq bandes. */
-const TRACE = 'rgba(8,9,11,.82)'
+const TRACE = 'rgba(18,12,9,.82)'
 
 export function TendonArc({ value }: { value: number }) {
   const part = Math.max(0, Math.min(100, value)) / 100
@@ -33,7 +33,7 @@ export function TendonArc({ value }: { value: number }) {
         <path
           d={`M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}`}
           fill="none"
-          stroke="rgba(255,255,255,.22)"
+          stroke="rgba(255,220,196,.22)"
           strokeWidth={2.5}
           strokeLinecap="round"
         />
@@ -46,7 +46,7 @@ export function TendonArc({ value }: { value: number }) {
           strokeDasharray={ARC}
           strokeDashoffset={ARC * (1 - part)}
         />
-        <circle cx={px} cy={py} r={4.5} fill={TRACE} stroke="rgba(255,255,255,.55)" strokeWidth={2} />
+        <circle cx={px} cy={py} r={4.5} fill={TRACE} stroke="rgba(255,220,196,.55)" strokeWidth={2} />
       </svg>
       <div
         style={{

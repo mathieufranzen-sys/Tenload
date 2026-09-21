@@ -210,7 +210,7 @@ export function Profile({
                       flex: 'none',
                       display: 'grid',
                       placeItems: 'center',
-                      background: 'rgba(255,255,255,.09)',
+                      background: 'rgba(255,220,196,.09)',
                       border: '1px solid var(--glass-border)',
                     }}
                   >
@@ -228,9 +228,9 @@ export function Profile({
                             letterSpacing: '.4px',
                             padding: '2.5px 7px',
                             borderRadius: 'var(--pill)',
-                            background: 'rgba(250,178,25,.18)',
-                            border: '1px solid rgba(250,178,25,.28)',
-                            color: '#FFD166',
+                            background: 'rgba(242,207,107,.18)',
+                            border: '1px solid rgba(242,207,107,.28)',
+                            color: 'var(--warning)',
                             verticalAlign: 'middle',
                           }}
                         >

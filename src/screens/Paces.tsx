@@ -92,8 +92,8 @@ export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLab
             padding: '24px 20px',
             marginBottom: 14,
             overflow: 'hidden',
-            background: 'rgba(255,255,255,.07)',
-            border: '1px solid rgba(255,255,255,.14)',
+            background: 'rgba(255,220,196,.07)',
+            border: '1px solid rgba(255,220,196,.14)',
             backdropFilter: 'var(--glass-blur)',
             WebkitBackdropFilter: 'var(--glass-blur)',
             boxShadow: 'var(--glass-lueur)',
@@ -110,7 +110,7 @@ export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLab
           </p>
           {/* Les trois allures qui figuraient ici doublonnaient le tableau des
               zones, juste en dessous. */}
-          <div style={{ height: 1, background: 'rgba(255,255,255,.14)', margin: '20px 0' }} />
+          <div style={{ height: 1, background: 'rgba(255,220,196,.14)', margin: '20px 0' }} />
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
             <div>
@@ -128,7 +128,7 @@ export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLab
                     marginTop: 7,
                     padding: '3px 9px',
                     borderRadius: 'var(--pill)',
-                    background: 'rgba(255,255,255,.1)',
+                    background: 'rgba(255,220,196,.1)',
                     fontSize: 11.5,
                     fontWeight: 600,
                     color: 'var(--sur-ink-2)',
@@ -149,7 +149,7 @@ export function Paces({ load, pain, feedback, marathonPace, fitnessPace, goalLab
             </div>
           </div>
           <div style={{ marginTop: 14 }}>
-            <div style={{ height: 8, borderRadius: 'var(--pill)', background: 'rgba(255,255,255,.14)', overflow: 'hidden' }}>
+            <div style={{ height: 8, borderRadius: 'var(--pill)', background: 'rgba(255,220,196,.14)', overflow: 'hidden' }}>
               <div style={{ width: `${progression}%`, height: '100%', background: '#fff' }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 7, color: 'var(--sur-ink-2)', fontSize: 12, fontWeight: 600 }}>

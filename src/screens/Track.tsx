@@ -467,9 +467,9 @@ function Kpi({
             style={{
               padding: '2.5px 7px',
               borderRadius: 'var(--pill)',
-              background: 'rgba(250,178,25,.18)',
-              border: '1px solid rgba(250,178,25,.28)',
-              color: '#FFD166',
+              background: 'rgba(242,207,107,.18)',
+              border: '1px solid rgba(242,207,107,.28)',
+              color: 'var(--warning)',
               fontSize: 9,
               fontWeight: 700,
               whiteSpace: 'nowrap',

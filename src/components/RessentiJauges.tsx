@@ -48,7 +48,7 @@ export function RessentiJauges({
             fontSize: 14.5,
             fontWeight: 700,
             letterSpacing: '-.2px',
-            color: '#6ee7b7',
+            color: 'var(--good)',
           }}
         >
           <Icon name="check" size={17} />

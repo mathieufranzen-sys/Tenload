@@ -85,10 +85,7 @@ export function ActionsSeance({
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${estRepos ? 2 : 4}, 1fr)`,
-          gap: 4,
-          padding: '14px 0',
-          borderTop: '1px solid var(--border)',
-          borderBottom: '1px solid var(--border)',
+          gap: 8,
         }}
       >
         {!estRepos && (
@@ -194,10 +191,10 @@ export function ActionsSeance({
                   fontWeight: 600,
                   color: 'var(--ink)',
                   background:
-                    patch.type === r.type ? 'rgba(255,255,255,.11)' : 'rgba(255,255,255,.04)',
+                    patch.type === r.type ? 'rgba(255,220,196,.11)' : 'rgba(255,220,196,.04)',
                   border:
                     patch.type === r.type
-                      ? '1px solid rgba(255,255,255,.26)'
+                      ? '1px solid rgba(255,220,196,.26)'
                       : '1px solid var(--border)',
                 }}
               >
@@ -247,7 +244,7 @@ function MarqueType({ type }: { type: SessionType }) {
         display: 'grid',
         placeItems: 'center',
         flex: 'none',
-        background: 'rgba(255,255,255,.07)',
+        background: 'rgba(255,220,196,.07)',
       }}
     >
       <Icon name={ICONE_TYPE[type] ?? 'run'} size={16} />
@@ -312,8 +309,8 @@ function ComposeurQualite({
           fontSize: 15,
           fontWeight: 600,
           color: 'var(--ink)',
-          background: actif ? 'rgba(255,255,255,.11)' : 'rgba(255,255,255,.04)',
-          border: actif ? '1px solid rgba(255,255,255,.26)' : '1px solid var(--border)',
+          background: actif ? 'rgba(255,220,196,.11)' : 'rgba(255,220,196,.04)',
+          border: actif ? '1px solid rgba(255,220,196,.26)' : '1px solid var(--border)',
         }}
       >
         {/* L'icône suit la zone : en VO2 la séance devient un intervalle, et
@@ -395,9 +392,9 @@ function Choix({
         fontSize: 13,
         fontWeight: 650,
         fontVariantNumeric: 'tabular-nums',
-        color: actif ? '#08090b' : 'var(--ink)',
-        background: actif ? '#fff' : 'rgba(255,255,255,.05)',
-        border: actif ? '1px solid #fff' : '1px solid var(--border)',
+        color: actif ? 'var(--pale-ink)' : 'var(--ink)',
+        background: actif ? 'var(--pale)' : 'rgba(255,220,196,.05)',
+        border: actif ? '1px solid var(--pale)' : '1px solid var(--border)',
         cursor: 'pointer',
       }}
     >
@@ -406,6 +403,7 @@ function Choix({
   )
 }
 
+/** Une tuile d'action de la maquette : l'icône au-dessus, le verbe dessous. */
 function Action({
   icone,
   label,
@@ -421,41 +419,23 @@ function Action({
     <button
       onClick={onClick}
       disabled={!onClick}
+      aria-pressed={actif}
       style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 7,
-        padding: '2px 0',
+        gap: 9,
+        padding: '16px 4px 14px',
+        borderRadius: 22,
+        color: actif ? 'var(--pale-ink)' : 'var(--ink)',
+        background: actif ? 'var(--pale)' : 'var(--surface)',
+        border: `1px solid ${actif ? 'var(--pale)' : 'var(--border-2)'}`,
         opacity: onClick ? 1 : 0.35,
         cursor: onClick ? 'pointer' : 'default',
       }}
     >
-      <span
-        style={{
-          width: 46,
-          height: 46,
-          borderRadius: '50%',
-          display: 'grid',
-          placeItems: 'center',
-          color: actif ? '#08090b' : 'var(--ink)',
-          background: actif ? '#fff' : 'transparent',
-          border: actif ? '1px solid #fff' : '1px solid var(--border-2)',
-        }}
-      >
-        <Icon name={icone} size={19} />
-      </span>
-      <span
-        style={{
-          fontSize: 10.5,
-          fontWeight: 700,
-          letterSpacing: '.5px',
-          textTransform: 'uppercase',
-          color: 'var(--ink-2)',
-          textAlign: 'center',
-          lineHeight: 1.2,
-        }}
-      >
+      <Icon name={icone} size={21} style={{ strokeWidth: 1.6 }} />
+      <span style={{ fontSize: 13.5, textAlign: 'center', lineHeight: 1.2, textTransform: 'lowercase' }}>
         {label}
       </span>
     </button>
@@ -543,13 +523,13 @@ function Boutons({
           flex: 1,
           padding: 14,
           borderRadius: 'var(--pill)',
-          fontWeight: 700,
+          fontWeight: 600,
           fontSize: 15.5,
-          background: '#fff',
-          color: '#08090b',
+          background: 'var(--pale)',
+          color: 'var(--pale-ink)',
         }}
       >
-        Enregistrer
+        enregistrer
       </button>
       {effacerVisible && (
         <button
@@ -593,16 +573,16 @@ export function Alertes({ alertes }: { alertes: Alerte[] }) {
         borderRadius: 'var(--radius-sm)',
         padding: '12px 13px',
         margin: '4px 0 14px',
-        background: 'rgba(229,72,77,.12)',
-        border: '1px solid rgba(229,72,77,.32)',
+        background: 'rgba(255,107,94,.12)',
+        border: '1px solid rgba(255,107,94,.32)',
       }}
     >
-      <div style={{ fontSize: 13, fontWeight: 800, color: '#FF9A9D', marginBottom: 6 }}>
+      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--critical)', marginBottom: 6 }}>
         {alertes.length > 1
           ? `${alertes.length} contraintes ne tiennent plus`
           : 'Une contrainte ne tient plus'}
       </div>
-      <ul style={{ margin: 0, paddingLeft: 17, color: '#E4E7EB', fontSize: 13.5, lineHeight: 1.55 }}>
+      <ul style={{ margin: 0, paddingLeft: 17, color: 'var(--ink)', fontSize: 13.5, lineHeight: 1.55 }}>
         {alertes.map((a, i) => (
           <li key={i}>
             {a.texte} <span style={{ color: 'var(--ink-3)' }}>(contrainte {a.contrainte})</span>
@@ -619,16 +599,7 @@ export function Alertes({ alertes }: { alertes: Alerte[] }) {
 function Champ({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div style={{ marginBottom: 13 }}>
-      <div
-        style={{
-          fontSize: 10.5,
-          fontWeight: 700,
-          letterSpacing: '.9px',
-          textTransform: 'uppercase',
-          color: 'var(--ink-3)',
-          marginBottom: 6,
-        }}
-      >
+      <div style={{ fontSize: 14, color: 'var(--accent)', marginBottom: 7, textTransform: 'lowercase' }}>
         {label}
       </div>
       {children}
@@ -639,7 +610,7 @@ function Champ({ label, children }: { label: string; children: ReactNode }) {
 const styleChamp: React.CSSProperties = {
   width: '100%',
   padding: '12px 13px',
-  borderRadius: 'var(--radius-sm)',
+  borderRadius: 16,
   background: 'var(--surface-2)',
   border: '1px solid var(--border-2)',
   color: 'var(--ink)',

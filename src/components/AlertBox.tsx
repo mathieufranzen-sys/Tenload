@@ -2,8 +2,8 @@ import type { AdaptResult } from '../lib/adapt'
 import { Icon } from './Icon'
 
 const NIVEAU = [
-  { bg: 'rgba(12,163,12,.09)', border: 'rgba(12,163,12,.32)', ink: '#5BE05B', titre: 'Plan inchangé' },
-  { bg: 'rgba(250,178,25,.09)', border: 'rgba(250,178,25,.32)', ink: '#FFD166', titre: 'Plan adapté — vigilance' },
+  { bg: 'rgba(12,163,12,.09)', border: 'rgba(12,163,12,.32)', ink: 'var(--good)', titre: 'Plan inchangé' },
+  { bg: 'rgba(242,207,107,.09)', border: 'rgba(242,207,107,.32)', ink: 'var(--warning)', titre: 'Plan adapté — vigilance' },
   { bg: 'rgba(236,131,90,.1)', border: 'rgba(236,131,90,.35)', ink: '#FFA579', titre: 'Plan adapté — recul' },
   { bg: 'rgba(208,59,59,.12)', border: 'rgba(208,59,59,.4)', ink: '#FF8A8A', titre: 'Plan suspendu — alerte' },
 ] as const
@@ -38,7 +38,7 @@ export function AlertBox({ adapt }: { adapt: AdaptResult }) {
         {n.titre}
       </h4>
       {adapt.rules.map((r) => (
-        <p key={r.id} style={{ margin: '0 0 8px', fontSize: 14.5, lineHeight: 1.5, color: '#D6D9DE' }}>
+        <p key={r.id} style={{ margin: '0 0 8px', fontSize: 14.5, lineHeight: 1.5, color: 'var(--ink)' }}>
           <b style={{ color: 'inherit' }}>{r.title}.</b>
           <br />
           {r.action}

@@ -113,12 +113,12 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
         {statut === 'envoyé' ? (
           <div className="glass" style={{ borderRadius: 22, padding: '20px 19px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
-              <span style={{ color: '#6ee7b7', display: 'flex' }}>
+              <span style={{ color: 'var(--good)', display: 'flex' }}>
                 <Icon name="check" size={20} />
               </span>
               <b style={{ fontSize: 16.5, fontWeight: 700 }}>Code envoyé</b>
             </div>
-            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.55, color: '#D6D9DE' }}>
+            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.55, color: 'var(--ink)' }}>
               Va chercher le mail envoyé à {email}, puis recopie ici le code qu'il contient.
             </p>
 
@@ -140,7 +140,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                 style={{
                   width: '100%',
                   boxSizing: 'border-box',
-                  background: 'rgba(8,9,11,.34)',
+                  background: 'rgba(18,12,9,.34)',
                   border: `1px solid ${erreur ? 'var(--c-erreur)' : 'var(--glass-border)'}`,
                   borderRadius: 14,
                   padding: '14px 15px',
@@ -157,7 +157,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                 }}
               />
               {erreur && (
-                <p style={{ color: '#FF9A9D', fontSize: 12.5, fontWeight: 600, margin: '9px 2px 0' }}>
+                <p style={{ color: 'var(--critical)', fontSize: 12.5, fontWeight: 600, margin: '9px 2px 0' }}>
                   {erreur}
                 </p>
               )}
@@ -168,7 +168,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                   width: '100%',
                   marginTop: 14,
                   background: '#fff',
-                  color: '#08090b',
+                  color: 'var(--pale-ink)',
                   borderRadius: 'var(--pill)',
                   padding: 15,
                   font: 'inherit',
@@ -236,7 +236,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
               style={{
                 width: '100%',
                 boxSizing: 'border-box',
-                background: 'rgba(8,9,11,.34)',
+                background: 'rgba(18,12,9,.34)',
                 border: `1px solid ${erreur ? 'var(--c-erreur)' : 'var(--glass-border)'}`,
                 borderRadius: 14,
                 padding: '14px 15px',
@@ -248,7 +248,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
               }}
             />
             {erreur && (
-              <p style={{ color: '#FF9A9D', fontSize: 12.5, fontWeight: 600, margin: '9px 2px 0' }}>
+              <p style={{ color: 'var(--critical)', fontSize: 12.5, fontWeight: 600, margin: '9px 2px 0' }}>
                 {erreur}
               </p>
             )}
@@ -259,7 +259,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                 width: '100%',
                 marginTop: 14,
                 background: '#fff',
-                color: '#08090b',
+                color: 'var(--pale-ink)',
                 borderRadius: 'var(--pill)',
                 padding: 15,
                 font: 'inherit',

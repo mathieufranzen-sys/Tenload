@@ -43,7 +43,7 @@ export function StatsSeance({
   const duree = enHeures
     ? dmin === dmax
       ? formatDuration(dmin)
-      : `${formatDuration(dmin)} - ${formatDuration(dmax)}`
+      : `${formatDuration(dmin)} à ${formatDuration(dmax)}`
     : dmin === dmax
       ? `${dmin}`
       : `${dmin}-${dmax}`
@@ -93,24 +93,15 @@ function Chiffre({
   const cle = taille === 'cle'
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: cle ? 8 : 5 }}>
-      <span
-        style={{
-          fontSize: cle ? 56 : 27,
-          fontWeight: cle ? 300 : 700,
-          letterSpacing: cle ? '-2px' : '-.8px',
-          lineHeight: 1,
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
+      <span className="chiffre" style={{ fontSize: cle ? 60 : 28, lineHeight: 1 }}>
         {valeur}
       </span>
       {unite && (
         <span
           style={{
-            fontSize: cle ? 20 : 14,
+            fontSize: cle ? 18 : 14,
             fontWeight: 500,
-            color: 'var(--sur-ink-2)',
-            letterSpacing: '-.3px',
+            color: 'var(--accent)',
           }}
         >
           {unite}

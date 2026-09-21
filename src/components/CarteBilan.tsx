@@ -64,9 +64,9 @@ function Ligne({
               borderRadius: 'var(--pill)',
               marginLeft: 8,
               whiteSpace: 'nowrap',
-              background: pastille.bonne ? 'rgba(52,211,153,.18)' : 'rgba(251,191,36,.16)',
-              border: `1px solid ${pastille.bonne ? 'rgba(52,211,153,.3)' : 'rgba(251,191,36,.32)'}`,
-              color: pastille.bonne ? '#6ee7b7' : '#fcd34d',
+              background: pastille.bonne ? 'rgba(111,224,176,.18)' : 'rgba(251,191,36,.16)',
+              border: `1px solid ${pastille.bonne ? 'rgba(111,224,176,.3)' : 'rgba(251,191,36,.32)'}`,
+              color: pastille.bonne ? 'var(--good)' : '#fcd34d',
             }}
           >
             {pastille.texte}
@@ -261,7 +261,7 @@ export function CarteBilan({ bilan: b, style }: { bilan: BilanSemaine; style?: C
           borderRadius: 16,
           padding: '14px 15px',
           background: 'rgba(110,231,183,.07)',
-          border: '1px solid rgba(52,211,153,.22)',
+          border: '1px solid rgba(111,224,176,.22)',
         }}
       >
         <div style={{ ...styleBloc, margin: '0 0 8px' }}>Dans la tête, la semaine qui vient</div>

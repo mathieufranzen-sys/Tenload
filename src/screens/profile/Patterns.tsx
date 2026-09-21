@@ -79,9 +79,9 @@ export function Patterns({ carnet }: { carnet: JourCarnet[] }) {
                     textTransform: 'uppercase',
                     padding: '3px 8px',
                     borderRadius: 'var(--pill)',
-                    background: aggrave ? 'rgba(251,191,36,.16)' : 'rgba(52,211,153,.18)',
-                    border: `1px solid ${aggrave ? 'rgba(251,191,36,.32)' : 'rgba(52,211,153,.3)'}`,
-                    color: aggrave ? '#fcd34d' : '#6ee7b7',
+                    background: aggrave ? 'rgba(251,191,36,.16)' : 'rgba(111,224,176,.18)',
+                    border: `1px solid ${aggrave ? 'rgba(251,191,36,.32)' : 'rgba(111,224,176,.3)'}`,
+                    color: aggrave ? '#fcd34d' : 'var(--good)',
                   }}
                 >
                   {aggrave ? `+${formatNumber(p.ecart)}` : formatNumber(p.ecart)}

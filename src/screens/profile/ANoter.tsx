@@ -37,7 +37,7 @@ export function ANoter({
   if (seances.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '48px 8px' }}>
-        <Icon name="check" size={30} style={{ color: '#6ee7b7', strokeWidth: 2.2 }} />
+        <Icon name="check" size={30} style={{ color: 'var(--good)', strokeWidth: 2.2 }} />
         <p style={{ fontSize: 15.5, fontWeight: 650, margin: '14px 0 6px', letterSpacing: '-.3px' }}>
           Tout est noté
         </p>
@@ -86,9 +86,9 @@ export function ANoter({
                   letterSpacing: '.9px',
                   padding: '3px 8px',
                   borderRadius: 'var(--pill)',
-                  background: 'rgba(52,211,153,.18)',
-                  border: '1px solid rgba(52,211,153,.3)',
-                  color: '#6ee7b7',
+                  background: 'rgba(111,224,176,.18)',
+                  border: '1px solid rgba(111,224,176,.3)',
+                  color: 'var(--good)',
                 }}
               >
                 aujourd'hui

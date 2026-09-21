@@ -84,6 +84,12 @@ export const RANG_ZONE: Record<ZoneKey, number> = {
 }
 
 export function encreZone(zone: ZoneKey): string {
-  const t = RANG_ZONE[zone] / 5
-  return `rgba(255,255,255,${(0.22 + t * 0.78).toFixed(2)})`
+  // Du cuivre sourd de la récupération à la pêche claire des répétitions :
+  // l'échelle monte en clarté, ce qui se lit comme une intensité même sans
+  // distinguer les teintes chaudes entre elles.
+  const t = Math.min(1, RANG_ZONE[zone] / 6)
+  const de = [122, 58, 28]
+  const a = [255, 220, 194]
+  const c = de.map((v, i) => Math.round(v + (a[i] - v) * t))
+  return `rgb(${c.join(',')})`
 }

@@ -142,7 +142,7 @@ export function BarreRessenti({
             color: pct > 88 ? encre : '#fff',
             textShadow:
               pct > 78 && pct < 100
-                ? `0 0 4px ${encre === '#fff' ? 'rgba(0,0,0,.55)' : 'rgba(255,255,255,.55)'}`
+                ? `0 0 4px ${encre === '#fff' ? 'rgba(0,0,0,.55)' : 'rgba(255,220,196,.55)'}`
                 : undefined,
             textAlign: 'right',
             opacity: saisi ? 1 : 0.55,

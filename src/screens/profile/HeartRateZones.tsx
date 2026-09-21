@@ -123,7 +123,7 @@ export function HeartRateZones({ hrMax, onSave }: Props) {
           <b style={{ fontSize: 16 }}>Tes cinq zones</b>
           <span style={{ color: 'var(--ink-3)', fontSize: 12.5, fontWeight: 600 }}>
             sur {apercu} bpm
-            {apercu !== hrMax && <span style={{ color: '#FFD166' }}> · aperçu</span>}
+            {apercu !== hrMax && <span style={{ color: 'var(--warning)' }}> · aperçu</span>}
           </span>
         </div>
         <div style={{ marginTop: 10 }}>

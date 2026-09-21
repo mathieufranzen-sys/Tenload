@@ -147,15 +147,14 @@ export function DecoupageSeance({
                   marginLeft: 14,
                   position: 'relative',
                   zIndex: 2,
-                  padding: '4px 11px',
+                  padding: '3px 11px',
                   borderRadius: 'var(--pill)',
-                  background: 'var(--bg)',
+                  background: 'var(--surface)',
                   border: '1px solid var(--border)',
-                  fontSize: 10.5,
-                  fontWeight: 800,
-                  letterSpacing: '.9px',
-                  textTransform: 'uppercase',
-                  color: 'var(--ink-2)',
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  textTransform: 'lowercase',
+                  color: 'var(--accent)',
                 }}
               >
                 {titre}
@@ -185,15 +184,14 @@ export function DecoupageSeance({
                     width: 52,
                     display: 'grid',
                     placeItems: 'center',
-                    background: 'rgba(255,255,255,.05)',
+                    background: 'rgba(255,220,196,.05)',
                     borderLeft: '1px solid var(--border)',
                   }}
                 >
                   <span
                     style={{
-                      fontSize: 19,
-                      fontWeight: 750,
-                      letterSpacing: '-.4px',
+                      fontSize: 22,
+                      fontFamily: 'var(--font-display)',
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >
@@ -247,7 +245,7 @@ function Ligne({
         <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--ink-2)', lineHeight: 1.25 }}>
           {seg.libelle}
         </div>
-        <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-.3px', marginTop: 2 }}>
+        <div style={{ fontSize: 17, fontWeight: 600, marginTop: 2 }}>
           {seg.quantite}
           {allure && (
             <>
