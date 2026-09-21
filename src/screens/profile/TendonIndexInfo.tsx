@@ -1,3 +1,4 @@
+import { TEINTE_BANDE } from '../../lib/teintes'
 import { BANDS, type Band } from '../../lib/tendonIndex'
 
 const TERMES: Array<{ nom: string; poids: string; texte: string }> = [
@@ -44,7 +45,7 @@ export function TendonIndexInfo({ idx, band }: { idx: number; band: Band }) {
         <p style={{ color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, margin: '0 0 14px' }}>
           Une note de 0 à 100 recalculée à chaque saisie. Elle pilote le programme toute seule : les
           séances se transforment sans que tu aies à demander. Aujourd'hui :{' '}
-          <b style={{ color: band.color }}>
+          <b style={{ color: TEINTE_BANDE[band.key] }}>
             {idx} sur 100, {band.name.toLowerCase()}
           </b>
           .

@@ -3,6 +3,7 @@
  * Porté depuis reference/tendo-v3.html (`idxChart`).
  */
 import { bandOf } from '../../lib/tendonIndex'
+import { TEINTE_BANDE } from '../../lib/teintes'
 import { indicesEtiquettes } from './etiquettes'
 import { formatDay } from '../../lib/dates'
 
@@ -60,11 +61,11 @@ export function IndexChart({ series, now }: { series: Array<{ day: string; idx: 
 
       {series.map((r, i) =>
         i > cut ? null : (
-          <circle key={i} cx={x(i)} cy={y(r.idx)} r={2.6} fill={bandOf(r.idx).color} stroke="var(--surface)" strokeWidth={1.6} />
+          <circle key={i} cx={x(i)} cy={y(r.idx)} r={2.6} fill={TEINTE_BANDE[bandOf(r.idx).key]} stroke="var(--surface)" strokeWidth={1.6} />
         ),
       )}
       {cut >= 0 && (
-        <circle cx={x(cut)} cy={y(series[cut].idx)} r={5} fill={bandOf(series[cut].idx).color} stroke="var(--surface)" strokeWidth={2.5} />
+        <circle cx={x(cut)} cy={y(series[cut].idx)} r={5} fill={TEINTE_BANDE[bandOf(series[cut].idx).key]} stroke="var(--surface)" strokeWidth={2.5} />
       )}
 
       {series.map((r, i) =>

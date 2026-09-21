@@ -272,9 +272,9 @@ export function Track({
           onOuvrirProfil={onOuvrirProfil}
         />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
           <Kpi
-            label="Charge vs semaine dernière"
+            label="charge vs semaine dernière"
             valeur={idxEcart == null ? '—' : `${idxEcart > 0 ? '+' : idxEcart < 0 ? '−' : ''}${Math.abs(idxEcart)}`}
             suffix={idxEcart == null ? '' : ' pts'}
             couleur={
@@ -283,23 +283,23 @@ export function Track({
             detail="moyenne de l'indice sur 7 jours"
           />
           <Kpi
-            label="Volume course · 7 j"
+            label="volume course · 7 jours"
             valeur={formatNumber(km7)}
             suffix=" km"
             detail={`${formatNumber(km28)} km sur 28 j`}
           />
           <Kpi
-            label="Santé du tendon"
+            label="santé du tendon"
             valeur={sante.label}
             suffix=""
             couleur={sante.couleur}
             detail="douleur des 30 derniers jours"
           />
           <Kpi
-            label="Séances notées"
+            label="séances notées"
             valeur={`${feedback.length}`}
             suffix={` / ${totalAttendu}`}
-            detail={notesEnRetard > 0 ? 'Aller les noter' : 'depuis le 10 août'}
+            detail={notesEnRetard > 0 ? 'aller les noter' : 'depuis le 10 août'}
             tag={notesEnRetard > 0 ? `${notesEnRetard} en retard` : undefined}
             onClick={notesEnRetard > 0 ? onVoirANoter : undefined}
           />
@@ -404,7 +404,7 @@ function Kpi({
   detail: string
   couleur?: string
   /**
-   * Étiquette d'alerte, sur la MÊME ligne que le chiffre : elle le qualifie,
+   * Étiquette d'alerte, sur la MÊME ligne que le libellé : elle le qualifie,
    * l'empiler dessous en faisait une information de plus alors que c'en est
    * la nuance. « 12 / 310 » et « 3 en retard » se lisent ensemble ou pas.
    */
@@ -415,84 +415,31 @@ function Kpi({
   const Balise = onClick ? 'button' : 'div'
   return (
     <Balise
-      className="glass"
+      className="carte"
       onClick={onClick}
       style={{
-        borderRadius: 17,
-        padding: '11px 12px 10px',
+        padding: '16px 16px 15px',
         width: '100%',
         textAlign: 'left',
         color: 'inherit',
         cursor: onClick ? 'pointer' : 'default',
-        // Le chevron s'aligne sur le libellé, en haut : les tuiles n'ont pas
-        // toutes la même hauteur.
         display: 'block',
+        borderColor: couleur ? `color-mix(in srgb, ${couleur} 45%, transparent)` : undefined,
       }}
     >
-      <div
-        style={{
-          fontSize: 8.5,
-          fontWeight: 700,
-          letterSpacing: '.7px',
-          textTransform: 'uppercase',
-          color: 'var(--sur-ink-2)',
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          flexWrap: 'wrap',
-          gap: '4px 7px',
-          marginTop: 5,
-        }}
-      >
-        <span
-          style={{
-            fontSize: 19,
-            fontWeight: 650,
-            letterSpacing: '-.5px',
-            lineHeight: 1,
-            color: couleur,
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+        <span className="chiffre" style={{ fontSize: valeur.length > 6 ? 28 : 38, lineHeight: 1, color: couleur }}>
           {valeur}
-          <small style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--sur-ink-2)' }}>{suffix}</small>
         </span>
-        {tag && (
-          <span
-            style={{
-              padding: '2.5px 7px',
-              borderRadius: 'var(--pill)',
-              background: 'rgba(242,207,107,.18)',
-              border: '1px solid rgba(242,207,107,.28)',
-              color: 'var(--warning)',
-              fontSize: 9,
-              fontWeight: 700,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {tag}
-          </span>
-        )}
+        {suffix && <span style={{ fontSize: 15, color: 'var(--accent)' }}>{suffix.trim()}</span>}
       </div>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 4,
-          fontSize: 9,
-          fontWeight: 500,
-          marginTop: 5,
-          color: 'var(--sur-ink-3)',
-          lineHeight: 1.35,
-        }}
-      >
+      <div style={{ fontSize: 13.5, marginTop: 8, color: tag ? 'var(--warning)' : 'var(--accent)', lineHeight: 1.3 }}>
+        {label}
+        {tag && ` · ${tag}`}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, marginTop: 3, color: 'var(--sur-ink-3)', lineHeight: 1.35 }}>
         <span style={{ flex: 1, minWidth: 0 }}>{detail}</span>
-        {onClick && <Icon name="chevronRight" size={12} style={{ flex: 'none', strokeWidth: 2 }} />}
+        {onClick && <Icon name="chevronRight" size={13} style={{ flex: 'none', strokeWidth: 2 }} />}
       </div>
     </Balise>
   )
@@ -514,13 +461,15 @@ function Viz({
   children: ReactNode
 }) {
   return (
-    <section className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
-      <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600, letterSpacing: '-.25px' }}>{titre}</h2>
-      <p style={{ margin: '0 0 12px', color: 'var(--sur-ink-2)', fontSize: 12.5, lineHeight: 1.5 }}>{legende}</p>
+    <section className="carte" style={{ padding: '18px 18px', marginBottom: 12 }}>
+      <h2 className="display" style={{ margin: '0 0 6px', fontSize: 22, lineHeight: 1.2, textTransform: 'lowercase' }}>
+        {titre}
+      </h2>
+      <p style={{ margin: '0 0 14px', color: 'var(--sur-ink-2)', fontSize: 13.5, lineHeight: 1.5 }}>{legende}</p>
       {controle && <div style={{ marginBottom: 14 }}>{controle}</div>}
       {/* Toile sombre sous le tracé : sur le verre seul, les bandes de fond de
           l'indice et la palette saturée se délavent contre le dégradé. */}
-      <div style={{ background: 'rgba(6,7,10,.5)', borderRadius: 13, padding: '10px 8px 4px' }}>{children}</div>
+      <div style={{ background: 'rgba(10,6,4,.4)', borderRadius: 16, padding: '10px 8px 4px' }}>{children}</div>
       {(legendeCouleurs || note) && (
         <div
           style={{
@@ -538,17 +487,17 @@ function Viz({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 5,
-                fontSize: 11,
+                fontSize: 13,
                 fontWeight: 500,
                 color: 'var(--sur-ink-2)',
               }}
             >
-              <b style={{ width: 8, height: 8, borderRadius: 2, background: l.couleur, flex: 'none' }} />
+              <b style={{ width: 14, height: 3, borderRadius: 2, background: l.couleur, flex: 'none' }} />
               {l.label}
             </span>
           ))}
           {note && (
-            <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--sur-ink-3)', marginLeft: 'auto' }}>
+            <span style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--sur-ink-3)', marginLeft: 'auto' }}>
               {note}
             </span>
           )}

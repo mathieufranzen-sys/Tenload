@@ -52,7 +52,7 @@ export function LoadChart({ rows }: { rows: StackRow[] }) {
             un relevé. La couleur reste celle de la discipline, la texture dit
             que c'est le plan qui parle. */}
         <pattern id="projete" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <rect width="4" height="4" fill="rgba(6,7,10,.55)" />
+          <rect width="4" height="4" fill="rgba(18,12,9,.55)" />
           <line x1="0" y1="0" x2="0" y2="4" stroke="rgba(255,220,196,.5)" strokeWidth="2" />
         </pattern>
       </defs>

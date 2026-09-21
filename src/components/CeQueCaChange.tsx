@@ -1,7 +1,7 @@
 /**
  * « Ce que ça change aujourd'hui » : ce que l'indice fait au plan du jour.
  *
- * Remplace le bandeau `AlertBox` sur l'écran Aujourd'hui. Il ne se montrait
+ * Remplace l'ancien bandeau des règles actives (AlertBox, supprimé). Il ne se montrait
  * qu'en cas de règle déclenchée, si bien qu'un jour normal l'écran ne disait
  * jamais que le plan tenait, et encore moins à partir d'où il cesserait de
  * tenir. La carte dit les deux : ce qui s'applique, puis le prochain seuil et
