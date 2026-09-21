@@ -1,37 +1,61 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   Design system Tendo
+   Design system Tenload, version « braise »
 
-   Repris tel quel de la version HTML validée. Les dégradés par type de séance
-   viennent de Runna : c'est le repère visuel le plus utile de l'app, on garde
-   la sémantique (violet = sortie longue, jaune-vert = facile, rouge-orange =
-   intervalles, bleu = renforcement).
+   Refondu le 21 septembre 2026 d'après la maquette Claude Design de Mathieu,
+   passée de violet à orange : fond sombre qui tire vers l'orange, accent
+   orange, typographie à empattements pour les titres et les chiffres.
 
-   La palette de data-viz a été validée par le validateur de contraste et de
-   déficience de vision des couleurs : trois séries maximum par graphique,
-   écart CVD minimum 9,4 sur la surface sombre #171A20.
+   La couleur a deux sens et deux seulement. L'orange est la voix de l'app
+   (accent, sélection, boutons). Les cinq teintes de bande (vert, jaune,
+   orange, rouge, noir) ne disent que la charge du tendon, et n'apparaissent
+   que là où elle est lue : jauge, pastilles de bande, calendrier passé.
    ══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ─── surfaces et encres ─────────────────────────────────────────────── */
-  --bg: #08090b;
-  --surface: #171a20;
-  --surface-2: #1f232b;
-  --surface-3: #282d37;
-  --ink: #ffffff;
-  --ink-2: #8f949e;
-  --ink-3: #666b75;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-2: rgba(255, 255, 255, 0.12);
+  /* ─── surfaces et encres ─────────────────────────────────────────────────
+     Refonte « braise » du 21 septembre 2026 : un noir qui tire vers l'orange
+     plutôt qu'un noir neutre. Toutes les surfaces sont prises dans la même
+     teinte, seule la clarté change, pour que les cartes se lisent comme des
+     épaisseurs d'une même matière et pas comme des pièces rapportées. */
+  --bg: #120c09;
+  --surface: #1d1511;
+  --surface-2: #261b16;
+  --surface-3: #33251d;
+  --ink: #fbf1e8;
+  --ink-2: #b9a698;
+  --ink-3: #85736a;
+  --border: rgba(255, 214, 186, 0.08);
+  --border-2: rgba(255, 214, 186, 0.14);
+
+  /* ─── accent ─────────────────────────────────────────────────────────────
+     Trois rôles, trois valeurs. `--accent` écrit les métadonnées et les
+     chiffres secondaires, `--pale` remplit les boutons principaux et la
+     sélection (l'équivalent du rose pâle de la maquette), `--braise` est le
+     fond profond des cartes de tête et du mot du coach. */
+  --accent: #ff9d5c;
+  --accent-2: #e8742f;
+  --accent-doux: #c98a62;
+  --pale: #ffdcc2;
+  --pale-ink: #3a1804;
+  --braise: #3b1a0b;
+  --braise-2: #26110a;
 
   /* ─── formes ─────────────────────────────────────────────────────────── */
-  --radius: 18px;
-  --radius-sm: 12px;
-  --radius-lg: 22px;
+  --radius: 26px;
+  --radius-sm: 16px;
+  --radius-lg: 32px;
   --pill: 100px;
 
-  /* ─── typographie ────────────────────────────────────────────────────── */
-  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter,
-    system-ui, sans-serif;
+  /* ─── typographie ────────────────────────────────────────────────────────
+     Fraunces porte tout ce qui se lit comme un titre ou un chiffre : les
+     titres d'écran, les grands nombres, le mot du coach en italique. Ses
+     empattements « doux » (axe SOFT) évitent l'air de journal d'un Didot sur
+     un fond sombre. Le texte courant et les étiquettes restent dans une
+     linéale, Instrument Sans : à 12 px sur un écran de téléphone, un
+     empattement se brouille. */
+  --font: 'Instrument Sans Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui,
+    sans-serif;
+  --font-display: 'Fraunces Variable', 'Iowan Old Style', Georgia, serif;
   --fs-hero: 30px;
   --fs-title: 27px;
   --fs-card: 20.5px;
@@ -54,116 +78,66 @@
   --dur-fast: 0.15s;
   --dur: 0.3s;
 
-  /* ─── encre d'erreur ─────────────────────────────────────────────────
-     Les douze dégradés et teintes par type de séance sont partis : la couleur
-     est rendue à la charge du tendon, seule information de l'app qui ait un
-     sens de lecture. La nature d'une séance se dit désormais par son icône de
-     discipline et son échelle d'intensité (voir src/lib/seanceStyle.ts).
-     Seul le rouge survit, pour ce qu'il a toujours vraiment servi ici : les
-     états d'erreur de formulaire, qui empruntaient le rouge des intervalles. */
-  --c-erreur: #e5433d;
+  --c-erreur: #ff6b5e;
 
-  /* ─── data-viz : palette validée pour surface sombre ─────────────────── */
-  --series-1: #3987e5;
-  --series-2: #d95926;
-  --series-3: #199e70;
-  --grid: #23262c;
-  --axis: #33373f;
-  --muted: #898781;
+  /* ─── data-viz ───────────────────────────────────────────────────────── */
+  --series-1: #ff9d5c;
+  --series-2: #ffdcc2;
+  --series-3: #6fe0b0;
+  --grid: #2a1f19;
+  --axis: #3a2b22;
+  --muted: #8f7d72;
 
   /* ─── graphiques du Suivi ────────────────────────────────────────────────
-     Triade saturée posée sur un fond très sombre. Les trois teintes sont
-     écartées en luminosité autant qu'en teinte (cyan clair, magenta moyen,
-     ambre clair) : sur une déficience rouge-vert, c'est l'écart de clarté qui
-     continue de séparer les courbes quand la teinte se brouille. La courbe de
-     fin de journée est en plus tracée plus épaisse — c'est le signal qui
-     compte le plus chez Mathieu, il doit se lire en premier. */
-  --chart-1: #22d3ee;
-  --chart-2: #f472b6;
-  --chart-3: #fbbf24;
-  /* L'indice n'a pas de teinte propre : ce sont les bandes de fond qui
-     portent la gravité, la ligne ne porte que la valeur. */
-  --chart-ligne: #e8eaed;
-  --chart-grille: rgba(255, 255, 255, 0.09);
-  --chart-texte: rgba(255, 255, 255, 0.45);
-
-  /* Les teintes des cinq bandes ne sont plus dupliquées ici : elles vivent
-     dans `BANDS` (tendonIndex.ts) et dans les camaïeux `[data-band]` du bas de
-     ce fichier. Ces variables n'étaient référencées nulle part et donnaient
-     une troisième version des mêmes couleurs, déjà périmée. */
+     Trois courbes de douleur : réveil, effort, soir. Elles restent séparées
+     par la clarté autant que par la teinte (pêche très claire, orange moyen,
+     cuivre sombre), ce qui tient sur une déficience rouge-vert où les teintes
+     chaudes se confondent. Le soir reste le trait le plus épais. */
+  --chart-1: #ffdcc2;
+  --chart-2: #ff9d5c;
+  --chart-3: #c2602a;
+  --chart-ligne: #fbf1e8;
+  --chart-grille: rgba(255, 214, 186, 0.1);
+  --chart-texte: rgba(255, 236, 222, 0.5);
 
   /* ─── état ───────────────────────────────────────────────────────────── */
-  --good: #0ca30c;
-  --warning: #fab219;
-  --serious: #ec835a;
-  --critical: #d03b3b;
+  --good: #6fe0b0;
+  --warning: #f2cf6b;
+  --serious: #ff9b52;
+  --critical: #ff6b5e;
 
-  /* ─── verre dépoli ───────────────────────────────────────────────────────
-     Les cartes posées sur le dégradé de l'écran Aujourd'hui. Le liseré clair
-     du haut donne l'épaisseur : sans lui la carte a l'air d'un simple voile. */
-  --glass: rgba(255, 255, 255, 0.11);
-  --glass-fort: rgba(255, 255, 255, 0.13);
-  --glass-border: rgba(255, 255, 255, 0.17);
-  --glass-blur: blur(22px) saturate(1.5);
-  --glass-lueur: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  /* ─── cartes ─────────────────────────────────────────────────────────────
+     Les cartes ne sont plus du verre sur un dégradé coloré mais des plaques
+     pleines, légèrement plus claires que le fond : la maquette pose tout sur
+     un fond sombre uni, le flou n'aurait rien à flouter. Les noms restent,
+     pour que chaque écran bascule sans être réécrit. */
+  --glass: rgba(255, 220, 196, 0.055);
+  --glass-fort: rgba(255, 220, 196, 0.08);
+  --glass-border: rgba(255, 214, 186, 0.1);
+  --glass-blur: blur(20px) saturate(1.2);
+  --glass-lueur: inset 0 1px 0 rgba(255, 236, 222, 0.05);
 
-  /* ─── typographie du dégradé ─────────────────────────────────────────────
-     Sur le dégradé, les encres grises de l'app (--ink-2, --ink-3) deviennent
-     sales : on passe par du blanc transparent, qui prend la couleur du fond. */
-  --sur-ink-2: rgba(255, 255, 255, 0.68);
-  --sur-ink-3: rgba(255, 255, 255, 0.55);
+  --sur-ink-2: rgba(255, 236, 222, 0.68);
+  --sur-ink-3: rgba(255, 236, 222, 0.5);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   Camaïeux du dégradé d'accueil
+   Teintes des cinq bandes
 
-   Six teintes d'une même famille par bande, pas une couleur unique déclinée
-   en opacité : c'est ce qui donne la profondeur. --m6 est le fond du bas, il
-   sert aussi de couleur d'écran derrière le dégradé.
+   Les couleurs de la maquette, où la bande jaune est enfin jaune (elle était
+   bleue dans la version précédente, pour ne pas se confondre avec l'ambre de
+   l'orange). `BANDS` dans tendonIndex.ts garde ses propres valeurs : c'est
+   un fichier du modèle, la refonte ne le touche pas. L'interface lit
+   celles-ci, via `teinteBande` (src/lib/teintes.ts).
 
-   Le camaïeu de chaque bande a changé de teinte de départ (vert, bleu, ambre,
-   rouge corail, violet) mais garde le même principe : m2 est la teinte de
-   référence, c'est elle qui donne aussi la couleur d'accent de la bande
-   (`color` dans `tendonIndex.ts`, réutilisée par le point du graphique
-   d'indice sur l'écran Suivi) — fond et accent restent la même couleur.
+   L'orange de bande est plus jaune et plus clair que l'accent de l'app : les
+   deux se côtoient sur l'écran Aujourd'hui, ils ne doivent pas se prendre
+   l'un pour l'autre.
    ══════════════════════════════════════════════════════════════════════════ */
-[data-band='vert'] {
-  --m1: #a7f3d0;
-  --m2: #34d399;
-  --m3: #047857;
-  --m4: #6ee7b7;
-  --m5: #064e3b;
-  --m6: #04140e;
-}
-[data-band='jaune'] {
-  --m1: #bfdbfe;
-  --m2: #4e8cff;
-  --m3: #1d4ed8;
-  --m4: #93c5fd;
-  --m5: #1e3a8a;
-  --m6: #05070f;
-}
-[data-band='orange'] {
-  --m1: #fde68a;
-  --m2: #f5b32e;
-  --m3: #b45309;
-  --m4: #fcd34d;
-  --m5: #78350f;
-  --m6: #170f02;
-}
-[data-band='rouge'] {
-  --m1: #fecaca;
-  --m2: #ff5a46;
-  --m3: #b91c1c;
-  --m4: #fb7185;
-  --m5: #7f1d1d;
-  --m6: #170504;
-}
-[data-band='noir'] {
-  --m1: #e9d5ff;
-  --m2: #a855f7;
-  --m3: #7e22ce;
-  --m4: #d946ef;
-  --m5: #4c1d95;
-  --m6: #0f0518;
+:root {
+  --bande-vert: #6fe0b0;
+  --bande-jaune: #f2cf6b;
+  --bande-orange: #ffb45c;
+  --bande-rouge: #ff6b5e;
+  --bande-noir: #0a0605;
 }

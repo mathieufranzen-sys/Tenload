@@ -15,7 +15,7 @@ import {
   addDays,
   daysBetween,
   formatDay,
-  formatDayLong,
+  formatNumber,
   today as todayISO,
   weekdayIndex,
 } from '../lib/dates'
@@ -29,10 +29,12 @@ import { sessionLoad, type ActivityRow } from '../lib/load'
 import type { FeedbackRow } from '../lib/buildPain'
 import { slotsParJour, verifierContraintes, type EcartRow } from '../lib/overrides'
 import { SessionCard } from '../components/SessionCard'
-import { AlertBox } from '../components/AlertBox'
-import { JournalDuJour } from '../components/JournalDuJour'
+import { CarteCarnet, PageCarnet } from '../components/JournalDuJour'
+import { CarteCharge } from '../components/CarteCharge'
+import { CeQueCaChange } from '../components/CeQueCaChange'
+import { SubPage } from '../components/SubPage'
+import { ProfileButton } from '../components/ProfileButton'
 import { MeshBackground } from '../components/MeshBackground'
-import { TendonArc } from '../components/TendonArc'
 import { InsightTiles } from '../components/InsightTiles'
 import { SessionHero } from '../components/SessionHero'
 import { ChargeSheet } from '../components/ChargeSheet'
@@ -40,7 +42,7 @@ import { Icon } from '../components/Icon'
 import { CarteCoach } from '../components/CarteCoach'
 import { CarteBilan } from '../components/CarteBilan'
 import { bilanSemaine, type FaitsBilan, type SeanceBilan } from '../lib/bilan'
-import { EnteteEcran } from '../components/EnteteEcran'
+import type { SeanceANoter } from '../lib/aNoter'
 
 const plan = planJson as unknown as Plan
 
@@ -99,6 +101,10 @@ interface Props {
    */
   onOuvrirSeance?: (seance: SeancePlanifiee) => void
   onOuvrirProfil: () => void
+  /** Les séances sans ressenti, calculées une fois dans App (voir aNoter.ts). */
+  aNoter?: SeanceANoter[]
+  /** Mène à la page « Séances à noter ». */
+  onVoirANoter?: () => void
 }
 
 export function Today({
@@ -114,6 +120,8 @@ export function Today({
   onVoirSuivi,
   onOuvrirSeance,
   onOuvrirProfil,
+  aNoter = [],
+  onVoirANoter,
 }: Props) {
   const now = todayISO()
   const A = useMemo(
@@ -121,6 +129,8 @@ export function Today({
     [load, pain, feedback, now, attestes],
   )
   const [calculOuvert, setCalculOuvert] = useState(false)
+  const [carnetOuvert, setCarnetOuvert] = useState(false)
+  const [bilanOuvert, setBilanOuvert] = useState(false)
 
   // Le jour consulté. Il recule jusqu'à 28 jours, la fenêtre du modèle, et ne
   // dépasse jamais aujourd'hui : on ne saisit pas la raideur d'un réveil qui
@@ -492,241 +502,179 @@ export function Today({
 
   const jRace = daysBetween(now, plan.meta.raceDate)
   const jDebut = daysBetween(now, debutPlan)
-  const sousTitre = formatDayLong(jour)
+
+  const veille = A.byDate[addDays(jour, -1)]
+  const ecartVeille =
+    detail.painInconnue || !veille || veille.painInconnue ? null : detail.idx - veille.idx
+  const semaineAffichee = plan.weeks.find((w) => jour >= w.monday && jour <= addDays(w.monday, 6))
+  const bloc = semaineAffichee && plan.blocs.find((b) => b.id === semaineAffichee.bloc)
+  const carnet = duJour.map((x) => ({ x, fb: feedbackDe(x) ?? null }))
 
   return (
-    // Le dégradé court sur toute la page, pas seulement sur le premier écran :
-    // c'est ce qui donne au verre dépoli quelque chose à flouter jusqu'en bas.
-    <div style={{ position: 'relative', maxWidth: 'var(--shell-max)', margin: '0 auto', paddingBottom: 90 }}>
+    <div style={{ position: 'relative', maxWidth: 'var(--shell-max)', margin: '0 auto', paddingBottom: 110 }}>
       <MeshBackground band={bande.key} />
 
-      {/* ─── premier écran : insights, indice, séance ──────────────────── */}
-      <section
-        style={{
-          position: 'relative',
-          zIndex: 5,
-          minHeight: '100dvh',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: '0 var(--page-x)',
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <EnteteEcran
-            titre={avantPlan ? 'Bientôt' : estAujourdhui ? "Aujourd'hui" : titreJour(jour, now)}
-            contexte={
-              <>
-                {sousTitre[0].toUpperCase() + sousTitre.slice(1)} ·{' '}
-                {avantPlan ? `J-${jDebut} avant la semaine 1` : `J-${jRace} avant Paris`}
-              </>
-            }
-            onOuvrirProfil={onOuvrirProfil}
+      <div style={{ position: 'relative', zIndex: 5, padding: '0 var(--page-x)' }}>
+        <EnteteJour
+          surtitre={
+            avantPlan
+              ? `J-${jDebut} avant la semaine 1`
+              : `${semaineAffichee ? `semaine ${semaineAffichee.n} / ${plan.weeks.length}` : ''}${bloc ? ` · ${bloc.name.toLowerCase()}` : ''} · J-${jRace} avant Paris`
+          }
+          titre={sousTitreLong(jour)}
+          relatif={avantPlan ? 'bientôt' : estAujourdhui ? null : titreJour(jour, now).toLowerCase()}
+          jour={jour}
+          now={now}
+          plusAncien={plusAncien}
+          onDecaler={decaler}
+          onAujourdhui={() => setJour(now)}
+          onOuvrirProfil={onOuvrirProfil}
+        />
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <CarteCharge
+            detail={detail}
+            bande={bande}
+            ecartVeille={ecartVeille}
+            onCalcul={() => setCalculOuvert(true)}
           />
 
-          <NavigationJour
-            jour={jour}
-            now={now}
-            plusAncien={plusAncien}
-            onDecaler={decaler}
-            onAujourdhui={() => setJour(now)}
-          />
+          {detail.stale && !detail.painInconnue && (
+            <Note>Aucune douleur saisie depuis 24 h : l'indice tourne sur une estimation.</Note>
+          )}
+
+          {estAujourdhui && <CeQueCaChange adapt={A} bande={bande} inconnu={detail.painInconnue} />}
+
+          {estAujourdhui && detail.chargeInconnue && (
+            <ChargeNonAttestee aNoter={aNoter} onVoirANoter={onVoirANoter} />
+          )}
+
+          {restantes.length ? (
+            <SessionHero
+              session={restantes[0].s}
+              marathonPace={marathonPace}
+              quand={estAujourdhui ? "Aujourd'hui" : formatDay(jour)}
+              rang={{ n: duJour.indexOf(restantes[0]) + 1, total: duJour.length }}
+              onClick={onOuvrirSeance && (() => onOuvrirSeance(restantes[0]))}
+            />
+          ) : (
+            <div className="carte" style={{ padding: '18px 18px', display: 'flex', gap: 14, alignItems: 'center' }}>
+              <span
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: '50%',
+                  background: faites.length ? 'rgba(111,224,176,.14)' : 'var(--surface-3)',
+                  color: faites.length ? 'var(--good)' : 'var(--accent)',
+                  display: 'grid',
+                  placeItems: 'center',
+                  flex: 'none',
+                }}
+              >
+                <Icon name={faites.length ? 'check' : 'rest'} />
+              </span>
+              <div>
+                <b className="display" style={{ fontSize: 21, fontWeight: 400 }}>
+                  {avantPlan
+                    ? 'Le plan commence le 10 août'
+                    : faites.length
+                      ? faites.length > 1
+                        ? `${faites.length} séances notées`
+                        : 'Séance notée'
+                      : estAujourdhui
+                        ? "Rien au programme aujourd'hui"
+                        : 'Rien au programme ce jour-là'}
+                </b>
+                <div style={{ color: 'var(--sur-ink-2)', fontSize: 14, marginTop: 2 }}>
+                  {avantPlan
+                    ? 'Semaine 1 : amorce, sans sortie longue.'
+                    : faites.length
+                      ? estAujourdhui
+                        ? "C'est fait pour aujourd'hui. Le détail est plus bas."
+                        : 'La journée est complète. Le détail est plus bas.'
+                      : estAujourdhui
+                        ? "Profites-en pour t'étirer."
+                        : 'Journée de repos jambes.'}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {restantes.slice(1).map((x, i) => (
+            <SessionCard
+              key={i}
+              session={x.s}
+              marathonPace={marathonPace}
+              onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
+            />
+          ))}
+
+          {faites.map((x, i) => (
+            <SessionCard
+              key={`f${i}`}
+              session={x.s}
+              marathonPace={marathonPace}
+              feedback={feedbackDe(x)}
+              onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
+            />
+          ))}
 
           {/* Les compteurs parlent de la semaine en cours : les afficher en
               relisant un jour passé laisserait croire qu'ils le concernent. */}
           {estAujourdhui && (
-            <div style={{ marginTop: 16 }}>
-              <InsightTiles insights={insights} />
-            </div>
+            <InsightTiles
+              insights={insights}
+              indice={detail.painInconnue ? null : detail.idx}
+              onCalcul={() => setCalculOuvert(true)}
+            />
           )}
 
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '26px 0',
-            }}
-          >
-            {/* Sans douleur saisie depuis plus de quatre jours, la composante
-                douleur vaut zéro. Comme elle pèse 85 des 100 points, l'indice
-                affiche un vert rassurant alors qu'on ne sait rien. On montre
-                l'arc à vide plutôt qu'un chiffre faux. */}
-            <TendonArc value={detail.painInconnue ? 0 : detail.idx} />
+          {journalActif && (
+            <CarteCarnet day={jour} now={now} seances={carnet} onOuvrir={() => setCarnetOuvert(true)} />
+          )}
 
-            {/* Le chiffre remonte dans la courbe : c'est ce qui fait tenir
-                l'arc et la valeur comme un seul objet plutôt que deux. */}
-            <div style={{ marginTop: -66, textAlign: 'center' }}>
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: '1.5px',
-                  textTransform: 'uppercase',
-                  color: 'var(--sur-ink-2)',
-                }}
-              >
-                Charge du tendon
-              </div>
-              <div
-                style={{
-                  fontSize: 88,
-                  fontWeight: 300,
-                  letterSpacing: '-3px',
-                  lineHeight: 0.92,
-                  marginTop: 2,
-                  fontVariantNumeric: 'tabular-nums',
-                  // Un tiret à cette taille se lit comme une barre pleine, pas
-                  // comme une absence. Le point d'interrogation dit la même
-                  // chose et se reconnaît tout de suite.
-                  opacity: detail.painInconnue ? 0.5 : 1,
-                }}
-              >
-                {detail.painInconnue ? '?' : detail.idx}
-              </div>
-              <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-.3px', marginTop: 6 }}>
-                {detail.painInconnue ? 'Je ne sais pas' : bande.headline}
-              </div>
-              <p
-                style={{
-                  fontSize: 12.5,
-                  fontWeight: 500,
-                  color: 'var(--sur-ink-2)',
-                  lineHeight: 1.45,
-                  margin: '7px auto 0',
-                  maxWidth: '34ch',
-                }}
-              >
-                {detail.painInconnue
-                  ? `Aucune douleur saisie depuis ${detail.joursSansDouleur ?? 'plus de 60'} jours. La charge mécanique, elle, est connue : ${Math.round(detail.ratio + detail.freshness + detail.monotony)} points sur 58. Note ta raideur au réveil et l'indice redevient lisible.`
-                  : bande.detail}
-              </p>
-            </div>
-
-            {/* Le détail chiffré vit dans la feuille : sur l'écran, un seul
-                badge, pour ne pas concurrencer la lecture de l'indice. */}
+          {estAujourdhui && bilan && (
             <button
-              onClick={() => setCalculOuvert(true)}
-              className="glass"
+              type="button"
+              onClick={() => setBilanOuvert(true)}
+              className="carte"
               style={{
-                marginTop: 20,
-                padding: '8px 14px',
-                borderRadius: 'var(--pill)',
-                fontSize: 12,
-                fontWeight: 600,
-                color: 'var(--ink)',
-                display: 'inline-flex',
+                display: 'flex',
                 alignItems: 'center',
-                gap: 7,
-                cursor: 'pointer',
+                gap: 14,
+                padding: '16px 16px 16px 20px',
+                textAlign: 'left',
               }}
             >
-              Calcul de la charge
-              <Icon name="chevronRight" size={13} style={{ opacity: 0.7 }} />
-            </button>
-
-            {detail.stale && !detail.painInconnue && (
-              <Note>Aucune douleur saisie depuis 24 h : l'indice tourne sur une estimation.</Note>
-            )}
-          </div>
-
-          <div style={{ paddingBottom: 18 }}>
-            {restantes.length ? (
-              <SessionHero
-                session={restantes[0].s}
-                marathonPace={marathonPace}
-                quand={estAujourdhui ? "Aujourd'hui" : formatDay(jour)}
-                onClick={onOuvrirSeance && (() => onOuvrirSeance(restantes[0]))}
-              />
-            ) : (
-              <div
-                className="glass"
-                style={{
-                  borderRadius: 22,
-                  padding: '16px 18px',
-                  display: 'flex',
-                  gap: 13,
-                  alignItems: 'center',
-                }}
-              >
-                <span
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 13,
-                    background: 'rgba(255,255,255,.12)',
-                    display: 'grid',
-                    placeItems: 'center',
-                    flex: 'none',
-                  }}
-                >
-                  <Icon name={faites.length ? 'check' : 'rest'} />
-                </span>
-                <div>
-                  <b style={{ fontSize: 16, fontWeight: 600 }}>
-                    {avantPlan
-                      ? 'Le plan commence le 10 août'
-                      : faites.length
-                        ? faites.length > 1
-                          ? `${faites.length} séances notées`
-                          : 'Séance notée'
-                        : estAujourdhui
-                          ? "Rien au programme aujourd'hui"
-                          : 'Rien au programme ce jour-là'}
-                  </b>
-                  <div style={{ color: 'var(--sur-ink-2)', fontSize: 13 }}>
-                    {avantPlan
-                      ? 'Semaine 1 : amorce, sans sortie longue.'
-                      : faites.length
-                        ? estAujourdhui
-                          ? "C'est fait pour aujourd'hui. Le détail est plus bas."
-                          : 'La journée est complète. Le détail est plus bas.'
-                        : estAujourdhui
-                          ? "Profites-en pour glacer et t'étirer."
-                          : 'Journée de repos jambes.'}
-                  </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p className="etiquette">bilan de la semaine {bilan.n}</p>
+                <div className="display" style={{ fontSize: 22, marginTop: 4 }}>
+                  {formatNumber(bilan.kmRealises)} km{' '}
+                  <span style={{ fontSize: 15, color: 'var(--sur-ink-2)', fontFamily: 'var(--font)' }}>
+                    sur {formatNumber(bilan.kmPrevus)} prévus
+                  </span>
                 </div>
               </div>
-            )}
-          </div>
+              <span
+                aria-hidden
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: '50%',
+                  background: 'var(--pale)',
+                  color: 'var(--pale-ink)',
+                  display: 'grid',
+                  placeItems: 'center',
+                  flex: 'none',
+                }}
+              >
+                <Icon name="arrowUpRight" size={18} />
+              </span>
+            </button>
+          )}
+
+          {estAujourdhui && <CarteCoach texte={mot.texte} />}
         </div>
-      </section>
-
-      {/* ─── au scroll : le reste de la journée et de la semaine ────────── */}
-      <div style={{ position: 'relative', zIndex: 5, padding: '24px var(--page-x) 0' }}>
-        {estAujourdhui && <AlertBox adapt={A} />}
-
-        {restantes.slice(1).map((x, i) => (
-          <SessionCard
-            key={i}
-            session={x.s}
-            marathonPace={marathonPace}
-            onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
-          />
-        ))}
-
-        {faites.length > 0 && (
-          <>
-            <Pretitle>Déjà noté</Pretitle>
-            {faites.map((x, i) => (
-              <SessionCard
-                key={i}
-                session={x.s}
-                marathonPace={marathonPace}
-                feedback={feedbackDe(x)}
-                onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
-              />
-            ))}
-          </>
-        )}
-
-        {journalActif && <JournalDuJour day={jour} now={now} />}
-
-        {estAujourdhui && bilan && <CarteBilan bilan={bilan} style={{ marginBottom: 14 }} />}
-
-        {estAujourdhui && <CarteCoach texte={mot.texte} style={{ marginBottom: 14 }} />}
-
       </div>
 
       {calculOuvert && (
@@ -737,7 +685,178 @@ export function Today({
           onClose={() => setCalculOuvert(false)}
         />
       )}
+
+      {journalActif && (
+        <SubPage
+          ouvert={carnetOuvert}
+          surtitre="carnet"
+          titre={sousTitreLong(jour)}
+          onBack={() => setCarnetOuvert(false)}
+        >
+          {carnetOuvert && (
+            <PageCarnet day={jour} now={now} seances={carnet} onOuvrirSeance={onOuvrirSeance} />
+          )}
+        </SubPage>
+      )}
+
+      {bilan && (
+        <SubPage
+          ouvert={bilanOuvert}
+          surtitre={`${formatDay(bilan.du)} → ${formatDay(bilan.au)}`}
+          titre={`bilan de la semaine ${bilan.n}`}
+          onBack={() => setBilanOuvert(false)}
+        >
+          {bilanOuvert && <CarteBilan bilan={bilan} />}
+        </SubPage>
+      )}
     </div>
+  )
+}
+
+/** « lundi 21 septembre » : le titre de l'écran, en toutes lettres. */
+function sousTitreLong(jour: string): string {
+  const [, m, d] = jour.split('-').map(Number)
+  return `${DAYS_LONG[weekdayIndex(jour)].toLowerCase()} ${d} ${MOIS[m - 1]}`
+}
+
+const MOIS = [
+  'janvier',
+  'février',
+  'mars',
+  'avril',
+  'mai',
+  'juin',
+  'juillet',
+  'août',
+  'septembre',
+  'octobre',
+  'novembre',
+  'décembre',
+]
+
+/**
+ * L'en-tête de l'écran Aujourd'hui, propre à lui : la semaine et le bloc en
+ * surtitre, la date en grand, et les deux flèches de jour à droite, comme la
+ * maquette. Le bouton profil reste au-dessus des flèches : c'est la seule
+ * porte vers les réglages, il ne peut pas disparaître.
+ */
+function EnteteJour({
+  surtitre,
+  titre,
+  relatif,
+  jour,
+  now,
+  plusAncien,
+  onDecaler,
+  onAujourdhui,
+  onOuvrirProfil,
+}: {
+  surtitre: string
+  titre: string
+  relatif: string | null
+  jour: string
+  now: string
+  plusAncien: string
+  onDecaler: (n: number) => void
+  onAujourdhui: () => void
+  onOuvrirProfil: () => void
+}) {
+  return (
+    <header style={{ padding: 'calc(18px + env(safe-area-inset-top)) 0 18px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--accent)', minWidth: 0 }}>{surtitre}</p>
+        <ProfileButton onClick={onOuvrirProfil} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, marginTop: 6 }}>
+        <div style={{ minWidth: 0 }}>
+          {relatif && (
+            <p style={{ margin: '0 0 2px', fontSize: 15, color: 'var(--sur-ink-2)' }}>{relatif}</p>
+          )}
+          <h1 className="display" style={{ margin: 0, fontSize: 38, lineHeight: 1.04 }}>
+            {titre}
+          </h1>
+        </div>
+        <NavigationJour
+          jour={jour}
+          now={now}
+          plusAncien={plusAncien}
+          onDecaler={onDecaler}
+        />
+      </div>
+      {jour !== now && (
+        <button
+          onClick={onAujourdhui}
+          className="puce"
+          style={{ marginTop: 12, background: 'var(--pale)', color: 'var(--pale-ink)', fontWeight: 600 }}
+        >
+          revenir à aujourd&apos;hui
+        </button>
+      )}
+    </header>
+  )
+}
+
+/**
+ * La charge n'est pas attestée : le pendant de « je ne sais pas » côté
+ * mécanique. La carte liste les séances qui manquent, parce que ce sont elles
+ * qui font le trou, et mène à la page qui permet de les noter.
+ */
+function ChargeNonAttestee({
+  aNoter,
+  onVoirANoter,
+}: {
+  aNoter: SeanceANoter[]
+  onVoirANoter?: () => void
+}) {
+  const enRetard = aNoter.filter((x) => x.enRetard)
+  return (
+    <section
+      className="carte"
+      style={{ padding: '18px 18px', borderColor: 'rgba(242,207,107,.4)', background: 'rgba(242,207,107,.05)' }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--warning)' }}>
+        <Icon name="alert" size={20} />
+        <span style={{ fontSize: 16, fontWeight: 600 }}>la charge n&apos;est pas attestée</span>
+      </div>
+      <p style={{ margin: '10px 0 0', fontSize: 15, lineHeight: 1.5, color: 'var(--sur-ink-2)' }}>
+        Moins de cinq des sept derniers jours portent une charge mesurée. L&apos;indice lit ces trous
+        comme des jours légers : il penche du côté qui rassure.
+      </p>
+      {enRetard.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 14 }}>
+          {enRetard.slice(0, 3).map((x) => (
+            <div
+              key={`${x.semaineOrigine}-${x.jourOrigine}-${x.slot}`}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: 10,
+                padding: '11px 14px',
+                borderRadius: 16,
+                background: 'var(--surface-2)',
+                fontSize: 14.5,
+              }}
+            >
+              <span style={{ minWidth: 0 }}>{x.titre}</span>
+              <span style={{ color: 'var(--accent)', flex: 'none' }}>{formatDay(x.day)}</span>
+            </div>
+          ))}
+          {enRetard.length > 3 && (
+            <span style={{ fontSize: 13.5, color: 'var(--accent)', margin: '2px 4px 0' }}>
+              et {enRetard.length - 3} autre{enRetard.length - 3 > 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+      )}
+      {onVoirANoter && enRetard.length > 0 && (
+        <button type="button" className="bouton-pale" onClick={onVoirANoter} style={{ marginTop: 14 }}>
+          voir les séances à noter
+          <span className="pastille">
+            <Icon name="arrowUpRight" size={18} />
+          </span>
+        </button>
+      )}
+    </section>
   )
 }
 
@@ -745,37 +864,13 @@ function Note({ children }: { children: ReactNode }) {
   return (
     <p
       style={{
-        color: 'rgba(255,214,138,.92)',
-        fontSize: 11.5,
-        fontWeight: 500,
-        margin: '12px 0 0',
-        textAlign: 'center',
-        maxWidth: '36ch',
+        color: 'var(--warning)',
+        fontSize: 13.5,
+        margin: '0 4px',
       }}
     >
       {children}
     </p>
-  )
-}
-
-/** Même grammaire que les tuiles d'insights : micro-label en capitales,
- *  valeur en chiffres tabulaires, précision en dessous. */
-
-/** Même grammaire que l'en-tête de jour de l'écran Programme. */
-function Pretitle({ children }: { children: ReactNode }) {
-  return (
-    <h2
-      style={{
-        fontSize: 12,
-        fontWeight: 700,
-        letterSpacing: '1.2px',
-        textTransform: 'uppercase',
-        color: 'var(--ink-3)',
-        margin: '26px 0 10px 2px',
-      }}
-    >
-      {children}
-    </h2>
   )
 }
 
@@ -803,17 +898,14 @@ function NavigationJour({
   now,
   plusAncien,
   onDecaler,
-  onAujourdhui,
 }: {
   jour: string
   now: string
   plusAncien: string
   onDecaler: (n: number) => void
-  onAujourdhui: () => void
 }) {
   const peutReculer = jour > plusAncien
   const peutAvancer = jour < now
-  const estAujourdhui = jour === now
 
   return (
     <div
@@ -821,7 +913,7 @@ function NavigationJour({
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        marginTop: 14,
+        flex: 'none',
       }}
     >
       <Fleche
@@ -836,22 +928,6 @@ function NavigationJour({
         label="Jour suivant"
         onClick={() => onDecaler(1)}
       />
-      {!estAujourdhui && (
-        <button
-          onClick={onAujourdhui}
-          className="glass"
-          style={{
-            marginLeft: 2,
-            padding: '7px 14px',
-            borderRadius: 'var(--pill)',
-            fontSize: 12.5,
-            fontWeight: 600,
-            color: 'var(--ink)',
-          }}
-        >
-          Revenir à aujourd&apos;hui
-        </button>
-      )}
     </div>
   )
 }
@@ -872,19 +948,14 @@ function Fleche({
       onClick={onClick}
       disabled={!actif}
       aria-label={label}
-      className="glass"
+      className="rond"
       style={{
-        width: 38,
-        height: 38,
-        borderRadius: '50%',
-        display: 'grid',
-        placeItems: 'center',
         opacity: actif ? 1 : 0.3,
         cursor: actif ? 'pointer' : 'default',
         transform: sens === 'gauche' ? 'scaleX(-1)' : undefined,
       }}
     >
-      <Icon name="chevronRight" size={16} />
+      <Icon name="chevronRight" size={18} />
     </button>
   )
 }

@@ -29,7 +29,7 @@ export function EnteteEcran({
   onOuvrirProfil,
 }: {
   titre: string
-  contexte: ReactNode
+  contexte?: ReactNode
   /** Absent sur l'écran Profil lui-même, qui n'a pas à s'ouvrir depuis lui-même. */
   onOuvrirProfil?: () => void
 }) {
@@ -59,10 +59,19 @@ export function EnteteEcran({
       }}
     >
       <div style={{ minWidth: 0 }}>
-        <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>{titre}</h1>
-        <p style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500, margin: '3px 0 0' }}>
-          {contexte}
-        </p>
+        {/* Titre en minuscules et en serif, comme la maquette : l'écran se
+            nomme d'une voix, il ne s'affiche pas en enseigne. */}
+        <h1
+          className="display"
+          style={{ margin: 0, fontSize: 38, lineHeight: 1.05, textTransform: 'lowercase' }}
+        >
+          {titre}
+        </h1>
+        {contexte && (
+          <p style={{ color: 'var(--accent)', fontSize: 13.5, fontWeight: 500, margin: '6px 0 0' }}>
+            {contexte}
+          </p>
+        )}
       </div>
       {onOuvrirProfil && <ProfileButton onClick={onOuvrirProfil} />}
     </header>

@@ -18,7 +18,7 @@ import { COULEUR_DOULEUR, rangRessenti } from '../lib/ressenti'
  */
 export const H_BARRE = 36
 /** Même rayon partout, remplissage compris. */
-const RAYON = 11
+const RAYON = 18
 /** Retrait horizontal du chiffre et du mot. */
 const RETRAIT = 13
 /** Largeur plancher du remplissage : le chiffre doit tenir dedans à zéro. */
@@ -40,7 +40,7 @@ export function largeurRemplissage(valeur: number): string {
 }
 
 /** Teinte neutre de l'effort perçu : un 9 sur une séance de qualité est une réussite. */
-const NEUTRE = '#d4d4d8'
+const NEUTRE = '#ffdcc2'
 
 export type TeinteRessenti = 'douleur' | 'neutre'
 
@@ -80,7 +80,7 @@ export function BarreRessenti({
   // Le chiffre repose toujours sur le remplissage : son encre suit donc la
   // luminance de la teinte. Un chiffre blanc sur l'ambre du milieu d'échelle
   // ne se lit pas, et c'est justement la zone où le plan commence à s'adapter.
-  const encre = hex && clair(hex) ? '#0b0c0e' : '#fff'
+  const encre = hex && clair(hex) ? '#1a0d06' : '#fff'
 
   return (
     <div
@@ -88,7 +88,7 @@ export function BarreRessenti({
         position: 'relative',
         height: hauteur,
         borderRadius: RAYON,
-        background: 'var(--surface-2)',
+        background: 'var(--surface-3)',
         overflow: 'hidden',
         opacity: attenuee ? 0.6 : 1,
       }}
@@ -101,7 +101,7 @@ export function BarreRessenti({
           top: 0,
           bottom: 0,
           width: largeurRemplissage(affiche),
-          background: hex ?? 'rgba(255,255,255,.16)',
+          background: hex ?? 'rgba(255,220,196,.12)',
           borderRadius: RAYON,
           transition: 'background var(--dur-fast), width var(--dur-fast)',
         }}
@@ -155,17 +155,16 @@ export function BarreRessenti({
   )
 }
 
-/** Le micro-label en capitales qui coiffe une barre. */
+/** Le libellé qui coiffe une barre : minuscules, encre pleine, comme la maquette. */
 export function LabelRessenti({ children }: { children: string }) {
   return (
     <div
       style={{
-        fontSize: 10,
-        fontWeight: 700,
-        letterSpacing: '1.3px',
-        textTransform: 'uppercase',
-        color: 'var(--sur-ink-2)',
-        marginBottom: 7,
+        fontSize: 15,
+        fontWeight: 500,
+        color: 'var(--ink)',
+        marginBottom: 9,
+        textTransform: 'lowercase',
       }}
     >
       {children}

@@ -1,34 +1,34 @@
 /**
- * La séance du jour, dépliée, en verre dépoli sur le dégradé.
+ * La séance du jour, en tête de l'écran Aujourd'hui.
  *
- * Toutes les sections partagent le même retrait horizontal : c'est ce qui
- * manquait à la maquette, chaque bloc avait son propre padding et les colonnes
- * ne s'alignaient pas.
+ * Refonte du 21 septembre 2026 : titre en serif, les chiffres de la séance en
+ * puces, et la pastille pâle qui ouvre le détail. Le premier pas de la séance
+ * reste sous un filet : c'est la seule consigne à avoir en tête au départ.
  */
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan, Session, ZoneKey } from '../data/types'
 import { formatNumber } from '../lib/dates'
-import { allureUnique, estimateDuration, formatPace, zonePace } from '../lib/paces'
+import { allureUnique, estimateDuration, formatDuration, formatPace, zonePace } from '../lib/paces'
 import { encreZone, styleSeance } from '../lib/seanceStyle'
-import { EchelleIntensite, MarqueSeance } from './MarqueSeance'
+import { EchelleIntensite } from './MarqueSeance'
+import { Icon } from './Icon'
 
 const plan = planJson as unknown as Plan
-
-/** Retrait commun à toutes les sections de la carte, symétrique depuis que
- *  le rail de gauche a disparu. */
-const RETRAIT = '15px 16px'
 
 export function SessionHero({
   session: s,
   marathonPace,
   /** Le jour affiché, quand ce n'est pas aujourd'hui. Sert l'étiquette du haut. */
   quand = "Aujourd'hui",
+  /** « 1 sur 2 » : le rang de la séance dans la journée, quand il y en a plusieurs. */
+  rang,
   onClick,
 }: {
   session: Session
   marathonPace: number
   quand?: string
+  rang?: { n: number; total: number }
   onClick?: () => void
 }) {
   const Balise = onClick ? 'button' : 'div'
@@ -39,79 +39,108 @@ export function SessionHero({
   const [dureeMin, dureeMax] = s.type === 'repos' ? [0, 0] : estimateDuration(s, marathonPace)
   // Rien si la séance change d'allure en route : voir `allureUnique`.
   const allure = allureUnique(s, marathonPace)
+  const st = styleSeance(s.type)
 
   return (
     <Balise
       onClick={onClick}
-      className="glass"
       style={{
         position: 'relative',
         display: 'block',
         width: '100%',
         textAlign: 'left',
-        borderRadius: 22,
+        borderRadius: 'var(--radius)',
         overflow: 'hidden',
         color: 'inherit',
-        padding: 0,
+        padding: '18px 18px 18px 20px',
         cursor: onClick ? 'pointer' : 'default',
+        // Un cran plus chaud que les autres cartes : c'est la seule séance de
+        // l'écran qui appelle un geste.
+        background:
+          'radial-gradient(120% 100% at 0% 0%, rgba(232,116,47,.2), transparent 60%), var(--surface)',
+        border: '1px solid rgba(255,170,120,.16)',
       }}
     >
-      {/* Plus de rail : une fois vidé de sa couleur il ne portait plus rien,
-          et il décalait toutes les colonnes de la carte pour se dégager. */}
-      <div style={{ padding: RETRAIT, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-        <MarqueSeance type={s.type} taille={38} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ ...etiquette, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span>{quand} · {s.cat}</span>
-          {styleSeance(s.type).intensite > 0 && (
-            <EchelleIntensite niveau={styleSeance(s.type).intensite} hauteur={10} />
-          )}
-        </div>
-        <h2
-          style={{
-            fontSize: 17,
-            fontWeight: 600,
-            letterSpacing: '-.3px',
-            margin: '3px 0 0',
-            lineHeight: 1.25,
-          }}
-        >
-          {s.title}
-        </h2>
-        {s.adapted && (
-          <span
-            style={{
-              display: 'inline-block',
-              marginTop: 8,
-              fontSize: 9.5,
-              fontWeight: 600,
-              padding: '3px 9px',
-              borderRadius: 'var(--pill)',
-              background: 'rgba(255,199,120,.2)',
-              color: '#ffd08a',
-              border: '1px solid rgba(255,199,120,.28)',
-            }}
-          >
-            {s.adapted}
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+        <p className="etiquette" style={{ color: 'var(--sur-ink-2)' }}>
+          {quand === "Aujourd'hui" ? 'séance du jour' : `séance · ${quand}`}
+        </p>
+        {rang && rang.total > 1 && (
+          <span style={{ fontSize: 13, color: 'var(--accent)' }}>
+            {rang.n} sur {rang.total}
           </span>
         )}
-        </div>
       </div>
 
-      <div style={{ display: 'flex', borderTop: SEPARATEUR }}>
-        {s.dist ? <Kv label="Distance" value={`${formatNumber(s.dist)} km`} /> : null}
+      <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginTop: 8 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h2 className="display" style={{ fontSize: 30, lineHeight: 1.08, margin: 0 }}>
+            {s.title}
+          </h2>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              marginTop: 6,
+              color: 'var(--accent)',
+              fontSize: 14,
+            }}
+          >
+            <span>{s.cat}</span>
+            {st.intensite > 0 && <EchelleIntensite niveau={st.intensite} hauteur={11} />}
+          </div>
+        </div>
+        {onClick && (
+          <span
+            aria-hidden
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: '50%',
+              background: 'var(--pale)',
+              color: 'var(--pale-ink)',
+              display: 'grid',
+              placeItems: 'center',
+              flex: 'none',
+            }}
+          >
+            <Icon name="arrowUpRight" size={20} />
+          </span>
+        )}
+      </div>
+
+      {s.adapted && (
+        <span
+          className="puce"
+          style={{
+            marginTop: 12,
+            background: 'rgba(242,207,107,.14)',
+            color: 'var(--warning)',
+            border: '1px solid rgba(242,207,107,.3)',
+            whiteSpace: 'normal',
+          }}
+        >
+          {s.adapted}
+        </span>
+      )}
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 14 }}>
+        {s.dist ? <span className="puce">{formatNumber(s.dist)} km</span> : null}
         {dureeMin > 0 ? (
-          <Kv label="Durée" value={dureeMin === dureeMax ? `${dureeMin} min` : `${dureeMin}-${dureeMax} min`} />
+          <span className="puce">
+            {dureeMin === dureeMax ? formatDuration(dureeMin) : `${formatDuration(dureeMin)} à ${formatDuration(dureeMax)}`}
+          </span>
         ) : null}
         {allure != null ? (
-          <Kv label="Allure" value={formatPace(allure)} />
+          <span className="puce">{formatPace(allure)}/km</span>
         ) : s.type === 'repos' ? (
-          <Kv label="Charge" value="Aucune" />
+          <span className="puce">aucune charge</span>
         ) : null}
       </div>
 
       {(premierSegment || premierPas || s.ex?.length) && (
-        <div style={{ padding: RETRAIT, borderTop: SEPARATEUR }}>
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: SEPARATEUR }}>
           {premierSegment && (
             <Pas
               titre={`${formatNumber(premierSegment.km)} km : ${formatPace(zonePace(marathonPace, premierSegment.zone))}/km`}
@@ -123,11 +152,11 @@ export function SessionHero({
             <Pas
               titre={typeof premierPas[0] === 'number' ? `${formatNumber(premierPas[0])} km` : String(premierPas[0])}
               detail={typeof premierPas[1] === 'string' && !(premierPas[1] in plan.zones) ? premierPas[1] : undefined}
-              couleur="rgba(255,255,255,.34)"
+              couleur="var(--accent-doux)"
             />
           )}
           {!premierSegment && !premierPas && s.ex?.[0] && (
-            <Pas titre={s.ex[0][0]} detail={s.ex[0][1]} couleur="rgba(255,255,255,.34)" />
+            <Pas titre={s.ex[0][0]} detail={s.ex[0][1]} couleur="var(--accent-doux)" />
           )}
         </div>
       )}
@@ -139,53 +168,16 @@ export function SessionHero({
   )
 }
 
-const SEPARATEUR = '1px solid rgba(255,255,255,.12)'
-
-const etiquette: CSSProperties = {
-  fontSize: 9.5,
-  fontWeight: 700,
-  letterSpacing: '.8px',
-  textTransform: 'uppercase',
-  color: 'var(--sur-ink-2)',
-}
-
-function Kv({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ flex: 1, padding: '11px 12px 11px 16px', borderRight: SEPARATEUR }}>
-      <div
-        style={{
-          fontSize: 8.5,
-          fontWeight: 700,
-          letterSpacing: '.6px',
-          textTransform: 'uppercase',
-          color: 'var(--sur-ink-3)',
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          fontSize: 15,
-          fontWeight: 650,
-          letterSpacing: '-.3px',
-          marginTop: 3,
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
-        {value}
-      </div>
-    </div>
-  )
-}
+const SEPARATEUR = '1px solid var(--border)'
 
 function Pas({ titre, detail, couleur }: { titre: string; detail?: ReactNode; couleur: string }) {
   return (
     <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
       <span aria-hidden style={{ width: 3, borderRadius: 2, background: couleur, flex: 'none' }} />
       <div>
-        <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '-.1px', lineHeight: 1.3 }}>{titre}</div>
+        <div style={{ fontSize: 14.5, fontWeight: 500, lineHeight: 1.3 }}>{titre}</div>
         {detail && (
-          <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--sur-ink-3)', marginTop: 2, lineHeight: 1.35 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--sur-ink-3)', marginTop: 3, lineHeight: 1.4 }}>
             {detail}
           </div>
         )}

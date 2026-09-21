@@ -44,7 +44,7 @@ export function HeartRateZones({ hrMax, onSave }: Props) {
     }
     onSave?.({ hr_max: propose })
     setErreur(null)
-    setConfirmation(`Zones recalculées sur ${propose} bpm. L'écran Allures suit.`)
+    setConfirmation(`Zones recalculées sur ${propose} bpm. L'écran Objectif suit.`)
   }
 
   return (

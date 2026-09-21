@@ -1,123 +1,118 @@
 /**
- * Les trois tuiles de haut d'écran, en verre dépoli sur le dégradé.
+ * Les quatre tuiles sous la carte de charge, en grille de deux.
+ *
+ * Refonte du 21 septembre 2026 : le grand chiffre en serif, l'unité et le
+ * libellé en accent dessous. La quatrième tuile n'est pas un chiffre mais la
+ * porte du calcul de l'indice, à l'endroit où l'œil vient de lire les trois
+ * nombres qui le nourrissent.
  */
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { formatNumber } from '../lib/dates'
 import type { Insights } from '../lib/insights'
+import { Icon } from './Icon'
 
-export function InsightTiles({ insights }: { insights: Insights }) {
+export function InsightTiles({
+  insights,
+  indice,
+  onCalcul,
+}: {
+  insights: Insights
+  /** L'indice affiché, pour la tuile du calcul. Absent quand il est inconnu. */
+  indice: number | null
+  onCalcul: () => void
+}) {
   const { seances, seancesTotal, km7, km7Jours, chargeVeille, chargeEcart } = insights
   const maxJour = Math.max(...km7Jours, 1)
 
   return (
-    <div style={{ display: 'flex', gap: 9 }}>
-      <Tile label="Séances">
-        <Valeur nombre={`${seancesTotal.realise}`} suffixe={`/${seancesTotal.prevu}`} />
-        <div style={sousTexte}>
-          <b style={fort}>
-            {seances.course.realise}/{seances.course.prevu}
-          </b>{' '}
-          course ·{' '}
-          <b style={fort}>
-            {seances.velo.realise}/{seances.velo.prevu}
-          </b>{' '}
-          vélo ·{' '}
-          <b style={fort}>
-            {seances.renfo.realise}/{seances.renfo.prevu}
-          </b>{' '}
-          renfo
-        </div>
-      </Tile>
-
-      <Tile label="Km · 7 j">
-        <Valeur nombre={formatNumber(km7)} suffixe=" km" />
-        <div style={{ display: 'flex', gap: 2.5, marginTop: 7, alignItems: 'flex-end', height: 15 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <Tuile>
+        <Valeur nombre={formatNumber(km7)} unite="km" />
+        <div style={{ display: 'flex', gap: 3, marginTop: 10, alignItems: 'flex-end', height: 16 }}>
           {km7Jours.map((km, i) => (
             <span
               key={i}
               title={`${formatNumber(km)} km`}
               style={{
                 flex: 1,
-                borderRadius: 1.5,
-                // 2 px minimum : un jour sans course reste visible comme un jour,
-                // sinon la barre disparaît et on croit à un trou dans la donnée.
+                borderRadius: 2,
+                // Un plancher : un jour sans course reste visible comme un
+                // jour, sinon on croit à un trou dans la donnée.
                 height: `${Math.max(12, (km / maxJour) * 100)}%`,
-                background: i === km7Jours.length - 1 ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.34)',
+                background: i === km7Jours.length - 1 ? 'var(--pale)' : 'var(--accent-2)',
+                opacity: i === km7Jours.length - 1 ? 1 : 0.55,
               }}
             />
           ))}
         </div>
-      </Tile>
+        <Libelle>7 derniers jours</Libelle>
+      </Tuile>
 
-      {/* Le mouvement du jour, pas une valeur de plus : l'indice est déjà en
-          grand sous l'arc, le répéter ici n'apprenait rien. */}
-      <Tile label="Vs hier">
+      <Tuile>
+        <Valeur nombre={`${seancesTotal.realise}`} unite={`/${seancesTotal.prevu}`} />
+        <Libelle>séances de la semaine</Libelle>
+        <div style={{ fontSize: 12.5, color: 'var(--sur-ink-3)', marginTop: 4, lineHeight: 1.4 }}>
+          course {seances.course.realise}/{seances.course.prevu} · vélo {seances.velo.realise}/
+          {seances.velo.prevu} · renfo {seances.renfo.realise}/{seances.renfo.prevu}
+        </div>
+      </Tuile>
+
+      <Tuile>
         <Valeur
           nombre={
-            chargeEcart == null ? '—' : `${chargeEcart > 0 ? '+' : chargeEcart < 0 ? '−' : ''}${Math.abs(chargeEcart)}`
+            chargeEcart == null
+              ? '—'
+              : `${chargeEcart > 0 ? '+' : chargeEcart < 0 ? '−' : ''}${Math.abs(chargeEcart)}`
           }
         />
-        <div style={sousTexte}>
-          charge tendon
-          {chargeVeille != null && (
-            <>
-              <br />
-              hier <b style={fort}>{chargeVeille}</b>
-            </>
-          )}
-        </div>
-      </Tile>
+        <Libelle>
+          {chargeVeille != null ? `indice, ${chargeVeille} hier` : 'indice, hier inconnu'}
+        </Libelle>
+      </Tuile>
+
+      <button
+        type="button"
+        onClick={onCalcul}
+        className="carte"
+        style={{
+          padding: '16px 16px',
+          textAlign: 'left',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          gap: 12,
+          borderColor: 'var(--border-2)',
+          background: 'var(--surface-2)',
+        }}
+      >
+        <Icon name="clip" size={20} style={{ color: 'var(--accent)' }} />
+        <span style={{ fontSize: 15, lineHeight: 1.3, color: 'var(--ink)' }}>
+          {indice == null ? 'le détail du calcul' : `d'où viennent ces ${indice} points`}
+        </span>
+      </button>
     </div>
   )
 }
 
-function Tile({ label, children }: { label: string; children: ReactNode }) {
+function Tuile({ children }: { children: ReactNode }) {
   return (
-    <div className="glass" style={{ flex: 1, borderRadius: 17, padding: '11px 11px 10px', minWidth: 0 }}>
-      <div
-        style={{
-          fontSize: 8.5,
-          fontWeight: 700,
-          letterSpacing: '.7px',
-          textTransform: 'uppercase',
-          color: 'var(--sur-ink-2)',
-        }}
-      >
-        {label}
-      </div>
+    <div className="carte" style={{ padding: '16px 16px 15px', minWidth: 0 }}>
       {children}
     </div>
   )
 }
 
-function Valeur({ nombre, suffixe }: { nombre: string; suffixe?: string }) {
+function Valeur({ nombre, unite }: { nombre: string; unite?: string }) {
   return (
-    <div
-      style={{
-        fontSize: 19,
-        fontWeight: 650,
-        letterSpacing: '-.5px',
-        marginTop: 5,
-        lineHeight: 1,
-        fontVariantNumeric: 'tabular-nums',
-      }}
-    >
-      {nombre}
-      {suffixe && (
-        <small style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--sur-ink-2)', letterSpacing: 0 }}>
-          {suffixe}
-        </small>
-      )}
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+      <span className="chiffre" style={{ fontSize: 40, lineHeight: 1 }}>
+        {nombre}
+      </span>
+      {unite && <span style={{ fontSize: 15, color: 'var(--accent)' }}>{unite}</span>}
     </div>
   )
 }
 
-const sousTexte: CSSProperties = {
-  fontSize: 9,
-  fontWeight: 500,
-  color: 'var(--sur-ink-3)',
-  marginTop: 5,
-  lineHeight: 1.35,
+function Libelle({ children }: { children: ReactNode }) {
+  return <div style={{ fontSize: 13.5, color: 'var(--accent)', marginTop: 8 }}>{children}</div>
 }
-
-const fort: CSSProperties = { color: 'rgba(255,255,255,.85)', fontWeight: 700 }

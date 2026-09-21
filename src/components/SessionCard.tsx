@@ -33,38 +33,59 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick }: Pro
   return (
     <button
       onClick={onClick}
-      className="glass"
+      className="carte"
       style={{
         position: 'relative',
         display: 'flex',
         alignItems: 'flex-start',
-        gap: 12,
+        gap: 13,
         width: '100%',
         textAlign: 'left',
         color: 'inherit',
-        borderRadius: 20,
-        padding: '15px 14px',
+        borderRadius: 22,
+        padding: '15px 15px',
         marginBottom: 11,
         overflow: 'hidden',
         // Une séance sautée s'efface plus qu'une séance notée : elle reste
         // lisible dans la semaine, mais elle ne réclame plus rien.
-        opacity: s.saute ? 0.38 : feedback ? 0.55 : 1,
+        opacity: s.saute ? 0.4 : 1,
         transition: 'transform var(--dur-fast), background var(--dur-fast)',
       }}
     >
       {/* L'icône est alignée en haut et non centrée : les cartes n'ont pas
           toutes la même hauteur (étiquettes d'écart, ressenti noté), et une
           marque centrée sautait d'une ligne à l'autre en balayant la semaine. */}
-      <MarqueSeance type={s.type} />
+      {/* Une séance notée prend la coche verte de la maquette à la place de
+          son icône : c'est ce qu'on cherche en balayant la journée. Elle
+          n'est plus grisée, le vert suffit à dire qu'elle est derrière. */}
+      {feedback ? (
+        <span
+          role="img"
+          aria-label="Séance notée"
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            display: 'grid',
+            placeItems: 'center',
+            flex: 'none',
+            background: 'rgba(111,224,176,.14)',
+            color: 'var(--good)',
+          }}
+        >
+          <Icon name="check" size={20} />
+        </span>
+      ) : (
+        <MarqueSeance type={s.type} />
+      )}
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <h3
+          className="display"
           style={{
             margin: '0 0 4px',
-            fontSize: 18.5,
-            fontWeight: 650,
-            letterSpacing: '-.4px',
-            lineHeight: 1.2,
+            fontSize: 20,
+            lineHeight: 1.18,
           }}
         >
           <span style={s.saute ? { textDecoration: 'line-through' } : undefined}>{s.title}</span>
@@ -94,11 +115,9 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick }: Pro
                 gap: 8,
                 padding: '4px 10px',
                 borderRadius: 'var(--pill)',
-                background: 'rgba(255,255,255,.07)',
-                border: '1px solid rgba(255,255,255,.12)',
-                fontSize: 11.5,
-                fontWeight: 650,
-                letterSpacing: '.2px',
+                background: 'var(--surface-3)',
+                fontSize: 12,
+                fontWeight: 500,
                 whiteSpace: 'nowrap',
               }}
             >
@@ -106,15 +125,15 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick }: Pro
               <EchelleIntensite niveau={st.intensite} hauteur={11} />
             </span>
           )}
-          {/* Bleu pour une décision de Mathieu, ambre pour le moteur
+          {/* Pêche pour une décision de Mathieu, jaune pour le moteur
               d'adaptation : la couleur dit d'où vient le changement. */}
-          {s.ecart && <Etiquette teinte="78,140,255" encre="#9DC1FF">{s.ecart}</Etiquette>}
-          {s.adapted && <Etiquette teinte="250,178,25" encre="#FFD166">{s.adapted}</Etiquette>}
+          {s.ecart && <Etiquette teinte="255,220,194" encre="var(--pale)">{s.ecart}</Etiquette>}
+          {s.adapted && <Etiquette teinte="242,207,107" encre="var(--warning)">{s.adapted}</Etiquette>}
         </div>
 
         {feedback && (
-          <div style={{ marginTop: 9, color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500 }}>
-            Douleur {formatNumber(feedback.pain)}/10 · Effort {feedback.rpe}/10
+          <div style={{ marginTop: 9, color: 'var(--good)', fontSize: 13, fontWeight: 500 }}>
+            noté · douleur {formatNumber(feedback.pain)}/10 · effort {feedback.rpe}/10
           </div>
         )}
       </div>
@@ -143,9 +162,9 @@ function Etiquette({
     <span
       style={{
         display: 'inline-block',
-        fontSize: 11,
-        fontWeight: 600,
-        padding: '3.5px 9px',
+        fontSize: 12,
+        fontWeight: 500,
+        padding: '4px 10px',
         borderRadius: 'var(--pill)',
         background: `rgba(${teinte},.18)`,
         color: encre,

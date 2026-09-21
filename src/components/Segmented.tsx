@@ -21,8 +21,8 @@ export function Segmented<T extends string>({
       aria-label={label}
       style={{
         display: 'flex',
-        background: 'rgba(255,255,255,.07)',
-        border: '1px solid rgba(255,255,255,.1)',
+        background: 'var(--surface-2)',
+        border: '1px solid var(--border)',
         borderRadius: 'var(--pill)',
         padding: 3,
         gap: 2,
@@ -38,13 +38,13 @@ export function Segmented<T extends string>({
             onClick={() => onChange(o.cle)}
             style={{
               flex: 1,
-              padding: '6px 10px',
+              padding: '8px 12px',
               borderRadius: 'var(--pill)',
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: 600,
               whiteSpace: 'nowrap',
-              background: actif ? 'rgba(255,255,255,.92)' : 'transparent',
-              color: actif ? '#0b0c0e' : 'var(--sur-ink-2)',
+              background: actif ? 'var(--pale)' : 'transparent',
+              color: actif ? 'var(--pale-ink)' : 'var(--sur-ink-2)',
               cursor: 'pointer',
               transition: 'background var(--dur-fast) var(--ease-out), color var(--dur-fast)',
             }}

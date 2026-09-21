@@ -438,7 +438,7 @@ export interface AdaptResult {
 
 const NIVEAU: Record<Band['key'], 0 | 1 | 2 | 3> = { vert: 0, jaune: 0, orange: 1, rouge: 2, noir: 3 }
 
-const TEXTE_BANDE: Partial<Record<Band['key'], string>> = {
+export const TEXTE_BANDE: Partial<Record<Band['key'], string>> = {
   orange:
     'Séance de qualité remplacée par du vélo Z3, renfo bas du corps allégé, sortie longue raccourcie de 20 %.',
   rouge:
@@ -488,7 +488,7 @@ export function adapt(
       id: 'ALLURES',
       title: 'Deux séances de qualité à 9/10 d’effort ou plus, sans douleur',
       action:
-        'Les allures cibles sont trop rapides pour l’instant : ajoute 5 s/km sur toutes les zones dans l’onglet Allures.',
+        'Les allures cibles sont trop rapides pour l’instant : ajoute 5 s/km sur toutes les zones dans l’onglet Objectif.',
     })
   }
 

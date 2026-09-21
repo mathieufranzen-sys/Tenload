@@ -422,6 +422,11 @@ function Coquille({
             setSeance({ semaineN: x.semaineOrigine, jourOrigine: x.jourOrigine, slot: x.slot })
           }
           onOuvrirProfil={() => setOnglet('profile')}
+          aNoter={aNoter}
+          onVoirANoter={() => {
+            setSectionProfil('anoter')
+            setOnglet('profile')
+          }}
         />
       )}
       {onglet === 'plan' && (
@@ -531,8 +536,8 @@ function BandeauDemo({ onQuitter }: { onQuitter?: () => void }) {
         gap: 12,
         maxWidth: 'var(--shell-max)',
         margin: '0 auto',
-        background: 'rgba(78,140,255,.12)',
-        border: '1px solid rgba(78,140,255,.3)',
+        background: 'var(--surface-2)',
+        border: '1px solid var(--border-2)',
         borderRadius: 'var(--radius-sm)',
         padding: '11px 12px',
         fontSize: 13,
@@ -548,9 +553,9 @@ function BandeauDemo({ onQuitter }: { onQuitter?: () => void }) {
             flex: 'none',
             padding: '6px 12px',
             borderRadius: 'var(--pill)',
-            border: '1px solid rgba(78,140,255,.4)',
-            background: 'transparent',
-            color: '#9DC1FF',
+            border: 'none',
+            background: 'var(--pale)',
+            color: 'var(--pale-ink)',
             fontSize: 12.5,
             fontWeight: 650,
             cursor: 'pointer',
