@@ -101,8 +101,8 @@ input[type='range']::-moz-range-thumb {
 /* ══════════════════════════════════════════════════════════════════════════
    Fond
 
-   Une seule lueur verte en haut de l'écran, qui retombe dans le noir vert du
-   fond. La classe garde son nom de la version orange (« braise »). Les sept masses colorées par bande sont parties : la maquette pose
+   Une seule lueur de vert néon, très diluée, en haut de l'écran, qui retombe
+   dans le Neutral-50 du fond. La classe garde son nom de la version orange (« braise »). Les sept masses colorées par bande sont parties : la maquette pose
    tout sur un fond uni, et la charge du tendon se lit dans la jauge, pas
    derrière elle. La lueur reste la même sur tous les écrans pour qu'on
    reconnaisse l'app avant d'en lire le contenu.
@@ -113,13 +113,12 @@ input[type='range']::-moz-range-thumb {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(120% 420px at 18% -60px, rgba(62, 122, 44, 0.34), transparent 70%),
-    radial-gradient(90% 360px at 100% 40px, rgba(23, 42, 6, 0.4), transparent 72%),
+    radial-gradient(120% 380px at 18% -80px, rgba(101, 246, 123, 0.16), transparent 70%),
     var(--bg);
 }
 .braise--calme {
   background:
-    radial-gradient(110% 320px at 10% -80px, rgba(62, 122, 44, 0.2), transparent 70%),
+    radial-gradient(110% 300px at 10% -90px, rgba(101, 246, 123, 0.1), transparent 70%),
     var(--bg);
 }
 
@@ -195,7 +194,8 @@ input[type='range']::-moz-range-thumb {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #f5f4f1;
+  background: #ffffff;
+  color: #142800;
   display: grid;
   place-items: center;
   flex: none;
@@ -234,7 +234,7 @@ input[type='range']::-moz-range-thumb {
    comme une carte de la maquette, assez transparente pour que la lueur du
    haut d'écran passe au travers. */
 .glass {
-  background: rgba(26, 36, 19, 0.86);
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid var(--glass-border);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);

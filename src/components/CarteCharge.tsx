@@ -48,7 +48,7 @@ export function CarteCharge({
         padding: '18px 18px 16px',
         borderRadius: 'var(--radius-lg)',
         ...(inconnu
-          ? { border: '1.5px dashed var(--border-2)', background: 'rgba(245,244,241,.03)' }
+          ? { border: '1.5px dashed var(--border-2)', background: 'color-mix(in srgb, var(--ink) 3%, transparent)' }
           : null),
       }}
     >
@@ -186,8 +186,8 @@ function Gelule({ valeur, teinte }: { valeur: number | null; teinte: string }) {
         flex: 'none',
         borderRadius: W / 2,
         overflow: 'hidden',
-        background: valeur == null ? 'transparent' : 'rgba(245,244,241,.07)',
-        border: valeur == null ? '1.5px dashed var(--border-2)' : '1px solid rgba(245,244,241,.12)',
+        background: valeur == null ? 'transparent' : 'color-mix(in srgb, var(--ink) 7%, transparent)',
+        border: valeur == null ? '1.5px dashed var(--border-2)' : '1px solid color-mix(in srgb, var(--ink) 12%, transparent)',
       }}
     >
       {valeur == null ? (
@@ -229,7 +229,7 @@ function Gelule({ valeur, teinte }: { valeur: number | null; teinte: string }) {
                 right: 12,
                 bottom: (s / 100) * H,
                 height: 1,
-                background: 'rgba(245,244,241,.18)',
+                background: 'color-mix(in srgb, var(--ink) 18%, transparent)',
               }}
             />
           ))}

@@ -184,7 +184,7 @@ export function DecoupageSeance({
                     width: 52,
                     display: 'grid',
                     placeItems: 'center',
-                    background: 'rgba(245,244,241,.05)',
+                    background: 'color-mix(in srgb, var(--ink) 5%, transparent)',
                     borderLeft: '1px solid var(--border)',
                   }}
                 >

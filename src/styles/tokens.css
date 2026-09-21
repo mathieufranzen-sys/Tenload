@@ -3,46 +3,47 @@
 
    Refondu le 21 septembre 2026 d'après la maquette Claude Design de Mathieu,
    puis recoloré le même jour sur la palette de Trailblazer, le design system
-   d'AllTrails (Neutral, Green, Neon Green, Blue), passée en mode sombre : le
-   fond est le vert presque noir de Green-400, le texte les neutres clairs,
-   l'accent le Neon Green. Les valeurs sont relevées sur le rendu de la
-   palette Figma, faute d'accès à son inspecteur.
+   d'AllTrails, en mode clair, avec les valeurs exactes du fichier.
 
-   La couleur a deux sens et deux seulement. Le vert néon est la voix de l'app
-   (accent, sélection, boutons). Les cinq teintes de bande (vert, jaune,
+   La couleur a deux sens et deux seulement. Le vert de la marque est la voix
+   de l'app (accent, sélection, boutons). Les cinq teintes de bande (vert, jaune,
    orange, rouge, noir) ne disent que la charge du tendon, et n'apparaissent
    que là où elle est lue : jauge, pastilles de bande, calendrier passé.
    ══════════════════════════════════════════════════════════════════════════ */
 
 :root {
   /* ─── surfaces et encres ─────────────────────────────────────────────────
-     Un noir qui tire vers le vert de Green-400 plutôt qu'un noir neutre.
-     Toutes les surfaces sont prises dans la même teinte, seule la clarté
-     change, pour que les cartes se lisent comme des épaisseurs d'une même
-     matière et pas comme des pièces rapportées. */
-  --bg: #0e150a;
-  --surface: #172012;
-  --surface-2: #1f2b18;
-  --surface-3: #2b3a22;
-  --ink: #f5f4f1;
-  --ink-2: #c5c5bc;
-  --ink-3: #8d917f;
-  --border: rgba(245, 244, 241, 0.08);
-  --border-2: rgba(245, 244, 241, 0.14);
+     Mode clair, valeurs exactes de Trailblazer (AllTrails), fournies par
+     Mathieu le 21 septembre 2026. Le fond est Neutral-50, les cartes
+     Neutral-0 : la carte blanche se détache d'un fond à peine grisé, sans
+     ombre. Le texte est Green-400, un presque-noir vert qui tient toute l'app
+     dans la même famille. */
+  --bg: #f6f6f4;
+  --surface: #ffffff;
+  --surface-2: #efefec;
+  --surface-3: #dbdad2;
+  --ink: #142800;
+  --ink-2: #4c5c43;
+  --ink-3: #8b9182;
+  --border: color-mix(in srgb, var(--ink) 9%, transparent);
+  --border-2: color-mix(in srgb, var(--ink) 16%, transparent);
 
   /* ─── accent ─────────────────────────────────────────────────────────────
-     Trois rôles, trois valeurs. `--accent` (Neon Green 200) écrit les
-     métadonnées et les chiffres secondaires, `--pale` (Neon Green 100)
-     remplit les boutons principaux et la sélection, `--braise` (Green-300,
-     la couleur Brand de Trailblazer) est le fond profond des cartes de tête
-     et du mot du coach. Le nom est resté de la version orange. */
-  --accent: #72d96a;
-  --accent-2: #6abf5e;
-  --accent-doux: #6d7560;
-  --pale: #8ef281;
-  --pale-ink: #172a06;
-  --braise: #2c441c;
-  --braise-2: #172a06;
+     `--accent` (Green-100) écrit les métadonnées et les chiffres
+     secondaires ; `--pale` (Green-300, la couleur Brand) remplit les boutons
+     principaux et la sélection, en blanc dessus ; `--braise` est le fond
+     vert profond des cartes de tête et du mot du coach. Le Neon Green ne
+     sert qu'à l'intérieur de ces cartes sombres : sur blanc, il ne se lit
+     pas. Les noms `pale` et `braise` sont restés des versions précédentes. */
+  --accent: #2e731a;
+  --accent-2: #2c5601;
+  --accent-doux: #a7a99f;
+  --pale: #274312;
+  --pale-ink: #ffffff;
+  --braise: #274312;
+  --braise-2: #142800;
+  --neon: #65f67b;
+  --neon-2: #49de61;
 
   /* ─── formes ─────────────────────────────────────────────────────────── */
   --radius: 26px;
@@ -53,8 +54,7 @@
   /* ─── typographie ────────────────────────────────────────────────────────
      Fraunces porte tout ce qui se lit comme un titre ou un chiffre : les
      titres d'écran, les grands nombres, le mot du coach en italique. Ses
-     empattements « doux » (axe SOFT) évitent l'air de journal d'un Didot sur
-     un fond sombre. Le texte courant et les étiquettes restent dans une
+     empattements « doux » (axe SOFT) évitent l'air de journal d'un Didot. Le texte courant et les étiquettes restent dans une
      linéale, Instrument Sans : à 12 px sur un écran de téléphone, un
      empattement se brouille. */
   --font: 'Instrument Sans Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui,
@@ -82,47 +82,65 @@
   --dur-fast: 0.15s;
   --dur: 0.3s;
 
-  --c-erreur: #ff6b5e;
+  --c-erreur: #c8321f;
 
   /* ─── data-viz ───────────────────────────────────────────────────────── */
-  --series-1: #72d96a;
-  --series-2: #7d8cf5;
-  --series-3: #e6e6df;
-  --grid: #1f2b18;
-  --axis: #2b3a22;
-  --muted: #8d917f;
+  --series-1: #2e731a;
+  --series-2: #4f63f2;
+  --series-3: #8b9182;
+  --grid: #efefec;
+  --axis: #dbdad2;
+  --muted: #8b9182;
 
   /* ─── graphiques du Suivi ────────────────────────────────────────────────
-     Trois courbes de douleur : réveil (neutre clair), effort (le Blue de
-     Trailblazer, éclairci) et soir (Neon Green). Trois teintes éloignées,
-     dont une bleue, ce qui tient sur une déficience rouge-vert. Le soir reste
-     le trait le plus épais. */
-  --chart-1: #e6e6df;
-  --chart-2: #7d8cf5;
-  --chart-3: #8ef281;
-  --chart-ligne: #f5f4f1;
-  --chart-grille: rgba(245, 244, 241, 0.1);
-  --chart-texte: rgba(245, 244, 241, 0.5);
+     Trois courbes de douleur : réveil (Neutral-500), effort (le Blue de
+     Trailblazer) et soir (Green-100, le trait le plus épais). Trois teintes
+     éloignées, dont une bleue, ce qui tient sur une déficience rouge-vert. */
+  --chart-1: #8b9182;
+  --chart-2: #4f63f2;
+  --chart-3: #2e731a;
+  --chart-ligne: #142800;
+  --chart-grille: color-mix(in srgb, var(--ink) 9%, transparent);
+  --chart-texte: color-mix(in srgb, var(--ink) 55%, transparent);
 
-  /* ─── état ───────────────────────────────────────────────────────────── */
-  --good: #6fe0b0;
-  --warning: #f2cf6b;
-  --serious: #ff9b52;
-  --critical: #ff6b5e;
+  /* ─── état ───────────────────────────────────────────────────────────────
+     Des encres lisibles sur blanc : le jaune et le vert d'eau des bandes
+     n'y tiennent pas comme texte. Les bandes gardent leurs teintes vives,
+     elles ne servent qu'en aplat. */
+  --good: #2e731a;
+  --warning: #8a6300;
+  --serious: #b85c00;
+  --critical: #c8321f;
 
-  /* ─── cartes ─────────────────────────────────────────────────────────────
-     Les cartes ne sont plus du verre sur un dégradé coloré mais des plaques
-     pleines, légèrement plus claires que le fond : la maquette pose tout sur
-     un fond sombre uni, le flou n'aurait rien à flouter. Les noms restent,
-     pour que chaque écran bascule sans être réécrit. */
-  --glass: rgba(245, 244, 241, 0.055);
-  --glass-fort: rgba(245, 244, 241, 0.08);
-  --glass-border: rgba(245, 244, 241, 0.1);
+  /* ─── cartes ─────────────────────────────────────────────────────────── */
+  --glass: #ffffff;
+  --glass-fort: #ffffff;
+  --glass-border: color-mix(in srgb, var(--ink) 9%, transparent);
   --glass-blur: blur(20px) saturate(1.2);
-  --glass-lueur: inset 0 1px 0 rgba(245, 244, 241, 0.05);
+  --glass-lueur: none;
 
-  --sur-ink-2: rgba(245, 244, 241, 0.68);
-  --sur-ink-3: rgba(245, 244, 241, 0.5);
+  --sur-ink-2: color-mix(in srgb, var(--ink) 72%, transparent);
+  --sur-ink-3: color-mix(in srgb, var(--ink) 52%, transparent);
+}
+
+/* Les cartes vertes profondes (tête, mot du coach) repassent en encres
+   claires : elles redéfinissent les jetons pour leurs enfants, si bien que
+   tout ce qui est écrit dedans avec `--ink`, `--accent` ou `--border`
+   s'inverse de lui-même, sans une ligne de plus dans les composants. */
+.carte-braise {
+  --ink: #ffffff;
+  --ink-2: #dbdad2;
+  --ink-3: #a7a99f;
+  --sur-ink-2: rgba(255, 255, 255, 0.76);
+  --sur-ink-3: rgba(255, 255, 255, 0.55);
+  --accent: #65f67b;
+  --pale: #65f67b;
+  --pale-ink: #142800;
+  --border: rgba(255, 255, 255, 0.12);
+  --border-2: rgba(255, 255, 255, 0.22);
+  --surface-2: rgba(255, 255, 255, 0.08);
+  --surface-3: rgba(255, 255, 255, 0.14);
+  color: var(--ink);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -134,9 +152,8 @@
    un fichier du modèle, la refonte ne le touche pas. L'interface lit
    celles-ci, via `teinteBande` (src/lib/teintes.ts).
 
-   Le vert de bande est un vert d'eau, plus bleu et plus doux que le néon de
-   l'app : les deux se côtoient sur l'écran Aujourd'hui, ils ne doivent pas
-   se prendre l'un pour l'autre.
+   Sur fond clair, les teintes de bande servent en aplat avec une encre
+   sombre dessus, jamais comme couleur de texte.
    ══════════════════════════════════════════════════════════════════════════ */
 :root {
   --bande-vert: #6fe0b0;

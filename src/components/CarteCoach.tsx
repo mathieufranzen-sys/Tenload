@@ -52,7 +52,7 @@ export function CarteCoach({
           style={{
             marginTop: 16,
             paddingTop: 14,
-            borderTop: '1px solid rgba(255,200,160,.16)',
+            borderTop: '1px solid rgba(255,255,255,.16)',
           }}
         >
           <p className="etiquette" style={{ marginBottom: 6 }}>

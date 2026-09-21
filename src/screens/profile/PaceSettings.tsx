@@ -162,8 +162,8 @@ export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
                   borderRadius: 'var(--pill)',
                   fontSize: 14,
                   fontWeight: 700,
-                  background: actif ? '#0C0D10' : 'transparent',
-                  color: actif ? 'var(--ink)' : 'var(--ink-2)',
+                  background: actif ? 'var(--pale)' : 'transparent',
+                  color: actif ? 'var(--pale-ink)' : 'var(--ink-2)',
                 }}
               >
                 {o.label}

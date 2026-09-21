@@ -52,6 +52,10 @@ export function EnteteEcran({
         // Un voile sombre le détachait du reste de l'écran alors qu'il doit y
         // appartenir ; c'est le flou seul qui rend le titre lisible quand du
         // contenu défile derrière.
+        // En mode clair, le flou seul ne suffit plus : une carte vert profond
+        // qui passe sous le titre le rendait illisible. Un voile du fond,
+        // presque opaque, le garde lisible sans dessiner de bande.
+        background: 'color-mix(in srgb, var(--bg) 88%, transparent)',
         backdropFilter: 'blur(18px) saturate(1.4)',
         WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
         maskImage: MASQUE,

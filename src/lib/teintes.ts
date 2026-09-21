@@ -21,7 +21,7 @@ export const ENCRE_BANDE: Record<BandKey, string> = {
   jaune: '#2a2006',
   orange: '#2e1604',
   rouge: '#2a0806',
-  noir: '#f5f4f1',
+  noir: '#ffffff',
 }
 
 export const teinteBande = (k: BandKey) => TEINTE_BANDE[k]

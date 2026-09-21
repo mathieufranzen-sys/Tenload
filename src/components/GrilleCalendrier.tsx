@@ -35,11 +35,11 @@ function formeDuJour(seances: SeancePlanifiee[]): Forme {
 }
 
 const STYLE_FORME: Record<Forme, { fond: string; encre: string; bord: string }> = {
-  longue: { fond: 'transparent', encre: 'var(--ink)', bord: '1.5px solid var(--ink-2)' },
-  qualite: { fond: '#3e7a2c', encre: '#f5f4f1', bord: '1.5px solid transparent' },
-  endurance: { fond: '#2b3a22', encre: 'var(--ink)', bord: '1.5px solid transparent' },
-  velo: { fond: '#1c2616', encre: 'var(--ink-3)', bord: '1.5px solid transparent' },
-  renfo: { fond: '#222e1b', encre: 'var(--ink-2)', bord: '1.5px solid transparent' },
+  longue: { fond: 'transparent', encre: 'var(--ink)', bord: '1.5px solid var(--ink)' },
+  qualite: { fond: '#2e731a', encre: '#ffffff', bord: '1.5px solid transparent' },
+  endurance: { fond: '#dbdad2', encre: 'var(--ink)', bord: '1.5px solid transparent' },
+  velo: { fond: '#efefec', encre: 'var(--ink-3)', bord: '1.5px solid transparent' },
+  renfo: { fond: '#e4e3dc', encre: 'var(--ink-2)', bord: '1.5px solid transparent' },
   repos: { fond: 'transparent', encre: 'var(--ink-3)', bord: '1.5px dashed var(--border-2)' },
   dossard: { fond: 'var(--pale)', encre: 'var(--pale-ink)', bord: '1.5px solid transparent' },
 }
@@ -56,11 +56,11 @@ const LEGENDE_FORME: Array<[Forme, string]> = [
 
 /** La couleur du liseré de semaine, par nature. */
 export const TEINTE_NATURE: Record<string, string> = {
-  charge: '#6abf5e',
-  'longue qualitative': '#6abf5e',
-  decharge: '#2f5a17',
-  pause: '#c5c5bc',
-  course: '#8ef281',
+  charge: '#2e731a',
+  'longue qualitative': '#2e731a',
+  decharge: '#a7a99f',
+  pause: '#49de61',
+  course: '#274312',
   // Le Blue de Trailblazer : le vert d'eau appartient à la bande verte.
   reprise: '#4f63f2',
   affutage: '#f2cf6b',

@@ -199,7 +199,7 @@ export function SessionSheet({
                 </NoteSeance>
               )}
               {s.ecart && (
-                <NoteSeance teinte="var(--pale)" fond="rgba(245,244,241,.05)">
+                <NoteSeance teinte="var(--pale)" fond="color-mix(in srgb, var(--ink) 5%, transparent)">
                   {s.ecart}
                 </NoteSeance>
               )}

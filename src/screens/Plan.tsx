@@ -156,7 +156,7 @@ export function Plan({
             zIndex: 20,
             margin: '0 calc(var(--page-x) * -1) 14px',
             padding: '0 var(--page-x) 10px',
-            background: 'rgba(12,18,8,.86)',
+            background: 'color-mix(in srgb, var(--bg) 86%, transparent)',
             backdropFilter: 'var(--glass-blur)',
             WebkitBackdropFilter: 'var(--glass-blur)',
           }}

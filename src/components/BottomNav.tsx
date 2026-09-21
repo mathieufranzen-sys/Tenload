@@ -28,7 +28,7 @@ export function BottomNav({ actif, onChange }: { actif: Onglet; onChange: (o: On
         // Barre posée sur le bas de l'écran, comme dans la maquette, plutôt
         // que flottante : elle prend la zone sûre à son compte et le contenu
         // ne passe plus dessous en transparence.
-        background: 'rgba(12, 18, 8, 0.9)',
+        background: 'color-mix(in srgb, var(--bg) 90%, transparent)',
         backdropFilter: 'blur(24px) saturate(1.3)',
         WebkitBackdropFilter: 'blur(24px) saturate(1.3)',
         borderTop: '1px solid var(--border)',

@@ -133,7 +133,7 @@ export function Paces({
               style={{
                 padding: '11px 20px',
                 borderRadius: 'var(--pill)',
-                border: '1px solid rgba(245,244,241,.35)',
+                border: '1px solid color-mix(in srgb, var(--ink) 35%, transparent)',
                 fontSize: 15,
                 color: 'var(--ink)',
                 flex: 'none',
@@ -180,8 +180,9 @@ export function Paces({
                     borderRadius: 'var(--pill)',
                     background: ancre
                       ? 'var(--pale)'
-                      : `color-mix(in srgb, var(--accent-2) ${22 + i * 11}%, var(--surface))`,
-                    color: ancre ? 'var(--pale-ink)' : 'var(--ink)',
+                      : `color-mix(in srgb, var(--accent-2) ${8 + i * 13}%, var(--surface))`,
+                    // Au-delà du seuil, la barre est assez foncée pour du blanc.
+                    color: ancre || i >= 4 ? 'var(--pale-ink)' : 'var(--ink)',
                     border: ancre ? 'none' : '1px solid rgba(142,242,129,.18)',
                   }}
                 >

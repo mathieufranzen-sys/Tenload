@@ -156,7 +156,7 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
         y2={y(seuil)}
         // Un trait neutre : en cumulé, chart-3 sert déjà de couleur de remplissage
         // à une des trois couches, un seuil de la même teinte s'y serait fondu.
-        stroke={cumulee ? 'rgba(245,244,241,.55)' : 'var(--chart-3)'}
+        stroke={cumulee ? 'color-mix(in srgb, var(--ink) 55%, transparent)' : 'var(--chart-3)'}
         strokeWidth={1}
         strokeDasharray="3 4"
         opacity={cumulee ? 1 : 0.5}
