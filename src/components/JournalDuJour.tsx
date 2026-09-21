@@ -6,6 +6,7 @@
  * les exposer laisserait croire qu'ils comptent.
  */
 import type { DailyLogRow } from '../lib/buildPain'
+import { addDays } from '../lib/dates'
 import { DOULEUR_MOT, rangRessenti } from '../lib/ressenti'
 import { JaugeRessenti } from './JaugeRessenti'
 import { useJournal } from '../hooks/DataProvider'
@@ -14,6 +15,8 @@ import { useFileAttente } from '../hooks/useFileAttente'
 
 interface Props {
   day: string
+  /** Aujourd'hui : la douleur du soir se prescrit 24 h après sa journée. */
+  now: string
 }
 
 const GESTES: Array<{ champ: 'eccentric' | 'jumps'; label: string; effet: string }> = [
@@ -21,10 +24,14 @@ const GESTES: Array<{ champ: 'eccentric' | 'jumps'; label: string; effet: string
   { champ: 'jumps', label: 'Sauts', effet: '−2' },
 ]
 
-export function JournalDuJour({ day }: Props) {
+export function JournalDuJour({ day, now }: Props) {
   const { ligne, enregistrerLog } = useJournal()
   const enAttente = useFileAttente()
   const l = ligne(day)
+  // Le soir se note dans les 24 h : plus tard, c'est de la mémoire, pas une
+  // mesure. Le curseur reste vide et dit « Non saisi », sans alerte nulle part
+  // (ni badge, ni liste). Une valeur déjà saisie reste corrigeable.
+  const soirPerime = day < addDays(now, -1) && l?.pain_evening == null
 
   return (
     <section
@@ -68,6 +75,7 @@ export function JournalDuJour({ day }: Props) {
           label="Douleur en fin de journée"
           valeur={l?.pain_evening ?? null}
           onEcrire={(v) => enregistrerLog(day, { pain_evening: v })}
+          verrouille={soirPerime}
         />
       </div>
 
@@ -146,10 +154,12 @@ function CurseurCarnet({
   label,
   valeur,
   onEcrire,
+  verrouille,
 }: {
   label: string
   valeur: number | null
   onEcrire: (v: number) => void
+  verrouille?: boolean
 }) {
   const [affichee, changer] = useSaisieDifferee(valeur, onEcrire)
 
@@ -158,6 +168,7 @@ function CurseurCarnet({
       label={label}
       valeur={affichee}
       onChange={changer}
+      disabled={verrouille}
       court={affichee == null ? 'Non saisi' : DOULEUR_MOT[rangRessenti(affichee)]}
       teinte="douleur"
       pas={0.5}

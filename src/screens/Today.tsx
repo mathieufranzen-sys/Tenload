@@ -721,7 +721,7 @@ export function Today({
           </>
         )}
 
-        {journalActif && <JournalDuJour day={jour} />}
+        {journalActif && <JournalDuJour day={jour} now={now} />}
 
         {estAujourdhui && bilan && <CarteBilan bilan={bilan} style={{ marginBottom: 14 }} />}
 
