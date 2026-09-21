@@ -1,6 +1,6 @@
 /**
- * La carte du bilan de la semaine, au-dessus du mot du coach, le dimanche et
- * le lundi. Le dimanche soir parce que c'est là que la semaine se referme ; le
+ * Le bilan de la semaine, en page ouverte depuis l'écran Aujourd'hui, le
+ * dimanche et le lundi. Le dimanche soir parce que c'est là que la semaine se referme ; le
  * lundi matin parce qu'on ne relit pas toujours l'app le dimanche, et que la
  * semaine qui commence est justement celle dont la carte parle.
  *
@@ -13,18 +13,23 @@
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { PART_LONGUE_MAX, SEUIL_CIBLE, type BilanSemaine } from '../lib/bilan'
-import { DAYS_LONG, formatDay, formatNumber, weekdayIndex } from '../lib/dates'
+import { DAYS_LONG, formatNumber, weekdayIndex } from '../lib/dates'
+import type { BandKey } from '../lib/tendonIndex'
+import { TEINTE_BANDE } from '../lib/teintes'
 import { MARATHON_KM, formatDuration, formatPace } from '../lib/paces'
 
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`
 
-const styleBloc: CSSProperties = {
-  fontSize: 11,
-  fontWeight: 750,
-  letterSpacing: '1.1px',
-  textTransform: 'uppercase',
-  color: 'var(--ink-3)',
-  margin: '18px 0 2px',
+/** Une carte par temps du bilan, l'étiquette d'accent en tête. */
+function Bloc({ titre, children }: { titre: string; children: ReactNode }) {
+  return (
+    <section className="carte" style={{ padding: '16px 18px 8px' }}>
+      <p className="etiquette" style={{ marginBottom: 4 }}>
+        {titre}
+      </p>
+      {children}
+    </section>
+  )
 }
 
 function Ligne({
@@ -44,29 +49,26 @@ function Ligne({
         alignItems: 'baseline',
         gap: 12,
         padding: '10px 0',
-        borderBottom: '1px solid var(--border)',
+        borderTop: '1px solid var(--border)',
         fontSize: 14.5,
         fontVariantNumeric: 'tabular-nums',
       }}
     >
       <span style={{ color: 'var(--ink-2)', flex: 'none' }}>{libelle}</span>
-      <span style={{ fontWeight: 650, textAlign: 'right' }}>
+      <span style={{ fontWeight: 600, textAlign: 'right' }}>
         {children}
         {pastille && (
           <span
             style={{
               display: 'inline-block',
-              fontSize: 9.5,
-              fontWeight: 800,
-              letterSpacing: '.9px',
-              textTransform: 'uppercase',
-              padding: '3px 8px',
+              fontSize: 12,
+              fontWeight: 600,
+              padding: '3px 9px',
               borderRadius: 'var(--pill)',
               marginLeft: 8,
               whiteSpace: 'nowrap',
-              background: pastille.bonne ? 'rgba(111,224,176,.18)' : 'rgba(251,191,36,.16)',
-              border: `1px solid ${pastille.bonne ? 'rgba(111,224,176,.3)' : 'rgba(251,191,36,.32)'}`,
-              color: pastille.bonne ? 'var(--good)' : '#fcd34d',
+              background: pastille.bonne ? 'rgba(111,224,176,.16)' : 'rgba(242,207,107,.14)',
+              color: pastille.bonne ? 'var(--good)' : 'var(--warning)',
             }}
           >
             {pastille.texte}
@@ -81,35 +83,102 @@ const Secondaire = ({ children }: { children: ReactNode }) => (
   <span style={{ color: 'var(--ink-2)', fontWeight: 500 }}> {children}</span>
 )
 
-function Liste({ titre, items }: { titre: string; items: string[] }) {
+/** Une liste en filets verticaux, comme « ce que la semaine change » de la maquette. */
+function Liste({ titre, items, teintes }: { titre: string; items: string[]; teintes?: string[] }) {
   if (items.length === 0) return null
   return (
-    <>
-      <div style={styleBloc}>{titre}</div>
-      <ul style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: 14.5, lineHeight: 1.55, color: 'var(--ink-2)' }}>
-        {items.map((x) => (
-          <li key={x} style={{ marginBottom: 5 }}>
-            {x}
-          </li>
+    <section className="carte" style={{ padding: '16px 18px' }}>
+      <p className="etiquette">{titre}</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
+        {items.map((x, i) => (
+          <div key={x} style={{ display: 'flex', gap: 12 }}>
+            <span
+              aria-hidden
+              style={{
+                width: 4,
+                flex: 'none',
+                borderRadius: 2,
+                background: teintes?.[i % teintes.length] ?? 'var(--accent-doux)',
+              }}
+            />
+            <span style={{ fontSize: 15, lineHeight: 1.5 }}>{x}</span>
+          </div>
         ))}
-      </ul>
-    </>
+      </div>
+    </section>
   )
 }
 
-export function CarteBilan({ bilan: b, style }: { bilan: BilanSemaine; style?: CSSProperties }) {
+export function CarteBilan({
+  bilan: b,
+  jours,
+  style,
+}: {
+  bilan: BilanSemaine
+  /**
+   * L'indice de chaque jour de la semaine bilanée, du lundi au dimanche. Null
+   * pour un jour sans indice lisible : il reste en pointillés, sans hauteur.
+   */
+  jours?: Array<{ idx: number; bande: BandKey } | null>
+  style?: CSSProperties
+}) {
   const chrono = b.forme ? formatDuration(Math.round((b.forme.allure * MARATHON_KM) / 60)) : null
 
   return (
-    <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '15px 16px', ...style }}>
-      <div style={{ fontSize: 11, fontWeight: 750, letterSpacing: '1.1px', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
-        Bilan de la semaine {b.n}
-      </div>
-      <div style={{ fontSize: 13, color: 'var(--ink-2)', margin: '3px 0 4px' }}>
-        du {formatDay(b.du)} au {formatDay(b.au)}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, ...style }}>
+      {/* La tête de la maquette : les kilomètres en grand, puis la semaine en
+          sept pastilles de bande, dont la hauteur suit l'indice du jour. */}
+      <section className="carte-braise" style={{ padding: '20px 20px 18px', borderRadius: 'var(--radius-lg)' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+          <span className="chiffre" style={{ fontSize: 76, lineHeight: 0.95 }}>
+            {formatNumber(b.kmRealises)}
+          </span>
+          <span style={{ fontSize: 17, color: 'var(--sur-ink-2)' }}>km sur {formatNumber(b.kmPrevus)} prévus</span>
+        </div>
+        <p style={{ margin: '10px 0 0', fontSize: 15, color: 'var(--accent)' }}>
+          {b.faites} séance{b.faites > 1 ? 's' : ''} sur {b.prevues}
+          {b.nonNotees === 0 ? ', toutes notées' : `, ${b.nonNotees} à noter`}
+        </p>
+        {jours && (
+          <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', marginTop: 22, height: 90 }}>
+            {jours.map((j, i) => (
+              <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+                <span
+                  title={j ? `indice ${j.idx}` : 'indice inconnu'}
+                  style={{
+                    display: 'block',
+                    // Un plancher de 26 px : un jour à 3 sur 100 reste une
+                    // pastille, pas un trait qu'on prend pour un manque.
+                    height: j == null ? 26 : 26 + Math.min(1, j.idx / 70) * 40,
+                    borderRadius: 20,
+                    background: j == null ? 'transparent' : TEINTE_BANDE[j.bande],
+                    border: j == null ? '1.5px dashed var(--border-2)' : undefined,
+                  }}
+                />
+                <span style={{ display: 'block', marginTop: 8, fontSize: 12.5, color: 'var(--sur-ink-3)' }}>
+                  {'lmmjvsd'[i]}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <Tuile valeur={b.indice.moyen != null ? String(b.indice.moyen) : '—'} libelle="indice moyen" />
+        <Tuile
+          valeur={b.pic ? formatNumber(b.pic.valeur) : '—'}
+          libelle={
+            b.pic
+              ? `douleur max · ${DAYS_LONG[weekdayIndex(b.pic.day)].toLowerCase()} ${b.pic.moment === 'soir' ? 'soir' : b.pic.moment === 'réveil' ? 'matin' : 'à l’effort'}`
+              : 'douleur max'
+          }
+        />
+        <Tuile valeur={`${b.excentrique}`} unite="/7" libelle="jours d'excentrique" />
+        <Tuile valeur={`${b.sautees}`} libelle={b.sautees > 1 ? 'séances sautées' : 'séance sautée'} bonne={b.sautees === 0} />
       </div>
 
-      <div style={styleBloc}>Ce que tu as fait</div>
+      <Bloc titre="ce que tu as fait">
       <Ligne
         libelle="Séances"
         pastille={b.nonNotees ? { texte: `${b.nonNotees} à noter`, bonne: false } : undefined}
@@ -149,7 +218,9 @@ export function CarteBilan({ bilan: b, style }: { bilan: BilanSemaine; style?: C
         <Secondaire>sur 28 jours, cible 3 pour 1</Secondaire>
       </Ligne>
 
-      <div style={styleBloc}>Ce que ton corps en dit</div>
+      </Bloc>
+
+      <Bloc titre="ce que ton corps en dit">
       {b.indice.moyen != null && (
         <Ligne libelle="Indice de charge">
           {b.indice.moyen} en moyenne<Secondaire>pic {b.indice.pic}</Secondaire>
@@ -213,7 +284,9 @@ export function CarteBilan({ bilan: b, style }: { bilan: BilanSemaine; style?: C
         {b.attestes} sur 7
       </Ligne>
 
-      <div style={styleBloc}>Ce que ça vaut pour le 4 avril</div>
+      </Bloc>
+
+      <Bloc titre="ce que ça vaut pour le 4 avril">
       {b.forme && (
         <>
           <Ligne libelle="Forme projetée">
@@ -239,33 +312,69 @@ export function CarteBilan({ bilan: b, style }: { bilan: BilanSemaine; style?: C
         J−{b.echeances.marathon}<Secondaire>marathon de Paris</Secondaire>
       </Ligne>
 
+      </Bloc>
+
       {b.echeances.dixKm != null && (
-        <>
-          <div style={styleBloc}>Ce que ça vaut pour le 15 novembre</div>
+        <Bloc titre="ce que ça vaut pour le 15 novembre">
           <Ligne libelle="Échéance">
             J−{b.echeances.dixKm}<Secondaire>10 km Hoka</Secondaire>
           </Ligne>
           <Ligne libelle="Séances spécifiques">
             {b.dosage.vitesse}<Secondaire>sur 28 jours</Secondaire>
           </Ligne>
-        </>
+        </Bloc>
       )}
 
-      <Liste titre={`Tes erreurs de la semaine · ${b.erreurs.length}`} items={b.erreurs} />
-      <Liste titre="Ce que je te propose de changer" items={b.adaptations} />
-      <Liste titre="La semaine prochaine" items={b.suivante} />
+      <Liste
+        titre={`tes erreurs de la semaine · ${b.erreurs.length}`}
+        items={b.erreurs}
+        teintes={['var(--warning)']}
+      />
+      <Liste titre="ce que je te propose de changer" items={b.adaptations} teintes={['var(--accent)']} />
+      <Liste
+        titre={`ce que la semaine ${b.n + 1} change`}
+        items={b.suivante}
+        teintes={['var(--pale)', 'var(--accent)', 'var(--accent-doux)']}
+      />
 
-      <div
-        style={{
-          marginTop: 18,
-          borderRadius: 16,
-          padding: '14px 15px',
-          background: 'rgba(110,231,183,.07)',
-          border: '1px solid rgba(111,224,176,.22)',
-        }}
-      >
-        <div style={{ ...styleBloc, margin: '0 0 8px' }}>Dans la tête, la semaine qui vient</div>
-        <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.55 }}>{b.mental}</p>
+      <section className="carte-braise" style={{ padding: '20px 20px 22px' }}>
+        <p className="etiquette" style={{ color: 'var(--pale)', opacity: 0.85 }}>
+          dans la tête, la semaine qui vient
+        </p>
+        <p className="display-it" style={{ margin: '10px 0 0', fontSize: 22, lineHeight: 1.35 }}>
+          {b.mental}
+        </p>
+      </section>
+    </div>
+  )
+}
+
+function Tuile({
+  valeur,
+  unite,
+  libelle,
+  bonne,
+}: {
+  valeur: string
+  unite?: string
+  libelle: string
+  bonne?: boolean
+}) {
+  return (
+    <div
+      className="carte"
+      style={{
+        padding: '16px 16px 15px',
+        borderColor: bonne ? 'rgba(111,224,176,.4)' : undefined,
+        background: bonne ? 'rgba(111,224,176,.05)' : undefined,
+      }}
+    >
+      <span className="chiffre" style={{ fontSize: 38, lineHeight: 1, color: bonne ? 'var(--good)' : undefined }}>
+        {valeur}
+      </span>
+      {unite && <span style={{ fontSize: 15, color: 'var(--accent)' }}> {unite}</span>}
+      <div style={{ fontSize: 13.5, marginTop: 8, color: bonne ? 'var(--good)' : 'var(--accent)', lineHeight: 1.3 }}>
+        {libelle}
       </div>
     </div>
   )

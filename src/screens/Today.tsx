@@ -43,6 +43,7 @@ import { CarteCoach } from '../components/CarteCoach'
 import { CarteBilan } from '../components/CarteBilan'
 import { bilanSemaine, type FaitsBilan, type SeanceBilan } from '../lib/bilan'
 import type { SeanceANoter } from '../lib/aNoter'
+import { libelleNature } from '../lib/natureSemaine'
 
 const plan = planJson as unknown as Plan
 
@@ -509,6 +510,7 @@ export function Today({
   const semaineAffichee = plan.weeks.find((w) => jour >= w.monday && jour <= addDays(w.monday, 6))
   const bloc = semaineAffichee && plan.blocs.find((b) => b.id === semaineAffichee.bloc)
   const carnet = duJour.map((x) => ({ x, fb: feedbackDe(x) ?? null }))
+  const semaineBilanee = bilan ? plan.weeks.find((w) => w.n === bilan.n) : undefined
 
   return (
     <div style={{ position: 'relative', maxWidth: 'var(--shell-max)', margin: '0 auto', paddingBottom: 110 }}>
@@ -705,11 +707,21 @@ export function Today({
       {bilan && (
         <SubPage
           ouvert={bilanOuvert}
-          surtitre={`${formatDay(bilan.du)} → ${formatDay(bilan.au)}`}
+          surtitre={`${formatDay(bilan.du)} → ${formatDay(bilan.au)}${semaineBilanee?.nature ? ` · ${libelleNature(semaineBilanee, { charge: true })}` : ''}`}
           titre={`bilan de la semaine ${bilan.n}`}
           onBack={() => setBilanOuvert(false)}
         >
-          {bilanOuvert && <CarteBilan bilan={bilan} />}
+          {bilanOuvert && (
+            <CarteBilan
+              bilan={bilan}
+              jours={Array.from({ length: 7 }, (_, k) => {
+                const d = A.byDate[addDays(bilan.du, k)]
+                return d && !d.painInconnue && addDays(bilan.du, k) <= now
+                  ? { idx: d.idx, bande: bandOf(d.idx).key }
+                  : null
+              })}
+            />
+          )}
         </SubPage>
       )}
     </div>
