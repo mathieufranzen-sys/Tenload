@@ -886,6 +886,58 @@ perçu, la douleur à l'effort et la douleur de fin de journée**.
   maîtrise pas : **il ne doit porter aucune règle métier**, tout le texte vient
   du message envoyé.
 
+## La refonte « braise » (branche `design-test`)
+
+Demandée le 21 septembre 2026, d'après une maquette Claude Design de Mathieu
+passée du violet à l'orange. **Aucun calcul ni aucune séance ne change** :
+c'est une consigne, pas un effet de bord. Seuls deux textes de règle ont bougé,
+parce qu'ils nommaient l'onglet Allures.
+
+- **Palette** (`tokens.css`) : fond noir tirant vers l'orange (`--bg`
+  #120c09), accent orange (`--accent`), pêche pâle pour les boutons et la
+  sélection (`--pale`), braise profonde pour la carte de tête et le mot du
+  coach (`.carte-braise`). Les noms des anciennes variables sont gardés pour
+  que chaque écran bascule sans réécriture.
+- **Les teintes de bande vivent dans `src/lib/teintes.ts`**, pas dans `BANDS`
+  (tendonIndex.ts), qui est un fichier du modèle. La bande jaune y est enfin
+  jaune. `COULEUR_DOULEUR` (ressenti.ts) suit les mêmes teintes, le noir
+  devenant un grenat lisible sur fond sombre.
+- **Typographie** : Fraunces (serif, axes SOFT et opsz) pour les titres, les
+  grands chiffres (`.chiffre`) et le mot du coach en italique (`.display-it`) ;
+  Instrument Sans pour le texte courant. Les deux sont embarquées par
+  `@fontsource` et préchargées par la PWA, sous-ensemble vietnamien exclu.
+- **Allures devient Objectif.** La clé d'onglet reste `paces` pour ne toucher
+  aucun appelant. L'écran porte l'allure visée, les zones en barres, la forme
+  projetée et les **dossards**.
+- Aujourd'hui : jauge en gélule (`CarteCharge`), « ce que ça change »
+  (`CeQueCaChange`, qui remplace AlertBox), carnet résumé et sa page
+  (`PageCarnet`), bilan de semaine en page. Le détail du calcul est une page.
+- Programme : pastilles de jour dans la vue semaine ; le calendrier s'ouvre sur
+  une grille du plan entier (`GrilleCalendrier`), le passé coloré par bande,
+  l'avenir par type de séance. Le détail jour par jour reste dessous, c'est là
+  que les séances se déplacent.
+- Le ressenti de séance se note en pastilles de 0 à 10 (`GrilleRessenti`). Le
+  « je ne sais pas » de la maquette n'est pas repris : un ressenti s'enregistre
+  entier ou pas du tout.
+
+### Les dossards
+
+`src/lib/dossards.ts` (+ 11 tests), `SectionDossards`, table
+`supabase/dossards.sql` **à exécuter une fois**. Tant qu'elle manque, l'écran
+le dit et n'enregistre rien, sans allumer la bannière de synchronisation.
+
+- Les quatre dossards du plan y sont d'office et ne se suppriment pas. Leur
+  ligne ne porte que l'objectif ; le chrono d'une course qui recale la forme
+  (10 à 39 km) reste la durée réelle de l'écart, saisie par le même chemin que
+  la feuille de séance. Une valeur, une source.
+- **Un dossard ajouté ne touche ni au programme ni à l'indice.** Son chrono ne
+  recale rien.
+- Une suppression est un drapeau `supprime`, jamais un DELETE : toutes les
+  écritures restent des upserts rejouables.
+- Le mot du coach d'un dossard (`motDuDossard`) compare l'objectif à
+  `chronoEquivalent`, l'inverse exact de `projeterMarathon` sur la forme
+  projetée, puis, la course passée, le chrono à l'objectif et à la forme.
+
 ## Pistes connues
 
 - Le bundle passe 600 Ko, essentiellement `plan.json` embarqué. Sans

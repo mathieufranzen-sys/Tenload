@@ -41,6 +41,10 @@ export default defineConfig({
         // L'app doit s'ouvrir hors ligne : le plan des 35 semaines est statique,
         // seules les saisies ont besoin du réseau (et sont mises en file d'attente).
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // Les polices embarquent un sous-ensemble vietnamien que le français
+        // n'appelle jamais. Le latin étendu, lui, reste : c'est lui qui porte
+        // le « œ » de « cœur » et d'« œil ».
+        globIgnores: ['**/*vietnamese*'],
         navigateFallback: '/index.html',
         runtimeCaching: [
           {

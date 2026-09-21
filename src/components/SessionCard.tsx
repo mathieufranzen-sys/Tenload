@@ -30,7 +30,7 @@ interface Props {
 export function SessionCard({ session: s, marathonPace, feedback, onClick, compact = false }: Props) {
   if (compact) return <CarteCompacte session={s} marathonPace={marathonPace} feedback={feedback} onClick={onClick} />
   const [lo, hi] = estimateDuration(s, marathonPace)
-  const duration = lo === hi ? formatDuration(lo) : `${formatDuration(lo)} - ${formatDuration(hi)}`
+  const duration = lo === hi ? formatDuration(lo) : `${formatDuration(lo)} à ${formatDuration(hi)}`
   // La distance seulement : le repli sur `s.dur` répétait la durée à côté
   // d'elle-même, « 40 min - 45 min · 40 min ». Une séance sans distance n'en
   // a pas, et la ligne s'arrête à la durée.
