@@ -893,11 +893,15 @@ passée du violet à l'orange. **Aucun calcul ni aucune séance ne change** :
 c'est une consigne, pas un effet de bord. Seuls deux textes de règle ont bougé,
 parce qu'ils nommaient l'onglet Allures.
 
-- **Palette** (`tokens.css`) : fond noir tirant vers l'orange (`--bg`
-  #120c09), accent orange (`--accent`), pêche pâle pour les boutons et la
-  sélection (`--pale`), braise profonde pour la carte de tête et le mot du
-  coach (`.carte-braise`). Les noms des anciennes variables sont gardés pour
-  que chaque écran bascule sans réécriture.
+- **Palette** (`tokens.css`) : d'abord orange, puis reprise le même jour sur
+  **Trailblazer, le design system d'AllTrails**, en mode sombre. Fond vert
+  presque noir (`--bg` #0e150a, tiré de Green-400), texte en neutres clairs,
+  accent et boutons en Neon Green (`--accent`, `--pale`), Green-300 (Brand)
+  pour la carte de tête et le mot du coach (`.carte-braise`, nom resté de la
+  version orange), Blue pour la courbe d'effort. **Les valeurs sont relevées
+  sur le rendu de la palette Figma**, l'inspecteur demandant un compte : à
+  corriger si Mathieu fournit les hexadécimaux exacts. Les noms des anciennes
+  variables sont gardés pour que chaque écran bascule sans réécriture.
 - **Les teintes de bande vivent dans `src/lib/teintes.ts`**, pas dans `BANDS`
   (tendonIndex.ts), qui est un fichier du modèle. La bande jaune y est enfin
   jaune. `COULEUR_DOULEUR` (ressenti.ts) suit les mêmes teintes, le noir

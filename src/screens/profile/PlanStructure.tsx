@@ -24,7 +24,7 @@ export function PlanStructure() {
                 fontWeight: 600,
                 padding: '5px 11px',
                 borderRadius: 'var(--pill)',
-                background: 'rgba(232,116,47,.14)',
+                background: 'rgba(62,122,44,.14)',
                 color: 'var(--accent)',
                 marginBottom: 6,
               }}

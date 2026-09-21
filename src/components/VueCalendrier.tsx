@@ -432,8 +432,8 @@ export function VueCalendrier({
             width: 180,
             padding: '9px 12px',
             borderRadius: 'var(--pill)',
-            background: 'linear-gradient(135deg, #e8742f, #b44f1c)',
-            color: '#fff4ec',
+            background: 'linear-gradient(135deg, #6abf5e, #2f5a17)',
+            color: '#f5f4f1',
             fontSize: 14,
             fontWeight: 600,
             transform: 'rotate(-2deg)',
@@ -456,7 +456,7 @@ function fondCible(enCours: boolean, cible: CibleDrop | undefined, survole: bool
   if (!enCours) return 'transparent'
   if (!cible) return 'transparent'
   if (cible.conflits.length) return survole ? 'rgba(255,107,94,.26)' : 'rgba(255,107,94,.10)'
-  return survole ? 'rgba(255,220,196,.16)' : 'rgba(255,220,196,.05)'
+  return survole ? 'rgba(245,244,241,.16)' : 'rgba(245,244,241,.05)'
 }
 
 /**

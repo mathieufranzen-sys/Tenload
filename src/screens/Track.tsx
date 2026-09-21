@@ -469,7 +469,7 @@ function Viz({
       {controle && <div style={{ marginBottom: 14 }}>{controle}</div>}
       {/* Toile sombre sous le tracé : sur le verre seul, les bandes de fond de
           l'indice et la palette saturée se délavent contre le dégradé. */}
-      <div style={{ background: 'rgba(10,6,4,.4)', borderRadius: 16, padding: '10px 8px 4px' }}>{children}</div>
+      <div style={{ background: 'rgba(6,10,4,.4)', borderRadius: 16, padding: '10px 8px 4px' }}>{children}</div>
       {(legendeCouleurs || note) && (
         <div
           style={{

@@ -205,7 +205,7 @@ function CarteCompacte({ session: s, marathonPace, feedback, onClick }: Omit<Pro
         background: repos
           ? 'transparent'
           : s.type === 'long'
-            ? 'linear-gradient(135deg, rgba(232,116,47,.22), rgba(232,116,47,.06)), var(--surface)'
+            ? 'linear-gradient(135deg, rgba(62,122,44,.22), rgba(62,122,44,.06)), var(--surface)'
             : 'var(--surface)',
         opacity: s.saute ? 0.45 : 1,
       }}

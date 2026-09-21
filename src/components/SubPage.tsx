@@ -33,7 +33,7 @@ export function SubPage({
         background: 'var(--bg)',
         // Une sous-page reste un écran de l'app : la même lueur en haut.
         backgroundImage:
-          'radial-gradient(110% 320px at 10% -80px, rgba(232, 116, 47, 0.2), transparent 70%)',
+          'radial-gradient(110% 320px at 10% -80px, rgba(62, 122, 44, 0.2), transparent 70%)',
         overflowY: 'auto',
         maxWidth: 'var(--shell-max)',
         margin: '0 auto',

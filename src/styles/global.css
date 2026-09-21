@@ -99,10 +99,10 @@ input[type='range']::-moz-range-thumb {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   Fond « braise »
+   Fond
 
-   Une seule lueur chaude en haut de l'écran, qui retombe dans le noir orangé
-   du fond. Les sept masses colorées par bande sont parties : la maquette pose
+   Une seule lueur verte en haut de l'écran, qui retombe dans le noir vert du
+   fond. La classe garde son nom de la version orange (« braise »). Les sept masses colorées par bande sont parties : la maquette pose
    tout sur un fond uni, et la charge du tendon se lit dans la jauge, pas
    derrière elle. La lueur reste la même sur tous les écrans pour qu'on
    reconnaisse l'app avant d'en lire le contenu.
@@ -113,13 +113,13 @@ input[type='range']::-moz-range-thumb {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(120% 420px at 18% -60px, rgba(232, 116, 47, 0.34), transparent 70%),
-    radial-gradient(90% 360px at 100% 40px, rgba(120, 44, 12, 0.4), transparent 72%),
+    radial-gradient(120% 420px at 18% -60px, rgba(62, 122, 44, 0.34), transparent 70%),
+    radial-gradient(90% 360px at 100% 40px, rgba(23, 42, 6, 0.4), transparent 72%),
     var(--bg);
 }
 .braise--calme {
   background:
-    radial-gradient(110% 320px at 10% -80px, rgba(232, 116, 47, 0.2), transparent 70%),
+    radial-gradient(110% 320px at 10% -80px, rgba(62, 122, 44, 0.2), transparent 70%),
     var(--bg);
 }
 
@@ -169,12 +169,12 @@ input[type='range']::-moz-range-thumb {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius);
 }
-/* Carte de tête et mot du coach : la braise, le seul fond coloré de l'app. */
+/* Carte de tête et mot du coach : Green-300, le seul fond coloré de l'app. */
 .carte-braise {
   background:
-    radial-gradient(120% 90% at 20% 0%, rgba(255, 140, 70, 0.28), transparent 65%),
+    radial-gradient(120% 90% at 20% 0%, rgba(106, 191, 94, 0.28), transparent 65%),
     linear-gradient(160deg, var(--braise) 0%, var(--braise-2) 100%);
-  border: 1px solid rgba(255, 170, 120, 0.18);
+  border: 1px solid rgba(142, 242, 129, 0.18);
   border-radius: var(--radius);
 }
 /* Bouton principal : pilule pâle, avec la pastille ronde de la maquette. */
@@ -195,7 +195,7 @@ input[type='range']::-moz-range-thumb {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #fff7f0;
+  background: #f5f4f1;
   display: grid;
   place-items: center;
   flex: none;
@@ -234,7 +234,7 @@ input[type='range']::-moz-range-thumb {
    comme une carte de la maquette, assez transparente pour que la lueur du
    haut d'écran passe au travers. */
 .glass {
-  background: rgba(34, 25, 20, 0.86);
+  background: rgba(26, 36, 19, 0.86);
   border: 1px solid var(--glass-border);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);

@@ -162,7 +162,7 @@ export function ChargeSheet({
         overflowY: 'auto',
         background: 'var(--bg)',
         backgroundImage:
-          'radial-gradient(110% 320px at 10% -80px, rgba(232, 116, 47, 0.2), transparent 70%)',
+          'radial-gradient(110% 320px at 10% -80px, rgba(62, 122, 44, 0.2), transparent 70%)',
       }}
     >
       <div
@@ -207,7 +207,7 @@ export function ChargeSheet({
               height: 34,
               marginTop: 18,
               borderRadius: 'var(--pill)',
-              background: 'rgba(255,220,196,.07)',
+              background: 'rgba(245,244,241,.07)',
               overflow: 'hidden',
             }}
           >
@@ -222,7 +222,7 @@ export function ChargeSheet({
                   width: `${soin}%`,
                   marginLeft: `-${soin}%`,
                   background:
-                    'repeating-linear-gradient(135deg, rgba(18,12,9,.75) 0 3px, transparent 3px 6px)',
+                    'repeating-linear-gradient(135deg, rgba(12,18,8,.75) 0 3px, transparent 3px 6px)',
                 }}
               />
             )}
@@ -397,7 +397,7 @@ export function ChargeSheet({
 }
 
 /** Du jaune de la douleur au cuivre de la tendance : le poids décroît avec la teinte. */
-const TEINTE_TERME = ['#f2cf6b', '#f0a45a', '#e27d45', '#c9652f', '#a85222', '#ffdcc2']
+const TEINTE_TERME = ['#f2cf6b', '#72d96a', '#6abf5e', '#3e7a2c', '#2f5a17', '#8ef281']
 
 function Avertissement({ children, sourd = false }: { children: ReactNode; sourd?: boolean }) {
   return (

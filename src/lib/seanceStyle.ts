@@ -84,12 +84,12 @@ export const RANG_ZONE: Record<ZoneKey, number> = {
 }
 
 export function encreZone(zone: ZoneKey): string {
-  // Du cuivre sourd de la récupération à la pêche claire des répétitions :
+  // Du vert mousse de la récupération au vert néon des répétitions :
   // l'échelle monte en clarté, ce qui se lit comme une intensité même sans
-  // distinguer les teintes chaudes entre elles.
+  // distinguer les teintes entre elles.
   const t = Math.min(1, RANG_ZONE[zone] / 6)
-  const de = [122, 58, 28]
-  const a = [255, 220, 194]
+  const de = [61, 90, 50]
+  const a = [142, 242, 129]
   const c = de.map((v, i) => Math.round(v + (a[i] - v) * t))
   return `rgb(${c.join(',')})`
 }

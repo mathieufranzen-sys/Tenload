@@ -57,8 +57,8 @@ export function SessionHero({
         // Un cran plus chaud que les autres cartes : c'est la seule séance de
         // l'écran qui appelle un geste.
         background:
-          'radial-gradient(120% 100% at 0% 0%, rgba(232,116,47,.2), transparent 60%), var(--surface)',
-        border: '1px solid rgba(255,170,120,.16)',
+          'radial-gradient(120% 100% at 0% 0%, rgba(62,122,44,.2), transparent 60%), var(--surface)',
+        border: '1px solid rgba(142,242,129,.16)',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>

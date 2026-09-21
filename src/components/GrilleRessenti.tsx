@@ -15,11 +15,11 @@
 import { COULEUR_DOULEUR, rangRessenti } from '../lib/ressenti'
 import { formatNumber } from '../lib/dates'
 
-/** L'effort n'est pas un signal d'alarme : un camaïeu chaud qui monte, sans rouge. */
+/** L'effort n'est pas un signal d'alarme : un camaïeu vert qui monte, sans rouge. */
 const COULEUR_EFFORT = Array.from({ length: 11 }, (_, i) => {
   const t = i / 10
-  const de = [58, 40, 30]
-  const a = [255, 196, 150]
+  const de = [43, 58, 34]
+  const a = [142, 242, 129]
   return `rgb(${de.map((v, k) => Math.round(v + (a[k] - v) * t)).join(',')})`
 })
 
@@ -75,7 +75,7 @@ export function GrilleRessenti({
                 aspectRatio: '1',
                 borderRadius: '50%',
                 background: c,
-                color: sombre(c) ? '#fbf1e8' : '#1a0d06',
+                color: sombre(c) ? '#f5f4f1' : '#172a06',
                 fontSize: 26,
                 opacity: valeur != null && !choisi ? 0.55 : 1,
                 boxShadow: choisi ? '0 0 0 3px var(--bg), 0 0 0 5px var(--pale)' : undefined,

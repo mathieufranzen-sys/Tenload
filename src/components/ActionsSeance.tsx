@@ -191,10 +191,10 @@ export function ActionsSeance({
                   fontWeight: 600,
                   color: 'var(--ink)',
                   background:
-                    patch.type === r.type ? 'rgba(255,220,196,.11)' : 'rgba(255,220,196,.04)',
+                    patch.type === r.type ? 'rgba(245,244,241,.11)' : 'rgba(245,244,241,.04)',
                   border:
                     patch.type === r.type
-                      ? '1px solid rgba(255,220,196,.26)'
+                      ? '1px solid rgba(245,244,241,.26)'
                       : '1px solid var(--border)',
                 }}
               >
@@ -244,7 +244,7 @@ function MarqueType({ type }: { type: SessionType }) {
         display: 'grid',
         placeItems: 'center',
         flex: 'none',
-        background: 'rgba(255,220,196,.07)',
+        background: 'rgba(245,244,241,.07)',
       }}
     >
       <Icon name={ICONE_TYPE[type] ?? 'run'} size={16} />
@@ -309,8 +309,8 @@ function ComposeurQualite({
           fontSize: 15,
           fontWeight: 600,
           color: 'var(--ink)',
-          background: actif ? 'rgba(255,220,196,.11)' : 'rgba(255,220,196,.04)',
-          border: actif ? '1px solid rgba(255,220,196,.26)' : '1px solid var(--border)',
+          background: actif ? 'rgba(245,244,241,.11)' : 'rgba(245,244,241,.04)',
+          border: actif ? '1px solid rgba(245,244,241,.26)' : '1px solid var(--border)',
         }}
       >
         {/* L'icône suit la zone : en VO2 la séance devient un intervalle, et
@@ -391,7 +391,7 @@ function Choix({
         fontWeight: 650,
         fontVariantNumeric: 'tabular-nums',
         color: actif ? 'var(--pale-ink)' : 'var(--ink)',
-        background: actif ? 'var(--pale)' : 'rgba(255,220,196,.05)',
+        background: actif ? 'var(--pale)' : 'rgba(245,244,241,.05)',
         border: actif ? '1px solid var(--pale)' : '1px solid var(--border)',
         cursor: 'pointer',
       }}

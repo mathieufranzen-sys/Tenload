@@ -183,7 +183,7 @@ export function roleDe(
 }
 
 export const COULEUR_ROLE: Record<RoleSegment, string> = {
-  facile: 'var(--chart-3)',
+  facile: '#3e7a2c',
   effort: 'var(--chart-1)',
   recup: 'var(--chart-2)',
 }

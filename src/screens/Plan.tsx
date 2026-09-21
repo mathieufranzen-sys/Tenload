@@ -156,7 +156,7 @@ export function Plan({
             zIndex: 20,
             margin: '0 calc(var(--page-x) * -1) 14px',
             padding: '0 var(--page-x) 10px',
-            background: 'rgba(18,12,9,.86)',
+            background: 'rgba(12,18,8,.86)',
             backdropFilter: 'var(--glass-blur)',
             WebkitBackdropFilter: 'var(--glass-blur)',
           }}
@@ -250,8 +250,8 @@ export function Plan({
           <span
             className="puce"
             style={{
-              background: 'rgba(232,116,47,.14)',
-              border: '1px solid rgba(232,116,47,.45)',
+              background: 'rgba(62,122,44,.14)',
+              border: '1px solid rgba(62,122,44,.45)',
               color: 'var(--accent)',
             }}
           >

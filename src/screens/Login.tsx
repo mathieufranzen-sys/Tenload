@@ -132,7 +132,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                 style={{
                   width: '100%',
                   boxSizing: 'border-box',
-                  background: 'rgba(18,12,9,.34)',
+                  background: 'rgba(12,18,8,.34)',
                   border: `1px solid ${erreur ? 'var(--c-erreur)' : 'var(--glass-border)'}`,
                   borderRadius: 14,
                   padding: '14px 15px',
@@ -226,7 +226,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
               style={{
                 width: '100%',
                 boxSizing: 'border-box',
-                background: 'rgba(18,12,9,.34)',
+                background: 'rgba(12,18,8,.34)',
                 border: `1px solid ${erreur ? 'var(--c-erreur)' : 'var(--glass-border)'}`,
                 borderRadius: 14,
                 padding: '14px 15px',

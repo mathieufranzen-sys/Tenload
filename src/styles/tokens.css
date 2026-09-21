@@ -1,11 +1,14 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   Design system Tenload, version « braise »
+   Design system Tenload, version « sentier »
 
    Refondu le 21 septembre 2026 d'après la maquette Claude Design de Mathieu,
-   passée de violet à orange : fond sombre qui tire vers l'orange, accent
-   orange, typographie à empattements pour les titres et les chiffres.
+   puis recoloré le même jour sur la palette de Trailblazer, le design system
+   d'AllTrails (Neutral, Green, Neon Green, Blue), passée en mode sombre : le
+   fond est le vert presque noir de Green-400, le texte les neutres clairs,
+   l'accent le Neon Green. Les valeurs sont relevées sur le rendu de la
+   palette Figma, faute d'accès à son inspecteur.
 
-   La couleur a deux sens et deux seulement. L'orange est la voix de l'app
+   La couleur a deux sens et deux seulement. Le vert néon est la voix de l'app
    (accent, sélection, boutons). Les cinq teintes de bande (vert, jaune,
    orange, rouge, noir) ne disent que la charge du tendon, et n'apparaissent
    que là où elle est lue : jauge, pastilles de bande, calendrier passé.
@@ -13,32 +16,33 @@
 
 :root {
   /* ─── surfaces et encres ─────────────────────────────────────────────────
-     Refonte « braise » du 21 septembre 2026 : un noir qui tire vers l'orange
-     plutôt qu'un noir neutre. Toutes les surfaces sont prises dans la même
-     teinte, seule la clarté change, pour que les cartes se lisent comme des
-     épaisseurs d'une même matière et pas comme des pièces rapportées. */
-  --bg: #120c09;
-  --surface: #1d1511;
-  --surface-2: #261b16;
-  --surface-3: #33251d;
-  --ink: #fbf1e8;
-  --ink-2: #b9a698;
-  --ink-3: #85736a;
-  --border: rgba(255, 214, 186, 0.08);
-  --border-2: rgba(255, 214, 186, 0.14);
+     Un noir qui tire vers le vert de Green-400 plutôt qu'un noir neutre.
+     Toutes les surfaces sont prises dans la même teinte, seule la clarté
+     change, pour que les cartes se lisent comme des épaisseurs d'une même
+     matière et pas comme des pièces rapportées. */
+  --bg: #0e150a;
+  --surface: #172012;
+  --surface-2: #1f2b18;
+  --surface-3: #2b3a22;
+  --ink: #f5f4f1;
+  --ink-2: #c5c5bc;
+  --ink-3: #8d917f;
+  --border: rgba(245, 244, 241, 0.08);
+  --border-2: rgba(245, 244, 241, 0.14);
 
   /* ─── accent ─────────────────────────────────────────────────────────────
-     Trois rôles, trois valeurs. `--accent` écrit les métadonnées et les
-     chiffres secondaires, `--pale` remplit les boutons principaux et la
-     sélection (l'équivalent du rose pâle de la maquette), `--braise` est le
-     fond profond des cartes de tête et du mot du coach. */
-  --accent: #ff9d5c;
-  --accent-2: #e8742f;
-  --accent-doux: #c98a62;
-  --pale: #ffdcc2;
-  --pale-ink: #3a1804;
-  --braise: #3b1a0b;
-  --braise-2: #26110a;
+     Trois rôles, trois valeurs. `--accent` (Neon Green 200) écrit les
+     métadonnées et les chiffres secondaires, `--pale` (Neon Green 100)
+     remplit les boutons principaux et la sélection, `--braise` (Green-300,
+     la couleur Brand de Trailblazer) est le fond profond des cartes de tête
+     et du mot du coach. Le nom est resté de la version orange. */
+  --accent: #72d96a;
+  --accent-2: #6abf5e;
+  --accent-doux: #6d7560;
+  --pale: #8ef281;
+  --pale-ink: #172a06;
+  --braise: #2c441c;
+  --braise-2: #172a06;
 
   /* ─── formes ─────────────────────────────────────────────────────────── */
   --radius: 26px;
@@ -81,24 +85,24 @@
   --c-erreur: #ff6b5e;
 
   /* ─── data-viz ───────────────────────────────────────────────────────── */
-  --series-1: #ff9d5c;
-  --series-2: #ffdcc2;
-  --series-3: #6fe0b0;
-  --grid: #2a1f19;
-  --axis: #3a2b22;
-  --muted: #8f7d72;
+  --series-1: #72d96a;
+  --series-2: #7d8cf5;
+  --series-3: #e6e6df;
+  --grid: #1f2b18;
+  --axis: #2b3a22;
+  --muted: #8d917f;
 
   /* ─── graphiques du Suivi ────────────────────────────────────────────────
-     Trois courbes de douleur : réveil, effort, soir. Elles restent séparées
-     par la clarté autant que par la teinte (pêche très claire, orange moyen,
-     cuivre sombre), ce qui tient sur une déficience rouge-vert où les teintes
-     chaudes se confondent. Le soir reste le trait le plus épais. */
-  --chart-1: #ffdcc2;
-  --chart-2: #ff9d5c;
-  --chart-3: #c2602a;
-  --chart-ligne: #fbf1e8;
-  --chart-grille: rgba(255, 214, 186, 0.1);
-  --chart-texte: rgba(255, 236, 222, 0.5);
+     Trois courbes de douleur : réveil (neutre clair), effort (le Blue de
+     Trailblazer, éclairci) et soir (Neon Green). Trois teintes éloignées,
+     dont une bleue, ce qui tient sur une déficience rouge-vert. Le soir reste
+     le trait le plus épais. */
+  --chart-1: #e6e6df;
+  --chart-2: #7d8cf5;
+  --chart-3: #8ef281;
+  --chart-ligne: #f5f4f1;
+  --chart-grille: rgba(245, 244, 241, 0.1);
+  --chart-texte: rgba(245, 244, 241, 0.5);
 
   /* ─── état ───────────────────────────────────────────────────────────── */
   --good: #6fe0b0;
@@ -111,14 +115,14 @@
      pleines, légèrement plus claires que le fond : la maquette pose tout sur
      un fond sombre uni, le flou n'aurait rien à flouter. Les noms restent,
      pour que chaque écran bascule sans être réécrit. */
-  --glass: rgba(255, 220, 196, 0.055);
-  --glass-fort: rgba(255, 220, 196, 0.08);
-  --glass-border: rgba(255, 214, 186, 0.1);
+  --glass: rgba(245, 244, 241, 0.055);
+  --glass-fort: rgba(245, 244, 241, 0.08);
+  --glass-border: rgba(245, 244, 241, 0.1);
   --glass-blur: blur(20px) saturate(1.2);
-  --glass-lueur: inset 0 1px 0 rgba(255, 236, 222, 0.05);
+  --glass-lueur: inset 0 1px 0 rgba(245, 244, 241, 0.05);
 
-  --sur-ink-2: rgba(255, 236, 222, 0.68);
-  --sur-ink-3: rgba(255, 236, 222, 0.5);
+  --sur-ink-2: rgba(245, 244, 241, 0.68);
+  --sur-ink-3: rgba(245, 244, 241, 0.5);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -130,9 +134,9 @@
    un fichier du modèle, la refonte ne le touche pas. L'interface lit
    celles-ci, via `teinteBande` (src/lib/teintes.ts).
 
-   L'orange de bande est plus jaune et plus clair que l'accent de l'app : les
-   deux se côtoient sur l'écran Aujourd'hui, ils ne doivent pas se prendre
-   l'un pour l'autre.
+   Le vert de bande est un vert d'eau, plus bleu et plus doux que le néon de
+   l'app : les deux se côtoient sur l'écran Aujourd'hui, ils ne doivent pas
+   se prendre l'un pour l'autre.
    ══════════════════════════════════════════════════════════════════════════ */
 :root {
   --bande-vert: #6fe0b0;

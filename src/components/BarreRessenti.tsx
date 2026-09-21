@@ -40,7 +40,7 @@ export function largeurRemplissage(valeur: number): string {
 }
 
 /** Teinte neutre de l'effort perçu : un 9 sur une séance de qualité est une réussite. */
-const NEUTRE = '#ffdcc2'
+const NEUTRE = '#8ef281'
 
 export type TeinteRessenti = 'douleur' | 'neutre'
 
@@ -80,7 +80,7 @@ export function BarreRessenti({
   // Le chiffre repose toujours sur le remplissage : son encre suit donc la
   // luminance de la teinte. Un chiffre blanc sur l'ambre du milieu d'échelle
   // ne se lit pas, et c'est justement la zone où le plan commence à s'adapter.
-  const encre = hex && clair(hex) ? '#1a0d06' : '#fff'
+  const encre = hex && clair(hex) ? '#172a06' : '#fff'
 
   return (
     <div
@@ -101,7 +101,7 @@ export function BarreRessenti({
           top: 0,
           bottom: 0,
           width: largeurRemplissage(affiche),
-          background: hex ?? 'rgba(255,220,196,.12)',
+          background: hex ?? 'rgba(245,244,241,.12)',
           borderRadius: RAYON,
           transition: 'background var(--dur-fast), width var(--dur-fast)',
         }}
@@ -142,7 +142,7 @@ export function BarreRessenti({
             color: pct > 88 ? encre : '#fff',
             textShadow:
               pct > 78 && pct < 100
-                ? `0 0 4px ${encre === '#fff' ? 'rgba(0,0,0,.55)' : 'rgba(255,220,196,.55)'}`
+                ? `0 0 4px ${encre === '#fff' ? 'rgba(0,0,0,.55)' : 'rgba(245,244,241,.55)'}`
                 : undefined,
             textAlign: 'right',
             opacity: saisi ? 1 : 0.55,

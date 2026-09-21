@@ -133,7 +133,7 @@ export function Paces({
               style={{
                 padding: '11px 20px',
                 borderRadius: 'var(--pill)',
-                border: '1px solid rgba(255,220,196,.35)',
+                border: '1px solid rgba(245,244,241,.35)',
                 fontSize: 15,
                 color: 'var(--ink)',
                 flex: 'none',
@@ -182,7 +182,7 @@ export function Paces({
                       ? 'var(--pale)'
                       : `color-mix(in srgb, var(--accent-2) ${22 + i * 11}%, var(--surface))`,
                     color: ancre ? 'var(--pale-ink)' : 'var(--ink)',
-                    border: ancre ? 'none' : '1px solid rgba(255,170,120,.18)',
+                    border: ancre ? 'none' : '1px solid rgba(142,242,129,.18)',
                   }}
                 >
                   <span style={{ fontSize: 15.5, fontWeight: ancre ? 600 : 500, lineHeight: 1.2 }}>
