@@ -23,7 +23,6 @@ import {
   DOULEUR_MOT,
   EFFORT_DETAIL,
   EFFORT_MOT,
-  rangRessenti,
 } from '../lib/ressenti'
 import { formatPace, zonePace } from '../lib/paces'
 import type { FeedbackRow } from '../lib/buildPain'
@@ -33,7 +32,7 @@ import { encreZone, styleSeance } from '../lib/seanceStyle'
 import { deroulerSeance } from '../lib/deroule'
 import { DecoupageSeance, ProfilSeance } from './ProfilSeance'
 import { RessentiJauges } from './RessentiJauges'
-import { JaugeRessenti } from './JaugeRessenti'
+import { GrilleRessenti } from './GrilleRessenti'
 import { StatsSeance } from './StatsSeance'
 
 const plan = planJson as unknown as Plan
@@ -485,36 +484,36 @@ function FormulaireRessenti({
   return (
     <div>
       <p style={{ color: 'var(--sur-ink-2)', fontSize: 14, lineHeight: 1.5, margin: '0 0 18px' }}>
-        Deux curseurs après chaque séance. C'est ce qui pilote l'adaptation du plan.
+        Deux notes après chaque séance. C'est ce qui pilote l'adaptation du plan.
       </p>
 
-      <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '18px 16px 14px', marginBottom: 12 }}>
-        <JaugeRessenti
-          label="Douleur au tendon"
+      <div className="carte" style={{ padding: '20px 18px 18px', marginBottom: 12 }}>
+        <GrilleRessenti
+          label="La douleur pendant l’effort, elle était où ?"
           valeur={pain}
           onChange={setPain}
           disabled={disabled}
-          court={pain == null ? '' : DOULEUR_MOT[rangRessenti(pain)]}
-          detail={pain == null ? undefined : DOULEUR_DETAIL[rangRessenti(pain)]}
           teinte="douleur"
+          mots={DOULEUR_MOT}
+          details={DOULEUR_DETAIL}
         />
       </div>
 
-      <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '18px 16px 14px', marginBottom: 12 }}>
-        <JaugeRessenti
-          label="Effort perçu"
+      <div className="carte" style={{ padding: '20px 18px 18px', marginBottom: 12 }}>
+        <GrilleRessenti
+          label="Et l’effort perçu ?"
           valeur={rpe}
           onChange={setRpe}
           disabled={disabled}
-          court={rpe == null ? '' : EFFORT_MOT[rangRessenti(rpe)]}
-          detail={rpe == null ? undefined : EFFORT_DETAIL[rangRessenti(rpe)]}
           teinte="neutre"
+          mots={EFFORT_MOT}
+          details={EFFORT_DETAIL}
         />
       </div>
 
       <button
         onClick={() => {
-          // Valider sans avoir touché un curseur vaut zéro : c'est une
+          // Valider sans avoir touché une pastille vaut zéro : c'est une
           // affirmation volontaire, contrairement à l'affichage d'avant.
           onSave(pain ?? 0, rpe ?? 0, '')
         }}
@@ -525,14 +524,14 @@ function FormulaireRessenti({
           marginTop: 12,
           padding: 15,
           borderRadius: 'var(--pill)',
-          fontWeight: 700,
+          fontWeight: 600,
           fontSize: 16,
           background: disabled ? 'var(--surface-2)' : 'var(--pale)',
           color: disabled ? 'var(--ink-3)' : 'var(--pale-ink)',
           opacity: disabled ? 0.6 : 1,
         }}
       >
-        Enregistrer mon ressenti
+        enregistrer mon ressenti
       </button>
       {disabled && (
         <p style={{ color: 'var(--ink-3)', fontSize: 12.5, marginTop: 8 }}>
