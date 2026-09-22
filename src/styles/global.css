@@ -148,8 +148,13 @@ input[type='range']::-moz-range-thumb {
   font-variant-numeric: lining-nums tabular-nums;
   letter-spacing: -0.02em;
 }
-/* L'étiquette de carte de la maquette : minuscules, accent, sans capitales
-   espacées. Elle nomme la carte sans lui disputer le titre. */
+/* L'étiquette de carte : Text/Subtle, sans capitales espacées. Elle nomme la
+   carte sans lui disputer le titre. */
+/* Majuscule au premier mot de chaque ligne (retour du 22 septembre) : filet
+   de sécurité pour une étiquette écrite en minuscules. */
+.etiquette::first-letter {
+  text-transform: uppercase;
+}
 .etiquette {
   font-size: 13px;
   font-weight: 500;

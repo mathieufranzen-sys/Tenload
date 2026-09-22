@@ -26,8 +26,8 @@ import { Icon } from './Icon'
 const DISTANCES: Array<[string, number]> = [
   ['5 km', 5],
   ['10 km', 10],
-  ['semi', 21.0975],
-  ['marathon', 42.195],
+  ['Semi', 21.0975],
+  ['Marathon', 42.195],
 ]
 
 export function SectionDossards({
@@ -77,7 +77,7 @@ export function SectionDossards({
     <section style={{ marginTop: 26 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 2px 12px' }}>
         <h2 className="display" style={{ margin: 0, fontSize: 30 }}>
-          dossards
+          Dossards
         </h2>
         {modifiable && !ajout && (
           <button
@@ -87,7 +87,7 @@ export function SectionDossards({
             style={{ background: 'var(--neon)', color: 'var(--ink)', fontWeight: 600, padding: '9px 16px' }}
           >
             <Icon name="plus" size={15} />
-            ajouter
+            Ajouter
           </button>
         )}
       </div>
@@ -187,14 +187,14 @@ function CarteDossard({
             color: jours === 0 ? 'var(--pale-ink)' : 'var(--ink)',
           }}
         >
-          {jours === 0 ? "aujourd'hui" : passe ? `il y a ${-jours} j` : `dans ${jours} j`}
+          {jours === 0 ? "Aujourd'hui" : passe ? `Il y a ${-jours} j` : `Dans ${jours} j`}
         </span>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 16 }}>
         <ChampChrono
           key={`o-${d.objectifS}`}
-          label="objectif"
+          label="Objectif"
           km={d.km}
           valeur={d.objectifS}
           modifiable={modifiable}
@@ -202,12 +202,12 @@ function CarteDossard({
         />
         {passe || jours === 0 ? (
           onChronoRecale ? (
-            <Valeur label="chrono" texte={d.chronoS != null ? formatChrono(d.chronoS) : '—'} />
+            <Valeur label="Chrono" texte={d.chronoS != null ? formatChrono(d.chronoS) : '—'} />
           ) : (
-            <ChampChrono key={`c-${d.chronoS}`} label="chrono" km={d.km} valeur={d.chronoS} modifiable={modifiable} onValider={onChronoLibre} />
+            <ChampChrono key={`c-${d.chronoS}`} label="Chrono" km={d.km} valeur={d.chronoS} modifiable={modifiable} onValider={onChronoLibre} />
           )
         ) : (
-          <Valeur label="allure visée" texte={d.objectifS != null ? `${formatPace(d.objectifS / d.km)}/km` : '—'} />
+          <Valeur label="Allure visée" texte={d.objectifS != null ? `${formatPace(d.objectifS / d.km)}/km` : '—'} />
         )}
       </div>
 
@@ -228,7 +228,7 @@ function CarteDossard({
         style={{ marginTop: 14, padding: '14px 16px', borderRadius: 20 }}
       >
         <p className="etiquette" style={{ color: 'var(--pale)', opacity: 0.85 }}>
-          le mot du coach
+          Le mot du coach
         </p>
         <p className="display-it" style={{ margin: '6px 0 0', fontSize: 18, lineHeight: 1.35 }}>
           {mot.constat}
@@ -241,15 +241,15 @@ function CarteDossard({
           {confirmer ? (
             <>
               <button type="button" onClick={() => setConfirmer(false)} style={boutonDiscret}>
-                garder
+                Garder
               </button>
               <button type="button" onClick={onSupprimer} style={{ ...boutonDiscret, color: 'var(--critical)', borderColor: 'rgba(255,107,94,.4)' }}>
-                retirer ce dossard
+                Retirer ce dossard
               </button>
             </>
           ) : (
             <button type="button" onClick={() => setConfirmer(true)} style={boutonDiscret}>
-              retirer
+              Retirer
             </button>
           )}
         </div>
@@ -308,7 +308,7 @@ function ChampChrono({
       }}
     >
       <div style={{ fontSize: 13, color: invalide ? 'var(--c-erreur)' : 'var(--accent)' }}>
-        {invalide ? 'chrono hors plage' : label}
+        {invalide ? 'Chrono hors plage' : label}
       </div>
       <input
         type="text"
@@ -357,15 +357,15 @@ function FormulaireDossard({
 
   return (
     <div className="carte" style={{ padding: '18px 18px', marginBottom: 12, borderColor: 'var(--border-2)' }}>
-      <p className="etiquette" style={{ fontSize: 14 }}>nouveau dossard</p>
+      <p className="etiquette" style={{ fontSize: 14 }}>Nouveau dossard</p>
 
-      <Champ label="nom de la course">
+      <Champ label="Nom de la course">
         <input value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Corrida de Noël" style={styleChamp} />
       </Champ>
-      <Champ label="date">
+      <Champ label="Date">
         <input type="date" value={day} onChange={(e) => setDay(e.target.value)} style={styleChamp} />
       </Champ>
-      <Champ label="distance">
+      <Champ label="Distance">
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {DISTANCES.map(([l, v]) => (
             <button
@@ -383,7 +383,7 @@ function FormulaireDossard({
           ))}
           <input
             inputMode="decimal"
-            placeholder="autre, en km"
+            placeholder="Autre, en km"
             value={autre}
             onChange={(e) => {
               setAutre(e.target.value)
@@ -393,7 +393,7 @@ function FormulaireDossard({
           />
         </div>
       </Champ>
-      <Champ label={objectifInvalide ? 'objectif hors plage pour cette distance' : 'objectif (facultatif)'}>
+      <Champ label={objectifInvalide ? 'Objectif hors plage pour cette distance' : 'Objectif (facultatif)'}>
         <input
           inputMode="numeric"
           placeholder={distance != null && distance >= 20 ? '1:30:00' : '40:00'}
@@ -433,10 +433,10 @@ function FormulaireDossard({
             fontWeight: 600,
           }}
         >
-          ajouter le dossard
+          Ajouter le dossard
         </button>
         <button type="button" onClick={onAnnuler} style={{ ...boutonDiscret, padding: '14px 18px', fontSize: 15 }}>
-          annuler
+          Annuler
         </button>
       </div>
     </div>

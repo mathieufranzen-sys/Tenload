@@ -128,7 +128,7 @@ export function CarteBilan({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, ...style }}>
       {/* La tête de la maquette : les kilomètres en grand, puis la semaine en
           sept pastilles de bande, dont la hauteur suit l'indice du jour. */}
-      <section className="carte-braise" style={{ padding: '20px 20px 18px', borderRadius: 'var(--radius-lg)' }}>
+      <section className="carte" style={{ padding: '20px 20px 18px', borderRadius: 'var(--radius-lg)' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
           <span className="chiffre" style={{ fontSize: 76, lineHeight: 0.95 }}>
             {formatNumber(b.kmRealises)}
@@ -156,7 +156,7 @@ export function CarteBilan({
                   }}
                 />
                 <span style={{ display: 'block', marginTop: 8, fontSize: 12.5, color: 'var(--sur-ink-3)' }}>
-                  {'lmmjvsd'[i]}
+                  {'LMMJVSD'[i]}
                 </span>
               </div>
             ))}
@@ -165,20 +165,20 @@ export function CarteBilan({
       </section>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-        <Tuile valeur={b.indice.moyen != null ? String(b.indice.moyen) : '—'} libelle="indice moyen" />
+        <Tuile valeur={b.indice.moyen != null ? String(b.indice.moyen) : '—'} libelle="Indice moyen" />
         <Tuile
           valeur={b.pic ? formatNumber(b.pic.valeur) : '—'}
           libelle={
             b.pic
-              ? `douleur max · ${DAYS_LONG[weekdayIndex(b.pic.day)].toLowerCase()} ${b.pic.moment === 'soir' ? 'soir' : b.pic.moment === 'réveil' ? 'matin' : 'à l’effort'}`
-              : 'douleur max'
+              ? `Douleur max · ${DAYS_LONG[weekdayIndex(b.pic.day)].toLowerCase()} ${b.pic.moment === 'soir' ? 'soir' : b.pic.moment === 'réveil' ? 'matin' : 'à l’effort'}`
+              : 'Douleur max'
           }
         />
-        <Tuile valeur={`${b.excentrique}`} unite="/7" libelle="jours d'excentrique" />
-        <Tuile valeur={`${b.sautees}`} libelle={b.sautees > 1 ? 'séances sautées' : 'séance sautée'} bonne={b.sautees === 0} />
+        <Tuile valeur={`${b.excentrique}`} unite="/7" libelle="Jours d'excentrique" />
+        <Tuile valeur={`${b.sautees}`} libelle={b.sautees > 1 ? 'Séances sautées' : 'Séance sautée'} bonne={b.sautees === 0} />
       </div>
 
-      <Bloc titre="ce que tu as fait">
+      <Bloc titre="Ce que tu as fait">
       <Ligne
         libelle="Séances"
         pastille={b.nonNotees ? { texte: `${b.nonNotees} à noter`, bonne: false } : undefined}
@@ -220,7 +220,7 @@ export function CarteBilan({
 
       </Bloc>
 
-      <Bloc titre="ce que ton corps en dit">
+      <Bloc titre="Ce que ton corps en dit">
       {b.indice.moyen != null && (
         <Ligne libelle="Indice de charge">
           {b.indice.moyen} en moyenne<Secondaire>pic {b.indice.pic}</Secondaire>
@@ -286,7 +286,7 @@ export function CarteBilan({
 
       </Bloc>
 
-      <Bloc titre="ce que ça vaut pour le 4 avril">
+      <Bloc titre="Ce que ça vaut pour le 4 avril">
       {b.forme && (
         <>
           <Ligne libelle="Forme projetée">
@@ -315,7 +315,7 @@ export function CarteBilan({
       </Bloc>
 
       {b.echeances.dixKm != null && (
-        <Bloc titre="ce que ça vaut pour le 15 novembre">
+        <Bloc titre="Ce que ça vaut pour le 15 novembre">
           <Ligne libelle="Échéance">
             J−{b.echeances.dixKm}<Secondaire>10 km Hoka</Secondaire>
           </Ligne>
@@ -326,20 +326,20 @@ export function CarteBilan({
       )}
 
       <Liste
-        titre={`tes erreurs de la semaine · ${b.erreurs.length}`}
+        titre={`Tes erreurs de la semaine · ${b.erreurs.length}`}
         items={b.erreurs}
         teintes={['var(--warning)']}
       />
-      <Liste titre="ce que je te propose de changer" items={b.adaptations} teintes={['var(--accent)']} />
+      <Liste titre="Ce que je te propose de changer" items={b.adaptations} teintes={['var(--accent)']} />
       <Liste
-        titre={`ce que la semaine ${b.n + 1} change`}
+        titre={`Ce que la semaine ${b.n + 1} change`}
         items={b.suivante}
         teintes={['var(--pale)', 'var(--accent)', 'var(--accent-doux)']}
       />
 
       <section className="carte-braise" style={{ padding: '20px 20px 22px' }}>
         <p className="etiquette" style={{ color: 'var(--pale)', opacity: 0.85 }}>
-          dans la tête, la semaine qui vient
+          Dans la tête, la semaine qui vient
         </p>
         <p className="display-it" style={{ margin: '10px 0 0', fontSize: 22, lineHeight: 1.35 }}>
           {b.mental}

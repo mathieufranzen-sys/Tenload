@@ -25,10 +25,17 @@ interface Props {
    * distance passe à droite du titre, comme dans la maquette.
    */
   compact?: boolean
+  /**
+   * Vue semaine seulement. `aFaire` : la séance du jour pas encore notée,
+   * traitée comme la séance du jour de l'écran Aujourd'hui (fond blanc,
+   * filet fort). `passe` : un jour révolu, grisé.
+   */
+  etat?: 'aFaire' | 'passe'
 }
 
-export function SessionCard({ session: s, marathonPace, feedback, onClick, compact = false }: Props) {
-  if (compact) return <CarteCompacte session={s} marathonPace={marathonPace} feedback={feedback} onClick={onClick} />
+export function SessionCard({ session: s, marathonPace, feedback, onClick, compact = false, etat }: Props) {
+  if (compact)
+    return <CarteCompacte session={s} marathonPace={marathonPace} feedback={feedback} onClick={onClick} etat={etat} />
   const [lo, hi] = estimateDuration(s, marathonPace)
   const duration = lo === hi ? formatDuration(lo) : `${formatDuration(lo)} à ${formatDuration(hi)}`
   // La distance seulement : le repli sur `s.dur` répétait la durée à côté
@@ -140,7 +147,7 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
 
         {feedback && (
           <div style={{ marginTop: 9, color: 'var(--good)', fontSize: 13, fontWeight: 500 }}>
-            noté · douleur {formatNumber(feedback.pain)}/10 · effort {feedback.rpe}/10
+            Noté · douleur {formatNumber(feedback.pain)}/10 · effort {feedback.rpe}/10
           </div>
         )}
       </div>
@@ -183,7 +190,7 @@ function Etiquette({
   )
 }
 
-function CarteCompacte({ session: s, marathonPace, feedback, onClick }: Omit<Props, 'compact'>) {
+function CarteCompacte({ session: s, marathonPace, feedback, onClick, etat }: Omit<Props, 'compact'>) {
   const [lo, hi] = estimateDuration(s, marathonPace)
   const duree = lo === hi ? formatDuration(lo) : `${formatDuration(lo)} à ${formatDuration(hi)}`
   const repos = s.type === 'repos'
@@ -201,13 +208,13 @@ function CarteCompacte({ session: s, marathonPace, feedback, onClick }: Omit<Pro
         borderRadius: 22,
         // Le repos se dessine en pointillés : un jour vide n'est pas une
         // séance, mais il se déplace et se remplace comme elle.
-        border: repos ? '1.5px dashed var(--border-2)' : '1px solid var(--glass-border)',
-        background: repos
-          ? 'transparent'
-          : s.type === 'long'
-            ? 'linear-gradient(135deg, rgba(62,122,44,.22), rgba(62,122,44,.06)), var(--surface)'
-            : 'var(--surface)',
-        opacity: s.saute ? 0.45 : 1,
+        border: repos
+          ? '1.5px dashed var(--border-2)'
+          : etat === 'aFaire'
+            ? '1.5px solid var(--ink)'
+            : '1px solid var(--glass-border)',
+        background: repos ? 'transparent' : etat === 'aFaire' ? 'var(--surface-2)' : 'var(--surface)',
+        opacity: s.saute ? 0.45 : etat === 'passe' ? 0.55 : 1,
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
@@ -223,7 +230,7 @@ function CarteCompacte({ session: s, marathonPace, feedback, onClick }: Omit<Pro
           {s.title}
         </span>
         {feedback ? (
-          <span style={{ fontSize: 13.5, color: 'var(--good)', flex: 'none' }}>noté</span>
+          <span style={{ fontSize: 13.5, color: 'var(--good)', flex: 'none' }}>Noté</span>
         ) : s.dist ? (
           <span style={{ fontSize: 14, color: 'var(--accent)', flex: 'none' }}>{formatNumber(s.dist)} km</span>
         ) : null}
@@ -239,7 +246,7 @@ function CarteCompacte({ session: s, marathonPace, feedback, onClick }: Omit<Pro
             color: 'var(--sur-ink-2)',
           }}
         >
-          <span>{feedback ? `douleur ${formatNumber(feedback.pain)} · effort ${feedback.rpe}` : duree}</span>
+          <span>{feedback ? `Douleur ${formatNumber(feedback.pain)} · effort ${feedback.rpe}` : duree}</span>
           {st.intensite > 0 && <EchelleIntensite niveau={st.intensite} hauteur={10} />}
         </div>
       )}

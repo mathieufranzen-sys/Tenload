@@ -131,7 +131,7 @@ export function ActionsSeance({
                 inputMode="decimal"
                 step="0.5"
                 min="0"
-                placeholder={origine.dist != null ? `${origine.dist} km` : 'km parcourus'}
+                placeholder={origine.dist != null ? `${origine.dist} km` : 'Km parcourus'}
                 value={patch.dist ?? ''}
                 onChange={(e) =>
                   maj({ dist: e.target.value === '' ? undefined : Number(e.target.value) })
@@ -146,7 +146,7 @@ export function ActionsSeance({
               inputMode="numeric"
               step="5"
               min="0"
-              placeholder={origine.dur ? `${origine.dur[0]} min` : 'en minutes'}
+              placeholder={origine.dur ? `${origine.dur[0]} min` : 'En minutes'}
               value={patch.durMin ?? ''}
               onChange={(e) =>
                 maj({ durMin: e.target.value === '' ? undefined : Number(e.target.value) })
@@ -433,7 +433,7 @@ function Action({
       }}
     >
       <Icon name={icone} size={21} style={{ strokeWidth: 1.6 }} />
-      <span style={{ fontSize: 13.5, textAlign: 'center', lineHeight: 1.2, textTransform: 'lowercase' }}>
+      <span style={{ fontSize: 13.5, textAlign: 'center', lineHeight: 1.2, textTransform: 'none' }}>
         {label}
       </span>
     </button>
@@ -482,7 +482,7 @@ function Pied({
         <Champ label="Pourquoi">
           <input
             type="text"
-            placeholder="facultatif"
+            placeholder="Facultatif"
             value={raison}
             onChange={(e) => setRaison(e.target.value)}
             style={styleChamp}
@@ -527,7 +527,7 @@ function Boutons({
           color: 'var(--ink)',
         }}
       >
-        enregistrer
+        Enregistrer
       </button>
       {effacerVisible && (
         <button
@@ -597,7 +597,7 @@ export function Alertes({ alertes }: { alertes: Alerte[] }) {
 function Champ({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div style={{ marginBottom: 13 }}>
-      <div style={{ fontSize: 14, color: 'var(--accent)', marginBottom: 7, textTransform: 'lowercase' }}>
+      <div style={{ fontSize: 14, color: 'var(--accent)', marginBottom: 7, textTransform: 'none' }}>
         {label}
       </div>
       {children}

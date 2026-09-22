@@ -274,32 +274,31 @@ export function Track({
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
           <Kpi
-            label="charge vs semaine dernière"
+            label="Charge vs semaine dernière"
             valeur={idxEcart == null ? '—' : `${idxEcart > 0 ? '+' : idxEcart < 0 ? '−' : ''}${Math.abs(idxEcart)}`}
             suffix={idxEcart == null ? '' : ' pts'}
             couleur={
               idxEcart == null ? undefined : idxEcart > 5 ? 'var(--warning)' : idxEcart < -5 ? 'var(--good)' : undefined
             }
-            detail="moyenne de l'indice sur 7 jours"
           />
           <Kpi
-            label="volume course · 7 jours"
+            label="Volume course · 7 jours"
             valeur={formatNumber(km7)}
             suffix=" km"
             detail={`${formatNumber(km28)} km sur 28 j`}
           />
           <Kpi
-            label="santé du tendon"
+            label="Santé du tendon"
             valeur={sante.label}
             suffix=""
             couleur={sante.couleur}
             detail="douleur des 30 derniers jours"
           />
           <Kpi
-            label="séances notées"
+            label="Séances notées"
             valeur={`${feedback.length}`}
             suffix={` / ${totalAttendu}`}
-            detail={notesEnRetard > 0 ? 'aller les noter' : 'depuis le 10 août'}
+            detail={notesEnRetard > 0 ? 'Aller les noter' : 'depuis le 10 août'}
             tag={notesEnRetard > 0 ? `${notesEnRetard} en retard` : undefined}
             onClick={notesEnRetard > 0 ? onVoirANoter : undefined}
           />
@@ -401,7 +400,7 @@ function Kpi({
   label: string
   valeur: string
   suffix: string
-  detail: string
+  detail?: string
   couleur?: string
   /**
    * Étiquette d'alerte, sur la MÊME ligne que le libellé : elle le qualifie,
@@ -462,7 +461,7 @@ function Viz({
 }) {
   return (
     <section className="carte" style={{ padding: '18px 18px', marginBottom: 12 }}>
-      <h2 className="display" style={{ margin: '0 0 6px', fontSize: 22, lineHeight: 1.2, textTransform: 'lowercase' }}>
+      <h2 className="display" style={{ margin: '0 0 6px', fontSize: 22, lineHeight: 1.2, }}>
         {titre}
       </h2>
       <p style={{ margin: '0 0 14px', color: 'var(--sur-ink-2)', fontSize: 13.5, lineHeight: 1.5 }}>{legende}</p>

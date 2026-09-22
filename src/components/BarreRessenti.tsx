@@ -155,7 +155,7 @@ export function BarreRessenti({
   )
 }
 
-/** Le libellé qui coiffe une barre : minuscules, encre pleine, comme la maquette. */
+/** Le libellé qui coiffe une barre, en encre pleine. */
 export function LabelRessenti({ children }: { children: string }) {
   return (
     <div
@@ -164,7 +164,6 @@ export function LabelRessenti({ children }: { children: string }) {
         fontWeight: 500,
         color: 'var(--ink)',
         marginBottom: 9,
-        textTransform: 'lowercase',
       }}
     >
       {children}

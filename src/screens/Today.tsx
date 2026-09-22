@@ -501,15 +501,24 @@ export function Today({
   const detail = A.byDate[jour] ?? A.detail
   const bande = bandOf(detail.idx)
 
-  const jRace = daysBetween(now, plan.meta.raceDate)
   const jDebut = daysBetween(now, debutPlan)
 
   const veille = A.byDate[addDays(jour, -1)]
   const ecartVeille =
     detail.painInconnue || !veille || veille.painInconnue ? null : detail.idx - veille.idx
-  const semaineAffichee = plan.weeks.find((w) => jour >= w.monday && jour <= addDays(w.monday, 6))
-  const bloc = semaineAffichee && plan.blocs.find((b) => b.id === semaineAffichee.bloc)
   const carnet = duJour.map((x) => ({ x, fb: feedbackDe(x) ?? null }))
+
+  // Les saisies du carnet encore dues : le réveil du jour, le soir de la
+  // veille. Au-delà de 24 h, elles ne se rattrapent plus (règle du
+  // 21 septembre), donc elles ne s'affichent plus. Le soir du jour n'est pas
+  // encore dû à l'heure où l'on regarde l'écran.
+  const hierIso = addDays(now, -1)
+  const saisiesManquantes: SaisieManquante[] = [
+    ...(pain[now]?.wake == null ? [{ day: now, libelle: 'Raideur au réveil', quand: "Aujourd'hui" }] : []),
+    ...(!avantPlan && pain[hierIso]?.evening == null
+      ? [{ day: hierIso, libelle: 'Douleur en fin de journée', quand: 'Hier soir' }]
+      : []),
+  ]
   const semaineBilanee = bilan ? plan.weeks.find((w) => w.n === bilan.n) : undefined
 
   return (
@@ -518,13 +527,9 @@ export function Today({
 
       <div style={{ position: 'relative', zIndex: 5, padding: '0 var(--page-x)' }}>
         <EnteteJour
-          surtitre={
-            avantPlan
-              ? `J-${jDebut} avant la semaine 1`
-              : `${semaineAffichee ? `semaine ${semaineAffichee.n} / ${plan.weeks.length}` : ''}${bloc ? ` · ${bloc.name.toLowerCase()}` : ''} · J-${jRace} avant Paris`
-          }
+          surtitre="Bonjour Mathieu,"
           titre={sousTitreLong(jour)}
-          relatif={avantPlan ? 'bientôt' : estAujourdhui ? null : titreJour(jour, now).toLowerCase()}
+          relatif={avantPlan ? `J-${jDebut} avant la semaine 1` : estAujourdhui ? null : titreJour(jour, now)}
           jour={jour}
           now={now}
           plusAncien={plusAncien}
@@ -545,10 +550,31 @@ export function Today({
             <Note>Aucune douleur saisie depuis 24 h : l'indice tourne sur une estimation.</Note>
           )}
 
-          {estAujourdhui && <CeQueCaChange adapt={A} bande={bande} inconnu={detail.painInconnue} />}
+          {/* Les compteurs parlent de la semaine en cours : les afficher en
+              relisant un jour passé laisserait croire qu'ils le concernent. */}
+          {estAujourdhui && <InsightTiles insights={insights} />}
 
-          {estAujourdhui && detail.chargeInconnue && (
-            <ChargeNonAttestee aNoter={aNoter} onVoirANoter={onVoirANoter} />
+          {/* Seulement quand une règle s'applique : un jour normal, dire que
+              rien ne change n'apprenait rien (retour du 22 septembre). */}
+          {estAujourdhui && A.rules.length > 0 && (
+            <CeQueCaChange adapt={A} bande={bande} inconnu={detail.painInconnue} />
+          )}
+
+          {estAujourdhui && (
+            <BlocANoter
+              seances={aNoter.filter((x) => x.enRetard)}
+              saisies={journalActif ? saisiesManquantes : []}
+              chargeInconnue={detail.chargeInconnue}
+              onOuvrirSeance={
+                onOuvrirSeance &&
+                ((x) => onOuvrirSeance({ semaineOrigine: x.semaineOrigine, jourOrigine: x.jourOrigine, slot: x.slot } as SeancePlanifiee))
+              }
+              onOuvrirCarnet={(d) => {
+                setJour(d)
+                setCarnetOuvert(true)
+              }}
+              onVoirTout={onVoirANoter}
+            />
           )}
 
           {restantes.length ? (
@@ -621,16 +647,6 @@ export function Today({
             />
           ))}
 
-          {/* Les compteurs parlent de la semaine en cours : les afficher en
-              relisant un jour passé laisserait croire qu'ils le concernent. */}
-          {estAujourdhui && (
-            <InsightTiles
-              insights={insights}
-              indice={detail.painInconnue ? null : detail.idx}
-              onCalcul={() => setCalculOuvert(true)}
-            />
-          )}
-
           {journalActif && (
             <CarteCarnet day={jour} now={now} seances={carnet} onOuvrir={() => setCarnetOuvert(true)} />
           )}
@@ -649,7 +665,7 @@ export function Today({
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p className="etiquette">bilan de la semaine {bilan.n}</p>
+                <p className="etiquette">Bilan de la semaine {bilan.n}</p>
                 <div className="display" style={{ fontSize: 22, marginTop: 4 }}>
                   {formatNumber(bilan.kmRealises)} km{' '}
                   <span style={{ fontSize: 15, color: 'var(--sur-ink-2)', fontFamily: 'var(--font)' }}>
@@ -663,8 +679,8 @@ export function Today({
                   width: 46,
                   height: 46,
                   borderRadius: '50%',
-                  background: 'var(--pale)',
-                  color: 'var(--pale-ink)',
+                  background: 'var(--neon)',
+                  color: 'var(--ink)',
                   display: 'grid',
                   placeItems: 'center',
                   flex: 'none',
@@ -694,7 +710,7 @@ export function Today({
       {journalActif && (
         <SubPage
           ouvert={carnetOuvert}
-          surtitre="carnet"
+          surtitre="Carnet"
           titre={sousTitreLong(jour)}
           onBack={() => setCarnetOuvert(false)}
         >
@@ -708,7 +724,7 @@ export function Today({
         <SubPage
           ouvert={bilanOuvert}
           surtitre={`${formatDay(bilan.du)} → ${formatDay(bilan.au)}${semaineBilanee?.nature ? ` · ${libelleNature(semaineBilanee, { charge: true })}` : ''}`}
-          titre={`bilan de la semaine ${bilan.n}`}
+          titre={`Bilan de la semaine ${bilan.n}`}
           onBack={() => setBilanOuvert(false)}
         >
           {bilanOuvert && (
@@ -731,7 +747,7 @@ export function Today({
 /** « lundi 21 septembre » : le titre de l'écran, en toutes lettres. */
 function sousTitreLong(jour: string): string {
   const [, m, d] = jour.split('-').map(Number)
-  return `${DAYS_LONG[weekdayIndex(jour)].toLowerCase()} ${d} ${MOIS[m - 1]}`
+  return `${DAYS_LONG[weekdayIndex(jour)]} ${d} ${MOIS[m - 1]}`
 }
 
 const MOIS = [
@@ -779,7 +795,9 @@ function EnteteJour({
   return (
     <header style={{ padding: 'calc(18px + env(safe-area-inset-top)) 0 18px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--accent)', minWidth: 0 }}>{surtitre}</p>
+        <p className="display" style={{ margin: 0, fontSize: 20, color: 'var(--ink-2)', minWidth: 0 }}>
+          {surtitre}
+        </p>
         <ProfileButton onClick={onOuvrirProfil} />
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, marginTop: 6 }}>
@@ -802,78 +820,116 @@ function EnteteJour({
         <button
           onClick={onAujourdhui}
           className="puce"
-          style={{ marginTop: 12, background: 'var(--pale)', color: 'var(--pale-ink)', fontWeight: 600 }}
+          style={{ marginTop: 12, background: 'var(--neon)', color: 'var(--ink)', fontWeight: 600 }}
         >
-          revenir à aujourd&apos;hui
+          Revenir à aujourd&apos;hui
         </button>
       )}
     </header>
   )
 }
 
+/** Une saisie du carnet encore due, et le jour où elle se fait. */
+interface SaisieManquante {
+  day: string
+  libelle: string
+  quand: string
+}
+
 /**
- * La charge n'est pas attestée : le pendant de « je ne sais pas » côté
- * mécanique. La carte liste les séances qui manquent, parce que ce sont elles
- * qui font le trou, et mène à la page qui permet de les noter.
+ * Ce qui reste à noter : séances en retard et saisies du carnet encore dues,
+ * dans un encart orange comme les étiquettes d'adaptation. Demandé le
+ * 22 septembre 2026 : la liste vivait dans Profil, loin de l'écran qu'on
+ * ouvre tous les jours. Quand la charge n'est plus attestée, l'encart le dit,
+ * parce que ce sont précisément ces trous qui la rendent inconnue.
  */
-function ChargeNonAttestee({
-  aNoter,
-  onVoirANoter,
+function BlocANoter({
+  seances,
+  saisies,
+  chargeInconnue,
+  onOuvrirSeance,
+  onOuvrirCarnet,
+  onVoirTout,
 }: {
-  aNoter: SeanceANoter[]
-  onVoirANoter?: () => void
+  seances: SeanceANoter[]
+  saisies: SaisieManquante[]
+  chargeInconnue: boolean
+  onOuvrirSeance?: (x: SeanceANoter) => void
+  onOuvrirCarnet: (day: string) => void
+  onVoirTout?: () => void
 }) {
-  const enRetard = aNoter.filter((x) => x.enRetard)
+  const total = seances.length + saisies.length
+  if (total === 0 && !chargeInconnue) return null
+  const lignes = [
+    ...saisies.map((x) => ({ cle: `s-${x.day}-${x.libelle}`, titre: x.libelle, quand: x.quand, ouvrir: () => onOuvrirCarnet(x.day) })),
+    ...seances.slice(0, 4).map((x) => ({
+      cle: `${x.semaineOrigine}-${x.jourOrigine}-${x.slot}`,
+      titre: x.titre,
+      quand: formatDay(x.day),
+      ouvrir: onOuvrirSeance ? () => onOuvrirSeance(x) : undefined,
+    })),
+  ]
   return (
     <section
-      className="carte"
-      style={{ padding: '18px 18px', borderColor: 'rgba(242,207,107,.4)', background: 'rgba(242,207,107,.05)' }}
+      style={{
+        padding: '16px 16px',
+        borderRadius: 'var(--radius)',
+        background: 'rgba(255,180,92,.14)',
+        border: '1px solid rgba(255,155,82,.5)',
+      }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--warning)' }}>
-        <Icon name="alert" size={20} />
-        <span style={{ fontSize: 16, fontWeight: 600 }}>la charge n&apos;est pas attestée</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: 'var(--serious)' }}>
+        <Icon name="alert" size={19} />
+        <span style={{ fontSize: 16, fontWeight: 600 }}>
+          {total === 0 ? 'La charge n’est pas attestée' : `${total} chose${total > 1 ? 's' : ''} à noter`}
+        </span>
       </div>
-      <p style={{ margin: '10px 0 0', fontSize: 15, lineHeight: 1.5, color: 'var(--sur-ink-2)' }}>
-        Moins de cinq des sept derniers jours portent une charge mesurée. L&apos;indice lit ces trous
-        comme des jours légers : il penche du côté qui rassure.
-      </p>
-      {enRetard.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 14 }}>
-          {enRetard.slice(0, 3).map((x) => (
-            <div
-              key={`${x.semaineOrigine}-${x.jourOrigine}-${x.slot}`}
+      {chargeInconnue && (
+        <p style={{ margin: '8px 0 0', fontSize: 14, lineHeight: 1.5, color: 'var(--ink-2)' }}>
+          Moins de cinq des sept derniers jours portent une charge mesurée : l'indice lit ces trous comme
+          des jours légers, il penche du côté qui rassure.
+        </p>
+      )}
+      {lignes.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12 }}>
+          {lignes.map((l) => (
+            <button
+              key={l.cle}
+              type="button"
+              onClick={l.ouvrir}
+              disabled={!l.ouvrir}
               style={{
                 display: 'flex',
+                alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: 10,
                 padding: '11px 14px',
                 borderRadius: 16,
                 background: 'var(--surface-2)',
+                textAlign: 'left',
                 fontSize: 14.5,
+                color: 'var(--ink)',
               }}
             >
-              <span style={{ minWidth: 0 }}>{x.titre}</span>
-              <span style={{ color: 'var(--accent)', flex: 'none' }}>{formatDay(x.day)}</span>
-            </div>
+              <span style={{ minWidth: 0 }}>{l.titre}</span>
+              <span style={{ color: 'var(--serious)', flex: 'none', fontSize: 13.5 }}>{l.quand}</span>
+            </button>
           ))}
-          {enRetard.length > 3 && (
-            <span style={{ fontSize: 13.5, color: 'var(--accent)', margin: '2px 4px 0' }}>
-              et {enRetard.length - 3} autre{enRetard.length - 3 > 1 ? 's' : ''}
-            </span>
-          )}
         </div>
       )}
-      {onVoirANoter && enRetard.length > 0 && (
-        <button type="button" className="bouton-pale" onClick={onVoirANoter} style={{ marginTop: 14 }}>
-          voir les séances à noter
-          <span className="pastille">
-            <Icon name="arrowUpRight" size={18} />
-          </span>
+      {seances.length > 4 && onVoirTout && (
+        <button
+          type="button"
+          onClick={onVoirTout}
+          style={{ marginTop: 10, fontSize: 14, color: 'var(--serious)', textDecoration: 'underline', textUnderlineOffset: 3 }}
+        >
+          Voir les {seances.length} séances à noter
         </button>
       )}
     </section>
   )
 }
+
 
 function Note({ children }: { children: ReactNode }) {
   return (

@@ -8,7 +8,6 @@ import {
   DAYS_LONG,
   addDays,
   formatDay,
-  formatDayLong,
   formatNumber,
   today as todayISO,
 } from '../lib/dates'
@@ -124,10 +123,16 @@ export function Plan({
   )
 
   const [vue, setVue] = useState<'semaine' | 'calendrier'>(focusSeance ? 'calendrier' : 'semaine')
+  const [lecture, setLecture] = useState<'semaine' | 'globale'>('semaine')
+  /** Le jour à amener à l'écran dans la vue semaine, choisi depuis la grille. */
+  const [jourVise, setJourVise] = useState<string | null>(null)
   // L'initialiseur ne tourne qu'au montage : quand « Déplacer » part d'une
   // séance ouverte depuis la vue semaine, Programme est déjà monté et y restait.
   useEffect(() => {
-    if (focusSeance) setVue('calendrier')
+    if (focusSeance) {
+      setVue('calendrier')
+      setLecture('semaine')
+    }
   }, [focusSeance, jetonFocus])
 
   const [premiere, derniere] = bloc.weeks
@@ -163,7 +168,6 @@ export function Plan({
         >
           <EnteteEcran
             titre="Programme"
-            contexte={<>{plan.meta.goal} · {formatDayLong(plan.meta.raceDate)}</>}
             onOuvrirProfil={onOuvrirProfil}
           />
           <Segmented
@@ -171,26 +175,68 @@ export function Plan({
             valeur={vue}
             onChange={setVue}
             options={[
-              { cle: 'semaine', libelle: 'semaine' },
-              { cle: 'calendrier', libelle: 'calendrier' },
+              { cle: 'semaine', libelle: 'Semaine' },
+              { cle: 'calendrier', libelle: 'Calendrier' },
             ]}
           />
+          {vue === 'calendrier' && (
+            <>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+            <label style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+              <span className="sr-only" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>
+                Lecture du calendrier
+              </span>
+              <select
+                value={lecture}
+                onChange={(e) => setLecture(e.target.value as 'semaine' | 'globale')}
+                style={{
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  padding: '10px 40px 10px 18px',
+                  borderRadius: 'var(--pill)',
+                  border: '1px solid var(--border-2)',
+                  background: 'var(--surface-2)',
+                  color: 'var(--ink)',
+                  fontSize: 15,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="semaine">Vue semaine</option>
+                <option value="globale">Vue globale</option>
+              </select>
+              <Icon
+                name="chevronRight"
+                size={16}
+                style={{ position: 'absolute', right: 16, transform: 'rotate(90deg)', pointerEvents: 'none' }}
+              />
+            </label>
+          </div>
+
+            </>
+          )}
         </div>
 
         {vue === 'calendrier' ? (
           <>
+          {/* Deux lectures du calendrier, au choix (retour du 22 septembre) :
+              la vue semaine, jour par jour, où les séances se déplacent, et
+              la vue globale, la grille du plan entier. La vue semaine est
+              celle par défaut, ouverte sur la semaine en cours. */}
+          {lecture === 'globale' ? (
           <GrilleCalendrier
             plan={plan}
             seances={toutesSeances}
             indices={A.byDate}
             now={now}
-            onChoisirJour={(d) =>
-              document.getElementById(`cal-jour-${d}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-            }
+            onChoisirJour={(d) => {
+              // Un jour choisi dans la grille ouvre la vue semaine dessus :
+              // c'est là qu'on lit le détail et qu'on déplace.
+              setJourVise(d)
+              setLecture('semaine')
+            }}
           />
-          <p className="etiquette" style={{ fontSize: 14, margin: '26px 2px 10px' }}>
-            le détail, jour par jour
-          </p>
+          ) : (
           <VueCalendrier
             plan={plan}
             seances={toutesSeances}
@@ -198,6 +244,7 @@ export function Plan({
             ecarts={ecarts}
             now={now}
             semaineVisee={semaine.n}
+            jourVise={jourVise ?? (focusSeance ? null : now)}
             focus={focusSeance}
             onOuvrirSeance={onOuvrirSeance}
             onDeplacer={
@@ -212,13 +259,13 @@ export function Plan({
                 }))
             }
           />
+          )}
           </>
         ) : (
           <>
-        {/* La semaine se choisit comme dans la maquette : deux flèches rondes
-            de part et d'autre du numéro, la plage de dates et le bloc en
-            accent dessous, puis ce qu'elle porte en trois puces. */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        {/* La semaine se choisit par deux flèches rondes de part et d'autre du
+            numéro ; la plage de dates seule dessous, le bloc a sa carte. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
           <button
             onClick={() => onChangerSemaine(numeroSemaine - 1)}
             disabled={numeroSemaine <= 1}
@@ -229,11 +276,11 @@ export function Plan({
           </button>
           <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
             <div className="display" style={{ fontSize: 28, lineHeight: 1.1 }}>
-              semaine {semaine.n}
+              Semaine {semaine.n}
               <span style={{ color: 'var(--sur-ink-3)' }}> / {plan.weeks.length}</span>
             </div>
             <div style={{ fontSize: 13.5, color: 'var(--accent)', marginTop: 3 }}>
-              {formatDay(semaine.monday)} → {formatDay(addDays(semaine.monday, 6))} · {bloc.name.toLowerCase()}
+              {formatDay(semaine.monday)} → {formatDay(addDays(semaine.monday, 6))}
             </div>
           </div>
           <button
@@ -246,22 +293,56 @@ export function Plan({
           </button>
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 18 }}>
-          <span
-            className="puce"
-            style={{
-              background: 'rgba(62,122,44,.14)',
-              border: '1px solid rgba(62,122,44,.45)',
-              color: 'var(--accent)',
-            }}
-          >
-            {libelleNature(semaine, { charge: true })}
-          </span>
-          <span className="puce">{formatNumber(kmCourse)} km prévus</span>
-          <span className="puce">
-            {nbCourses} course{nbCourses > 1 ? 's' : ''}
-          </span>
-          {semaine.sl ? <span className="puce">longue {semaine.sl} km</span> : null}
+        {/* Le bloc en tête de semaine, avec les chiffres de la semaine dedans
+            (retour du 22 septembre) : c'est lui qui dit pourquoi la semaine
+            ressemble à ça. Les semaines déjà passées du bloc sont en vert
+            foncé, celle d'aujourd'hui en néon. */}
+        <div className="carte" style={{ padding: '16px 18px', marginBottom: 16 }}>
+          <p className="etiquette">
+            Bloc {bloc.id} · {bloc.name} · semaine {rangDansBloc} sur {dureeBloc}
+          </p>
+          <div style={{ display: 'flex', gap: 3, margin: '12px 0 0' }}>
+            {Array.from({ length: dureeBloc }, (_, i) => {
+              const w = plan.weeks.find((x) => x.n === premiere + i)
+              const finie = w != null && addDays(w.monday, 6) < now
+              const enCours = w != null && now >= w.monday && now <= addDays(w.monday, 6)
+              return (
+                <span
+                  key={i}
+                  aria-hidden
+                  style={{
+                    flex: 1,
+                    height: premiere + i === semaine.n ? 9 : 6,
+                    alignSelf: 'center',
+                    borderRadius: 'var(--pill)',
+                    background: finie ? 'var(--braise-2)' : enCours ? 'var(--neon-2)' : 'var(--surface-3)',
+                  }}
+                />
+              )
+            })}
+          </div>
+          <p style={{ fontSize: 14.5, lineHeight: 1.5, color: 'var(--ink-2)', margin: '12px 0 0' }}>
+            {bloc.focus}
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 14 }}>
+            <span className="puce" style={{ background: 'var(--surface-2)', fontWeight: 600 }}>
+              {(() => {
+                const n = libelleNature(semaine, { charge: true })
+                return n.charAt(0).toUpperCase() + n.slice(1)
+              })()}
+            </span>
+            <span className="puce" style={{ background: 'var(--surface-2)' }}>
+              {formatNumber(kmCourse)} km prévus
+            </span>
+            <span className="puce" style={{ background: 'var(--surface-2)' }}>
+              {nbCourses} course{nbCourses > 1 ? 's' : ''}
+            </span>
+            {semaine.sl ? (
+              <span className="puce" style={{ background: 'var(--surface-2)' }}>
+                Longue {semaine.sl} km
+              </span>
+            ) : null}
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -270,14 +351,25 @@ export function Plan({
             const date = addDays(semaine.monday, d)
             const estAujourdhui = date === now
             return (
-              <div key={d} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                <PastilleJour jour={d} date={date} aujourdhui={estAujourdhui} vide={!duJour.length} />
+              // La pastille du jour s'étire sur toute la hauteur de la ligne :
+              // deux séances le même jour restent sous le même jour.
+              <div key={d} style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
+                <PastilleJour
+                  jour={d}
+                  date={date}
+                  aujourdhui={estAujourdhui}
+                  passe={date < now}
+                  vide={!duJour.length}
+                />
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {duJour.length ? (
                     duJour.map((x) => (
                       <SessionCard
                         key={`${x.jourOrigine}-${x.slot}`}
                         compact
+                        etat={
+                          date < now ? 'passe' : estAujourdhui && !feedbackDe(x) ? 'aFaire' : undefined
+                        }
                         session={x.s}
                         marathonPace={marathonPace}
                         feedback={feedbackDe(x)}
@@ -287,6 +379,7 @@ export function Plan({
                   ) : (
                     <div
                       style={{
+                        flex: 1,
                         padding: '16px 16px',
                         borderRadius: 22,
                         border: '1.5px dashed var(--border)',
@@ -294,7 +387,7 @@ export function Plan({
                         fontSize: 15,
                       }}
                     >
-                      rien ce jour-là
+                      Rien ce jour-là
                     </div>
                   )}
                 </div>
@@ -303,38 +396,13 @@ export function Plan({
           })}
         </div>
 
-        {/* Le bloc, en pied de semaine : la maquette l'avait retiré de la tête,
-            mais c'est lui qui dit pourquoi la semaine ressemble à ça. */}
-        <div className="carte" style={{ padding: '16px 18px', marginTop: 18 }}>
-          <p className="etiquette">
-            bloc {bloc.id} · {bloc.name.toLowerCase()} · semaine {rangDansBloc} sur {dureeBloc}
-          </p>
-          <div style={{ display: 'flex', gap: 3, margin: '12px 0 0' }}>
-            {Array.from({ length: dureeBloc }, (_, i) => (
-              <span
-                key={i}
-                aria-hidden
-                style={{
-                  flex: 1,
-                  height: 5,
-                  borderRadius: 'var(--pill)',
-                  background: i < rangDansBloc ? 'var(--accent)' : 'var(--surface-3)',
-                }}
-              />
-            ))}
-          </div>
-          <p style={{ fontSize: 14.5, lineHeight: 1.5, color: 'var(--sur-ink-2)', margin: '12px 0 0' }}>
-            {bloc.focus}
-          </p>
-        </div>
-
         {semaineCourante && semaineCourante.n !== numeroSemaine && (
           <button
             onClick={() => onChangerSemaine(semaineCourante.n)}
             className="bouton-pale"
             style={{ marginTop: 14 }}
           >
-            aller à la semaine en cours
+            Aller à la semaine en cours
             <span className="pastille">
               <Icon name="arrowRight" size={18} />
             </span>
@@ -347,18 +415,23 @@ export function Plan({
   )
 }
 
-const JOUR_COURT = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim']
+const JOUR_COURT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 
-/** La pastille du jour : pleine et pâle aujourd'hui, en pointillés un jour vide. */
+/**
+ * La pastille du jour, pleine hauteur de la ligne. Aujourd'hui en néon, un
+ * jour passé en grisé, un jour vide en pointillés.
+ */
 function PastilleJour({
   jour,
   date,
   aujourdhui,
+  passe,
   vide,
 }: {
   jour: number
   date: string
   aujourdhui: boolean
+  passe: boolean
   vide: boolean
 }) {
   return (
@@ -373,12 +446,13 @@ function PastilleJour({
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: aujourdhui ? 'var(--pale)' : 'transparent',
-        color: aujourdhui ? 'var(--pale-ink)' : 'var(--ink)',
+        background: aujourdhui ? 'var(--neon)' : 'transparent',
+        color: passe ? 'var(--ink-3)' : 'var(--ink)',
         border: aujourdhui ? 'none' : `1.5px ${vide ? 'dashed' : 'solid'} var(--border-2)`,
+        opacity: passe ? 0.7 : 1,
       }}
     >
-      <span style={{ fontSize: 13, color: aujourdhui ? 'inherit' : 'var(--sur-ink-2)' }}>{JOUR_COURT[jour]}</span>
+      <span style={{ fontSize: 13, color: aujourdhui ? 'inherit' : 'var(--ink-2)' }}>{JOUR_COURT[jour]}</span>
       <span className="chiffre" style={{ fontSize: 24, lineHeight: 1.1 }}>
         {Number(date.slice(8))}
       </span>

@@ -153,7 +153,6 @@ export function DecoupageSeance({
                   border: '1px solid var(--border)',
                   fontSize: 12.5,
                   fontWeight: 500,
-                  textTransform: 'lowercase',
                   color: 'var(--accent)',
                 }}
               >

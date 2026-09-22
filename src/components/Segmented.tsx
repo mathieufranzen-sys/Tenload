@@ -43,8 +43,9 @@ export function Segmented<T extends string>({
               fontSize: 13,
               fontWeight: 600,
               whiteSpace: 'nowrap',
-              background: actif ? 'var(--pale)' : 'transparent',
-              color: actif ? 'var(--pale-ink)' : 'var(--sur-ink-2)',
+              // Button/Accent : le néon, texte Green-400 (retour du 22 septembre).
+              background: actif ? 'var(--neon)' : 'transparent',
+              color: actif ? 'var(--ink)' : 'var(--sur-ink-2)',
               cursor: 'pointer',
               transition: 'background var(--dur-fast) var(--ease-out), color var(--dur-fast)',
             }}

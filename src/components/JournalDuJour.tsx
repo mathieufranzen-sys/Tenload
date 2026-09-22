@@ -16,6 +16,7 @@ import type { SeancePlanifiee } from '../lib/adapt'
 import { addDays, formatNumber } from '../lib/dates'
 import { DOULEUR_MOT, EFFORT_MOT, rangRessenti } from '../lib/ressenti'
 import { JaugeRessenti } from './JaugeRessenti'
+import { BarreRessenti, LabelRessenti } from './BarreRessenti'
 import { useJournal } from '../hooks/DataProvider'
 import { useSaisieDifferee } from '../hooks/useSaisieDifferee'
 import { useFileAttente } from '../hooks/useFileAttente'
@@ -34,11 +35,11 @@ const GESTES: Array<{
   icone: 'dumb' | 'up' | 'heart'
   detail: string
 }> = [
-  { champ: 'eccentric', label: 'excentrique', effet: '−6', icone: 'dumb', detail: 'le traitement, pas un complément' },
-  { champ: 'jumps', label: 'sauts', effet: '−2', icone: 'up', detail: 'le test de charge du kiné' },
+  { champ: 'eccentric', label: 'Excentrique', effet: '−6', icone: 'dumb', detail: 'Le traitement, pas un complément' },
+  { champ: 'jumps', label: 'Sauts', effet: '−2', icone: 'up', detail: 'Le test de charge du kiné' },
   // Hydratation n'est pas un booléen en base (`hydration_l` est en litres) :
   // le geste écrit 2 L ou efface la saisie, seuil retenu pour le crédit.
-  { champ: 'hydration_l', label: 'hydratation', effet: '−2', icone: 'heart', detail: '2 litres ou plus' },
+  { champ: 'hydration_l', label: 'Hydratation', effet: '−2', icone: 'heart', detail: '2 litres ou plus' },
 ]
 
 const actif = (l: DailyLogRow | null, champ: (typeof GESTES)[number]['champ']) =>
@@ -84,86 +85,48 @@ export function CarteCarnet({
   const notables = aNoter(seances)
   const douleurEffort = pire(notables, 'pain')
   const effort = pire(notables, 'rpe')
+  const vieux = perime(day, now)
 
-  const mesures: Array<{ label: string; valeur: number | null; attente: string; teinte: 'douleur' | 'neutre'; mot: string[] }> = [
-    { label: 'raideur au réveil', valeur: l?.pain_wake ?? null, attente: perime(day, now) ? 'non saisi' : 'pas encore', teinte: 'douleur', mot: DOULEUR_MOT },
-  ]
-  if (notables.length) {
-    mesures.push(
-      { label: "douleur pendant l'effort", valeur: douleurEffort, attente: 'après la séance', teinte: 'douleur', mot: DOULEUR_MOT },
-      { label: 'effort perçu', valeur: effort, attente: 'après la séance', teinte: 'neutre', mot: EFFORT_MOT },
-    )
-  }
-  mesures.push({
-    label: 'douleur de fin de journée',
-    valeur: l?.pain_evening ?? null,
-    attente: perime(day, now) ? 'non saisi' : 'pas encore',
-    teinte: 'douleur',
-    mot: DOULEUR_MOT,
-  })
-  const faites = mesures.filter((m) => m.valeur != null).length
+  const mesures = [l?.pain_wake, l?.pain_evening, ...(notables.length ? [douleurEffort, effort] : [])]
+  const faites = mesures.filter((v) => v != null).length
 
   return (
     <section className="carte" style={{ padding: '18px 18px 18px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
-        <p className="etiquette">carnet du jour</p>
-        <span style={{ fontSize: 13, color: enAttente > 0 ? 'var(--warning)' : 'var(--sur-ink-2)' }}>
+        <p className="etiquette">Carnet du jour</p>
+        <span style={{ fontSize: 13, color: enAttente > 0 ? 'var(--warning)' : 'var(--ink-2)' }}>
           {enAttente > 0
             ? `${enAttente} saisie${enAttente > 1 ? 's' : ''} en attente`
             : `${faites} mesure${faites > 1 ? 's' : ''} sur ${mesures.length}`}
         </span>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
-        {mesures.map((m) => (
-          <div key={m.label}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 7 }}>
-              <span style={{ fontSize: 15 }}>{m.label}</span>
-              <span style={{ fontSize: 13.5, color: 'var(--sur-ink-2)', textAlign: 'right' }}>
-                {m.valeur != null ? `${formatNumber(m.valeur)} · ${m.mot[rangRessenti(m.valeur)].toLowerCase()}` : m.attente}
-              </span>
-            </div>
-            {m.valeur != null ? (
-              <BarreFine valeur={m.valeur} douleur={m.teinte === 'douleur'} />
-            ) : (
-              <div style={{ height: 6, borderRadius: 3, border: '1px dashed var(--border-2)' }} />
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 18 }}>
-        {GESTES.map((g) => {
-          const on = actif(l, g.champ)
-          return (
-            <button
-              key={g.champ}
-              type="button"
-              aria-pressed={on}
-              onClick={() => enregistrerLog(day, basculer(l, g.champ))}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '8px 15px',
-                borderRadius: 'var(--pill)',
-                border: `1px solid ${on ? 'transparent' : 'var(--border-2)'}`,
-                background: on ? 'var(--pale)' : 'transparent',
-                color: on ? 'var(--pale-ink)' : 'var(--sur-ink-2)',
-                fontSize: 14,
-                fontWeight: on ? 600 : 500,
-              }}
-            >
-              {on && <Icon name="check" size={14} />}
-              {g.label}
-              <span style={{ fontSize: 12, opacity: 0.7 }}>{g.effet}</span>
-            </button>
-          )
-        })}
+      {/* Les deux mesures du carnet se saisissent ici même, avec les curseurs
+          pleine épaisseur de la version d'origine. Celles de la séance se
+          lisent seulement : elles se notent dans la feuille de séance. */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 14 }}>
+        <CurseurCarnet
+          label="Raideur au réveil"
+          valeur={l?.pain_wake ?? null}
+          onEcrire={(v) => enregistrerLog(day, { pain_wake: v })}
+          verrouille={vieux && l?.pain_wake == null}
+        />
+        {notables.length > 0 && (
+          <>
+            <Lecture label="Douleur pendant l'effort" valeur={douleurEffort} teinte="douleur" mots={DOULEUR_MOT} />
+            <Lecture label="Effort perçu" valeur={effort} teinte="neutre" mots={EFFORT_MOT} />
+          </>
+        )}
+        <CurseurCarnet
+          label="Douleur en fin de journée"
+          valeur={l?.pain_evening ?? null}
+          onEcrire={(v) => enregistrerLog(day, { pain_evening: v })}
+          verrouille={vieux && l?.pain_evening == null}
+        />
       </div>
 
       <button type="button" className="bouton-pale" onClick={onOuvrir} style={{ marginTop: 18 }}>
-        ouvrir le carnet
+        Ouvrir le carnet
         <span className="pastille">
           <Icon name="arrowUpRight" size={18} />
         </span>
@@ -172,17 +135,25 @@ export function CarteCarnet({
   )
 }
 
-/** Une barre de 6 px : le résumé montre une valeur, il ne se règle pas. */
-function BarreFine({ valeur, douleur }: { valeur: number; douleur: boolean }) {
+/** Une mesure de séance, en lecture : la même barre, sans curseur. */
+function Lecture({
+  label,
+  valeur,
+  teinte,
+  mots,
+}: {
+  label: string
+  valeur: number | null
+  teinte: 'douleur' | 'neutre'
+  mots: string[]
+}) {
   return (
-    <div style={{ height: 6, borderRadius: 3, background: 'var(--surface-3)', overflow: 'hidden' }}>
-      <div
-        style={{
-          height: '100%',
-          width: `${Math.max(6, valeur * 10)}%`,
-          borderRadius: 3,
-          background: douleur ? 'var(--accent)' : 'var(--pale)',
-        }}
+    <div>
+      <LabelRessenti>{label}</LabelRessenti>
+      <BarreRessenti
+        valeur={valeur}
+        court={valeur == null ? 'Après la séance' : mots[rangRessenti(valeur)]}
+        teinte={teinte}
       />
     </div>
   )
@@ -218,7 +189,7 @@ export function PageCarnet({
         </p>
       )}
 
-      <Section titre="ce matin">
+      <Section titre="Ce matin">
         <div className="carte" style={{ padding: '18px 18px 20px' }}>
           <CurseurCarnet
             label="Raideur au réveil"
@@ -230,7 +201,7 @@ export function PageCarnet({
       </Section>
 
       {notables.length > 0 && (
-        <Section titre={notables.length > 1 ? 'après les séances' : `après la séance`}>
+        <Section titre={notables.length > 1 ? 'Après les séances' : 'Après la séance'}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {notables.map(({ x, fb }) => (
               <LigneSeance
@@ -244,7 +215,7 @@ export function PageCarnet({
         </Section>
       )}
 
-      <Section titre="ce soir">
+      <Section titre="Ce soir">
         <div className="carte" style={{ padding: '18px 18px 20px' }}>
           <CurseurCarnet
             label="Douleur en fin de journée"
@@ -256,7 +227,7 @@ export function PageCarnet({
       </Section>
 
       <Section
-        titre="les gestes de soin"
+        titre="Les gestes de soin"
         aDroite={`−${credit} point${credit > 1 ? 's' : ''} sur −10 possibles`}
       >
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -273,9 +244,11 @@ export function PageCarnet({
                   textAlign: 'left',
                   padding: '16px 16px 18px',
                   borderRadius: 24,
+                  // Coché : le néon de Button/Accent. Le vert profond est
+                  // réservé au mot du coach.
                   border: `1px solid ${on ? 'transparent' : 'var(--border-2)'}`,
-                  background: on ? 'var(--pale)' : 'var(--surface)',
-                  color: on ? 'var(--pale-ink)' : 'var(--ink)',
+                  background: on ? 'var(--neon)' : 'var(--surface)',
+                  color: 'var(--ink)',
                   minHeight: 118,
                   display: 'flex',
                   flexDirection: 'column',
@@ -284,7 +257,7 @@ export function PageCarnet({
                 }}
               >
                 <span style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Icon name={g.icone} size={22} style={{ color: on ? 'var(--pale-ink)' : 'var(--accent)' }} />
+                  <Icon name={g.icone} size={22} style={{ color: on ? 'var(--ink)' : 'var(--accent)' }} />
                   {on && <Icon name="check" size={20} />}
                 </span>
                 <span>
@@ -311,9 +284,9 @@ function Section({ titre, aDroite, children }: { titre: string; aDroite?: string
   return (
     <section style={{ marginBottom: 22 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, margin: '0 2px 10px' }}>
-        <p className="etiquette" style={{ fontSize: 14 }}>
+        <h3 className="display" style={{ margin: 0, fontSize: 21, fontWeight: 400 }}>
           {titre}
-        </p>
+        </h3>
         {aDroite && <span style={{ fontSize: 13, color: 'var(--sur-ink-2)' }}>{aDroite}</span>}
       </div>
       {children}
@@ -364,8 +337,8 @@ function LigneSeance({
         <div style={{ fontSize: 16 }}>{titre}</div>
         <div style={{ fontSize: 13.5, color: 'var(--sur-ink-2)', marginTop: 2 }}>
           {fb
-            ? `douleur ${formatNumber(fb.pain)} · effort ${fb.rpe}`
-            : "douleur pendant l'effort et effort perçu, pas encore notés"}
+            ? `Douleur ${formatNumber(fb.pain)} · effort ${fb.rpe}`
+            : "Douleur pendant l'effort et effort perçu, pas encore notés"}
         </div>
       </div>
       {onOuvrir && (
@@ -382,7 +355,7 @@ function LigneSeance({
             fontWeight: 600,
           }}
         >
-          {fb ? 'modifier' : 'noter'}
+          {fb ? 'Modifier' : 'Noter'}
         </button>
       )}
     </div>

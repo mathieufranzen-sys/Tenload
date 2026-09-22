@@ -16,8 +16,8 @@ import { addDays, daysBetween } from '../lib/dates'
 import { bandOf, type IndexBreakdown } from '../lib/tendonIndex'
 import { ENCRE_BANDE, TEINTE_BANDE } from '../lib/teintes'
 
-const MOIS_COURT = ['janv', 'févr', 'mars', 'avr', 'mai', 'juin', 'juil', 'août', 'sept', 'oct', 'nov', 'déc']
-const JOURS = ['l', 'm', 'm', 'j', 'v', 's', 'd']
+const MOIS_COURT = ['Janv', 'Févr', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc']
+const JOURS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 
 type Forme = 'longue' | 'qualite' | 'endurance' | 'velo' | 'renfo' | 'repos' | 'dossard'
 
@@ -34,24 +34,29 @@ function formeDuJour(seances: SeancePlanifiee[]): Forme {
   return 'repos'
 }
 
+/**
+ * Une teinte par nature de séance, écartées en clarté autant qu'en teinte
+ * (retour du 22 septembre : endurance, renfo et vélo se confondaient). La
+ * sortie longue prend le néon : c'est la séance qui structure la semaine.
+ */
 const STYLE_FORME: Record<Forme, { fond: string; encre: string; bord: string }> = {
-  longue: { fond: 'transparent', encre: 'var(--ink)', bord: '1.5px solid var(--ink)' },
-  qualite: { fond: '#2e731a', encre: '#ffffff', bord: '1.5px solid transparent' },
-  endurance: { fond: '#dbdad2', encre: 'var(--ink)', bord: '1.5px solid transparent' },
-  velo: { fond: '#efefec', encre: 'var(--ink-3)', bord: '1.5px solid transparent' },
-  renfo: { fond: '#e4e3dc', encre: 'var(--ink-2)', bord: '1.5px solid transparent' },
+  longue: { fond: '#65f67b', encre: '#142800', bord: '1.5px solid transparent' },
+  qualite: { fond: '#274312', encre: '#ffffff', bord: '1.5px solid transparent' },
+  endurance: { fond: '#a7a99f', encre: '#142800', bord: '1.5px solid transparent' },
+  velo: { fond: '#d6dafc', encre: '#2b3aa6', bord: '1.5px solid transparent' },
+  renfo: { fond: '#ffffff', encre: '#4c5c43', bord: '1.5px solid #8b9182' },
   repos: { fond: 'transparent', encre: 'var(--ink-3)', bord: '1.5px dashed var(--border-2)' },
-  dossard: { fond: 'var(--pale)', encre: 'var(--pale-ink)', bord: '1.5px solid transparent' },
+  dossard: { fond: '#142800', encre: '#65f67b', bord: '2px solid #65f67b' },
 }
 
 const LEGENDE_FORME: Array<[Forme, string]> = [
-  ['longue', 'sortie longue'],
-  ['qualite', 'qualité'],
-  ['endurance', 'endurance'],
-  ['velo', 'vélo'],
-  ['renfo', 'renfo'],
-  ['repos', 'repos'],
-  ['dossard', 'dossard'],
+  ['longue', 'Sortie longue'],
+  ['qualite', 'Qualité'],
+  ['endurance', 'Endurance'],
+  ['velo', 'Vélo'],
+  ['renfo', 'Renfo'],
+  ['repos', 'Repos'],
+  ['dossard', 'Dossard'],
 ]
 
 /** La couleur du liseré de semaine, par nature. */
@@ -67,12 +72,12 @@ export const TEINTE_NATURE: Record<string, string> = {
 }
 
 const LEGENDE_NATURE: Array<[string, string]> = [
-  ['charge', 'charge'],
-  ['decharge', 'décharge'],
-  ['pause', 'pause de longue'],
-  ['course', 'dossard'],
-  ['reprise', 'reprise'],
-  ['affutage', 'affûtage'],
+  ['charge', 'Charge'],
+  ['decharge', 'Décharge'],
+  ['pause', 'Pause de longue'],
+  ['course', 'Dossard'],
+  ['reprise', 'Reprise'],
+  ['affutage', 'Affûtage'],
 ]
 
 /** Le nom de la ligne : le mois quand la semaine en porte le premier jour, sinon le numéro. */
@@ -112,7 +117,7 @@ export function GrilleCalendrier({
         <span style={{ fontSize: 14, color: 'var(--accent)' }}>
           {nbJours} jours · {nbSeances} séances
         </span>
-        {rang >= 1 && rang <= nbJours && <span style={{ fontSize: 14, color: 'var(--accent)' }}>jour {rang}</span>}
+        {rang >= 1 && rang <= nbJours && <span style={{ fontSize: 14, color: 'var(--accent)' }}>Jour {rang}</span>}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '38px repeat(7, 1fr)', columnGap: 5, rowGap: 6 }}>
@@ -136,7 +141,7 @@ export function GrilleCalendrier({
       </div>
 
       <div className="carte" style={{ padding: '16px 18px', marginTop: 18 }}>
-        <p style={{ margin: 0, fontSize: 14, color: 'var(--accent)' }}>derrière : la bande du jour</p>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--accent)' }}>Derrière : la bande du jour</p>
         <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
           {(['vert', 'jaune', 'orange', 'rouge', 'noir'] as const).map((b) => (
             <span
@@ -151,7 +156,7 @@ export function GrilleCalendrier({
             />
           ))}
         </div>
-        <p style={{ margin: '16px 0 0', fontSize: 14, color: 'var(--accent)' }}>devant : ce qui est écrit</p>
+        <p style={{ margin: '16px 0 0', fontSize: 14, color: 'var(--accent)' }}>Devant : ce qui est écrit</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
           {LEGENDE_FORME.map(([f, l]) => (
             <span

@@ -54,16 +54,16 @@ export function SessionHero({
         color: 'inherit',
         padding: '18px 18px 18px 20px',
         cursor: onClick ? 'pointer' : 'default',
-        // Un cran plus chaud que les autres cartes : c'est la seule séance de
-        // l'écran qui appelle un geste.
-        background:
-          'radial-gradient(120% 100% at 0% 0%, rgba(62,122,44,.2), transparent 60%), var(--surface)',
-        border: '1px solid rgba(142,242,129,.16)',
+        // La séance à faire se détache des cartes grises : fond blanc et filet
+        // Stroke/Container/Strong. C'est la seule carte de l'écran qui appelle
+        // un geste. Le vert profond, lui, est réservé au mot du coach.
+        background: 'var(--surface-2)',
+        border: '1.5px solid var(--ink)',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
         <p className="etiquette" style={{ color: 'var(--sur-ink-2)' }}>
-          {quand === "Aujourd'hui" ? 'séance du jour' : `séance · ${quand}`}
+          {quand === "Aujourd'hui" ? 'Séance du jour' : `Séance · ${quand}`}
         </p>
         {rang && rang.total > 1 && (
           <span style={{ fontSize: 13, color: 'var(--accent)' }}>
@@ -98,8 +98,8 @@ export function SessionHero({
               width: 52,
               height: 52,
               borderRadius: '50%',
-              background: 'var(--pale)',
-              color: 'var(--pale-ink)',
+              background: 'var(--neon)',
+              color: 'var(--ink)',
               display: 'grid',
               placeItems: 'center',
               flex: 'none',
@@ -135,11 +135,13 @@ export function SessionHero({
         {allure != null ? (
           <span className="puce">{formatPace(allure)}/km</span>
         ) : s.type === 'repos' ? (
-          <span className="puce">aucune charge</span>
+          <span className="puce">Aucune charge</span>
         ) : null}
       </div>
 
-      {(premierSegment || premierPas || s.ex?.length) && (
+      {/* Une séance d'un seul bloc (une course facile de 10 km) ne ferait que
+          répéter ici la distance et l'allure des puces du dessus. */}
+      {!(premierSegment && s.struct?.length === 1) && (premierSegment || premierPas || s.ex?.length) && (
         <div style={{ marginTop: 14, paddingTop: 14, borderTop: SEPARATEUR }}>
           {premierSegment && (
             <Pas

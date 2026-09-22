@@ -177,7 +177,7 @@ export function ChargeSheet({
           <div style={{ minWidth: 0 }}>
             <p style={{ margin: '0 0 3px', fontSize: 13.5, color: 'var(--accent)' }}>{jourLibelle}</p>
             <h2 className="display" style={{ margin: 0, fontSize: 28, lineHeight: 1.1 }}>
-              {b.painInconnue ? 'ce que l’indice sait encore' : `d'où viennent ces ${b.idx} points`}
+              {b.painInconnue ? 'Ce que l’indice sait encore' : `D'où viennent ces ${b.idx} points`}
             </h2>
           </div>
         </div>
@@ -185,7 +185,7 @@ export function ChargeSheet({
         {/* La carte de tête pose l'addition en une ligne, puis la dessine :
             une barre empilée de 0 à 100 où chaque terme prend sa largeur,
             avec le seuil de l'orange repéré. */}
-        <section className="carte-braise" style={{ padding: '20px 20px 18px', borderRadius: 'var(--radius-lg)' }}>
+        <section className="carte" style={{ padding: '20px 20px 18px', borderRadius: 'var(--radius-lg)' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
             <span className="chiffre" style={{ fontSize: 76, lineHeight: 0.9, color: TEINTE_BANDE[band.key] }}>
               {b.idx}
@@ -246,7 +246,7 @@ export function ChargeSheet({
             }}
           >
             <span>0</span>
-            <span>seuil orange à 50</span>
+            <span>Seuil orange à 50</span>
             <span>100</span>
           </div>
         </section>
@@ -266,7 +266,7 @@ export function ChargeSheet({
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
-                  <span style={{ fontSize: 17, textTransform: 'lowercase' }}>{t.label}</span>
+                  <span style={{ fontSize: 17 }}>{t.label}</span>
                   <span style={{ whiteSpace: 'nowrap' }}>
                     <span
                       className="chiffre"
@@ -369,7 +369,7 @@ export function ChargeSheet({
                 color: 'var(--ink)',
               }}
             >
-              voir le calcul de la veille
+              Voir le calcul de la veille
             </button>
           )}
           <button
@@ -386,7 +386,7 @@ export function ChargeSheet({
               color: 'var(--ink)',
             }}
           >
-            voir l'historique
+            Voir l'historique
           </button>
         </div>
       </div>

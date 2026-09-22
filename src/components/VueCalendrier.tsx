@@ -54,6 +54,11 @@ interface Props {
   now: string
   /** Semaine à amener à l'écran à l'ouverture. */
   semaineVisee: number
+  /**
+   * Jour à amener à l'écran : aujourd'hui par défaut, ou celui choisi dans
+   * la vue globale. Null quand c'est une séance mise en avant qui décide.
+   */
+  jourVise?: string | null
   /** Clé `semaine-jour-slot` de la séance à mettre en avant, après « Déplacer ». */
   focus?: string | null
   onOuvrirSeance?: (seance: SeancePlanifiee) => void
@@ -68,6 +73,7 @@ export function VueCalendrier({
   ecarts,
   now,
   semaineVisee,
+  jourVise,
   focus,
   onOuvrirSeance,
   onDeplacer,
@@ -129,16 +135,24 @@ export function VueCalendrier({
   // d'origine. Une séance déjà déplacée renvoyait donc à l'endroit d'où elle
   // était partie.
   //
-  // Sans séance à mettre en avant, on ne descend plus : depuis la refonte du
-  // 21 septembre 2026, le calendrier s'ouvre sur la grille du plan entier, qui
-  // montre déjà aujourd'hui. `semaineVisee` ne sert plus qu'au repli.
+  // Sans séance à mettre en avant, on descend sur `jourVise` : aujourd'hui à
+  // l'ouverture, ou le jour choisi dans la vue globale. L'en-tête de sa
+  // semaine vient en haut de l'écran, pour lire la semaine entière.
   useEffect(() => {
-    if (!focus) return
-    const cible = seances.find((x) => cleEcart(x.semaineOrigine, x.jourOrigine, x.slot) === focus)
-    const semaine = plan.weeks.find((w) => w.n === semaineVisee)
-    const jour = cible?.day ?? semaine?.monday
-    lignes.current.get(`jour-${jour}`)?.scrollIntoView({ block: 'center' })
-  }, [semaineVisee, focus, seances, plan.weeks])
+    if (focus) {
+      const cible = seances.find((x) => cleEcart(x.semaineOrigine, x.jourOrigine, x.slot) === focus)
+      const semaine = plan.weeks.find((w) => w.n === semaineVisee)
+      const jour = cible?.day ?? semaine?.monday
+      lignes.current.get(`jour-${jour}`)?.scrollIntoView({ block: 'center' })
+      return
+    }
+    if (!jourVise) return
+    const w = plan.weeks.find((x) => jourVise >= x.monday && jourVise <= addDays(x.monday, 6))
+    const cle = jourVise === now && w ? `semaine-${w.n}` : `jour-${jourVise}`
+    lignes.current.get(cle)?.scrollIntoView({ block: jourVise === now ? 'start' : 'center' })
+    // Seulement à l'arrivée : défiler ensuite ne doit pas ramener l'écran.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus, jourVise])
 
   const jourSousLePointeur = (x: number, y: number): string | null => {
     for (const [cle, el] of lignes.current) {
@@ -259,12 +273,19 @@ export function VueCalendrier({
           }}
         >
           <Icon name="clip" size={14} />
-          voir le plan initial
+          Voir le plan initial
         </button>
       </div>
 
       {plan.weeks.map((w, i) => (
-        <section key={w.n} style={{ marginBottom: 8, paddingTop: 6 }}>
+        <section
+          key={w.n}
+          ref={(el) => {
+            if (el) lignes.current.set(`semaine-${w.n}`, el as unknown as HTMLDivElement)
+            else lignes.current.delete(`semaine-${w.n}`)
+          }}
+          style={{ marginBottom: 8, paddingTop: 6, scrollMarginTop: 170 }}
+        >
           <EnteteSemaine
             semaine={w}
             courante={now >= w.monday && now <= addDays(w.monday, 6)}
@@ -312,7 +333,7 @@ export function VueCalendrier({
                       color: jour === now ? 'var(--accent)' : 'var(--sur-ink-3)',
                     }}
                   >
-                    {DAYS_LONG[weekdayIndex(jour)].slice(0, 3).toLowerCase()}
+                    {DAYS_LONG[weekdayIndex(jour)].slice(0, 3)}
                   </div>
                   <div
                     className="chiffre"
@@ -331,6 +352,7 @@ export function VueCalendrier({
                       key={`${x.semaineOrigine}-${x.jourOrigine}-${x.slot}`}
                       seance={x}
                       priseEnCours={prise?.day === x.day && prise?.slot === x.slot}
+                      passe={jour < now}
                       misEnAvant={focus === cleEcart(x.semaineOrigine, x.jourOrigine, x.slot)}
                       onOuvrir={
                         onOuvrirSeance && !prise
@@ -394,8 +416,8 @@ export function VueCalendrier({
             margin: '0 auto',
             padding: '12px 14px',
             borderRadius: 'var(--pill)',
-            background: 'var(--pale)',
-            color: 'var(--pale-ink)',
+            background: 'var(--neon)',
+            color: 'var(--ink)',
             boxShadow: '0 12px 32px rgba(0,0,0,.45)',
             fontSize: 14,
             fontWeight: 600,
@@ -416,7 +438,7 @@ export function VueCalendrier({
               fontWeight: 600,
             }}
           >
-            annuler
+            Annuler
           </button>
         </div>
       )}
@@ -497,7 +519,7 @@ function EnteteSemaine({
       }}
     >
       <span className="display" style={{ fontSize: 20, whiteSpace: 'nowrap' }}>
-        semaine {semaine.n}
+        Semaine {semaine.n}
       </span>
       <span
         style={{
@@ -523,11 +545,11 @@ function EnteteSemaine({
             padding: '3px 10px',
             borderRadius: 'var(--pill)',
             // Le présent a la teinte de la pastille du jour de la vue semaine.
-            background: 'var(--pale)',
-            color: 'var(--pale-ink)',
+            background: 'var(--neon)',
+            color: 'var(--ink)',
           }}
         >
-          en cours
+          En cours
         </span>
       )}
     </div>
@@ -537,12 +559,15 @@ function EnteteSemaine({
 function CarteJour({
   seance,
   priseEnCours,
+  passe,
   misEnAvant,
   onOuvrir,
   onPrise,
 }: {
   seance: SeancePlanifiee
   priseEnCours: boolean
+  /** Jour révolu : grisé, comme dans la vue semaine. */
+  passe: boolean
   misEnAvant: boolean
   onOuvrir?: () => void
   onPrise?: (e: React.PointerEvent) => void
@@ -560,7 +585,7 @@ function CarteJour({
         borderRadius: 16,
         background: 'var(--surface)',
         border: misEnAvant ? '1.5px solid var(--accent)' : '1px solid var(--glass-border)',
-        opacity: priseEnCours ? 0.3 : seance.s.saute ? 0.4 : 1,
+        opacity: priseEnCours ? 0.3 : seance.s.saute ? 0.4 : passe ? 0.55 : 1,
         cursor: onOuvrir ? 'pointer' : 'default',
         userSelect: 'none',
         WebkitUserSelect: 'none',

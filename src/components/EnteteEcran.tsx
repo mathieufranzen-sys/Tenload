@@ -63,12 +63,7 @@ export function EnteteEcran({
       }}
     >
       <div style={{ minWidth: 0 }}>
-        {/* Titre en minuscules et en serif, comme la maquette : l'écran se
-            nomme d'une voix, il ne s'affiche pas en enseigne. */}
-        <h1
-          className="display"
-          style={{ margin: 0, fontSize: 38, lineHeight: 1.05, textTransform: 'lowercase' }}
-        >
+        <h1 className="display" style={{ margin: 0, fontSize: 38, lineHeight: 1.05 }}>
           {titre}
         </h1>
         {contexte && (

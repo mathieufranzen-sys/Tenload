@@ -10,10 +10,10 @@ export type Onglet = 'today' | 'plan' | 'track' | 'paces' | 'profile'
  * dossards, et que les allures n'en sont qu'une conséquence.
  */
 const ONGLETS: Array<{ key: Onglet; icon: 'capsule' | 'calendar' | 'chart' | 'target'; label: string }> = [
-  { key: 'today', icon: 'capsule', label: "aujourd'hui" },
-  { key: 'plan', icon: 'calendar', label: 'programme' },
-  { key: 'track', icon: 'chart', label: 'suivi' },
-  { key: 'paces', icon: 'target', label: 'objectif' },
+  { key: 'today', icon: 'capsule', label: "Aujourd'hui" },
+  { key: 'plan', icon: 'calendar', label: 'Programme' },
+  { key: 'track', icon: 'chart', label: 'Suivi' },
+  { key: 'paces', icon: 'target', label: 'Objectif' },
 ]
 
 export function BottomNav({ actif, onChange }: { actif: Onglet; onChange: (o: Onglet) => void }) {

@@ -28,7 +28,7 @@ export function CeQueCaChange({
 
   return (
     <section className="carte" style={{ padding: '18px 20px 20px' }}>
-      <p className="etiquette">ce que ça change aujourd'hui</p>
+      <p className="etiquette">Ce que ça change aujourd'hui</p>
 
       {adapt.rules.length > 0 ? (
         <>

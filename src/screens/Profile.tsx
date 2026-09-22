@@ -167,7 +167,7 @@ export function Profile({
         zIndex: 5,
         padding: '0 var(--page-x) 0',
       }}>
-          <EnteteEcran titre="profil" contexte={<>Règles du plan, calcul de l'indice, réglages</>} />
+          <EnteteEcran titre="Profil" contexte={<>Règles du plan, calcul de l'indice, réglages</>} />
 
           {GROUPES.map((groupe) => (
             <section key={groupe.titre} style={{ marginBottom: 22 }}>
@@ -265,7 +265,7 @@ export function Profile({
                 cursor: 'pointer',
               }}
             >
-              se déconnecter
+              Se déconnecter
             </button>
           )}
         </div>

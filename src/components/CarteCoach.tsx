@@ -17,7 +17,7 @@ export function CarteCoach({
   but,
   /** Version resserrée, pour la carte de séance du jour. */
   compact = false,
-  titre = 'le mot du coach',
+  titre = 'Le mot du coach',
   style,
 }: {
   texte: ReactNode
@@ -56,7 +56,7 @@ export function CarteCoach({
           }}
         >
           <p className="etiquette" style={{ marginBottom: 6 }}>
-            à quoi ça sert
+            À quoi ça sert
           </p>
           <p style={{ margin: 0, color: 'var(--sur-ink-2)', fontSize: 14.5, lineHeight: 1.5 }}>
             {butNet}

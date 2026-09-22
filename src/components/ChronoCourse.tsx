@@ -120,7 +120,7 @@ export function ChronoCourse({ km, chronoSaisi, formeActuelle, disabled, onValid
               border: 'none',
             }}
           >
-            {applique ? 'forme recalée sur ce chrono' : 'recaler ma forme sur ce chrono'}
+            {applique ? 'Forme recalée sur ce chrono' : 'Recaler ma forme sur ce chrono'}
           </button>
         </>
       )}

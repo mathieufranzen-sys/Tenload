@@ -1,6 +1,9 @@
 /**
  * La carte de tête de l'écran Aujourd'hui : la charge du tendon.
  *
+ * Fond clair depuis le 22 septembre 2026 : le vert profond est réservé au mot
+ * du coach, c'est la seule voix de l'app et elle doit se distinguer.
+ *
  * Refonte du 21 septembre 2026, d'après la maquette. La gélule verticale
  * remplace l'arc : elle se remplit comme un tube, du bas vers le haut, et ses
  * quatre graduations sont les seuils des bandes. Le chiffre est en serif, à
@@ -42,20 +45,26 @@ export function CarteCharge({
   const teinte = TEINTE_BANDE[bande.key]
 
   return (
-    <section
-      className={inconnu ? undefined : 'carte-braise'}
+    // La carte entière ouvre le détail du calcul : un bouton de plus sous la
+    // carte disait la même chose en plus petit (demande du 22 septembre).
+    <button
+      type="button"
+      onClick={onCalcul}
+      aria-label="Ouvrir le détail du calcul de l'indice"
+      className={inconnu ? undefined : 'carte'}
       style={{
+        display: 'block',
+        width: '100%',
+        textAlign: 'left',
+        color: 'inherit',
         padding: '18px 18px 16px',
         borderRadius: 'var(--radius-lg)',
-        ...(inconnu
-          ? { border: '1.5px dashed var(--border-2)', background: 'color-mix(in srgb, var(--ink) 3%, transparent)' }
-          : null),
+        cursor: 'pointer',
+        ...(inconnu ? { border: '1.5px dashed var(--border-2)', background: 'transparent' } : null),
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-        <button
-          type="button"
-          onClick={onCalcul}
+        <span
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -68,10 +77,10 @@ export function CarteCharge({
           }}
         >
           <Icon name="capsule" size={15} style={{ color: 'var(--accent)' }} />
-          charge tendon
-        </button>
+          Charge tendon
+        </span>
         <span style={{ fontSize: 13, color: 'var(--accent)', textAlign: 'right' }}>
-          {inconnu ? 'non calculé' : detail.stale ? 'sur une estimation' : 'indice du jour'}
+          {inconnu ? 'Non calculé' : detail.stale ? 'Sur une estimation' : 'Voir le détail'}
         </span>
       </div>
 
@@ -82,7 +91,7 @@ export function CarteCharge({
           {inconnu ? (
             <>
               <div className="display" style={{ fontSize: 44, lineHeight: 1 }}>
-                je ne sais pas
+                Je ne sais pas
               </div>
               <p style={{ margin: '12px 0 0', fontSize: 15, lineHeight: 1.5, color: 'var(--sur-ink-2)' }}>
                 Aucune douleur saisie depuis {detail.joursSansDouleur ?? 'plus de 60'} jours.
@@ -112,7 +121,7 @@ export function CarteCharge({
                   lineHeight: 1.25,
                 }}
               >
-                {bande.name.toLowerCase()} · {bande.headline.toLowerCase()}
+                {bande.name} · {bande.headline.toLowerCase()}
               </span>
               {ecartVeille != null && (
                 <div
@@ -131,7 +140,7 @@ export function CarteCharge({
                     </span>
                   )}
                   {ecartVeille === 0
-                    ? 'comme hier'
+                    ? 'Comme hier'
                     : `${Math.abs(ecartVeille)} point${Math.abs(ecartVeille) > 1 ? 's' : ''} depuis hier`}
                 </div>
               )}
@@ -168,7 +177,7 @@ export function CarteCharge({
           })}
         </div>
       )}
-    </section>
+    </button>
   )
 }
 

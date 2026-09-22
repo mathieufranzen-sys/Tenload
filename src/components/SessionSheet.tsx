@@ -23,6 +23,7 @@ import {
   DOULEUR_MOT,
   EFFORT_DETAIL,
   EFFORT_MOT,
+  rangRessenti,
 } from '../lib/ressenti'
 import { formatPace, zonePace } from '../lib/paces'
 import type { FeedbackRow } from '../lib/buildPain'
@@ -32,7 +33,7 @@ import { encreZone, styleSeance } from '../lib/seanceStyle'
 import { deroulerSeance } from '../lib/deroule'
 import { DecoupageSeance, ProfilSeance } from './ProfilSeance'
 import { RessentiJauges } from './RessentiJauges'
-import { GrilleRessenti } from './GrilleRessenti'
+import { JaugeRessenti } from './JaugeRessenti'
 import { StatsSeance } from './StatsSeance'
 
 const plan = planJson as unknown as Plan
@@ -215,15 +216,39 @@ export function SessionSheet({
             allureReelle={allureReelle}
           />
 
+          {/* Les actions au-dessus du déroulé (retour du 22 septembre) : ce
+              qu'on fait de la séance se décide en la regardant de haut. */}
+          {onSaveEcart && (
+            <div style={{ marginTop: 22 }}>
+              <ActionsSeance
+                origine={origine}
+                actuel={seance.ecart?.patch ?? null}
+                actuelRaison={seance.ecart?.reason ?? null}
+                semaineAvant={semaineAvant}
+                simuler={(patch) =>
+                  seancesAvecEcarts(week, new Map(ecartsBase).set(cle, {
+                    week: week.n,
+                    day_index: jourOrigine,
+                    slot,
+                    patch,
+                    reason: null,
+                  }))
+                }
+                onSave={(patch, reason) => onSaveEcart(week.n, jourOrigine, slot, patch, reason)}
+                onDeplacer={onDeplacer && (() => onDeplacer(seance))}
+              />
+            </div>
+          )}
+
           {/* Le profil d'abord, le détail ensuite : la forme de la séance se
               lit en un coup d'œil, les allures se lisent quand on s'y met. */}
           {(deroule.length > 0 || s.ex || s.type === 'escalade' || s.type === 'repos') && (
-            <section className="carte" style={{ padding: '18px 18px 20px', marginTop: 20 }}>
+            // Sans carte autour : le déroulé est le contenu de la page, pas un
+            // encart dans la page.
+            <section style={{ marginTop: 8 }}>
               {deroule.length > 0 && (
                 <>
-                  <p className="etiquette" style={{ marginBottom: 12 }}>
-                    {['race', 'course'].includes(s.type) ? 'la course' : 'le déroulé'}
-                  </p>
+                  <TitreSection>{['race', 'course'].includes(s.type) ? 'La course' : 'Le déroulé'}</TitreSection>
                   <ProfilSeance blocs={deroule} />
                   <DecoupageSeance session={s} blocs={deroule} marathonPace={marathonPace} />
                 </>
@@ -231,10 +256,7 @@ export function SessionSheet({
 
               {s.ex && (
                 <>
-                  {deroule.length > 0 && <div style={{ height: 1, background: 'var(--border)', margin: '18px 0' }} />}
-                  <p className="etiquette" style={{ marginBottom: 4 }}>
-                    {deroule.length > 0 ? 'renforcement enchaîné' : 'les exercices'}
-                  </p>
+                  <TitreSection>{deroule.length > 0 ? 'Renforcement enchaîné' : 'Les exercices'}</TitreSection>
                   {s.ex.map(([nom, serie, precision], i) => (
                     <div
                       key={i}
@@ -262,9 +284,7 @@ export function SessionSheet({
 
               {(s.type === 'escalade' || s.type === 'repos') && (
                 <>
-                  <p className="etiquette" style={{ marginBottom: 12 }}>
-                    {s.type === 'repos' ? 'les consignes' : 'la séance'}
-                  </p>
+                  <TitreSection>{s.type === 'repos' ? 'Les consignes' : 'La séance'}</TitreSection>
                   <StepView
                     main={s.type === 'repos' ? 'Aucune charge sur les jambes' : 'Escalade en salle'}
                     zone={null}
@@ -280,33 +300,9 @@ export function SessionSheet({
             </section>
           )}
 
-          {/* Les actions sous le déroulé, comme dans la maquette : on décide
-              de sauter ou de déplacer une séance après l'avoir regardée. */}
-          {onSaveEcart && (
-            <div style={{ marginTop: 14 }}>
-              <ActionsSeance
-                origine={origine}
-                actuel={seance.ecart?.patch ?? null}
-                actuelRaison={seance.ecart?.reason ?? null}
-                semaineAvant={semaineAvant}
-                simuler={(patch) =>
-                  seancesAvecEcarts(week, new Map(ecartsBase).set(cle, {
-                    week: week.n,
-                    day_index: jourOrigine,
-                    slot,
-                    patch,
-                    reason: null,
-                  }))
-                }
-                onSave={(patch, reason) => onSaveEcart(week.n, jourOrigine, slot, patch, reason)}
-                onDeplacer={onDeplacer && (() => onDeplacer(seance))}
-              />
-            </div>
-          )}
-
           {recalageSurCourse(s) && day <= today() && formeActuelle != null && (
             <>
-              <p className="etiquette" style={{ fontSize: 14, margin: '22px 2px 10px' }}>ton chrono</p>
+              <TitreSection>Ton chrono</TitreSection>
               <ChronoCourse
                 km={s.dist!}
                 chronoSaisi={
@@ -326,9 +322,7 @@ export function SessionSheet({
               />
             </>
           )}
-          <p className="etiquette" style={{ fontSize: 14, margin: '22px 2px 10px' }}>
-            le ressenti, après
-          </p>
+          <TitreSection>Le ressenti, après</TitreSection>
           {ressentiImplicite ? (
             <div
               className="glass"
@@ -386,7 +380,7 @@ export function SessionSheet({
 
           {butDeLaSeance(s.type) && (
             <section className="carte" style={{ padding: '18px 20px', marginTop: 16 }}>
-              <p className="etiquette">ce que travaille cette séance</p>
+              <p className="display" style={{ margin: 0, fontSize: 21 }}>Ce que travaille cette séance</p>
               <p style={{ margin: '8px 0 0', fontSize: 16, lineHeight: 1.55 }}>
                 {butDeLaSeance(s.type)!.replace(/^À quoi ça sert\s*:\s*/i, '')}
               </p>
@@ -397,6 +391,15 @@ export function SessionSheet({
         </div>
       </div>
     </div>
+  )
+}
+
+/** Un titre de section : un vrai titre, en serif, pas une étiquette. */
+function TitreSection({ children }: { children: string }) {
+  return (
+    <h3 className="display" style={{ margin: '28px 0 12px', fontSize: 23, fontWeight: 400, lineHeight: 1.2 }}>
+      {children}
+    </h3>
   )
 }
 
@@ -484,36 +487,38 @@ function FormulaireRessenti({
   return (
     <div>
       <p style={{ color: 'var(--sur-ink-2)', fontSize: 14, lineHeight: 1.5, margin: '0 0 18px' }}>
-        Deux notes après chaque séance. C'est ce qui pilote l'adaptation du plan.
+        Deux curseurs après chaque séance. C'est ce qui pilote l'adaptation du plan.
       </p>
 
-      <div className="carte" style={{ padding: '20px 18px 18px', marginBottom: 12 }}>
-        <GrilleRessenti
-          label="La douleur pendant l’effort, elle était où ?"
+      {/* Les curseurs d'origine, les mêmes que le carnet : une seule façon
+          de noter une douleur dans toute l'app (retour du 22 septembre). */}
+      <div className="carte" style={{ padding: '18px 16px 14px', marginBottom: 12 }}>
+        <JaugeRessenti
+          label="Douleur au tendon"
           valeur={pain}
           onChange={setPain}
           disabled={disabled}
+          court={pain == null ? '' : DOULEUR_MOT[rangRessenti(pain)]}
+          detail={pain == null ? undefined : DOULEUR_DETAIL[rangRessenti(pain)]}
           teinte="douleur"
-          mots={DOULEUR_MOT}
-          details={DOULEUR_DETAIL}
         />
       </div>
 
-      <div className="carte" style={{ padding: '20px 18px 18px', marginBottom: 12 }}>
-        <GrilleRessenti
-          label="Et l’effort perçu ?"
+      <div className="carte" style={{ padding: '18px 16px 14px', marginBottom: 12 }}>
+        <JaugeRessenti
+          label="Effort perçu"
           valeur={rpe}
           onChange={setRpe}
           disabled={disabled}
+          court={rpe == null ? '' : EFFORT_MOT[rangRessenti(rpe)]}
+          detail={rpe == null ? undefined : EFFORT_DETAIL[rangRessenti(rpe)]}
           teinte="neutre"
-          mots={EFFORT_MOT}
-          details={EFFORT_DETAIL}
         />
       </div>
 
       <button
         onClick={() => {
-          // Valider sans avoir touché une pastille vaut zéro : c'est une
+          // Valider sans avoir touché un curseur vaut zéro : c'est une
           // affirmation volontaire, contrairement à l'affichage d'avant.
           onSave(pain ?? 0, rpe ?? 0, '')
         }}
@@ -531,7 +536,7 @@ function FormulaireRessenti({
           opacity: disabled ? 0.6 : 1,
         }}
       >
-        enregistrer mon ressenti
+        Enregistrer mon ressenti
       </button>
       {disabled && (
         <p style={{ color: 'var(--ink-3)', fontSize: 12.5, marginTop: 8 }}>

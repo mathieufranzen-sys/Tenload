@@ -108,7 +108,7 @@ export function Paces({
 
       <div style={{ position: 'relative', zIndex: 5, padding: '0 var(--page-x) 0' }}>
         <EnteteEcran
-          titre="objectif"
+          titre="Objectif"
           contexte={
             <>
               {goalLabel} au marathon de Paris · {formatDay(plan.meta.raceDate)} 2027 · J-{jRace}
@@ -118,8 +118,8 @@ export function Paces({
         />
 
         {/* L'allure visée, en tête : c'est la seule valeur qui règle tout. */}
-        <section className="carte-braise" style={{ padding: '20px 20px 22px', borderRadius: 'var(--radius-lg)' }}>
-          <p style={{ margin: 0, fontSize: 14.5, color: 'var(--ink)' }}>allure marathon visée</p>
+        <section className="carte" style={{ padding: '20px 20px 22px', borderRadius: 'var(--radius-lg)' }}>
+          <p style={{ margin: 0, fontSize: 14.5, color: 'var(--ink)' }}>Allure marathon visée</p>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 6 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
               <span className="chiffre" style={{ fontSize: 84, lineHeight: 0.95 }}>
@@ -139,7 +139,7 @@ export function Paces({
                 flex: 'none',
               }}
             >
-              modifier
+              Modifier
             </button>
           </div>
           <p style={{ margin: '12px 0 0', fontSize: 15, lineHeight: 1.5, color: 'var(--sur-ink-2)' }}>
@@ -157,8 +157,8 @@ export function Paces({
             valeur={discipline}
             onChange={setDiscipline}
             options={[
-              { cle: 'course', libelle: 'fréquence en course' },
-              { cle: 'velo', libelle: 'fréquence à vélo' },
+              { cle: 'course', libelle: 'Fréquence en course' },
+              { cle: 'velo', libelle: 'Fréquence à vélo' },
             ]}
           />
         </div>
@@ -187,7 +187,7 @@ export function Paces({
                   }}
                 >
                   <span style={{ fontSize: 15.5, fontWeight: ancre ? 600 : 500, lineHeight: 1.2 }}>
-                    {z.label.toLowerCase()}
+                    {z.label}
                   </span>
                   <span className="chiffre" style={{ fontSize: 20, flex: 'none' }}>
                     {formatPace(zonePace(marathonPace, k))}
@@ -208,7 +208,7 @@ export function Paces({
         )}
 
         <section className="carte" style={{ padding: '20px 20px', marginTop: 20 }}>
-          <p className="etiquette">forme projetée</p>
+          <p className="etiquette">Forme projetée</p>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, marginTop: 8 }}>
             <div>
               <div className="chiffre" style={{ fontSize: 54, lineHeight: 1 }}>
@@ -222,7 +222,7 @@ export function Paces({
               <div className="chiffre" style={{ fontSize: 26 }}>
                 {formatDuration(Math.round(gt / 60))}
               </div>
-              <div style={{ fontSize: 13.5, color: 'var(--accent)' }}>objectif</div>
+              <div style={{ fontSize: 13.5, color: 'var(--accent)' }}>Objectif</div>
             </div>
           </div>
 
@@ -248,9 +248,9 @@ export function Paces({
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 13, color: 'var(--sur-ink-2)' }}>
               <span>
-                semaine {semaineCourante?.n ?? 1} sur {nbSemaines}
+                Semaine {semaineCourante?.n ?? 1} sur {nbSemaines}
               </span>
-              <span>{gap <= 0 ? 'objectif atteint' : `il reste ${gap} min à combler`}</span>
+              <span>{gap <= 0 ? 'Objectif atteint' : `Il reste ${gap} min à combler`}</span>
             </div>
           </div>
         </section>
