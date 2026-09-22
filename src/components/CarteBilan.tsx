@@ -32,15 +32,24 @@ function Bloc({ titre, children }: { titre: string; children: ReactNode }) {
   )
 }
 
+interface Pastille {
+  texte: string
+  bonne: boolean
+}
+
 function Ligne({
   libelle,
   children,
   pastille,
+  pastilles,
 }: {
   libelle: string
   children: ReactNode
-  pastille?: { texte: string; bonne: boolean }
+  pastille?: Pastille
+  /** Plusieurs étiquettes de suite : « 2 sautées » et « 1 à noter ». */
+  pastilles?: Array<Pastille | undefined>
 }) {
+  const liste = (pastilles ?? [pastille]).filter((p): p is Pastille => Boolean(p))
   return (
     <div
       style={{
@@ -57,8 +66,9 @@ function Ligne({
       <span style={{ color: 'var(--ink-2)', flex: 'none' }}>{libelle}</span>
       <span style={{ fontWeight: 600, textAlign: 'right' }}>
         {children}
-        {pastille && (
+        {liste.map((p) => (
           <span
+            key={p.texte}
             style={{
               display: 'inline-block',
               fontSize: 'var(--fs-micro)',
@@ -67,13 +77,13 @@ function Ligne({
               borderRadius: 'var(--pill)',
               marginLeft: 8,
               whiteSpace: 'nowrap',
-              background: pastille.bonne ? 'color-mix(in srgb, var(--neon) 22%, transparent)' : 'var(--adapte-fond)',
-              color: pastille.bonne ? 'var(--good)' : 'var(--warning)',
+              background: p.bonne ? 'color-mix(in srgb, var(--neon) 22%, transparent)' : 'var(--adapte-fond)',
+              color: p.bonne ? 'var(--good)' : 'var(--orange-900)',
             }}
           >
-            {pastille.texte}
+            {p.texte}
           </span>
-        )}
+        ))}
       </span>
     </div>
   )
@@ -181,12 +191,24 @@ export function CarteBilan({
       <Bloc titre="Entraînement">
       <Ligne
         libelle="Séances"
-        pastille={b.nonNotees ? { texte: `${b.nonNotees} à noter`, bonne: false } : undefined}
+        pastilles={[
+          b.sautees > 0 ? { texte: pluriel(b.sautees, 'sautée'), bonne: false } : undefined,
+          b.nonNotees ? { texte: `${b.nonNotees} à noter`, bonne: false } : undefined,
+        ]}
       >
         {b.faites} sur {b.prevues}
-        {b.sautees > 0 && <Secondaire>{pluriel(b.sautees, 'sautée')}</Secondaire>}
       </Ligne>
-      <Ligne libelle="Course">
+      <Ligne
+        libelle="Course"
+        pastille={
+          b.kmPrevus > 0
+            ? (() => {
+                const e = Math.round((b.kmRealises / b.kmPrevus - 1) * 100)
+                return { texte: `${e > 0 ? '+' : e < 0 ? '−' : ''}${Math.abs(e)} %`, bonne: Math.abs(e) <= 10 }
+              })()
+            : undefined
+        }
+      >
         {formatNumber(b.kmRealises)} km<Secondaire>sur {formatNumber(b.kmPrevus)} prévus</Secondaire>
       </Ligne>
       <Ligne libelle="Sur 28 jours">
@@ -213,7 +235,14 @@ export function CarteBilan({
       >
         {b.seuilMin} min<Secondaire>cible {SEUIL_CIBLE[0]} à {SEUIL_CIBLE[1]}</Secondaire>
       </Ligne>
-      <Ligne libelle="Seuil pour vitesse">
+      <Ligne
+        libelle="Seuil pour vitesse"
+        pastille={
+          b.dosage.vitesse > 0
+            ? { texte: b.dosage.seuil >= 3 * b.dosage.vitesse ? 'dosage tenu' : 'trop de vitesse', bonne: b.dosage.seuil >= 3 * b.dosage.vitesse }
+            : undefined
+        }
+      >
         {b.dosage.seuil} pour {b.dosage.vitesse}
         <Secondaire>sur 28 jours, cible 3 pour 1</Secondaire>
       </Ligne>
@@ -222,17 +251,26 @@ export function CarteBilan({
 
       <Bloc titre="Tendon et récupération">
       {b.indice.moyen != null && (
-        <Ligne libelle="Indice de charge">
+        <Ligne
+          libelle="Indice de charge"
+          pastille={{ texte: b.indice.moyen < 50 ? 'sous l’orange' : 'dans l’orange', bonne: b.indice.moyen < 50 }}
+        >
           {b.indice.moyen} en moyenne<Secondaire>pic {b.indice.pic}</Secondaire>
         </Ligne>
       )}
       {b.indice.emballement != null && (
-        <Ligne libelle="Emballement">
+        <Ligne
+          libelle="Emballement"
+          pastille={{ texte: b.indice.emballement <= 15 ? 'maîtrisé' : 'ça monte vite', bonne: b.indice.emballement <= 15 }}
+        >
           {Math.round(b.indice.emballement)} points<Secondaire>sur 30</Secondaire>
         </Ligne>
       )}
       {b.indice.monotonie != null && (
-        <Ligne libelle="Monotonie">
+        <Ligne
+          libelle="Monotonie"
+          pastille={{ texte: b.indice.monotonie <= 4 ? 'semaine variée' : 'semaine plate', bonne: b.indice.monotonie <= 4 }}
+        >
           {Math.round(b.indice.monotonie)} points<Secondaire>sur 8</Secondaire>
         </Ligne>
       )}
@@ -256,7 +294,10 @@ export function CarteBilan({
           </>
         )}
       </Ligne>
-      <Ligne libelle="Pic de douleur">
+      <Ligne
+        libelle="Pic de douleur"
+        pastille={b.pic ? { texte: b.pic.valeur <= 3 ? 'sous le seuil' : 'au-dessus de 3', bonne: b.pic.valeur <= 3 } : undefined}
+      >
         {b.pic ? (
           <>
             {formatNumber(b.pic.valeur)}
@@ -273,7 +314,10 @@ export function CarteBilan({
         {pluriel(b.sansDouleur.jours, 'jour')}
         <Secondaire>{b.sansDouleur.releves} relevés</Secondaire>
       </Ligne>
-      <Ligne libelle="Excentrique">
+      <Ligne
+        libelle="Excentrique"
+        pastille={{ texte: b.excentrique >= 4 ? 'observance tenue' : 'à relancer', bonne: b.excentrique >= 4 }}
+      >
         {pluriel(b.excentrique, 'jour')} sur 7
         {b.excentriqueSerie > 1 && <Secondaire>série de {b.excentriqueSerie}</Secondaire>}
       </Ligne>
@@ -293,7 +337,10 @@ export function CarteBilan({
             {formatPace(b.forme.allure)}/km<Secondaire>soit {chrono}</Secondaire>
           </Ligne>
           {b.forme.seances >= 3 && b.forme.ecart !== 0 && (
-            <Ligne libelle="Ressenti">
+            <Ligne
+              libelle="Ressenti"
+              pastille={{ texte: b.forme.ecart < 0 ? 'en progrès' : 'en retrait', bonne: b.forme.ecart < 0 }}
+            >
               {Math.abs(Math.round(b.forme.ecart))} s/km {b.forme.ecart < 0 ? 'plus vite' : 'plus lent'}
               <Secondaire>que ton dernier test</Secondaire>
             </Ligne>
@@ -302,7 +349,7 @@ export function CarteBilan({
       )}
       {b.rpeMoyen != null && (
         <Ligne libelle="Effort perçu moyen">
-          {formatNumber(b.rpeMoyen)}<Secondaire>sur dix</Secondaire>
+          {formatNumber(b.rpeMoyen)}<Secondaire>/ 10</Secondaire>
         </Ligne>
       )}
       <Ligne libelle="Semaines d’affilée">

@@ -306,13 +306,13 @@ export function Plan({
             foncé, celle d'aujourd'hui en néon. Pas de phrase de bloc, et
             trois puces qui tiennent sur une ligne : la nature de la semaine
             est montée sous les dates, où elle qualifie la semaine. */}
-        <div className="carte" style={{ padding: '16px 18px', marginBottom: 16 }}>
+        <div className="carte" style={{ padding: '20px 18px 22px', marginBottom: 20 }}>
           <h2 className="display" style={{ fontSize: 'var(--fs-t-liste)', lineHeight: 1.25, margin: 0 }}>
             {/* Espaces insécables avant chaque point : une ligne ne commence
                 jamais par « · ». */}
             {`Bloc ${bloc.id}\u00a0· ${bloc.name}\u00a0· semaine ${rangDansBloc} sur ${dureeBloc}`}
           </h2>
-          <div style={{ display: 'flex', gap: 3, margin: '14px 0 0' }}>
+          <div style={{ display: 'flex', gap: 3, margin: '18px 0 0' }}>
             {Array.from({ length: dureeBloc }, (_, i) => {
               const w = plan.weeks.find((x) => x.n === premiere + i)
               const finie = w != null && addDays(w.monday, 6) < now
@@ -332,7 +332,7 @@ export function Plan({
               )
             })}
           </div>
-          <div style={{ display: 'flex', gap: 6, marginTop: 14 }}>
+          <div style={{ display: 'flex', gap: 6, marginTop: 18 }}>
             <span className="puce" style={PUCE_BLOC}>
               {formatNumber(kmCourse)} km prévus
             </span>

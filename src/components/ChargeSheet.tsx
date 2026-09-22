@@ -403,7 +403,9 @@ export function ChargeSheet({
  * bleu 300 non plus (retour du 22 septembre).
  */
 const TEINTE_TERME = [
-  'var(--orange-700)',
+  // Le m3 de la famille rouge des bandes : la douleur est le terme qui pèse
+  // le plus, elle prend la couleur de ce que l'indice surveille.
+  '#b91c1c',
   'var(--bleu-500)',
   'var(--bleu-700)',
   'var(--bleu-400)',

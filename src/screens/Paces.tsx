@@ -6,15 +6,15 @@
  * dossards. Depuis le 22 septembre 2026, l'allure marathon visée ne vit plus
  * que dans Profil → Réglages d'allure, et la forme projetée dans Suivi.
  */
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan, ZoneKey } from '../data/types'
 import { today as todayISO } from '../lib/dates'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { FeedbackRow } from '../lib/buildPain'
 import type { EcartPatch, EcartRow } from '../lib/overrides'
-import type { DossardRow } from '../lib/dossards'
-import { ZONE_OFFSETS, formatPace, zonePace, zoneHrRange } from '../lib/paces'
+import { chronoEquivalent, formatChrono, type DossardRow } from '../lib/dossards'
+import { HALF_KM, MARATHON_KM, ZONE_OFFSETS, formatPace, zonePace, zoneHrRange } from '../lib/paces'
 import { COULEUR_ZONE, ENCRE_ZONE } from '../lib/seanceStyle'
 import type { AjustementForme } from '../lib/forme'
 import { EnteteEcran } from '../components/EnteteEcran'
@@ -64,6 +64,14 @@ const ZONE_DESC_VELO: Record<ZoneKey, string> = {
   vo2: 'Fractionné 3 à 5 minutes, effort 9/10',
   rep: '30 secondes à 1 minute, sprints courts',
 }
+
+/** Les quatre distances qui se courent, de la plus courte à la plus longue. */
+const DISTANCES_EQUIVALENTES: Array<[string, number]> = [
+  ['5 km', 5],
+  ['10 km', 10],
+  ['Semi-marathon', HALF_KM],
+  ['Marathon', MARATHON_KM],
+]
 
 interface Props {
   load: LoadMap
@@ -171,6 +179,64 @@ export function Paces({
             )
           })}
         </div>
+
+        {/* Ce que ta forme du jour vaut sur les autres distances, et ce que
+            l'objectif marathon y vaudrait : les deux colonnes se comparent
+            ligne à ligne. Même équivalence que le recalage d'un chrono de
+            course, à l'envers (`chronoEquivalent`). */}
+        <section className="carte" style={{ padding: '18px 18px 16px', marginTop: 26 }}>
+          <h2 className="display" style={{ margin: '0 0 4px', fontSize: 'var(--fs-t-carte)', lineHeight: 1.2 }}>
+            Chronos équivalents
+          </h2>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr auto auto',
+              gap: '0 16px',
+              alignItems: 'baseline',
+              marginTop: 10,
+            }}
+          >
+            <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--accent)' }} />
+            <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--accent)', textAlign: 'right' }}>Ta forme</span>
+            <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--bleu-700)', textAlign: 'right' }}>Objectif</span>
+            {DISTANCES_EQUIVALENTES.map(([libelle, km]) => (
+              <Fragment key={libelle}>
+                <span
+                  style={{
+                    fontSize: 'var(--fs-texte)',
+                    padding: '10px 0',
+                    borderTop: '1px solid var(--border)',
+                    color: 'var(--ink-2)',
+                  }}
+                >
+                  {libelle}
+                </span>
+                <span
+                  className="chiffre"
+                  style={{ fontSize: 'var(--fs-c-s)', padding: '10px 0', borderTop: '1px solid var(--border)', textAlign: 'right' }}
+                >
+                  {formatChrono(chronoEquivalent(km, fitnessPace))}
+                </span>
+                <span
+                  className="chiffre"
+                  style={{
+                    fontSize: 'var(--fs-c-s)',
+                    padding: '10px 0',
+                    borderTop: '1px solid var(--border)',
+                    textAlign: 'right',
+                    color: 'var(--bleu-700)',
+                  }}
+                >
+                  {formatChrono(chronoEquivalent(km, marathonPace))}
+                </span>
+              </Fragment>
+            ))}
+          </div>
+          <p style={{ margin: '12px 2px 0', fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)', lineHeight: 1.45 }}>
+            Des équivalences, pas des prévisions : elles supposent une course préparée et un jour sans vent.
+          </p>
+        </section>
 
         <SectionDossards
           periode="avenir"

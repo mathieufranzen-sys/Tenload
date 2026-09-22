@@ -978,12 +978,16 @@ parce qu'ils nommaient l'onglet Allures.
   palier. Deux notes de 0 à 10 sur la même séance ne peuvent pas avoir l'une
   une échelle et l'autre un bleu fixe.
 - **Une couleur par allure** (`COULEUR_ZONE`, seanceStyle.ts), la même dans
-  les barres d'Objectif et dans le déroulé d'une séance ; **les
-  récupérations entre deux tours sont en vert clair**, ce qui fait lire le
+  les barres d'Objectif et dans le déroulé d'une séance. Elle va **du vert
+  au bleu** : les deux allures lentes, qui font le volume, prennent le vert
+  de la marque, les cinq autres foncent dans le bleu — sept bleus voisins ne
+  se distinguaient pas. **Les récupérations entre deux tours sont en vert
+  clair**, ce qui fait lire le
   graphique du déroulé comme une alternance effort / souffle. L'ancienne règle du
   néon quand la séance change d'allure est retirée : on ne voyait pas OÙ
   l'allure changeait, ce qui est justement ce que le déroulé montre.
-- **Un seul orange** (`--orange-100` à `--orange-900`) : l'aplat des
+- **Un seul orange** (`--orange-100` à `--orange-900`), aligné sur la
+  famille ambre des bandes depuis que les camaïeux sont revenus : l'aplat des
   étiquettes, la bande, le cran 5 de la douleur, l'encre d'alerte et l'encre
   sur l'aplat. `--warning` et `--serious` valent tous deux le 700 : deux
   oranges pour deux degrés du même message ne se lisaient pas comme une
@@ -1072,6 +1076,9 @@ le dit et n'enregistre rien, sans allumer la bannière de synchronisation.
 - Une carte de dossard à venir est bleu clair et non grise, avec sa pastille
   de compte à rebours en blanc : un dossard est un rendez-vous, pas une ligne
   de liste. Sur sa page, l'allure visée a son propre bloc.
+- **Chronos équivalents** dans Objectif : 5 km, 10 km, semi et marathon, en
+  deux colonnes, la forme du jour et l'objectif. Même équivalence que le
+  recalage sur un chrono de course, prise à l'envers (`chronoEquivalent`).
 - Objectif ne liste que les dossards à venir ; **les passés vivent dans
   Profil → Dossards passés**. Une carte ouvre la page du dossard (par un
   portail, pour s'ouvrir aussi depuis une sous-page), où se saisissent

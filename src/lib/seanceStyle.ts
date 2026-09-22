@@ -85,26 +85,29 @@ export const RANG_ZONE: Record<ZoneKey, number> = {
 
 /**
  * Une couleur par allure, la même dans toute l'app : les barres de zones
- * d'Objectif, le déroulé d'une séance, la pastille d'intensité. Sept crans
- * de la gamme bleue, du plus pâle au plus foncé à mesure que l'allure
- * accélère (retour du 22 septembre 2026 : chaque allure se distingue, et
- * deux séances qui courent la même zone la montrent de la même couleur).
+ * d'Objectif, le déroulé d'une séance, la pastille d'intensité.
+ *
+ * Du VERT au BLEU, et non sept crans d'un même bleu : les deux allures
+ * lentes, celles qui font le volume, prennent le vert de la marque, les
+ * cinq autres foncent dans la gamme bleue à mesure que l'effort monte. Sept
+ * bleus voisins ne se distinguaient pas dans le déroulé d'une séance
+ * (retour du 22 septembre 2026).
  */
 export const COULEUR_ZONE: Record<ZoneKey, string> = {
-  recup: '#d6dafc',
-  ef: '#b3bbf9',
-  am: '#6e7ff4',
-  semi: '#4f63f2',
-  seuil: '#3b4dd6',
+  recup: '#c9fdd2',
+  ef: '#65f67b',
+  am: '#b3bbf9',
+  semi: '#6e7ff4',
+  seuil: '#4f63f2',
   vo2: '#2b3aa6',
   rep: '#1f2a78',
 }
 
 /** L'encre lisible sur `COULEUR_ZONE` : sombre sur les deux plus pâles. */
 export const ENCRE_ZONE: Record<ZoneKey, string> = {
-  recup: '#1f2a78',
-  ef: '#1f2a78',
-  am: '#ffffff',
+  recup: '#142800',
+  ef: '#142800',
+  am: '#1f2a78',
   semi: '#ffffff',
   seuil: '#ffffff',
   vo2: '#ffffff',

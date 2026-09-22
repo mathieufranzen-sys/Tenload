@@ -168,20 +168,20 @@
   --chart-texte: color-mix(in srgb, var(--ink) 55%, transparent);
 
   /* ─── l'orange, une seule gamme ──────────────────────────────────────────
-     Resserrée le 22 septembre 2026 : l'app portait cinq oranges cousins
-     qui ne se ressemblaient d'un écran à l'autre ni par la teinte ni par la
-     clarté. Une seule rampe désormais, du fond clair à l'encre foncée, et
-     tout ce qui alerte y puise.
+     Resserrée le 22 septembre 2026, puis alignée le soir même sur la famille
+     ambre des bandes : l'orange vif ne venait d'aucune famille depuis que les
+     camaïeux sont revenus. Une seule rampe, du fond clair à l'encre foncée,
+     et tout ce qui alerte y puise.
        100  aplat clair (étiquette « adaptée », badges, encarts)
        300  la bande orange de l'indice, et le cran 4 de la douleur
        500  le cran 5 de la douleur
        700  l'encre d'alerte sur blanc (vigilance, à noter, retard)
        900  l'encre posée sur l'aplat 100 */
-  --orange-100: #ffe2b8;
-  --orange-300: #ff9500;
-  --orange-500: #e07c00;
-  --orange-700: #b45c00;
-  --orange-900: #7a3e00;
+  --orange-100: #fde68a;
+  --orange-300: #fcd34d;
+  --orange-500: #f5b32e;
+  --orange-700: #b45309;
+  --orange-900: #78350f;
 
   /* ─── état ───────────────────────────────────────────────────────────────
      Des encres lisibles sur blanc : le jaune et le vert d'eau des bandes

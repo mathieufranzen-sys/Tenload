@@ -530,7 +530,7 @@ function Kpi({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-        <span className="chiffre" style={{ fontSize: valeur.length > 6 ? 'var(--fs-c-l)' : 'var(--fs-c-xl)', lineHeight: 1, color: couleur }}>
+        <span className="chiffre" style={{ fontSize: valeur.length > 6 ? 'var(--fs-c-m)' : 'var(--fs-c-l)', lineHeight: 1, color: couleur }}>
           {valeur}
         </span>
         {suffix && <span style={{ fontSize: 'var(--fs-texte)', color: 'var(--accent)' }}>{suffix.trim()}</span>}
