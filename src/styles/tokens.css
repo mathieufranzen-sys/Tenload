@@ -161,7 +161,9 @@
   --chart-1: #49de61;
   --chart-2: #4f63f2;
   --chart-3: #1f2a78;
-  --chart-ligne: #142800;
+  /* La ligne de l'indice prend le bleu nuit des courbes du soir : un trait
+     noir sur une carte grise se lisait comme une bordure. */
+  --chart-ligne: var(--chart-3);
   --chart-grille: color-mix(in srgb, var(--ink) 9%, transparent);
   --chart-texte: color-mix(in srgb, var(--ink) 55%, transparent);
 
@@ -268,8 +270,8 @@
    ══════════════════════════════════════════════════════════════════════════ */
 :root {
   --bande-vert: #65f67b;
-  --bande-jaune: #ffd23f;
-  --bande-orange: var(--orange-300);
-  --bande-rouge: #ff3b30;
-  --bande-noir: #1a1a1a;
+  --bande-jaune: #93c5fd;
+  --bande-orange: #fcd34d;
+  --bande-rouge: #fb7185;
+  --bande-noir: #d946ef;
 }

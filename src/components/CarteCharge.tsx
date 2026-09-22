@@ -92,9 +92,7 @@ export function CarteCharge({
         <Icon name="arrowUpRight" size={20} />
       </span>
       <div style={{ paddingRight: 64 }}>
-        <p className="etiquette" style={{ fontSize: 'var(--fs-meta)', color: 'var(--ink)', fontWeight: 600 }}>
-          Charge du tendon
-        </p>
+        <p className="etiquette">Charge du tendon</p>
         {(inconnu || detail.stale) && (
           <p style={{ margin: '2px 0 0', fontSize: 'var(--fs-detail)', color: 'var(--accent)' }}>
             {inconnu ? 'Non calculée' : 'Sur une estimation'}

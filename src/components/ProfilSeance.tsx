@@ -16,8 +16,7 @@ import type { Session } from '../data/types'
 import { formatPace, zonePace } from '../lib/paces'
 import {
   COULEUR_ROLE,
-  couleurRole,
-  plusieursAllures,
+  couleurSegment,
   hauteurSegment,
   roleDe,
   type BlocDeroule,
@@ -37,13 +36,12 @@ interface Barre {
 
 function barres(blocs: BlocDeroule[]): Barre[] {
   const out: Barre[] = []
-  const varie = plusieursAllures(blocs)
   for (const b of blocs) {
     for (let i = 0; i < b.reps; i++) {
       out.push({
         part: b.effort.secondes ?? 60,
         hauteur: hauteurSegment(b.effort, false, b.phase),
-        couleur: couleurRole(roleDe(b.effort, false, b.phase), varie),
+        couleur: couleurSegment(b.effort, roleDe(b.effort, false, b.phase)),
       })
       // La dernière récupération d'un bloc n'est pas dessinée : on ne récupère
       // pas d'un tour qui n'aura pas de suivant, la séance enchaîne.
@@ -132,7 +130,6 @@ export function DecoupageSeance({
   blocs: BlocDeroule[]
   marathonPace: number
 }) {
-  const varie = plusieursAllures(blocs)
   return (
     <div>
       {blocs.map((b, i) => {
@@ -173,10 +170,10 @@ export function DecoupageSeance({
               }}
             >
               <div style={{ flex: 1, minWidth: 0, padding: '14px 4px 14px 0' }}>
-                <Ligne seg={b.effort} recuperation={false} phase={b.phase} marathonPace={marathonPace} varie={varie} />
+                <Ligne seg={b.effort} recuperation={false} phase={b.phase} marathonPace={marathonPace} />
                 {b.recup && (
                   <div style={{ marginTop: 12 }}>
-                    <Ligne seg={b.recup} recuperation phase={b.phase} marathonPace={marathonPace} varie={varie} />
+                    <Ligne seg={b.recup} recuperation phase={b.phase} marathonPace={marathonPace} />
                   </div>
                 )}
               </div>
@@ -226,13 +223,11 @@ function Ligne({
   recuperation,
   phase,
   marathonPace,
-  varie,
 }: {
   seg: SegmentDeroule
   recuperation: boolean
   phase: PhaseCle
   marathonPace: number
-  varie: boolean
 }) {
   const allure = seg.zone ? `${formatPace(zonePace(marathonPace, seg.zone))} /km` : null
   return (
@@ -243,7 +238,7 @@ function Ligne({
           width: 4,
           borderRadius: 2,
           flex: 'none',
-          background: couleurRole(roleDe(seg, recuperation, phase), varie),
+          background: couleurSegment(seg, roleDe(seg, recuperation, phase)),
         }}
       />
       <div style={{ minWidth: 0 }}>

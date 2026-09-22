@@ -827,8 +827,8 @@ function BlocANoter({
       style={{
         padding: '16px 16px',
         borderRadius: 'var(--radius)',
-        background: 'color-mix(in srgb, var(--bande-orange) 10%, transparent)',
-        border: '1.5px solid color-mix(in srgb, var(--bande-orange) 65%, transparent)',
+        background: 'color-mix(in srgb, var(--orange-300) 10%, transparent)',
+        border: '1.5px solid color-mix(in srgb, var(--orange-300) 65%, transparent)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: 'var(--serious)' }}>

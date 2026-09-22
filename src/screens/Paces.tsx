@@ -15,6 +15,7 @@ import type { FeedbackRow } from '../lib/buildPain'
 import type { EcartPatch, EcartRow } from '../lib/overrides'
 import type { DossardRow } from '../lib/dossards'
 import { ZONE_OFFSETS, formatPace, zonePace, zoneHrRange } from '../lib/paces'
+import { COULEUR_ZONE, ENCRE_ZONE } from '../lib/seanceStyle'
 import type { AjustementForme } from '../lib/forme'
 import { EnteteEcran } from '../components/EnteteEcran'
 import { MeshBackground } from '../components/MeshBackground'
@@ -38,15 +39,8 @@ const ZONE_DESC: Record<ZoneKey, string> = {
  * allures (arbitré par Mathieu le 22 septembre 2026) : du bleu pâle de la
  * récupération au bleu nuit des répétitions.
  */
-const TEINTE_ZONE: Array<{ fond: string; encre: string }> = [
-  { fond: '#d6dafc', encre: '#1f2a78' },
-  { fond: '#b3bbf9', encre: '#1f2a78' },
-  { fond: '#6e7ff4', encre: '#ffffff' },
-  { fond: '#4f63f2', encre: '#ffffff' },
-  { fond: '#3b4dd6', encre: '#ffffff' },
-  { fond: '#2b3aa6', encre: '#ffffff' },
-  { fond: '#1f2a78', encre: '#ffffff' },
-]
+// Les couleurs d'allure vivent dans `seanceStyle.ts` : le déroulé d'une
+// séance et ces barres doivent montrer la même zone de la même couleur.
 
 /**
  * La borne lente des zones qui se courent en plage, en s/km au-dessus de
@@ -158,8 +152,8 @@ export function Paces({
                     gap: 10,
                     padding: '13px 20px',
                     borderRadius: 'var(--pill)',
-                    background: TEINTE_ZONE[i].fond,
-                    color: TEINTE_ZONE[i].encre,
+                    background: COULEUR_ZONE[k],
+                    color: ENCRE_ZONE[k],
                   }}
                 >
                   <span style={{ fontSize: 'var(--fs-texte)', fontWeight: ancre ? 600 : 500, lineHeight: 1.2 }}>

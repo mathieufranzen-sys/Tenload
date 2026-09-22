@@ -6,6 +6,7 @@
  * nombre sur dix. Deux échelles de douleur dans la même app, l'une nommée et
  * l'autre muette, alors que c'est la même douleur au même tendon.
  */
+import { CAMAIEU_BANDE } from './teintes'
 
 /** Douleur au tendon. C'est cette échelle qui pilote l'adaptation du plan. */
 export const DOULEUR_MOT = [
@@ -91,17 +92,15 @@ export const rangRessenti = (v: number): number => Math.max(0, Math.min(10, Math
  *   6-7  rouge   plancher rouge
  *   8-10 noir    plancher noir
  *
- * Chaque palier ouvre sur la teinte exacte de sa bande, puis fonce : la
- * douleur et la jauge parlent la même couleur, et la progression reste
- * lisible à l'intérieur d'un même plancher. Le noir est revenu le
- * 22 septembre 2026, à la demande de Mathieu : le carmin qui le remplaçait
- * faisait une sixième couleur que les bandes n'ont pas. Le chiffre posé
- * dessus passe en blanc (`BarreRessenti` suit la luminance).
+ * Chaque palier ouvre sur le m4 de sa bande, la teinte claire, puis passe au
+ * m2, plus soutenu : la douleur et la jauge parlent la même couleur, et la
+ * progression reste lisible à l'intérieur d'un même plancher. Les familles
+ * viennent des camaïeux (`teintes.ts`), repris le 22 septembre 2026.
  */
 export const COULEUR_DOULEUR = [
-  '#65f67b', '#49de61',
-  '#ffd23f', '#f5bd1a',
-  '#ff9500', '#e07c00',
-  '#ff3b30', '#e5261c',
-  '#333333', '#262626', '#1a1a1a',
+  CAMAIEU_BANDE.vert.m4, CAMAIEU_BANDE.vert.m2,
+  CAMAIEU_BANDE.jaune.m4, CAMAIEU_BANDE.jaune.m2,
+  CAMAIEU_BANDE.orange.m4, CAMAIEU_BANDE.orange.m2,
+  CAMAIEU_BANDE.rouge.m4, CAMAIEU_BANDE.rouge.m2,
+  CAMAIEU_BANDE.noir.m4, CAMAIEU_BANDE.noir.m2, CAMAIEU_BANDE.noir.m3,
 ]

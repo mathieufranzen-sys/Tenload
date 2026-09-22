@@ -523,10 +523,6 @@ function FormulaireRessenti({
 
   return (
     <div>
-      <p style={{ color: 'var(--sur-ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5, margin: '0 0 18px' }}>
-        Deux curseurs après chaque séance. C'est ce qui pilote l'adaptation du plan.
-      </p>
-
       {/* Les curseurs d'origine, les mêmes que le carnet : une seule façon
           de noter une douleur dans toute l'app (retour du 22 septembre). */}
       <div className="carte" style={{ padding: '18px 16px 14px', marginBottom: 12 }}>

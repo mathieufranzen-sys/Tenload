@@ -40,7 +40,12 @@ export function largeurRemplissage(valeur: number): string {
 }
 
 /** Teinte neutre de l'effort perçu : un 9 sur une séance de qualité est une réussite. */
-const NEUTRE = '#4f63f2'
+/**
+ * L'effort perçu suit la même échelle de couleur que la douleur depuis le
+ * 22 septembre 2026 : ce sont deux notes de 0 à 10 sur la même séance, et
+ * un bleu fixe d'un côté, une échelle de l'autre, les faisait lire comme
+ * deux mesures sans rapport.
+ */
 
 export type TeinteRessenti = 'douleur' | 'neutre'
 
@@ -76,7 +81,7 @@ export function BarreRessenti({
     ? null
     : teinte === 'douleur'
       ? COULEUR_DOULEUR[rangRessenti(affiche)]
-      : NEUTRE
+      : COULEUR_DOULEUR[rangRessenti(affiche)]
   // Le chiffre repose toujours sur le remplissage : son encre suit donc la
   // luminance de la teinte. Un chiffre blanc sur l'ambre du milieu d'échelle
   // ne se lit pas, et c'est justement la zone où le plan commence à s'adapter.

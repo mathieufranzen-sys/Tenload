@@ -350,28 +350,37 @@ export function weekSessions(
     const day = addDays(week.monday, s.day + 7 * (s.semaines ?? 0))
     const cle = cleEcart(week.n, jourOrigine, slot)
 
-    // Une séance déclarée non faite ne reçoit aucune adaptation : il n'y a
-    // plus rien à protéger. Une séance déjà notée non plus, pour la même
-    // raison — elle est derrière lui.
-    const figee = s.saute || Boolean(contexte?.faites?.has(cle))
+    // Une séance déjà notée est derrière lui : aucune adaptation ne la
+    // réécrit, c'est une mesure.
+    const notee = Boolean(contexte?.faites?.has(cle))
 
     let vecue = s
-    if (!figee) {
-      const palier = contexte?.palier
-      if (palier && s.type === 'long' && day === palier.jour && s.dist && s.dist > palier.km) {
-        vecue = appliquerPalier(vecue, palier)
-      }
-      // Même règle pour la séance spécifique du jeudi, qui grossit d'une
-      // répétition par semaine : si la précédente n'est pas passée, on répète
-      // au lieu de monter.
-      const ps = contexte?.palierSpecifique
-      if (ps && s.specifique && day === ps.jour) {
-        vecue = appliquerPalierSpecifique(vecue, ps)
+    if (!notee) {
+      // Le palier est une règle de progression : il ne vise que ce qui reste
+      // à courir, donc jamais une séance sautée.
+      if (!s.saute) {
+        const palier = contexte?.palier
+        if (palier && s.type === 'long' && day === palier.jour && s.dist && s.dist > palier.km) {
+          vecue = appliquerPalier(vecue, palier)
+        }
+        // Même règle pour la séance spécifique du jeudi, qui grossit d'une
+        // répétition par semaine : si la précédente n'est pas passée, on répète
+        // au lieu de monter.
+        const ps = contexte?.palierSpecifique
+        if (ps && s.specifique && day === ps.jour) {
+          vecue = appliquerPalierSpecifique(vecue, ps)
+        }
       }
       vecue = applyFx(vecue, fxForDate(day, now, byDate), {
         lendemainDeLongue: jourLongue != null && s.day === jourLongue + 1,
         raideurReveil: contexte?.reveils?.[day] ?? null,
       })
+      // Une séance sautée garde l'ADAPTATION à l'écran mais perd son
+      // étiquette (retour du 22 septembre) : Mathieu a sauté le vélo que
+      // l'indice avait posé, pas la course du plan, et la carte doit dire
+      // « vélo sauté ». Rien ne change au calcul : une séance sautée vaut
+      // zéro dans la charge, quelle que soit sa discipline.
+      if (s.saute) vecue = { ...vecue, adapted: undefined }
     }
 
     return {

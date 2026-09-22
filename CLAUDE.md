@@ -468,7 +468,11 @@ discipline, la déplacer d'un jour, corriger sa distance ou sa durée.
   `check_plan.py` un fichier qui n'est plus la référence de personne.
 - **Ordre d'application : plan → écart volontaire → `applyFx`.** La décision de
   Mathieu passe d'abord, la protection du tendon s'applique par-dessus. Une
-  séance sautée ne reçoit aucune adaptation : il n'y a plus rien à protéger.
+  séance sautée garde l'adaptation À L'ÉCRAN mais perd son étiquette
+  (22 septembre 2026) : sauter la course devenue vélo doit afficher « vélo
+  sauté », sinon la carte parle d'une séance que Mathieu n'a jamais vue.
+  Rien ne change au calcul, une séance sautée vaut zéro dans la charge. Le
+  palier, lui, ne vise que ce qui reste à courir : il ignore les sautées.
 - **Une séance sautée vaut zéro dans la charge**, comme une journée sans
   activité importée.
 - **Le contrôle des contraintes avertit, il ne bloque pas.** `verifierContraintes`
@@ -943,7 +947,8 @@ parce qu'ils nommaient l'onglet Allures.
   cours, là où les séances se déplacent) et **vue globale**, la grille du plan
   entier (`GrilleCalendrier`), le passé coloré par bande, l'avenir par type de
   séance, la sortie longue en néon.
-- Le ressenti de séance garde les curseurs d'origine (`JaugeRessenti`) et les
+- Le ressenti n'a plus de phrase d'introduction : les deux curseurs se
+  suffisent. Le ressenti de séance garde les curseurs d'origine (`JaugeRessenti`) et les
   mots du test de la parole : les pastilles de la maquette ont été essayées puis
   retirées le 22 septembre, une seule façon de noter dans toute l'app.
 - **Le vert profond est réservé au mot du coach** (`.carte-braise`), et à ce
@@ -963,9 +968,19 @@ parce qu'ils nommaient l'onglet Allures.
 - Aujourd'hui n'a plus de bloc « ce que ça change » : l'adaptation se lit
   sur la séance. Le carnet du jour n'y est qu'un résumé à jauges fines, la
   saisie vit dans sa page.
-- Bandes et douleur en teintes vives depuis le 22 septembre : **vert de
-  marque #65f67b** (le vert d'eau faisait un sixième vert), jaune #ffd23f,
-  orange #ff9500, rouge #ff3b30, noir #1a1a1a.
+- **Les bandes reprennent les camaïeux de la branche main** (`CAMAIEU_BANDE`
+  dans teintes.ts), en m4 — la teinte claire — et avec le vert de la marque
+  à la place du vert d'eau : vert #65f67b, jaune #93c5fd, orange #fcd34d,
+  rouge #fb7185, noir #d946ef. Le nom d'une bande ne décrit plus sa couleur
+  (le « jaune » est bleu, le « noir » violet) : c'est l'ordre qui se lit.
+  L'encre posée dessus est le m6 de la même famille.
+- **La douleur ET l'effort perçu** suivent ces familles : m4 puis m2 par
+  palier. Deux notes de 0 à 10 sur la même séance ne peuvent pas avoir l'une
+  une échelle et l'autre un bleu fixe.
+- **Une couleur par allure** (`COULEUR_ZONE`, seanceStyle.ts), la même dans
+  les barres d'Objectif et dans le déroulé d'une séance. L'ancienne règle du
+  néon quand la séance change d'allure est retirée : on ne voyait pas OÙ
+  l'allure changeait, ce qui est justement ce que le déroulé montre.
 - **Un seul orange** (`--orange-100` à `--orange-900`) : l'aplat des
   étiquettes, la bande, le cran 5 de la douleur, l'encre d'alerte et l'encre
   sur l'aplat. `--warning` et `--serious` valent tous deux le 700 : deux

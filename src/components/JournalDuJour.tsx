@@ -109,19 +109,19 @@ export function CarteCarnet({
           label="Raideur au réveil"
           valeur={l?.pain_wake ?? null}
           attente={vieux ? 'Non saisi' : 'À noter'}
-          teinte="douleur"
+         
         />
         {notables.length > 0 && (
           <>
-            <Resume label="Douleur pendant l'effort" valeur={douleurEffort} attente="Après la séance" teinte="douleur" />
-            <Resume label="Effort perçu" valeur={effort} attente="Après la séance" teinte="neutre" />
+            <Resume label="Douleur pendant l'effort" valeur={douleurEffort} attente="Après la séance" />
+            <Resume label="Effort perçu" valeur={effort} attente="Après la séance" />
           </>
         )}
         <Resume
           label="Douleur en fin de journée"
           valeur={l?.pain_evening ?? null}
           attente={vieux ? 'Non saisi' : 'Ce soir'}
-          teinte="douleur"
+         
         />
       </div>
 
@@ -137,15 +137,14 @@ function Resume({
   label,
   valeur,
   attente,
-  teinte,
 }: {
   label: string
   valeur: number | null
   attente: string
-  teinte: 'douleur' | 'neutre'
 }) {
   const couleur =
-    valeur == null ? undefined : teinte === 'douleur' ? COULEUR_DOULEUR[rangRessenti(valeur)] : 'var(--accent-2)'
+    // Douleur et effort perçu partagent l'échelle : voir `BarreRessenti`.
+    valeur == null ? undefined : COULEUR_DOULEUR[rangRessenti(valeur)]
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, marginBottom: 7 }}>

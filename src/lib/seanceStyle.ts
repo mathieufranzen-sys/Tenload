@@ -83,6 +83,34 @@ export const RANG_ZONE: Record<ZoneKey, number> = {
   rep: 6,
 }
 
+/**
+ * Une couleur par allure, la même dans toute l'app : les barres de zones
+ * d'Objectif, le déroulé d'une séance, la pastille d'intensité. Sept crans
+ * de la gamme bleue, du plus pâle au plus foncé à mesure que l'allure
+ * accélère (retour du 22 septembre 2026 : chaque allure se distingue, et
+ * deux séances qui courent la même zone la montrent de la même couleur).
+ */
+export const COULEUR_ZONE: Record<ZoneKey, string> = {
+  recup: '#d6dafc',
+  ef: '#b3bbf9',
+  am: '#6e7ff4',
+  semi: '#4f63f2',
+  seuil: '#3b4dd6',
+  vo2: '#2b3aa6',
+  rep: '#1f2a78',
+}
+
+/** L'encre lisible sur `COULEUR_ZONE` : sombre sur les deux plus pâles. */
+export const ENCRE_ZONE: Record<ZoneKey, string> = {
+  recup: '#1f2a78',
+  ef: '#1f2a78',
+  am: '#ffffff',
+  semi: '#ffffff',
+  seuil: '#ffffff',
+  vo2: '#ffffff',
+  rep: '#ffffff',
+}
+
 export function encreZone(zone: ZoneKey): string {
   // Du bleu pâle de la récupération au bleu nuit des répétitions :
   // l'échelle fonce, ce qui se lit comme une intensité même sans

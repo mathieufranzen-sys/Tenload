@@ -15,6 +15,7 @@
 import planJson from '../data/plan.json'
 import type { Plan, Session, Step, ZoneKey } from '../data/types'
 import { zonePace } from './paces'
+import { COULEUR_ZONE } from './seanceStyle'
 
 const plan = planJson as unknown as Plan
 
@@ -194,20 +195,17 @@ export const COULEUR_ROLE: Record<RoleSegment, string> = {
   recup: '#d6dafc',
 }
 
-const EFFORT_AUTRE_ALLURE = '#49de61'
 
-/** Vrai quand le déroulé porte plus d'une allure (zones distinctes). */
-export function plusieursAllures(blocs: BlocDeroule[]): boolean {
-  const zones = new Set<string>()
-  for (const b of blocs) {
-    if (b.effort.zone) zones.add(b.effort.zone)
-    if (b.recup?.zone) zones.add(b.recup.zone)
-  }
-  return zones.size > 1
-}
 
-export const couleurRole = (role: RoleSegment, varie: boolean): string =>
-  role === 'effort' && varie ? EFFORT_AUTRE_ALLURE : COULEUR_ROLE[role]
+/**
+ * La couleur d'un segment : celle de son ALLURE quand il en a une, sinon
+ * celle de son rôle. Avant, tous les efforts d'une séance partageaient un
+ * seul bleu et la séance changeait de couleur en bloc dès qu'elle mêlait
+ * deux allures ; on ne voyait donc pas où l'allure changeait, ce qui est
+ * précisément ce que le déroulé doit montrer (retour du 22 septembre 2026).
+ */
+export const couleurSegment = (seg: SegmentDeroule, role: RoleSegment): string =>
+  seg.zone ? COULEUR_ZONE[seg.zone] : COULEUR_ROLE[role]
 
 /**
  * Hauteur relative d'une barre, de 0 à 1. L'échelle suit le rang de la zone :

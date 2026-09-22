@@ -518,9 +518,9 @@ function EnteteSemaine({
         // filet, parce que sur 238 jours de défilement un trait d'un pixel
         // passe sous l'œil sans l'arrêter.
         margin: premiere ? '0 calc(var(--page-x) * -1)' : '34px calc(var(--page-x) * -1) 0',
-        padding: '13px var(--page-x) 12px',
+        padding: '21px var(--page-x) 20px',
         background: 'var(--surface)',
-        borderTop: premiere ? 'none' : '2px solid var(--border-2)',
+        borderTop: premiere ? 'none' : '1px solid var(--border-2)',
         borderBottom: '1px solid var(--border)',
       }}
     >
