@@ -99,3 +99,41 @@ export function ajusterForme(
     borne: Math.abs(brut) > ECART_MAX,
   }
 }
+
+/**
+ * La forme projetée semaine après semaine, pour les graphiques de niveau
+ * (Suivi) et la tendance de la carte « Forme projetée » (Objectif).
+ *
+ * Chaque point est `ajusterForme` rejoué à la date donnée, sur les seuls
+ * ressentis connus à cette date : c'est ce que l'app aurait affiché ce
+ * jour-là. L'ancre est le test ACTUEL : un recalage ancien n'est pas rejoué,
+ * la courbe montre ce que le ressenti a fait bouger, pas l'histoire des tests.
+ */
+export function serieForme(
+  base: number,
+  feedback: FeedbackRow[],
+  dates: string[],
+): Array<{ day: string } & AjustementForme> {
+  return dates.map((day) => ({ day, ...ajusterForme(base, feedback, day) }))
+}
+
+/**
+ * L'effort perçu d'une semaine, contre l'effort attendu de chaque séance :
+ * positif, la semaine a paru plus dure que prévu. Mêmes filtres que
+ * `ajusterForme` (course seulement, séances douloureuses écartées), pour que
+ * le graphique montre exactement ce que la forme lit. Null sans séance.
+ */
+export function ecartEffortSemaine(feedback: FeedbackRow[], lundi: string): { ecart: number | null; seances: number } {
+  const dimanche = addDays(lundi, 6)
+  const ecarts: number[] = []
+  for (const f of feedback) {
+    if (f.day < lundi || f.day > dimanche) continue
+    const attendu = RPE_ATTENDU[f.session_type as SessionType]
+    if (attendu == null || f.pain >= DOULEUR_MAX) continue
+    ecarts.push(f.rpe - attendu)
+  }
+  return {
+    ecart: ecarts.length ? ecarts.reduce((a, b) => a + b, 0) / ecarts.length : null,
+    seances: ecarts.length,
+  }
+}

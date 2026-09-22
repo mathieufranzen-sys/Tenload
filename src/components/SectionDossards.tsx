@@ -7,6 +7,7 @@
  * pas ; ceux qu'on ajoute ne touchent ni au programme ni à la charge.
  */
 import { useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import type { Plan } from '../data/types'
 import type { EcartPatch, EcartRow } from '../lib/overrides'
 import { cleEcart } from '../lib/overrides'
@@ -21,6 +22,7 @@ import {
   type DossardRow,
 } from '../lib/dossards'
 import { ChronoCourse, formaterChronoLong, lireChrono } from './ChronoCourse'
+import { SubPage } from './SubPage'
 import { Icon } from './Icon'
 
 const DISTANCES: Array<[string, number]> = [
@@ -41,7 +43,20 @@ export function SectionDossards({
   onSave,
   onSaveEcart,
   onRecalibrerForme,
+  periode,
+  allureMarathon,
+  titre = true,
 }: {
+  /**
+   * Les dossards à venir vivent dans Objectif, ceux qui sont passés dans
+   * Profil → Dossards passés (retour du 22 septembre) : une course courue
+   * n'est plus un objectif.
+   */
+  periode: 'avenir' | 'passe'
+  /** Allure marathon visée, pour l'objectif par défaut du marathon. */
+  allureMarathon: number
+  /** Le titre « Dossards » : inutile dans une sous-page qui porte déjà le sien. */
+  titre?: boolean
   plan: Plan
   now: string
   lignes: DossardRow[]
@@ -55,8 +70,12 @@ export function SectionDossards({
   onSaveEcart?: (week: number, dayIndex: number, slot: number, patch: EcartPatch) => void
   onRecalibrerForme?: (allure: number) => void
 }) {
-  const dossards = listerDossards(plan, lignes, ecarts, now)
+  const dossards = listerDossards(plan, lignes, ecarts, now, allureMarathon).filter((d) =>
+    periode === 'avenir' ? d.day >= now : d.day < now,
+  )
   const [ajout, setAjout] = useState(false)
+  const [ouvert, setOuvert] = useState<string | null>(null)
+  const dossardOuvert = dossards.find((d) => d.id === ouvert) ?? null
   const modifiable = Boolean(onSave) && !indisponibles
 
   /** La ligne à écrire pour un dossard, avec ce qui change. */
@@ -74,11 +93,15 @@ export function SectionDossards({
   })
 
   return (
-    <section style={{ marginTop: 26 }}>
+    <section style={{ marginTop: titre ? 26 : 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 2px 12px' }}>
-        <h2 className="display" style={{ margin: 0, fontSize: 30 }}>
-          Dossards
-        </h2>
+        {titre ? (
+          <h2 className="display" style={{ margin: 0, fontSize: 30 }}>
+            Dossards
+          </h2>
+        ) : (
+          <span />
+        )}
         {modifiable && !ajout && (
           <button
             type="button"
@@ -110,8 +133,31 @@ export function SectionDossards({
         />
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {dossards.length === 0 && (
+          <p style={{ margin: '4px 2px', fontSize: 15, color: 'var(--ink-2)' }}>
+            {periode === 'passe' ? 'Aucun dossard couru pour l’instant.' : 'Aucun dossard à venir.'}
+          </p>
+        )}
         {dossards.map((d) => (
+          <ResumeDossard key={d.id} dossard={d} now={now} onOuvrir={() => setOuvert(d.id)} />
+        ))}
+      </div>
+
+      {/* Toucher un dossard ouvre sa page : c'est là que se saisissent le
+          chrono réel et l'objectif, et que parle le coach. */}
+      {dossardOuvert && (() => {
+        const d = dossardOuvert
+        // Par un portail : dans Profil, la section vit déjà dans une sous-page
+        // décalée par `transform`, et un `position: fixed` imbriqué s'y
+        // positionnerait par rapport à elle au lieu de l'écran.
+        return createPortal(
+          <SubPage
+            ouvert
+            surtitre={`${formatDayLong(d.day)} · ${formatNumber(Math.round(d.km * 10) / 10)} km`}
+            titre={d.nom}
+            onBack={() => setOuvert(null)}
+          >
           <CarteDossard
             key={d.id}
             dossard={d}
@@ -121,7 +167,14 @@ export function SectionDossards({
             modifiable={modifiable}
             onObjectif={(s) => onSave?.(ligneDe(d, { objectif_s: s }))}
             onChronoLibre={(s) => onSave?.(ligneDe(d, { chrono_s: s }))}
-            onSupprimer={d.duPlan ? undefined : () => onSave?.(ligneDe(d, { supprime: true }))}
+            onSupprimer={
+              d.duPlan
+                ? undefined
+                : () => {
+                    onSave?.(ligneDe(d, { supprime: true }))
+                    setOuvert(null)
+                  }
+            }
             onChronoRecale={
               d.recale && d.seance && onSaveEcart && onRecalibrerForme
                 ? (chrono, allure) => {
@@ -135,9 +188,64 @@ export function SectionDossards({
                 : undefined
             }
           />
-        ))}
-      </div>
+          </SubPage>,
+          document.body,
+        )
+      })()}
     </section>
+  )
+}
+
+/** Un dossard dans la liste : ce qu'il faut voir d'un coup d'œil, et la porte vers sa page. */
+function ResumeDossard({ dossard: d, now, onOuvrir }: { dossard: Dossard; now: string; onOuvrir: () => void }) {
+  const jours = daysBetween(now, d.day)
+  const passe = jours < 0
+  return (
+    <button
+      type="button"
+      onClick={onOuvrir}
+      className="carte"
+      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '16px 18px', color: 'inherit' }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
+        <div style={{ minWidth: 0 }}>
+          <h3 className="display" style={{ margin: 0, fontSize: 22, lineHeight: 1.15, fontWeight: 400 }}>
+            {d.nom}
+          </h3>
+          <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--ink-2)' }}>
+            {formatDayLong(d.day)} · {formatNumber(Math.round(d.km * 10) / 10)} km
+          </p>
+        </div>
+        <span
+          className="puce"
+          style={{
+            flex: 'none',
+            background: jours === 0 ? 'var(--neon)' : 'var(--surface-2)',
+          }}
+        >
+          {jours === 0 ? "Aujourd'hui" : passe ? `Il y a ${-jours} j` : `Dans ${jours} j`}
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 18, marginTop: 14 }}>
+        <div>
+          <div style={{ fontSize: 12.5, color: 'var(--ink-2)' }}>Objectif</div>
+          <div className="chiffre" style={{ fontSize: 22 }}>{d.objectifS != null ? formatChrono(d.objectifS) : '—'}</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 12.5, color: 'var(--ink-2)' }}>{passe || jours === 0 ? 'Chrono' : 'Allure visée'}</div>
+          <div className="chiffre" style={{ fontSize: 22 }}>
+            {passe || jours === 0
+              ? d.chronoS != null
+                ? formatChrono(d.chronoS)
+                : 'À saisir'
+              : d.objectifS != null
+                ? `${formatPace(d.objectifS / d.km)}/km`
+                : '—'}
+          </div>
+        </div>
+        <Icon name="chevronRight" size={18} style={{ marginLeft: 'auto', alignSelf: 'center', color: 'var(--ink-3)' }} />
+      </div>
+    </button>
   )
 }
 
@@ -168,28 +276,25 @@ function CarteDossard({
   const [confirmer, setConfirmer] = useState(false)
 
   return (
-    <article className="carte" style={{ padding: '18px 18px 18px', opacity: passe && d.chronoS == null ? 0.92 : 1 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
-        <div style={{ minWidth: 0 }}>
-          <h3 className="display" style={{ margin: 0, fontSize: 23, lineHeight: 1.15 }}>
-            {d.nom}
-          </h3>
-          <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--accent)' }}>
-            {formatDayLong(d.day)} · {formatNumber(Math.round(d.km * 10) / 10)} km
-            {d.duPlan ? ' · au plan' : ''}
-          </p>
-        </div>
-        <span
-          className="puce"
-          style={{
-            flex: 'none',
-            background: jours === 0 ? 'var(--pale)' : 'var(--surface-3)',
-            color: jours === 0 ? 'var(--pale-ink)' : 'var(--ink)',
-          }}
-        >
+    // La page du dossard porte déjà son nom et sa date en titre : le corps
+    // commence par ce qui se saisit.
+    <article>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <span className="puce" style={{ background: jours === 0 ? 'var(--neon)' : 'var(--surface)' }}>
           {jours === 0 ? "Aujourd'hui" : passe ? `Il y a ${-jours} j` : `Dans ${jours} j`}
         </span>
+        {d.duPlan && (
+          <span className="puce" style={{ background: 'var(--surface)' }}>
+            Au plan
+          </span>
+        )}
       </div>
+
+      {!passe && jours !== 0 && (
+        <p style={{ margin: '14px 2px 0', fontSize: 14, lineHeight: 1.5, color: 'var(--ink-2)' }}>
+          Le chrono réel se saisit ici à partir du jour de la course.
+        </p>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 16 }}>
         <ChampChrono
@@ -268,7 +373,7 @@ const boutonDiscret = {
 
 function Valeur({ label, texte }: { label: string; texte: string }) {
   return (
-    <div style={{ padding: '12px 14px', borderRadius: 18, background: 'var(--surface-2)' }}>
+    <div style={{ padding: '12px 14px', borderRadius: 18, background: 'var(--surface)' }}>
       <div style={{ fontSize: 13, color: 'var(--accent)' }}>{label}</div>
       <div className="chiffre" style={{ fontSize: 24, marginTop: 2 }}>
         {texte}
@@ -303,7 +408,7 @@ function ChampChrono({
         display: 'block',
         padding: '12px 14px',
         borderRadius: 18,
-        background: 'var(--surface-2)',
+        background: 'var(--surface)',
         border: `1px ${saisie ? 'solid' : 'dashed'} ${invalide ? 'var(--c-erreur)' : 'var(--border-2)'}`,
       }}
     >

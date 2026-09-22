@@ -934,6 +934,12 @@ parce qu'ils nommaient l'onglet Allures.
   Arbitré par Mathieu le 22 septembre 2026 : les autres blocs n'y ont pas
   droit. L'action est en néon, la séance à faire en blanc sous un filet fort.
 - **Majuscule au premier mot de chaque ligne**, étiquettes comprises.
+- Suivi : les courbes de douleur sont **lissées à l'affichage** (moyenne
+  glissante de 7 jours, `lisser`), l'indice lit toujours les valeurs brutes.
+  Deux graphiques de niveau en course (`NiveauChart`) : le marathon projeté
+  semaine par semaine (`serieForme`, l'ancre est le test actuel) et l'effort
+  perçu contre l'effort attendu (`ecartEffortSemaine`), soit exactement ce
+  que lit `ajusterForme`.
 
 ### Les dossards
 
@@ -949,6 +955,13 @@ le dit et n'enregistre rien, sans allumer la bannière de synchronisation.
   recale rien.
 - Une suppression est un drapeau `supprime`, jamais un DELETE : toutes les
   écritures restent des upserts rejouables.
+- **Objectifs par défaut** (`objectifParDefaut`), tant qu'aucun n'est saisi :
+  10 km 40:12 (le record), semi test 1 h 30, marathon l'allure visée du
+  profil. Le 20 km de Paris n'en a pas, aucun chrono n'a été fixé.
+- Objectif ne liste que les dossards à venir ; **les passés vivent dans
+  Profil → Dossards passés**. Une carte ouvre la page du dossard (par un
+  portail, pour s'ouvrir aussi depuis une sous-page), où se saisissent
+  l'objectif et le chrono réel.
 - Le mot du coach d'un dossard (`motDuDossard`) compare l'objectif à
   `chronoEquivalent`, l'inverse exact de `projeterMarathon` sur la forme
   projetée, puis, la course passée, le chrono à l'objectif et à la forme.

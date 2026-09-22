@@ -55,6 +55,19 @@ export interface Dossard {
 
 const estDossard = (s: Session) => s.type === 'course' || s.type === 'race'
 
+/**
+ * Les objectifs déjà donnés par Mathieu, appliqués tant qu'il n'en a pas saisi
+ * un autre. Le 10 km vise son record (40:12), le semi test la barre de 1 h 30
+ * qui décide si 3 h 15 tient. Le marathon suit l'allure visée du profil. Le
+ * 20 km de Paris n'en a pas : c'est un bonus, aucun chrono n'a été fixé.
+ */
+export function objectifParDefaut(s: Session, allureMarathon: number): number | null {
+  if (s.type === 'race') return Math.round(allureMarathon * MARATHON_KM)
+  if (s.dist === 10) return 40 * 60 + 12
+  if (s.dist != null && Math.abs(s.dist - 21.1) < 0.1) return 90 * 60
+  return null
+}
+
 /** L'id d'un dossard du plan : stable, dérivé de sa place dans le plan. */
 export const idDossardPlan = (semaine: number, jour: number, slot: number) =>
   `plan-${semaine}-${jour}-${slot}`
@@ -68,6 +81,8 @@ export function listerDossards(
   lignes: DossardRow[],
   ecarts: Map<string, EcartRow> | undefined,
   now: string,
+  /** Allure marathon visée : elle donne l'objectif par défaut du marathon. */
+  allureMarathon?: number,
 ): Dossard[] {
   const parId = new Map(lignes.map((l) => [l.id, l]))
   const out: Dossard[] = []
@@ -88,7 +103,8 @@ export function listerDossards(
         nom: s.title,
         day: addDays(w.monday, decalage),
         km: s.dist,
-        objectifS: parId.get(id)?.objectif_s ?? null,
+        objectifS:
+          parId.get(id)?.objectif_s ?? (allureMarathon != null ? objectifParDefaut(s, allureMarathon) : null),
         chronoS: durMin != null ? Math.round(durMin * 60) : (parId.get(id)?.chrono_s ?? null),
         recale: s.type === 'course' && s.dist >= 10 && s.dist < 40,
         duPlan: true,

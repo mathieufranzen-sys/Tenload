@@ -102,3 +102,20 @@ describe('motDuDossard', () => {
     expect(m.constat).toMatch(/^Objectif tenu, 10 s sous la barre/)
   })
 })
+
+describe('objectifs par défaut', () => {
+  it('remplit le 10 km, le semi et le marathon, pas le 20 km', () => {
+    const l = listerDossards(plan, [], undefined, '2026-09-22', 277)
+    const par = Object.fromEntries(l.map((d) => [d.nom, d.objectifS]))
+    expect(par['10 km Hoka de Paris']).toBe(2412)
+    expect(par['Semi-marathon test']).toBe(5400)
+    expect(par['Marathon de Paris']).toBe(Math.round(277 * 42.195))
+    expect(par['20 km de Paris']).toBeNull()
+  })
+
+  it("s'efface devant un objectif saisi", () => {
+    const id = idDossardPlan(14, 6, 0)
+    const l = listerDossards(plan, [perso({ id, objectif_s: 2400 })], undefined, '2026-09-22', 277)
+    expect(l.find((d) => d.id === id)!.objectifS).toBe(2400)
+  })
+})

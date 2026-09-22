@@ -7,7 +7,7 @@
  * corps, ce qui se règle. Six lignes à plat se lisaient comme un menu système,
  * sans hiérarchie.
  */
-import { useMemo } from 'react'
+import { type ReactNode, useMemo } from 'react'
 import { adapt } from '../lib/adapt'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { FeedbackRow } from '../lib/buildPain'
@@ -40,8 +40,9 @@ export type SectionKey =
   | 'rappels'
   | 'anoter'
   | 'patterns'
+  | 'dossards'
 
-type IconeRubrique = 'alert' | 'clip' | 'chart' | 'heart' | 'gauge' | 'run' | 'sun'
+type IconeRubrique = 'alert' | 'clip' | 'chart' | 'heart' | 'gauge' | 'run' | 'sun' | 'flag'
 
 interface Rubrique {
   key: SectionKey
@@ -65,6 +66,7 @@ const GROUPES: Array<{ titre: string; rubriques: Rubrique[] }> = [
       { key: 'patterns', titre: 'Tes patterns', description: 'Ce qui suit ta douleur, et l’export pour une IA', icone: 'chart' },
       { key: 'indice', titre: 'Indice de charge du tendon', description: 'Les bandes et le détail du calcul', icone: 'chart' },
       { key: 'coeur', titre: 'Fréquence cardiaque', description: 'Recalibre ta FC max et tes zones', icone: 'heart' },
+      { key: 'dossards', titre: 'Dossards passés', description: 'Tes courses, leurs chronos et le mot du coach', icone: 'flag' },
     ],
   },
   {
@@ -115,6 +117,8 @@ interface Props {
    */
   section: SectionKey | null
   onSection: (s: SectionKey | null) => void
+  /** La liste des dossards passés, construite par `App` qui en a les données. */
+  dossardsPasses?: ReactNode
 }
 
 export function Profile({
@@ -133,6 +137,7 @@ export function Profile({
   onOuvrirSeance,
   section,
   onSection,
+  dossardsPasses,
 }: Props) {
   const now = todayISO()
   // Quatre-vingt-dix jours : assez pour voir revenir un pattern une douzaine
@@ -280,6 +285,7 @@ export function Profile({
         {section === 'rappels' && <Reminders userId={userId} />}
         {section === 'anoter' && <ANoter seances={aNoter} onOuvrir={onOuvrirSeance} />}
         {section === 'patterns' && <Patterns carnet={carnet} />}
+        {section === 'dossards' && dossardsPasses}
       </SubPage>
     </>
   )

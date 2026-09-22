@@ -7,15 +7,17 @@
  * la forme projetée, puis les dossards. Les réglages restent dans Profil ;
  * le bouton « modifier » y mène.
  */
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan, ZoneKey } from '../data/types'
-import { addDays, daysBetween, formatDay, today as todayISO } from '../lib/dates'
+import { addDays, mondayOf, today as todayISO } from '../lib/dates'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { FeedbackRow } from '../lib/buildPain'
 import type { EcartPatch, EcartRow } from '../lib/overrides'
 import type { DossardRow } from '../lib/dossards'
-import { MARATHON_KM, formatDuration, formatPace, zonePace, zoneHrRange } from '../lib/paces'
+import { MARATHON_KM, ZONE_OFFSETS, formatPace, zonePace, zoneHrRange } from '../lib/paces'
+import { MIN_SEANCES, serieForme } from '../lib/forme'
+import { CarteForme } from '../components/CarteForme'
 import type { AjustementForme } from '../lib/forme'
 import { EnteteEcran } from '../components/EnteteEcran'
 import { MeshBackground } from '../components/MeshBackground'
@@ -32,6 +34,34 @@ const ZONE_DESC: Record<ZoneKey, string> = {
   seuil: 'Effort soutenu tenable 40 à 60 minutes',
   vo2: 'Fractionné 800 m à 1 200 m, effort 9/10',
   rep: '400 m à 600 m, vivacité et économie de course',
+}
+
+/**
+ * Le camaïeu des zones, pris dans les seules couleurs de Trailblazer : les
+ * neutres pour les allures lentes, le néon pour l'allure marathon (l'ancre),
+ * puis les quatre verts de plus en plus sombres jusqu'aux répétitions. Le
+ * mélange précédent donnait des olives boueuses (retour du 22 septembre).
+ */
+const TEINTE_ZONE: Array<{ fond: string; encre: string }> = [
+  { fond: '#dbdad2', encre: '#142800' },
+  { fond: '#c2c2b8', encre: '#142800' },
+  { fond: '#65f67b', encre: '#142800' },
+  { fond: '#2e731a', encre: '#ffffff' },
+  { fond: '#2c5601', encre: '#ffffff' },
+  { fond: '#274312', encre: '#ffffff' },
+  { fond: '#142800', encre: '#ffffff' },
+]
+
+/**
+ * La borne lente des zones qui se courent en plage, en s/km au-dessus de
+ * l'allure marathon. L'endurance va de sa propre allure à celle de la
+ * récupération, la récupération descend jusqu'à 6:30 pour un objectif de
+ * 3 h 15 (+113). Donné par Mathieu le 22 septembre 2026. Les autres zones
+ * restent une allure : ce sont des cibles, pas des plafonds.
+ */
+const PLAGE_LENTE: Partial<Record<ZoneKey, number>> = {
+  ef: ZONE_OFFSETS.recup,
+  recup: 113,
 }
 
 /** À vélo, rien ne se pense en mètres : les mêmes zones se lisent en temps. */
@@ -72,7 +102,7 @@ interface Props {
 export function Paces({
   marathonPace,
   fitnessPace,
-  goalLabel,
+  feedback,
   forme,
   hrMax,
   onOuvrirProfil,
@@ -90,17 +120,20 @@ export function Paces({
 
   const gt = marathonPace * MARATHON_KM
   const ft = fitnessPace * MARATHON_KM
-  const gap = Math.round((ft - gt) / 60)
 
-  // Progression réelle : la semaine où on en est, pas une fausse jauge tirée
-  // de l'écart d'allure — on n'a pas d'historique de forme pour mesurer à
-  // quelle vitesse cet écart se comble.
-  const semaineCourante = plan.weeks.find((w) => now >= w.monday && now <= addDays(w.monday, 6))
-  const nbSemaines = plan.weeks.length
-  const progression = semaineCourante ? ((semaineCourante.n - 1) / nbSemaines) * 100 : 0
-  const jRace = daysBetween(now, plan.meta.raceDate)
+  // La tendance de la carte « Forme projetée » : les trois derniers lundis et
+  // aujourd'hui, la forme telle que l'app l'affichait ces jours-là.
+  const tendance = useMemo(() => {
+    const lundi = mondayOf(now)
+    const dates = [addDays(lundi, -21), addDays(lundi, -14), addDays(lundi, -7), now]
+    return serieForme(formeTest, feedback, dates).map((f) => ({ minutes: Math.round((f.allure * MARATHON_KM) / 60) }))
+  }, [formeTest, feedback, now])
 
-  const zones = Object.entries(plan.zones) as Array<[ZoneKey, (typeof plan.zones)[ZoneKey]]>
+  // Du plus lent au plus rapide : l'allure semi, ajoutée après coup, était
+  // rangée en fin de liste, derrière les répétitions.
+  const zones = (Object.entries(plan.zones) as Array<[ZoneKey, (typeof plan.zones)[ZoneKey]]>).sort(
+    ([a], [b]) => zonePace(marathonPace, b) - zonePace(marathonPace, a),
+  )
 
   return (
     <div style={{ position: 'relative', maxWidth: 'var(--shell-max)', margin: '0 auto', paddingBottom: 110 }}>
@@ -109,11 +142,6 @@ export function Paces({
       <div style={{ position: 'relative', zIndex: 5, padding: '0 var(--page-x) 0' }}>
         <EnteteEcran
           titre="Objectif"
-          contexte={
-            <>
-              {goalLabel} au marathon de Paris · {formatDay(plan.meta.raceDate)} 2027 · J-{jRace}
-            </>
-          }
           onOuvrirProfil={onOuvrirProfil}
         />
 
@@ -142,10 +170,6 @@ export function Paces({
               Modifier
             </button>
           </div>
-          <p style={{ margin: '12px 0 0', fontSize: 15, lineHeight: 1.5, color: 'var(--sur-ink-2)' }}>
-            {formatDuration(Math.round(gt / 60))} sur 42,195 km. Une seule valeur règle tout : les sept zones et
-            leurs fréquences cardiaques en découlent.
-          </p>
         </section>
 
         {/* Les zones en barres qui s'allongent avec la vitesse, comme dans la
@@ -171,19 +195,15 @@ export function Paces({
               <div key={k}>
                 <div
                   style={{
-                    width: `${58 + (i / (zones.length - 1)) * 42}%`,
+                    width: `${74 + (i / (zones.length - 1)) * 26}%`,
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     gap: 10,
                     padding: '13px 20px',
                     borderRadius: 'var(--pill)',
-                    background: ancre
-                      ? 'var(--pale)'
-                      : `color-mix(in srgb, var(--accent-2) ${8 + i * 13}%, var(--surface))`,
-                    // Au-delà du seuil, la barre est assez foncée pour du blanc.
-                    color: ancre || i >= 4 ? 'var(--pale-ink)' : 'var(--ink)',
-                    border: ancre ? 'none' : '1px solid rgba(142,242,129,.18)',
+                    background: TEINTE_ZONE[i].fond,
+                    color: TEINTE_ZONE[i].encre,
                   }}
                 >
                   <span style={{ fontSize: 15.5, fontWeight: ancre ? 600 : 500, lineHeight: 1.2 }}>
@@ -191,6 +211,7 @@ export function Paces({
                   </span>
                   <span className="chiffre" style={{ fontSize: 20, flex: 'none' }}>
                     {formatPace(zonePace(marathonPace, k))}
+                    {PLAGE_LENTE[k] != null && ` – ${formatPace(marathonPace + PLAGE_LENTE[k]!)}`}
                   </span>
                 </div>
                 <div style={{ margin: '6px 20px 0', fontSize: 13, color: 'var(--sur-ink-3)', lineHeight: 1.4 }}>
@@ -207,55 +228,17 @@ export function Paces({
           </p>
         )}
 
-        <section className="carte" style={{ padding: '20px 20px', marginTop: 20 }}>
-          <p className="etiquette">Forme projetée</p>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, marginTop: 8 }}>
-            <div>
-              <div className="chiffre" style={{ fontSize: 54, lineHeight: 1 }}>
-                {formatDuration(Math.round(ft / 60))}
-              </div>
-              <div style={{ fontSize: 14, color: 'var(--accent)', marginTop: 6 }}>
-                {formatPace(fitnessPace)}/km au marathon
-              </div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div className="chiffre" style={{ fontSize: 26 }}>
-                {formatDuration(Math.round(gt / 60))}
-              </div>
-              <div style={{ fontSize: 13.5, color: 'var(--accent)' }}>Objectif</div>
-            </div>
-          </div>
-
-          {/* D'où vient l'ajustement : sans cette ligne, la forme bouge toute
-              seule entre deux tests et rien ne dit pourquoi. */}
-          {forme.ecart !== 0 && (
-            <span className="puce" style={{ marginTop: 12 }}>
-              {forme.ecart > 0 ? '+' : '−'}
-              {Math.abs(forme.ecart)} s/km · ressenti des 28 derniers jours
-            </span>
-          )}
-
-          <div style={{ marginTop: 18 }}>
-            <div style={{ height: 10, borderRadius: 'var(--pill)', background: 'var(--surface-3)', overflow: 'hidden' }}>
-              <div
-                style={{
-                  width: `${progression}%`,
-                  height: '100%',
-                  borderRadius: 'var(--pill)',
-                  background: 'linear-gradient(90deg, var(--accent-2), var(--pale))',
-                }}
-              />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 13, color: 'var(--sur-ink-2)' }}>
-              <span>
-                Semaine {semaineCourante?.n ?? 1} sur {nbSemaines}
-              </span>
-              <span>{gap <= 0 ? 'Objectif atteint' : `Il reste ${gap} min à combler`}</span>
-            </div>
-          </div>
-        </section>
+        <CarteForme
+          minutes={Math.round(ft / 60)}
+          objectif={Math.round(gt / 60)}
+          tendance={tendance}
+          lue={forme.seances >= MIN_SEANCES}
+          ecartRessenti={forme.ecart}
+        />
 
         <SectionDossards
+          periode="avenir"
+          allureMarathon={marathonPace}
           plan={plan}
           now={now}
           lignes={dossards}

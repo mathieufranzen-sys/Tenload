@@ -23,6 +23,9 @@ import { PainChart, type PainRow, type VuePain } from '../components/charts/Pain
 import { VolumeChart, type BarRow, type VueVolume } from '../components/charts/VolumeChart'
 import { LoadChart, type StackRow } from '../components/charts/LoadChart'
 import { MeshBackground } from '../components/MeshBackground'
+import { EffortChart, FormeChart } from '../components/charts/NiveauChart'
+import { MIN_SEANCES, ecartEffortSemaine, serieForme } from '../lib/forme'
+import { MARATHON_KM } from '../lib/paces'
 import { Segmented } from '../components/Segmented'
 import { EnteteEcran } from '../components/EnteteEcran'
 
@@ -43,6 +46,10 @@ interface Props {
   notesEnRetard: number
   /** Ouvre la liste de ces séances. Absent en mode instantanés. */
   onVoirANoter?: () => void
+  /** Forme du dernier test, l'ancre des graphiques de niveau. */
+  formeTest: number
+  /** Allure marathon visée, pour la ligne d'objectif. */
+  marathonPace: number
   onOuvrirProfil: () => void
 }
 
@@ -73,6 +80,8 @@ export function Track({
   feedback,
   notesEnRetard,
   onVoirANoter,
+  formeTest,
+  marathonPace,
   onOuvrirProfil,
 }: Props) {
   const now = todayISO()
@@ -251,6 +260,21 @@ export function Track({
       }))
   }, [loadParDiscipline, now])
 
+  // Le niveau en course sur les douze dernières semaines, un point par lundi
+  // plus aujourd'hui : la forme telle que l'app l'aurait affichée ce jour-là.
+  const niveau = useMemo(() => {
+    const lundiCourant = mondayOf(now)
+    const lundis = Array.from({ length: 12 }, (_, k) => addDays(lundiCourant, -7 * (11 - k)))
+    const dates = [...lundis.slice(1), now]
+    const forme = serieForme(formeTest, feedback, dates).map((f, i) => ({
+      label: i === dates.length - 1 ? "auj." : formatDay(dates[i]),
+      minutes: Math.round((f.allure * MARATHON_KM) / 60),
+      lu: f.seances >= MIN_SEANCES,
+    }))
+    const effort = lundis.map((l) => ({ label: formatDay(l), ecart: ecartEffortSemaine(feedback, l).ecart }))
+    return { forme, effort }
+  }, [formeTest, feedback, now])
+
   const volumeAffiche =
     vueVolume === 'cumul'
       ? volumeRows.reduce((s, r) => s + r.course + r.velo, 0)
@@ -306,18 +330,12 @@ export function Track({
 
         <Viz
           titre="Indice de charge du tendon"
-          legende="Zéro, tendon frais. Cent, repos obligatoire. Après aujourd'hui, c'est une projection."
         >
           <IndexChart series={idxRows} now={now} />
         </Viz>
 
         <Viz
           titre="Douleur au fil des jours"
-          legende={
-            vuePain === 'separee'
-              ? "Trois moments de mesure. Celle de fin de journée compte le plus : la réaction du tendon est retardée de plusieurs heures."
-              : "Les trois mesures empilées : la charge douloureuse totale d'une journée, même quand aucune ne semble alarmante seule."
-          }
           controle={
             <Segmented
               label="Lecture de la douleur"
@@ -341,12 +359,32 @@ export function Track({
         </Viz>
 
         <Viz
+          titre="Niveau en course"
+          legendeCouleurs={[
+            { label: 'Marathon projeté', couleur: 'var(--chart-1)' },
+            { label: 'Objectif', couleur: 'var(--chart-3)' },
+          ]}
+          note={(() => {
+            const f = niveau.forme
+            const d = f.length > 1 ? f[f.length - 1].minutes - f[0].minutes : 0
+            return d === 0 ? 'Stable sur 12 semaines' : `${d < 0 ? '−' : '+'}${Math.abs(d)} min sur 12 semaines`
+          })()}
+        >
+          <FormeChart points={niveau.forme} objectif={Math.round((marathonPace * MARATHON_KM) / 60)} />
+        </Viz>
+
+        <Viz
+          titre="Effort perçu contre effort attendu"
+          legendeCouleurs={[
+            { label: 'Plus facile que prévu', couleur: 'var(--chart-1)' },
+            { label: 'Plus dur', couleur: 'var(--chart-2)' },
+          ]}
+        >
+          <EffortChart points={niveau.effort} />
+        </Viz>
+
+        <Viz
           titre="Volume par semaine"
-          legende={
-            vueVolume === 'course'
-              ? "Tes kilomètres de course. Le vélo n'y figure pas : seul l'impact au sol charge le tendon."
-              : 'Course et vélo cumulés : ce que le moteur encaisse, pas ce que le tendon subit.'
-          }
           controle={
             <Segmented
               label="Lecture du volume"
@@ -373,13 +411,11 @@ export function Track({
 
         <Viz
           titre="Charge d'entraînement par semaine"
-          legende="Le même coût que l'indice de charge, séparé par discipline. Le vélo porte le volume aérobie pendant que le tendon récupère. Les barres hachurées sont ce que le plan prévoit, pas ce que tu as fait."
           legendeCouleurs={[
             { label: 'Course', couleur: 'var(--chart-1)' },
             { label: 'Vélo', couleur: 'var(--chart-2)' },
             { label: 'Muscu, escalade, autres', couleur: 'var(--chart-3)' },
           ]}
-          note={loadRows.some((r) => (r.projete?.course ?? 0) + (r.projete?.velo ?? 0) + (r.projete?.autre ?? 0) > 0) ? 'hachuré = à venir' : undefined}
         >
           <LoadChart rows={loadRows} />
         </Viz>
@@ -446,14 +482,12 @@ function Kpi({
 
 function Viz({
   titre,
-  legende,
   controle,
   legendeCouleurs,
   note,
   children,
 }: {
   titre: string
-  legende: string
   controle?: ReactNode
   legendeCouleurs?: Array<{ label: string; couleur: string }>
   note?: string
@@ -464,11 +498,12 @@ function Viz({
       <h2 className="display" style={{ margin: '0 0 6px', fontSize: 22, lineHeight: 1.2, }}>
         {titre}
       </h2>
-      <p style={{ margin: '0 0 14px', color: 'var(--sur-ink-2)', fontSize: 13.5, lineHeight: 1.5 }}>{legende}</p>
       {controle && <div style={{ marginBottom: 14 }}>{controle}</div>}
       {/* Toile sombre sous le tracé : sur le verre seul, les bandes de fond de
           l'indice et la palette saturée se délavent contre le dégradé. */}
-      <div style={{ background: 'var(--surface-2)', borderRadius: 16, padding: '10px 8px 4px' }}>{children}</div>
+      {/* Plus de toile blanche sous le tracé : une couche de plus dans une
+          carte déjà grise (retour du 22 septembre). */}
+      <div style={{ marginTop: 12 }}>{children}</div>
       {(legendeCouleurs || note) && (
         <div
           style={{

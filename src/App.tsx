@@ -28,6 +28,7 @@ import { Paces } from './screens/Paces'
 import { Profile, type SectionKey } from './screens/Profile'
 import { BottomNav, type Onglet } from './components/BottomNav'
 import { SessionSheet } from './components/SessionSheet'
+import { SectionDossards } from './components/SectionDossards'
 import {
   DataProvider,
   useActivities,
@@ -473,6 +474,8 @@ function Coquille({
           activities={data.activities}
           feedback={feedback}
           notesEnRetard={notesEnRetard}
+          formeTest={fitnessPaceTest}
+          marathonPace={marathonPace}
           onVoirANoter={() => {
             setSectionProfil('anoter')
             setOnglet('profile')
@@ -520,6 +523,23 @@ function Coquille({
           activities={data.activities}
           section={sectionProfil}
           onSection={setSectionProfil}
+          dossardsPasses={
+            <SectionDossards
+              periode="passe"
+              titre={false}
+              allureMarathon={marathonPace}
+              plan={plan}
+              now={now}
+              lignes={dossards}
+              ecarts={ecarts}
+              formeMarathon={fitnessPace}
+              formeTest={fitnessPaceTest}
+              indisponibles={dossardsIndisponibles}
+              onSave={onSaveDossard}
+              onSaveEcart={onSaveEcart}
+              onRecalibrerForme={onSaveProfil && ((allure) => onSaveProfil({ fitness_pace_s: allure }))}
+            />
+          }
           onOuvrirSeance={
             onSaveFeedback &&
             ((x) => setSeance({ semaineN: x.semaineOrigine, jourOrigine: x.jourOrigine, slot: x.slot }))

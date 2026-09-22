@@ -101,12 +101,13 @@
   --muted: #8b9182;
 
   /* ─── graphiques du Suivi ────────────────────────────────────────────────
-     Trois courbes de douleur : réveil (Neutral-500), effort (le Blue de
-     Trailblazer) et soir (Green-100, le trait le plus épais). Trois teintes
-     éloignées, dont une bleue, ce qui tient sur une déficience rouge-vert. */
-  --chart-1: #8b9182;
+     Réveil et course en NeonGreen-200 (le gris d'avant faisait fade, retour
+     du 22 septembre), effort et vélo en Blue, soir et « autres » en
+     Green-300, le trait le plus épais. Clair, bleu, foncé : trois teintes
+     séparées par la clarté autant que par la couleur. */
+  --chart-1: #49de61;
   --chart-2: #4f63f2;
-  --chart-3: #2e731a;
+  --chart-3: #274312;
   --chart-ligne: #142800;
   --chart-grille: color-mix(in srgb, var(--ink) 9%, transparent);
   --chart-texte: color-mix(in srgb, var(--ink) 55%, transparent);
