@@ -103,7 +103,7 @@ export function SectionDossards({
             Dossards
           </h2>
           {modifiable && !ajout && (
-            <BoutonAction compact icone="plus" onClick={() => setAjout(true)}>
+            <BoutonAction icone="plus" onClick={() => setAjout(true)} style={{ width: 'auto' }}>
               Ajouter
             </BoutonAction>
           )}

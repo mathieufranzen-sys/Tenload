@@ -19,6 +19,13 @@ export type CategorieRepartition = 'endurance' | 'marathon' | 'seuil' | 'vitesse
 /** Du plus facile au plus dur, puis le hors-course : l'ordre de la légende. */
 export const ORDRE_REPARTITION: CategorieRepartition[] = ['endurance', 'marathon', 'seuil', 'vitesse', 'velo', 'renfo']
 
+/**
+ * Ce que l'anneau de Suivi montre : la course seule (retour du 22 septembre).
+ * Le vélo et le renfo se comptent encore, mais mêlés aux allures ils
+ * écrasaient la lecture qu'on vient chercher, celle du dosage d'intensité.
+ */
+export const ORDRE_COURSE: CategorieRepartition[] = ['endurance', 'marathon', 'seuil', 'vitesse']
+
 export const LIBELLE_REPARTITION: Record<CategorieRepartition, string> = {
   endurance: 'Endurance',
   marathon: 'Allure marathon',

@@ -963,8 +963,19 @@ parce qu'ils nommaient l'onglet Allures.
 - Aujourd'hui n'a plus de bloc « ce que ça change » : l'adaptation se lit
   sur la séance. Le carnet du jour n'y est qu'un résumé à jauges fines, la
   saisie vit dans sa page.
-- Bandes et douleur en teintes vives depuis le 22 septembre : vert #4fe39a,
-  jaune #ffd23f, orange #ff9500, rouge #ff3b30, noir #1a1a1a.
+- Bandes et douleur en teintes vives depuis le 22 septembre : **vert de
+  marque #65f67b** (le vert d'eau faisait un sixième vert), jaune #ffd23f,
+  orange #ff9500, rouge #ff3b30, noir #1a1a1a.
+- **Un seul orange** (`--orange-100` à `--orange-900`) : l'aplat des
+  étiquettes, la bande, le cran 5 de la douleur, l'encre d'alerte et l'encre
+  sur l'aplat. `--warning` et `--serious` valent tous deux le 700 : deux
+  oranges pour deux degrés du même message ne se lisaient pas comme une
+  échelle.
+- Le bloc de charge est une **carte grise** (Neutral-100) avec un tube blanc
+  à filet gris et un **bouton secondaire** blanc à flèche bleue : le néon
+  reste à l'action principale d'un écran.
+- L'anneau de Suivi ne montre que **la course** : le vélo et le renfo
+  écrasaient la lecture du dosage d'intensité (`ORDRE_COURSE`).
 - Suivi : les courbes de douleur sont **lissées à l'affichage** (moyenne
   glissante de 7 jours, `lisser`), l'indice lit toujours les valeurs brutes.
   Deux graphiques de niveau en course (`NiveauChart`) : le marathon projeté

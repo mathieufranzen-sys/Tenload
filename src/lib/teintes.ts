@@ -8,7 +8,7 @@
 import type { BandKey } from './tendonIndex'
 
 export const TEINTE_BANDE: Record<BandKey, string> = {
-  vert: '#4fe39a',
+  vert: '#65f67b',
   jaune: '#ffd23f',
   orange: '#ff9500',
   rouge: '#ff3b30',

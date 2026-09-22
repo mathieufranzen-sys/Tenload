@@ -99,9 +99,9 @@ export const rangRessenti = (v: number): number => Math.max(0, Math.min(10, Math
  * dessus passe en blanc (`BarreRessenti` suit la luminance).
  */
 export const COULEUR_DOULEUR = [
-  '#4fe39a', '#2fcf7f',
+  '#65f67b', '#49de61',
   '#ffd23f', '#f5bd1a',
-  '#ff9500', '#e86a00',
+  '#ff9500', '#e07c00',
   '#ff3b30', '#e5261c',
   '#333333', '#262626', '#1a1a1a',
 ]

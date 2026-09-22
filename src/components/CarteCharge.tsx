@@ -57,14 +57,14 @@ export function CarteCharge({
       type="button"
       onClick={onCalcul}
       aria-label="Ouvrir le détail du calcul de l'indice"
-      className={inconnu ? undefined : 'carte-bleu-pale'}
+      className={inconnu ? undefined : 'carte'}
       style={{
         position: 'relative',
         display: 'block',
         width: '100%',
         textAlign: 'left',
         color: 'inherit',
-        padding: '18px 18px 16px',
+        padding: '14px 18px 16px',
         borderRadius: 'var(--radius-lg)',
         cursor: 'pointer',
         ...(inconnu ? { border: '1.5px dashed var(--border-2)', background: 'transparent' } : null),
@@ -81,15 +81,17 @@ export function CarteCharge({
           width: 52,
           height: 52,
           borderRadius: '50%',
-          background: 'var(--neon)',
-          color: '#142800',
+          // Bouton secondaire : blanc, flèche bleue. Le néon est réservé à
+          // l'action principale d'un écran (retour du 22 septembre).
+          background: 'var(--surface-2)',
+          color: 'var(--bleu-500)',
           display: 'grid',
           placeItems: 'center',
         }}
       >
         <Icon name="arrowUpRight" size={20} />
       </span>
-      <div style={{ paddingRight: 64, minHeight: 52 - (18 - COIN), display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <div style={{ paddingRight: 64 }}>
         <p className="etiquette" style={{ fontSize: 'var(--fs-meta)', color: 'var(--ink)', fontWeight: 600 }}>
           Charge du tendon
         </p>
@@ -100,7 +102,7 @@ export function CarteCharge({
         )}
       </div>
 
-      <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginTop: 12 }}>
+      <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginTop: 14 }}>
         <Gelule valeur={inconnu ? null : detail.idx} teinte={teinte} />
 
         <div style={{ flex: 1, minWidth: 0 }}>

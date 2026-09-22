@@ -142,8 +142,8 @@
   /* L'étiquette « adaptée » : un aplat pêche et son encre, dérivés de
      l'orange de bande, assez foncée pour se lire sur le pêche comme sur le
      bloc bleu. */
-  --adapte-fond: #ffe2b8;
-  --adapte-encre: #7a3e00;
+  --adapte-fond: var(--orange-100);
+  --adapte-encre: var(--orange-900);
 
   /* ─── data-viz ───────────────────────────────────────────────────────── */
   --series-1: #2e731a;
@@ -165,13 +165,31 @@
   --chart-grille: color-mix(in srgb, var(--ink) 9%, transparent);
   --chart-texte: color-mix(in srgb, var(--ink) 55%, transparent);
 
+  /* ─── l'orange, une seule gamme ──────────────────────────────────────────
+     Resserrée le 22 septembre 2026 : l'app portait cinq oranges cousins
+     qui ne se ressemblaient d'un écran à l'autre ni par la teinte ni par la
+     clarté. Une seule rampe désormais, du fond clair à l'encre foncée, et
+     tout ce qui alerte y puise.
+       100  aplat clair (étiquette « adaptée », badges, encarts)
+       300  la bande orange de l'indice, et le cran 4 de la douleur
+       500  le cran 5 de la douleur
+       700  l'encre d'alerte sur blanc (vigilance, à noter, retard)
+       900  l'encre posée sur l'aplat 100 */
+  --orange-100: #ffe2b8;
+  --orange-300: #ff9500;
+  --orange-500: #e07c00;
+  --orange-700: #b45c00;
+  --orange-900: #7a3e00;
+
   /* ─── état ───────────────────────────────────────────────────────────────
      Des encres lisibles sur blanc : le jaune et le vert d'eau des bandes
      n'y tiennent pas comme texte. Les bandes gardent leurs teintes vives,
-     elles ne servent qu'en aplat. */
+     elles ne servent qu'en aplat. « Vigilance » et « à noter » partagent
+     désormais la même encre : deux oranges pour deux degrés du même
+     message, ça ne se lisait pas comme une échelle. */
   --good: #2e731a;
-  --warning: #a86b00;
-  --serious: #e86a00;
+  --warning: var(--orange-700);
+  --serious: var(--orange-700);
   --critical: #e5261c;
 
   /* ─── cartes ─────────────────────────────────────────────────────────── */
@@ -249,9 +267,9 @@
    sombre dessus, jamais comme couleur de texte.
    ══════════════════════════════════════════════════════════════════════════ */
 :root {
-  --bande-vert: #4fe39a;
+  --bande-vert: #65f67b;
   --bande-jaune: #ffd23f;
-  --bande-orange: #ff9500;
+  --bande-orange: var(--orange-300);
   --bande-rouge: #ff3b30;
   --bande-noir: #1a1a1a;
 }

@@ -447,7 +447,7 @@ export function Track({
         {/* Le temps de la semaine par intensité, en anneau (demandé le
             22 septembre) : le plan de la semaine en cours, écarts et
             adaptations compris, séances sautées exclues. */}
-        <Viz titre={`Répartition de la semaine ${semaineN}`}>
+        <Viz titre={`Répartition de la course, semaine ${semaineN}`}>
           <RepartitionChart minutes={repartition} />
         </Viz>
 

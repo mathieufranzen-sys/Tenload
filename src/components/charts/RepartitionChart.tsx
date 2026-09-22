@@ -1,28 +1,28 @@
 /**
  * La semaine en anneau : la part de chaque intensité, en temps.
  *
- * Les quatre allures de course suivent la gamme bleue, du plus pâle au plus
- * foncé à mesure que l'effort monte : c'est un ordre, pas quatre catégories
- * sans rapport, et c'est la même gamme que les zones d'Objectif. Le vélo
- * prend le vert de Suivi, le renfo le gris. La légende porte les minutes et
- * les pourcentages : l'anneau donne la proportion d'un coup d'œil, les
- * chiffres la disent sans demander de distinguer deux bleus.
+ * La course seule : le vélo et le renfo n'ont pas d'allure, et mêlés aux
+ * quatre intensités ils cachaient le dosage qu'on vient lire.
+ *
+ * Les quatre allures suivent la gamme bleue, du plus pâle au plus foncé à
+ * mesure que l'effort monte : c'est un ordre, pas quatre catégories sans
+ * rapport, et c'est la même gamme que les zones d'Objectif. La légende porte
+ * les minutes et les pourcentages : l'anneau donne la proportion d'un coup
+ * d'œil, les chiffres la disent sans demander de distinguer deux bleus.
  */
 import { useState } from 'react'
 import {
   LIBELLE_REPARTITION,
-  ORDRE_REPARTITION,
+  ORDRE_COURSE,
   type CategorieRepartition,
 } from '../../lib/repartition'
 import { formatDuration } from '../../lib/paces'
 
-export const COULEUR_REPARTITION: Record<CategorieRepartition, string> = {
+export const COULEUR_REPARTITION: Partial<Record<CategorieRepartition, string>> = {
   endurance: 'var(--bleu-200)',
   marathon: 'var(--bleu-400)',
   seuil: 'var(--bleu-600)',
   vitesse: 'var(--bleu-800)',
-  velo: 'var(--neon-2)',
-  renfo: 'var(--accent-doux)',
 }
 
 const R = 70
@@ -43,9 +43,8 @@ function arc(debut: number, fin: number): string {
 
 export function RepartitionChart({ minutes }: { minutes: Record<CategorieRepartition, number> }) {
   const [survol, setSurvol] = useState<CategorieRepartition | null>(null)
-  const total = ORDRE_REPARTITION.reduce((a, k) => a + minutes[k], 0)
-  const presentes = ORDRE_REPARTITION.filter((k) => minutes[k] > 0)
-  const course = minutes.endurance + minutes.marathon + minutes.seuil + minutes.vitesse
+  const total = ORDRE_COURSE.reduce((a, k) => a + minutes[k], 0)
+  const presentes = ORDRE_COURSE.filter((k) => minutes[k] > 0)
   const pct = (m: number) => (total ? Math.round((m / total) * 100) : 0)
 
   let angle = 0
@@ -61,7 +60,7 @@ export function RepartitionChart({ minutes }: { minutes: Record<CategorieReparti
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
       <div style={{ position: 'relative', width: TAILLE, height: TAILLE, flex: 'none', margin: '0 auto' }}>
-        <svg width={TAILLE} height={TAILLE} viewBox={`0 0 ${TAILLE} ${TAILLE}`} role="img" aria-label="Répartition de la semaine par intensité">
+        <svg width={TAILLE} height={TAILLE} viewBox={`0 0 ${TAILLE} ${TAILLE}`} role="img" aria-label="Répartition de la course par intensité">
           {parts.length === 1 ? (
             <circle cx={TAILLE / 2} cy={TAILLE / 2} r={R} fill="none" stroke={COULEUR_REPARTITION[parts[0].k]} strokeWidth={EPAISSEUR} />
           ) : (
@@ -105,7 +104,7 @@ export function RepartitionChart({ minutes }: { minutes: Record<CategorieReparti
       </div>
 
       <ul style={{ listStyle: 'none', margin: 0, padding: 0, flex: '1 1 150px', minWidth: 0 }}>
-        {ORDRE_REPARTITION.map((k) => (
+        {ORDRE_COURSE.map((k) => (
           <li
             key={k}
             onPointerEnter={() => minutes[k] > 0 && setSurvol(k)}
@@ -126,9 +125,9 @@ export function RepartitionChart({ minutes }: { minutes: Record<CategorieReparti
             </span>
           </li>
         ))}
-        {course > 0 && (
+        {total > 0 && (
           <li style={{ marginTop: 6, paddingTop: 8, borderTop: '1px solid var(--border)', fontSize: 'var(--fs-detail)', color: 'var(--ink-2)' }}>
-            En course, {Math.round((minutes.endurance / course) * 100)} % du temps en endurance
+            {pct(minutes.endurance)} % du temps de course en endurance
           </li>
         )}
       </ul>

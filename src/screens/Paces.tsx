@@ -177,12 +177,6 @@ export function Paces({
             )
           })}
         </div>
-        {discipline === 'velo' && (
-          <p style={{ margin: '12px 20px 0', fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)', lineHeight: 1.4 }}>
-            À vélo, ta FC est inférieure de 20 bpm à la FC course à effort équivalent : les fourchettes en
-            tiennent compte.
-          </p>
-        )}
 
         <SectionDossards
           periode="avenir"
