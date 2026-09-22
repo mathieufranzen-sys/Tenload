@@ -281,7 +281,11 @@ export function Plan({
               <span style={{ color: 'var(--sur-ink-3)' }}> / {plan.weeks.length}</span>
             </div>
             <div style={{ fontSize: 13.5, color: 'var(--accent)', marginTop: 3 }}>
-              {formatDay(semaine.monday)} → {formatDay(addDays(semaine.monday, 6))}
+              {formatDay(semaine.monday)} → {formatDay(addDays(semaine.monday, 6))} ·{' '}
+              {(() => {
+                const n = libelleNature(semaine, { charge: true })
+                return n.charAt(0).toUpperCase() + n.slice(1)
+              })()}
             </div>
           </div>
           <button
@@ -296,13 +300,15 @@ export function Plan({
 
         {/* Le bloc en tête de semaine, avec les chiffres de la semaine dedans
             (retour du 22 septembre) : c'est lui qui dit pourquoi la semaine
-            ressemble à ça. Les semaines déjà passées du bloc sont en bleu
-            foncé (le vert foncé est au coach), celle d'aujourd'hui en néon. */}
+            ressemble à ça. Les semaines déjà passées du bloc sont en vert
+            foncé, celle d'aujourd'hui en néon. Pas de phrase de bloc, et
+            trois puces qui tiennent sur une ligne : la nature de la semaine
+            est montée sous les dates, où elle qualifie la semaine. */}
         <div className="carte" style={{ padding: '16px 18px', marginBottom: 16 }}>
-          <p className="etiquette">
+          <h2 className="display" style={{ fontSize: 21, lineHeight: 1.2, margin: 0 }}>
             Bloc {bloc.id} · {bloc.name} · semaine {rangDansBloc} sur {dureeBloc}
-          </p>
-          <div style={{ display: 'flex', gap: 3, margin: '12px 0 0' }}>
+          </h2>
+          <div style={{ display: 'flex', gap: 3, margin: '14px 0 0' }}>
             {Array.from({ length: dureeBloc }, (_, i) => {
               const w = plan.weeks.find((x) => x.n === premiere + i)
               const finie = w != null && addDays(w.monday, 6) < now
@@ -316,22 +322,13 @@ export function Plan({
                     height: premiere + i === semaine.n ? 9 : 6,
                     alignSelf: 'center',
                     borderRadius: 'var(--pill)',
-                    background: finie ? '#2b3aa6' : enCours ? 'var(--neon-2)' : 'var(--surface-3)',
+                    background: finie ? 'var(--braise)' : enCours ? 'var(--neon-2)' : 'var(--surface-3)',
                   }}
                 />
               )
             })}
           </div>
-          <p style={{ fontSize: 14.5, lineHeight: 1.5, color: 'var(--ink-2)', margin: '12px 0 0' }}>
-            {bloc.focus}
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 14 }}>
-            <span className="puce" style={{ background: 'var(--surface-2)', fontWeight: 600 }}>
-              {(() => {
-                const n = libelleNature(semaine, { charge: true })
-                return n.charAt(0).toUpperCase() + n.slice(1)
-              })()}
-            </span>
+          <div style={{ display: 'flex', gap: 6, marginTop: 14 }}>
             <span className="puce" style={{ background: 'var(--surface-2)' }}>
               {formatNumber(kmCourse)} km prévus
             </span>
@@ -412,8 +409,9 @@ export function Plan({
 const JOUR_COURT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 
 /**
- * La pastille du jour, pleine hauteur de la ligne. Aujourd'hui en néon, un
- * jour passé en grisé, un jour vide en pointillés.
+ * La pastille du jour, pleine hauteur de la ligne. Aujourd'hui en bleu
+ * clair (le néon est aux gestes, retour du 22 septembre), un jour passé en
+ * grisé, un jour vide en pointillés, les autres sous un filet léger.
  */
 function PastilleJour({
   jour,
@@ -440,9 +438,9 @@ function PastilleJour({
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: aujourdhui ? 'var(--neon)' : 'transparent',
-        color: passe ? 'var(--ink-3)' : 'var(--ink)',
-        border: aujourdhui ? 'none' : `1.5px ${vide ? 'dashed' : 'solid'} var(--border-2)`,
+        background: aujourdhui ? 'var(--bleu-100)' : 'transparent',
+        color: aujourdhui ? 'var(--bleu-800)' : passe ? 'var(--ink-3)' : 'var(--ink)',
+        border: aujourdhui ? 'none' : `1.5px ${vide ? 'dashed' : 'solid'} var(--border)`,
         opacity: passe ? 0.7 : 1,
       }}
     >

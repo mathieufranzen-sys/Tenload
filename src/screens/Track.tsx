@@ -296,12 +296,13 @@ export function Track({
       }}>
         <EnteteEcran
           titre="Suivi"
-          contexte={<>Carnet tendon d'Achille · {jours.length} jour{jours.length > 1 ? 's' : ''} enregistré
-              {jours.length > 1 ? 's' : ''}</>}
           onOuvrirProfil={onOuvrirProfil}
         />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+        {/* Les quatre chiffres posés sur le fond, sans carte (retour du
+            22 septembre) : ils se lisent comme l'en-tête des graphiques qui
+            suivent, pas comme quatre blocs de plus. */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 16, marginBottom: 18 }}>
           <Kpi
             label="Charge vs semaine dernière"
             valeur={idxEcart == null ? '—' : `${idxEcart > 0 ? '+' : idxEcart < 0 ? '−' : ''}${Math.abs(idxEcart)}`}
@@ -321,13 +322,13 @@ export function Track({
             valeur={sante.label}
             suffix=""
             couleur={sante.couleur}
-            detail="douleur des 30 derniers jours"
+            detail="Douleur des 30 derniers jours"
           />
           <Kpi
             label="Séances notées"
             valeur={`${feedback.length}`}
             suffix={` / ${totalAttendu}`}
-            detail={notesEnRetard > 0 ? 'Aller les noter' : 'depuis le 10 août'}
+            detail={notesEnRetard > 0 ? 'Aller les noter' : 'Depuis le 10 août'}
             tag={notesEnRetard > 0 ? `${notesEnRetard} en retard` : undefined}
             onClick={notesEnRetard > 0 ? onVoirANoter : undefined}
           />
@@ -466,16 +467,15 @@ function Kpi({
   const Balise = onClick ? 'button' : 'div'
   return (
     <Balise
-      className="carte"
       onClick={onClick}
       style={{
-        padding: '16px 16px 15px',
+        padding: '14px 0 14px',
         width: '100%',
         textAlign: 'left',
         color: 'inherit',
         cursor: onClick ? 'pointer' : 'default',
         display: 'block',
-        borderColor: couleur ? `color-mix(in srgb, ${couleur} 45%, transparent)` : undefined,
+        borderTop: '1px solid var(--border)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>

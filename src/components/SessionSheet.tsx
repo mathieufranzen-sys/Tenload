@@ -516,6 +516,10 @@ function FormulaireRessenti({
    */
   const [pain, setPain] = useState<number | null>(feedback?.pain ?? null)
   const [rpe, setRpe] = useState<number | null>(feedback?.rpe ?? null)
+  // Le bouton attend un geste (retour du 22 septembre) : enregistrer sans
+  // rien toucher écrivait deux zéros qu'on n'avait pas voulu dire, ou
+  // réécrivait tel quel un ressenti déjà noté.
+  const touche = pain !== (feedback?.pain ?? null) || rpe !== (feedback?.rpe ?? null)
 
   return (
     <div>
@@ -551,7 +555,7 @@ function FormulaireRessenti({
 
       <BoutonAction
         icone="check"
-        disabled={disabled}
+        disabled={disabled || !touche}
         style={{ marginTop: 12 }}
         onClick={() => {
           // Valider sans avoir touché un curseur vaut zéro : c'est une

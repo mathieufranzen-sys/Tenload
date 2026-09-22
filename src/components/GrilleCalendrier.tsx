@@ -239,11 +239,11 @@ function Ligne({
             onClick={() => onChoisirJour(day)}
             aria-label={day}
             style={{
-              aspectRatio: '1',
+              // Des pastilles aplaties plutôt que des ronds (retour du
+              // 22 septembre) : la ligne de la semaine se lit d'un trait.
               width: '100%',
-              maxWidth: 44,
-              justifySelf: 'center',
-              borderRadius: '50%',
+              height: 28,
+              borderRadius: 'var(--pill)',
               display: 'grid',
               placeItems: 'center',
               fontSize: 13.5,
@@ -251,7 +251,7 @@ function Ligne({
               background: fond,
               color: encre,
               border: bord,
-              boxShadow: aujourdhui ? '0 0 0 2px var(--bg), 0 0 0 3.5px var(--pale)' : undefined,
+              boxShadow: aujourdhui ? '0 0 0 2px var(--bg), 0 0 0 3.5px var(--bleu-500)' : undefined,
             }}
           >
             {Number(day.slice(8))}

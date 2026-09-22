@@ -97,8 +97,10 @@ export function SessionHero({
               width: 52,
               height: 52,
               borderRadius: '50%',
+              // Encre fixe : dans le bloc bleu, `--ink` vaut blanc, et une
+              // flèche blanche sur néon ne se lit pas.
               background: 'var(--neon)',
-              color: 'var(--ink)',
+              color: '#142800',
               display: 'grid',
               placeItems: 'center',
               flex: 'none',
@@ -110,18 +112,9 @@ export function SessionHero({
       </div>
 
       {s.adapted && (
-        <span
-          className="puce"
-          style={{
-            marginTop: 12,
-            background: 'rgba(242,207,107,.14)',
-            color: 'var(--warning)',
-            border: '1px solid rgba(242,207,107,.3)',
-            whiteSpace: 'normal',
-          }}
-        >
-          {s.adapted}
-        </span>
+        <div style={{ marginTop: 12 }}>
+          <span className="tag-adapte">{s.adapted}</span>
+        </div>
       )}
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 14 }}>

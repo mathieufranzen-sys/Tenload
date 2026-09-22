@@ -25,8 +25,6 @@ import {
   dispositionSemaine,
   type EcartRow,
 } from '../lib/overrides'
-import { styleSeance } from '../lib/seanceStyle'
-import { Icon } from './Icon'
 
 /** Le geste s'ouvre après ce délai, pour ne pas voler le défilement. */
 const DELAI_PRISE_MS = 220
@@ -272,7 +270,6 @@ export function VueCalendrier({
             border: initial ? '1px solid var(--pale)' : '1px solid var(--border-2)',
           }}
         >
-          <Icon name="clip" size={14} />
           Voir le plan initial
         </button>
       </div>
@@ -318,7 +315,9 @@ export function VueCalendrier({
                   display: 'flex',
                   gap: 12,
                   padding: '9px 10px',
-                  borderRadius: 14,
+                  // Des filets droits : arrondis, ils se lisaient comme des
+                  // cartes et non comme la coupure entre deux jours.
+                  borderRadius: 0,
                   minHeight: 54,
                   alignItems: 'flex-start',
                   borderBottom: '1px solid var(--glass-border)',
@@ -326,11 +325,13 @@ export function VueCalendrier({
                   transition: 'background var(--dur-fast)',
                 }}
               >
-                <div style={{ width: 42, flex: 'none', paddingTop: 4 }}>
+                {/* Mêmes corps que la pastille de jour de la vue semaine, et
+                    même bleu pour aujourd'hui : les deux vues se lisent pareil. */}
+                <div style={{ width: 42, flex: 'none', paddingTop: 2 }}>
                   <div
                     style={{
-                      fontSize: 12.5,
-                      color: jour === now ? 'var(--accent)' : 'var(--sur-ink-3)',
+                      fontSize: 13,
+                      color: jour === now ? 'var(--bleu-700)' : 'var(--ink-2)',
                     }}
                   >
                     {DAYS_LONG[weekdayIndex(jour)].slice(0, 3)}
@@ -338,8 +339,9 @@ export function VueCalendrier({
                   <div
                     className="chiffre"
                     style={{
-                      fontSize: 21,
-                      color: jour === now ? 'var(--accent)' : 'var(--sur-ink-2)',
+                      fontSize: 24,
+                      lineHeight: 1.1,
+                      color: jour === now ? 'var(--bleu-700)' : 'var(--ink)',
                     }}
                   >
                     {formatDay(jour).split(' ')[0]}
@@ -540,13 +542,15 @@ function EnteteSemaine({
         <span
           style={{
             marginLeft: 'auto',
+            flex: 'none',
+            whiteSpace: 'nowrap',
             fontSize: 12,
             fontWeight: 600,
             padding: '3px 10px',
             borderRadius: 'var(--pill)',
             // Le présent a la teinte de la pastille du jour de la vue semaine.
-            background: 'var(--neon)',
-            color: 'var(--ink)',
+            background: 'var(--bleu-100)',
+            color: 'var(--bleu-800)',
           }}
         >
           En cours
@@ -572,7 +576,6 @@ function CarteJour({
   onOuvrir?: () => void
   onPrise?: (e: React.PointerEvent) => void
 }) {
-  const st = styleSeance(seance.s.type)
   return (
     <div
       onPointerDown={onPrise}
@@ -591,12 +594,12 @@ function CarteJour({
         WebkitUserSelect: 'none',
       }}
     >
-      <Icon name={st.icone} size={16} style={{ color: 'var(--accent)' }} />
       <div style={{ minWidth: 0, flex: 1 }}>
         <div
+          className="display"
           style={{
-            fontSize: 14.5,
-            fontWeight: 500,
+            fontSize: 17,
+            lineHeight: 1.25,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -611,9 +614,6 @@ function CarteJour({
           </div>
         )}
       </div>
-      {onPrise && (
-        <Icon name="grip" size={15} style={{ color: 'var(--sur-ink-3)', flex: 'none' }} />
-      )}
     </div>
   )
 }

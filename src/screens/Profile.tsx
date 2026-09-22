@@ -41,6 +41,7 @@ export type SectionKey =
   | 'anoter'
   | 'patterns'
   | 'dossards'
+  | 'bilans'
 
 type IconeRubrique = 'alert' | 'clip' | 'chart' | 'heart' | 'gauge' | 'run' | 'sun' | 'flag'
 
@@ -62,6 +63,7 @@ const GROUPES: Array<{ titre: string; rubriques: Rubrique[] }> = [
   {
     titre: 'Ton corps',
     rubriques: [
+      { key: 'bilans', titre: 'Bilans de la semaine', description: 'Chaque semaine terminée, relue', icone: 'clip' },
       { key: 'anoter', titre: 'Séances à noter', description: 'Les journées que l’indice ne mesure pas', icone: 'clip' },
       { key: 'patterns', titre: 'Tes patterns', description: 'Ce qui suit ta douleur, et l’export pour une IA', icone: 'chart' },
       { key: 'indice', titre: 'Indice de charge du tendon', description: 'Les bandes et le détail du calcul', icone: 'chart' },
@@ -119,6 +121,8 @@ interface Props {
   onSection: (s: SectionKey | null) => void
   /** La liste des dossards passés, construite par `App` qui en a les données. */
   dossardsPasses?: ReactNode
+  /** Les bilans des semaines terminées, construits par `App` qui en a les données. */
+  bilans?: ReactNode
 }
 
 export function Profile({
@@ -138,6 +142,7 @@ export function Profile({
   section,
   onSection,
   dossardsPasses,
+  bilans,
 }: Props) {
   const now = todayISO()
   // Quatre-vingt-dix jours : assez pour voir revenir un pattern une douzaine
@@ -286,6 +291,7 @@ export function Profile({
         {section === 'anoter' && <ANoter seances={aNoter} onOuvrir={onOuvrirSeance} />}
         {section === 'patterns' && <Patterns carnet={carnet} />}
         {section === 'dossards' && dossardsPasses}
+        {section === 'bilans' && bilans}
       </SubPage>
     </>
   )

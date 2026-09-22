@@ -89,17 +89,19 @@ export const rangRessenti = (v: number): number => Math.max(0, Math.min(10, Math
  *   2-3  jaune   aucun plancher non plus, mais on approche
  *   4-5  orange  plancher orange
  *   6-7  rouge   plancher rouge
- *   8-10 carmin  plancher noir
+ *   8-10 noir    plancher noir
  *
- * Deux teintes par palier, la seconde plus soutenue : la progression reste
- * lisible à l'intérieur d'un même plancher. Le noir de la bande devient un
- * carmin : sur la jauge d'un curseur, un noir se confondrait avec le texte.
- * Teintes de la refonte du 21 septembre 2026, les mêmes que `TEINTE_BANDE`.
+ * Chaque palier ouvre sur la teinte exacte de sa bande, puis fonce : la
+ * douleur et la jauge parlent la même couleur, et la progression reste
+ * lisible à l'intérieur d'un même plancher. Le noir est revenu le
+ * 22 septembre 2026, à la demande de Mathieu : le carmin qui le remplaçait
+ * faisait une sixième couleur que les bandes n'ont pas. Le chiffre posé
+ * dessus passe en blanc (`BarreRessenti` suit la luminance).
  */
 export const COULEUR_DOULEUR = [
-  '#4fe39a', '#86e27f',
-  '#ffe14d', '#ffd23f',
-  '#ffac1f', '#ff9500',
-  '#ff6a1a', '#ff3b30',
-  '#e8173f', '#c40d3c', '#9e0a38',
+  '#4fe39a', '#2fcf7f',
+  '#ffd23f', '#f5bd1a',
+  '#ff9500', '#eb7f00',
+  '#ff3b30', '#e0241a',
+  '#333333', '#262626', '#1a1a1a',
 ]

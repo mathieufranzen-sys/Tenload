@@ -131,7 +131,7 @@ export function Paces({
         {/* Les zones en barres qui s'allongent avec la vitesse, comme dans la
             maquette : l'échelle se lit avant les chiffres. L'allure marathon
             est la seule en pâle, c'est l'ancre des six autres. */}
-        <div style={{ margin: '22px 0 14px' }}>
+        <div style={{ margin: '0 0 14px' }}>
           <Segmented
             label="Lecture des zones"
             valeur={discipline}

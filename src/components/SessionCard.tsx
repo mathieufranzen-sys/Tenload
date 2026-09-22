@@ -139,10 +139,10 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
               <EchelleIntensite niveau={st.intensite} hauteur={11} />
             </span>
           )}
-          {/* Pêche pour une décision de Mathieu, jaune pour le moteur
+          {/* Blanc pour une décision de Mathieu, orange pour le moteur
               d'adaptation : la couleur dit d'où vient le changement. */}
-          {s.ecart && <Etiquette teinte="255,220,194" encre="var(--pale)">{s.ecart}</Etiquette>}
-          {s.adapted && <Etiquette teinte="242,207,107" encre="var(--warning)">{s.adapted}</Etiquette>}
+          {s.ecart && <span className="tag-ecart">{s.ecart}</span>}
+          {s.adapted && <span className="tag-adapte">{s.adapted}</span>}
         </div>
 
         {feedback && (
@@ -160,33 +160,6 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
         />
       )}
     </button>
-  )
-}
-
-function Etiquette({
-  teinte,
-  encre,
-  children,
-}: {
-  teinte: string
-  encre: string
-  children: string
-}) {
-  return (
-    <span
-      style={{
-        display: 'inline-block',
-        fontSize: 12,
-        fontWeight: 500,
-        padding: '4px 10px',
-        borderRadius: 'var(--pill)',
-        background: `rgba(${teinte},.18)`,
-        color: encre,
-        border: `1px solid rgba(${teinte},.26)`,
-      }}
-    >
-      {children}
-    </span>
   )
 }
 
@@ -253,8 +226,8 @@ function CarteCompacte({ session: s, marathonPace, feedback, onClick, etat }: Om
       )}
       {(s.ecart || s.adapted) && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 9 }}>
-          {s.ecart && <Etiquette teinte="255,220,194" encre="var(--pale)">{s.ecart}</Etiquette>}
-          {s.adapted && <Etiquette teinte="242,207,107" encre="var(--warning)">{s.adapted}</Etiquette>}
+          {s.ecart && <span className="tag-ecart">{s.ecart}</span>}
+          {s.adapted && <span className="tag-adapte">{s.adapted}</span>}
         </div>
       )}
     </button>

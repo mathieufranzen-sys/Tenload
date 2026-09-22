@@ -1,5 +1,7 @@
 /**
- * Les trois indicateurs sous la carte de charge, sur une seule ligne.
+ * Les trois indicateurs de la semaine, sur une seule ligne, dans la carte de
+ * charge depuis le 22 septembre 2026 : trois cartes de plus sous la jauge
+ * faisaient une rangée de blocs gris, alors qu'elles lisent la même chose.
  *
  * La tuile « d'où viennent ces points » est partie le 22 septembre 2026 : la
  * carte de charge entière ouvre désormais le détail du calcul, un bouton de
@@ -14,8 +16,16 @@ export function InsightTiles({ insights }: { insights: Insights }) {
   const maxJour = Math.max(...km7Jours, 1)
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
-      <Tuile>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+        marginTop: 16,
+        paddingTop: 14,
+        borderTop: '1px solid var(--border)',
+      }}
+    >
+      <Tuile premiere>
         <Valeur nombre={formatNumber(km7)} unite="km" />
         <div style={{ display: 'flex', gap: 2, marginTop: 8, alignItems: 'flex-end', height: 12 }}>
           {km7Jours.map((km, i) => (
@@ -59,9 +69,16 @@ export function InsightTiles({ insights }: { insights: Insights }) {
   )
 }
 
-function Tuile({ children }: { children: ReactNode }) {
+/** Une colonne, séparée de la précédente par un filet vertical, comme les chiffres d'une séance. */
+function Tuile({ children, premiere }: { children: ReactNode; premiere?: boolean }) {
   return (
-    <div className="carte" style={{ padding: '14px 12px 13px', minWidth: 0, borderRadius: 22 }}>
+    <div
+      style={{
+        minWidth: 0,
+        padding: premiere ? '0 10px 0 0' : '0 10px',
+        borderLeft: premiere ? undefined : '1px solid var(--border)',
+      }}
+    >
       {children}
     </div>
   )
@@ -70,7 +87,7 @@ function Tuile({ children }: { children: ReactNode }) {
 function Valeur({ nombre, unite }: { nombre: string; unite?: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
-      <span className="chiffre" style={{ fontSize: 30, lineHeight: 1 }}>
+      <span className="chiffre" style={{ fontSize: 26, lineHeight: 1 }}>
         {nombre}
       </span>
       {unite && <span style={{ fontSize: 13, color: 'var(--accent)' }}>{unite}</span>}

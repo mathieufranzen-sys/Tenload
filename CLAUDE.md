@@ -967,6 +967,21 @@ parce qu'ils nommaient l'onglet Allures.
   perçu contre l'effort attendu (`ecartEffortSemaine`), soit exactement ce
   que lit `ajusterForme`.
 
+- Retours du 22 septembre, fin de journée : les trois indicateurs de la
+  semaine vivent DANS la jauge, sous l'échelle des bandes ; les étiquettes
+  de séance sont en aplat plein (`.tag-adapte`, `.tag-ecart`) pour se lire
+  sur le bloc bleu ; le bouton du ressenti reste grisé tant qu'aucun curseur
+  n'a bougé. Programme : le jour courant en bleu clair, les semaines passées
+  du bloc en vert foncé (exception voulue par Mathieu à la règle du vert
+  réservé au coach), la nature de la semaine sous les dates et trois puces
+  seulement dans la carte du bloc. Calendrier : filets droits, sans icônes,
+  mêmes corps que la vue semaine ; vue globale en pastilles aplaties.
+- **Profil → Bilans de la semaine** relit chaque semaine terminée
+  (`BilansPasses`). Le calcul est sorti d'Aujourd'hui dans
+  `construireBilan` (`bilanDeSemaine.ts`), lu à la date `ref` : aujourd'hui
+  pour le bilan courant, le lundi suivant pour une semaine passée, sans la
+  forme projetée, qui ne vaut que pour aujourd'hui.
+
 ### Les dossards
 
 `src/lib/dossards.ts` (+ 11 tests), `SectionDossards`, table
@@ -984,6 +999,9 @@ le dit et n'enregistre rien, sans allumer la bannière de synchronisation.
 - **Objectifs par défaut** (`objectifParDefaut`), tant qu'aucun n'est saisi :
   10 km 40:12 (le record), semi test 1 h 30, marathon l'allure visée du
   profil. Le 20 km de Paris n'en a pas, aucun chrono n'a été fixé.
+- La page d'un dossard porte toujours l'objectif ET le chrono réel ; avant
+  la course, le chrono attend « le jour J ». Le bouton d'ajout est à côté
+  du titre.
 - Objectif ne liste que les dossards à venir ; **les passés vivent dans
   Profil → Dossards passés**. Une carte ouvre la page du dossard (par un
   portail, pour s'ouvrir aussi depuis une sous-page), où se saisissent

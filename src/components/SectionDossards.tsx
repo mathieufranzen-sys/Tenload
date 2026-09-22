@@ -95,10 +95,19 @@ export function SectionDossards({
 
   return (
     <section style={{ marginTop: titre ? 26 : 0 }}>
+      {/* Le bouton d'ajout reste à côté du titre (retour du 22 septembre) :
+          en bas de liste, il descendait à chaque dossard ajouté. */}
       {titre && (
-        <h2 className="display" style={{ margin: '0 2px 12px', fontSize: 30 }}>
-          Dossards
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '0 2px 12px' }}>
+          <h2 className="display" style={{ margin: 0, fontSize: 30 }}>
+            Dossards
+          </h2>
+          {modifiable && !ajout && (
+            <BoutonAction compact icone="plus" onClick={() => setAjout(true)}>
+              Ajouter
+            </BoutonAction>
+          )}
+        </div>
       )}
 
       {indisponibles && (
@@ -109,6 +118,19 @@ export function SectionDossards({
         </p>
       )}
 
+
+      {/* Le formulaire s'ouvre sous le bouton qui l'appelle. */}
+      <div>
+        {ajout && onSave && (
+          <FormulaireDossard
+            onAnnuler={() => setAjout(false)}
+            onValider={(l) => {
+              onSave(l)
+              setAjout(false)
+            }}
+          />
+        )}
+      </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {dossards.length === 0 && (
@@ -121,19 +143,8 @@ export function SectionDossards({
         ))}
       </div>
 
-      <div style={{ marginTop: 12 }}>
-        {ajout && onSave && (
-          <FormulaireDossard
-            onAnnuler={() => setAjout(false)}
-            onValider={(l) => {
-              onSave(l)
-              setAjout(false)
-            }}
-          />
-        )}
-      </div>
 
-      {modifiable && !ajout && (
+      {!titre && modifiable && !ajout && (
         <BoutonAction icone="plus" onClick={() => setAjout(true)} style={{ marginTop: 12 }}>
           Ajouter un dossard
         </BoutonAction>
@@ -285,12 +296,9 @@ function CarteDossard({
         )}
       </div>
 
-      {!passe && jours !== 0 && (
-        <p style={{ margin: '14px 2px 0', fontSize: 14, lineHeight: 1.5, color: 'var(--ink-2)' }}>
-          Le chrono réel se saisit ici à partir du jour de la course.
-        </p>
-      )}
-
+      {/* L'objectif et le chrono réel, toujours côte à côte (retour du
+          22 septembre) : avant la course, le chrono attend le jour J au lieu
+          de céder sa place à l'allure visée, qui se lit sous l'objectif. */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 16 }}>
         <ChampChrono
           key={`o-${d.objectifS}`}
@@ -300,16 +308,19 @@ function CarteDossard({
           modifiable={modifiable}
           onValider={onObjectif}
         />
-        {passe || jours === 0 ? (
-          onChronoRecale ? (
-            <Valeur label="Chrono" texte={d.chronoS != null ? formatChrono(d.chronoS) : '—'} />
-          ) : (
-            <ChampChrono key={`c-${d.chronoS}`} label="Chrono" km={d.km} valeur={d.chronoS} modifiable={modifiable} onValider={onChronoLibre} />
-          )
+        {!passe && jours !== 0 ? (
+          <Valeur label="Chrono réel" texte="Le jour J" attente />
+        ) : onChronoRecale ? (
+          <Valeur label="Chrono réel" texte={d.chronoS != null ? formatChrono(d.chronoS) : '—'} />
         ) : (
-          <Valeur label="Allure visée" texte={d.objectifS != null ? `${formatPace(d.objectifS / d.km)}/km` : '—'} />
+          <ChampChrono key={`c-${d.chronoS}`} label="Chrono réel" km={d.km} valeur={d.chronoS} modifiable={modifiable} onValider={onChronoLibre} />
         )}
       </div>
+      {d.objectifS != null && (
+        <p style={{ margin: '8px 2px 0', fontSize: 13.5, color: 'var(--ink-2)' }}>
+          Soit {formatPace(d.objectifS / d.km)}/km
+        </p>
+      )}
 
       {(passe || jours === 0) && onChronoRecale && (
         <div style={{ marginTop: 12 }}>
@@ -366,11 +377,11 @@ const boutonDiscret = {
   color: 'var(--sur-ink-2)',
 } as const
 
-function Valeur({ label, texte }: { label: string; texte: string }) {
+function Valeur({ label, texte, attente }: { label: string; texte: string; attente?: boolean }) {
   return (
     <div style={{ padding: '12px 14px', borderRadius: 18, background: 'var(--surface)' }}>
       <div style={{ fontSize: 13, color: 'var(--accent)' }}>{label}</div>
-      <div className="chiffre" style={{ fontSize: 24, marginTop: 2 }}>
+      <div className="chiffre" style={{ fontSize: 24, marginTop: 2, color: attente ? 'var(--ink-3)' : undefined }}>
         {texte}
       </div>
     </div>
@@ -553,5 +564,5 @@ const styleChamp = {
   border: '1px solid var(--border-2)',
   color: 'var(--ink)',
   fontSize: 16,
-  colorScheme: 'dark',
+  colorScheme: 'light',
 } as const

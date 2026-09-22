@@ -17,6 +17,7 @@ export function BoutonAction({
   disabled,
   type = 'button',
   style,
+  compact,
 }: {
   children: ReactNode
   onClick?: () => void
@@ -25,6 +26,8 @@ export function BoutonAction({
   disabled?: boolean
   type?: 'button' | 'submit'
   style?: CSSProperties
+  /** À côté d'un titre : même dessin, à la largeur du libellé. */
+  compact?: boolean
 }) {
   return (
     <button
@@ -33,13 +36,20 @@ export function BoutonAction({
       disabled={disabled}
       className="bouton-pale"
       style={{
+        ...(compact ? { width: 'auto', padding: '5px 5px 5px 16px', fontSize: 14.5, gap: 10 } : null),
         ...(disabled ? { background: 'var(--surface-3)', color: 'var(--ink-3)', cursor: 'default' } : null),
         ...style,
       }}
     >
       {children}
-      <span className="pastille" style={disabled ? { color: 'var(--ink-3)' } : undefined}>
-        <Icon name={icone} size={18} />
+      <span
+        className="pastille"
+        style={{
+          ...(compact ? { width: 32, height: 32 } : null),
+          ...(disabled ? { color: 'var(--ink-3)' } : null),
+        }}
+      >
+        <Icon name={icone} size={compact ? 15 : 18} />
       </span>
     </button>
   )

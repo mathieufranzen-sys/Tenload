@@ -13,6 +13,7 @@
  * « je ne sais pas » : c'est la même règle qu'avant, un indice bas obtenu par
  * absence de mesure n'est pas un indice bas.
  */
+import type { ReactNode } from 'react'
 import type { Band, BandKey, IndexBreakdown } from '../lib/tendonIndex'
 import { BANDS } from '../lib/tendonIndex'
 import { ENCRE_BANDE, TEINTE_BANDE } from '../lib/teintes'
@@ -34,12 +35,15 @@ export function CarteCharge({
   bande,
   ecartVeille,
   onCalcul,
+  pied,
 }: {
   detail: IndexBreakdown
   bande: Band
   /** Mouvement depuis la veille, en points. Absent quand la veille est inconnue. */
   ecartVeille: number | null
   onCalcul: () => void
+  /** Les indicateurs de la semaine, sous l'échelle des bandes. */
+  pied?: ReactNode
 }) {
   const inconnu = detail.painInconnue
   const teinte = TEINTE_BANDE[bande.key]
@@ -177,6 +181,8 @@ export function CarteCharge({
           })}
         </div>
       )}
+
+      {pied}
     </button>
   )
 }

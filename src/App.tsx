@@ -28,6 +28,7 @@ import { Paces } from './screens/Paces'
 import { Profile, type SectionKey } from './screens/Profile'
 import { BottomNav, type Onglet } from './components/BottomNav'
 import { SessionSheet } from './components/SessionSheet'
+import { BilansPasses } from './components/BilansPasses'
 import { SectionDossards } from './components/SectionDossards'
 import {
   DataProvider,
@@ -524,6 +525,17 @@ function Coquille({
           activities={data.activities}
           section={sectionProfil}
           onSection={setSectionProfil}
+          bilans={
+            <BilansPasses
+              plan={plan}
+              now={now}
+              load={load}
+              pain={data.pain}
+              feedback={feedback}
+              ecarts={ecarts}
+              attestes={attestes}
+            />
+          }
           dossardsPasses={
             <SectionDossards
               periode="passe"
