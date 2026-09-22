@@ -920,13 +920,20 @@ parce qu'ils nommaient l'onglet Allures.
 - Aujourd'hui : jauge en gélule (`CarteCharge`), « ce que ça change »
   (`CeQueCaChange`, qui remplace AlertBox), carnet résumé et sa page
   (`PageCarnet`), bilan de semaine en page. Le détail du calcul est une page.
-- Programme : pastilles de jour dans la vue semaine ; le calendrier s'ouvre sur
-  une grille du plan entier (`GrilleCalendrier`), le passé coloré par bande,
-  l'avenir par type de séance. Le détail jour par jour reste dessous, c'est là
-  que les séances se déplacent.
-- Le ressenti de séance se note en pastilles de 0 à 10 (`GrilleRessenti`). Le
-  « je ne sais pas » de la maquette n'est pas repris : un ressenti s'enregistre
-  entier ou pas du tout.
+- Programme : pastilles de jour pleine hauteur dans la vue semaine, le bloc en
+  tête avec les chiffres de la semaine, les jours passés grisés. Le calendrier
+  a deux lectures au choix : **vue semaine** (par défaut, sur la semaine en
+  cours, là où les séances se déplacent) et **vue globale**, la grille du plan
+  entier (`GrilleCalendrier`), le passé coloré par bande, l'avenir par type de
+  séance, la sortie longue en néon.
+- Le ressenti de séance garde les curseurs d'origine (`JaugeRessenti`) et les
+  mots du test de la parole : les pastilles de la maquette ont été essayées puis
+  retirées le 22 septembre, une seule façon de noter dans toute l'app.
+- **Le vert profond est réservé au mot du coach** (`.carte-braise`), et à ce
+  qui en est une variante : mot mental du bilan, mot du coach d'un dossard.
+  Arbitré par Mathieu le 22 septembre 2026 : les autres blocs n'y ont pas
+  droit. L'action est en néon, la séance à faire en blanc sous un filet fort.
+- **Majuscule au premier mot de chaque ligne**, étiquettes comprises.
 
 ### Les dossards
 
