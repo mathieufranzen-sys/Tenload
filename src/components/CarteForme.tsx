@@ -14,15 +14,27 @@ import { formatDuration } from '../lib/paces'
 export interface PointTendance {
   /** Marathon projeté, en minutes. */
   minutes: number
+  /** Le même, en secondes : l'arrondi à la minute effaçait les progrès. */
+  secondes: number
 }
 
 const court = (min: number) => formatDuration(min).replace(' min', '')
+
+/** « 42 s », « 1 min 24 » : un écart de chrono se lit en durée. */
+const formatEcartCourt = (s: number): string => {
+  const r = Math.round(s)
+  if (r < 60) return `${r} s`
+  const m = Math.floor(r / 60)
+  const reste = r % 60
+  return reste ? `${m} min ${String(reste).padStart(2, '0')}` : `${m} min`
+}
 
 export function CarteForme({
   minutes,
   objectif,
   tendance,
   lue,
+  seances,
 }: {
   /** Marathon projeté aujourd'hui, en minutes. */
   minutes: number
@@ -32,11 +44,15 @@ export function CarteForme({
   tendance: PointTendance[]
   /** Assez de séances notées pour que le ressenti compte. */
   lue: boolean
+  /** Séances notées que la projection lit sur 28 jours. */
+  seances: number
 }) {
   const gauche = objectif + 10
   const droite = objectif - 5
   const pos = (m: number) => Math.max(0, Math.min(1, (gauche - m) / (gauche - droite))) * 100
   const aReprendre = minutes - objectif
+  const ecartTendance =
+    tendance.length > 1 ? tendance[tendance.length - 1].secondes - tendance[0].secondes : 0
   const teinte = lue ? 'var(--ink)' : 'var(--ink-3)'
 
   // La tendance, en petit : plus vite = plus haut.
@@ -142,9 +158,17 @@ export function CarteForme({
               />
             ))}
           </svg>
-          <span style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--ink-2)' }}>
-            {tendance.map((p) => court(p.minutes)).join(' → ')}
-          </span>
+          {/* Le mouvement sur quatre semaines, en secondes : la suite des
+              chronos arrondis à la minute (« 3 h 21 → 3 h 20 → 3 h 20 »)
+              ne disait rien (retour du 22 septembre). */}
+          <div style={{ minWidth: 0 }}>
+            <div className="chiffre" style={{ fontSize: 30, lineHeight: 1, color: teinte }}>
+              {ecartTendance === 0 ? 'Stable' : `${ecartTendance < 0 ? '−' : '+'}${formatEcartCourt(Math.abs(ecartTendance))}`}
+            </div>
+            <div style={{ fontSize: 13.5, color: 'var(--ink-2)', marginTop: 5, lineHeight: 1.35 }}>
+              en 4 semaines, sur {seances} séance{seances > 1 ? 's' : ''} notée{seances > 1 ? 's' : ''}
+            </div>
+          </div>
         </div>
       )}
 

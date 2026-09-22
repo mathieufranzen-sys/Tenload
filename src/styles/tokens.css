@@ -53,6 +53,23 @@
   --neon-2: #49de61;
   --plus: #4f63f2;
 
+  /* ─── gamme secondaire : le bleu ─────────────────────────────────────────
+     Construite le 22 septembre 2026 autour des deux bleus déjà en place :
+     le Blue d'AllTrails+ (500, effort et vélo dans les graphiques) et le bleu
+     pâle des jours de vélo du calendrier (100). Même principe que les
+     neutres de Trailblazer : dix crans, la teinte reste, seule la clarté
+     bouge. Le 700 est l'encre lisible sur les fonds 50 à 200. */
+  --bleu-50: #f0f2fe;
+  --bleu-100: #d6dafc;
+  --bleu-200: #b3bbf9;
+  --bleu-300: #8e9af6;
+  --bleu-400: #6e7ff4;
+  --bleu-500: #4f63f2;
+  --bleu-600: #3b4dd6;
+  --bleu-700: #2b3aa6;
+  --bleu-800: #1f2a78;
+  --bleu-900: #141b4d;
+
   /* ─── formes ─────────────────────────────────────────────────────────── */
   --radius: 26px;
   --radius-sm: 16px;

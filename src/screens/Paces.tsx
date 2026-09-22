@@ -126,7 +126,10 @@ export function Paces({
   const tendance = useMemo(() => {
     const lundi = mondayOf(now)
     const dates = [addDays(lundi, -21), addDays(lundi, -14), addDays(lundi, -7), now]
-    return serieForme(formeTest, feedback, dates).map((f) => ({ minutes: Math.round((f.allure * MARATHON_KM) / 60) }))
+    return serieForme(formeTest, feedback, dates).map((f) => ({
+      minutes: Math.round((f.allure * MARATHON_KM) / 60),
+      secondes: Math.round(f.allure * MARATHON_KM),
+    }))
   }, [formeTest, feedback, now])
 
   // Du plus lent au plus rapide : l'allure semi, ajoutée après coup, était
@@ -233,6 +236,7 @@ export function Paces({
           objectif={Math.round(gt / 60)}
           tendance={tendance}
           lue={forme.seances >= MIN_SEANCES}
+          seances={forme.seances}
         />
 
         <SectionDossards
