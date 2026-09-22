@@ -16,7 +16,7 @@
  * pousserait à ne rien saisir, et on perdrait l'information au lieu de la
  * garder.
  */
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Session, SessionType } from '../data/types'
 import { formatNumber } from '../lib/dates'
 import { familleDe } from '../lib/insights'
@@ -30,6 +30,7 @@ import {
   type ZoneQualite,
 } from '../lib/overrides'
 import { Icon } from './Icon'
+import { BoutonAction } from './BoutonAction'
 
 type Panneau = 'reel' | 'remplacer' | null
 
@@ -46,6 +47,11 @@ interface Props {
   onSave: (patch: EcartPatch, reason: string | null) => void
   /** Ouvre la vue calendrier sur cette séance. Absent en lecture seule. */
   onDeplacer?: () => void
+  /**
+   * Le bouton principal de la barre du bas : noter la séance. Absent quand
+   * il n'y a rien à noter (repos, ressenti déjà saisi).
+   */
+  onNoter?: () => void
 }
 
 export function ActionsSeance({
@@ -56,8 +62,15 @@ export function ActionsSeance({
   simuler,
   onSave,
   onDeplacer,
+  onNoter,
 }: Props) {
   const [panneau, setPanneau] = useState<Panneau>(null)
+  const ancre = useRef<HTMLDivElement>(null)
+  // Un panneau s'ouvre dans le contenu, loin de la barre du bas qui l'a
+  // demandé : on l'amène sous les yeux.
+  useEffect(() => {
+    if (panneau) ancre.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [panneau])
   const [patch, setPatch] = useState<EcartPatch>(actuel ?? {})
   const [raison, setRaison] = useState(actuelRaison ?? '')
 
@@ -80,37 +93,49 @@ export function ActionsSeance({
   }
 
   return (
-    <div style={{ marginBottom: 22 }}>
+    <div ref={ancre} style={{ scrollMarginTop: 20 }}>
+      {/* La barre d'actions collée en bas de la feuille, comme les boutons
+          d'une fiche AllTrails : noter en néon, le reste en contour, et la
+          barre défile à l'horizontale si elle déborde. */}
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${estRepos ? 2 : 4}, 1fr)`,
-          gap: 8,
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 65,
+          maxWidth: 'var(--shell-max)',
+          margin: '0 auto',
+          padding: '18px var(--page-x) calc(14px + env(safe-area-inset-bottom, 0px))',
+          background: 'linear-gradient(180deg, transparent, var(--bg) 38%)',
         }}
       >
-        {!estRepos && (
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none' }}>
+          {onNoter && <Action icone="pencil" label="Noter" principal onClick={onNoter} />}
+          {!estRepos && (
+            <Action
+              icone="skip"
+              label={saute ? 'Rétablir' : 'Sauter'}
+              actif={saute}
+              onClick={() => enregistrer({ ...patch, skipped: saute ? undefined : true })}
+            />
+          )}
+          <Action icone="calendar" label="Déplacer" onClick={onDeplacer} />
+          {!estRepos && (
+            <Action
+              icone="clip"
+              label="Donnée réelle"
+              actif={patch.dist != null || patch.durMin != null || panneau === 'reel'}
+              onClick={() => setPanneau((p) => (p === 'reel' ? null : 'reel'))}
+            />
+          )}
           <Action
-            icone="skip"
-            label={saute ? 'Rétablir' : 'Sauter'}
-            actif={saute}
-            onClick={() => enregistrer({ ...patch, skipped: saute ? undefined : true })}
+            icone="swap"
+            label="Remplacer"
+            actif={patch.type != null || panneau === 'remplacer'}
+            onClick={() => setPanneau((p) => (p === 'remplacer' ? null : 'remplacer'))}
           />
-        )}
-        <Action icone="calendar" label="Déplacer" onClick={onDeplacer} />
-        {!estRepos && (
-          <Action
-            icone="clip"
-            label="Donnée réelle"
-            actif={patch.dist != null || patch.durMin != null}
-            onClick={() => setPanneau((p) => (p === 'reel' ? null : 'reel'))}
-          />
-        )}
-        <Action
-          icone="swap"
-          label="Remplacer"
-          actif={patch.type != null}
-          onClick={() => setPanneau((p) => (p === 'remplacer' ? null : 'remplacer'))}
-        />
+        </div>
       </div>
 
       {panneau === 'reel' && (
@@ -401,41 +426,44 @@ function Choix({
   )
 }
 
-/** Une tuile d'action de la maquette : l'icône au-dessus, le verbe dessous. */
+/** Une pilule de la barre du bas : néon pour l'action principale, contour sinon. */
 function Action({
   icone,
   label,
   actif = false,
+  principal = false,
   onClick,
 }: {
-  icone: 'skip' | 'calendar' | 'clip' | 'swap'
+  icone: 'skip' | 'calendar' | 'clip' | 'swap' | 'pencil'
   label: string
   actif?: boolean
+  principal?: boolean
   onClick?: () => void
 }) {
   return (
     <button
       onClick={onClick}
       disabled={!onClick}
-      aria-pressed={actif}
+      aria-pressed={principal ? undefined : actif}
       style={{
-        display: 'flex',
-        flexDirection: 'column',
+        flex: 'none',
+        display: 'inline-flex',
         alignItems: 'center',
         gap: 9,
-        padding: '16px 4px 14px',
-        borderRadius: 22,
+        padding: '14px 22px',
+        borderRadius: 'var(--pill)',
+        fontSize: 16,
+        fontWeight: 600,
+        whiteSpace: 'nowrap',
         color: actif ? 'var(--pale-ink)' : 'var(--ink)',
-        background: actif ? 'var(--pale)' : 'var(--surface)',
-        border: `1px solid ${actif ? 'var(--pale)' : 'var(--border-2)'}`,
-        opacity: onClick ? 1 : 0.35,
+        background: principal ? 'var(--neon)' : actif ? 'var(--pale)' : 'var(--surface-2)',
+        border: principal ? 'none' : `1.5px solid ${actif ? 'var(--pale)' : 'var(--border-2)'}`,
+        opacity: onClick ? 1 : 0.4,
         cursor: onClick ? 'pointer' : 'default',
       }}
     >
-      <Icon name={icone} size={21} style={{ strokeWidth: 1.6 }} />
-      <span style={{ fontSize: 13.5, textAlign: 'center', lineHeight: 1.2, textTransform: 'none' }}>
-        {label}
-      </span>
+      <Icon name={icone} size={19} style={{ strokeWidth: 1.8 }} />
+      {label}
     </button>
   )
 }
@@ -515,20 +543,9 @@ function Boutons({
 }) {
   return (
     <div style={{ display: 'flex', gap: 9 }}>
-      <button
-        onClick={onValider}
-        style={{
-          flex: 1,
-          padding: 14,
-          borderRadius: 'var(--pill)',
-          fontWeight: 600,
-          fontSize: 15.5,
-          background: 'var(--neon)',
-          color: 'var(--ink)',
-        }}
-      >
+      <BoutonAction icone="check" onClick={onValider} style={{ flex: 1 }}>
         Enregistrer
-      </button>
+      </BoutonAction>
       {effacerVisible && (
         <button
           onClick={onEffacer}

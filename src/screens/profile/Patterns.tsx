@@ -5,6 +5,7 @@
  * comparaison simple entre les jours avec et sans une activité, effectifs
  * affichés : un « +1,2 » sans « sur 5 jours » laisserait croire à une loi.
  */
+import { BoutonAction } from '../../components/BoutonAction'
 import { useState } from 'react'
 import {
   ECART_MIN,
@@ -16,7 +17,6 @@ import {
   type JourCarnet,
 } from '../../lib/carnet'
 import { formatNumber } from '../../lib/dates'
-import { Icon } from '../../components/Icon'
 
 const titreSection = {
   fontSize: 14,
@@ -126,26 +126,9 @@ export function Patterns({ carnet }: { carnet: JourCarnet[] }) {
         Le carnet complet en texte, avec les échelles et une consigne d'analyse. Colle-le dans Claude
         ou ChatGPT pour chercher des patterns plus fins que ces comparaisons.
       </p>
-      <button
-        onClick={copier}
-        className="glass"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-          width: '100%',
-          color: 'inherit',
-          borderRadius: 16,
-          padding: '14px',
-          fontSize: 15,
-          fontWeight: 700,
-          cursor: 'pointer',
-        }}
-      >
-        <Icon name={etatCopie === 'copie' ? 'check' : 'clip'} size={17} />
+      <BoutonAction onClick={copier} icone={etatCopie === 'copie' ? 'check' : 'arrowUpRight'}>
         {etatCopie === 'copie' ? 'Copié' : etatCopie === 'echec' ? 'Copie impossible sur cet appareil' : 'Copier le carnet pour une IA'}
-      </button>
+      </BoutonAction>
     </div>
   )
 }

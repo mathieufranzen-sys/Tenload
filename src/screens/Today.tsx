@@ -31,7 +31,6 @@ import { slotsParJour, verifierContraintes, type EcartRow } from '../lib/overrid
 import { SessionCard } from '../components/SessionCard'
 import { CarteCarnet, PageCarnet } from '../components/JournalDuJour'
 import { CarteCharge } from '../components/CarteCharge'
-import { CeQueCaChange } from '../components/CeQueCaChange'
 import { SubPage } from '../components/SubPage'
 import { ProfileButton } from '../components/ProfileButton'
 import { MeshBackground } from '../components/MeshBackground'
@@ -39,6 +38,7 @@ import { InsightTiles } from '../components/InsightTiles'
 import { SessionHero } from '../components/SessionHero'
 import { ChargeSheet } from '../components/ChargeSheet'
 import { Icon } from '../components/Icon'
+import { BoutonAction } from '../components/BoutonAction'
 import { CarteCoach } from '../components/CarteCoach'
 import { CarteBilan } from '../components/CarteBilan'
 import { bilanSemaine, type FaitsBilan, type SeanceBilan } from '../lib/bilan'
@@ -554,11 +554,9 @@ export function Today({
               relisant un jour passé laisserait croire qu'ils le concernent. */}
           {estAujourdhui && <InsightTiles insights={insights} />}
 
-          {/* Seulement quand une règle s'applique : un jour normal, dire que
-              rien ne change n'apprenait rien (retour du 22 septembre). */}
-          {estAujourdhui && A.rules.length > 0 && (
-            <CeQueCaChange adapt={A} bande={bande} inconnu={detail.painInconnue} />
-          )}
+          {/* « Ce que ça change aujourd'hui » est parti le 22 septembre : ce
+              que l'indice change à une séance se lit sur la séance même, par
+              son étiquette d'adaptation. */}
 
           {estAujourdhui && (
             <BlocANoter
@@ -817,13 +815,9 @@ function EnteteJour({
         />
       </div>
       {jour !== now && (
-        <button
-          onClick={onAujourdhui}
-          className="puce"
-          style={{ marginTop: 12, background: 'var(--neon)', color: 'var(--ink)', fontWeight: 600 }}
-        >
+        <BoutonAction icone="arrowRight" onClick={onAujourdhui} style={{ marginTop: 14 }}>
           Revenir à aujourd&apos;hui
-        </button>
+        </BoutonAction>
       )}
     </header>
   )
@@ -874,8 +868,8 @@ function BlocANoter({
       style={{
         padding: '16px 16px',
         borderRadius: 'var(--radius)',
-        background: 'rgba(255,180,92,.14)',
-        border: '1px solid rgba(255,155,82,.5)',
+        background: 'rgba(255,149,0,.1)',
+        border: '1.5px solid rgba(255,149,0,.65)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: 'var(--serious)' }}>
@@ -918,13 +912,9 @@ function BlocANoter({
         </div>
       )}
       {seances.length > 4 && onVoirTout && (
-        <button
-          type="button"
-          onClick={onVoirTout}
-          style={{ marginTop: 10, fontSize: 14, color: 'var(--serious)', textDecoration: 'underline', textUnderlineOffset: 3 }}
-        >
+        <BoutonAction onClick={onVoirTout} style={{ marginTop: 12 }}>
           Voir les {seances.length} séances à noter
-        </button>
+        </BoutonAction>
       )}
     </section>
   )

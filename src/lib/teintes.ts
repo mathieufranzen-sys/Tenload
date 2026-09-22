@@ -8,11 +8,11 @@
 import type { BandKey } from './tendonIndex'
 
 export const TEINTE_BANDE: Record<BandKey, string> = {
-  vert: '#6fe0b0',
-  jaune: '#f2cf6b',
-  orange: '#ffb45c',
-  rouge: '#ff6b5e',
-  noir: '#0a0605',
+  vert: '#4fe39a',
+  jaune: '#ffd23f',
+  orange: '#ff9500',
+  rouge: '#ff3b30',
+  noir: '#1a1a1a',
 }
 
 /** Encre lisible posée SUR la teinte : sombre partout, sauf sur le noir. */
@@ -20,7 +20,7 @@ export const ENCRE_BANDE: Record<BandKey, string> = {
   vert: '#10231a',
   jaune: '#2a2006',
   orange: '#2e1604',
-  rouge: '#2a0806',
+  rouge: '#ffffff',
   noir: '#ffffff',
 }
 

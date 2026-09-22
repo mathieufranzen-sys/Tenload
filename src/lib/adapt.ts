@@ -438,7 +438,7 @@ export interface AdaptResult {
 
 const NIVEAU: Record<Band['key'], 0 | 1 | 2 | 3> = { vert: 0, jaune: 0, orange: 1, rouge: 2, noir: 3 }
 
-export const TEXTE_BANDE: Partial<Record<Band['key'], string>> = {
+const TEXTE_BANDE: Partial<Record<Band['key'], string>> = {
   orange:
     'Séance de qualité remplacée par du vélo Z3, renfo bas du corps allégé, sortie longue raccourcie de 20 %.',
   rouge:

@@ -934,6 +934,20 @@ parce qu'ils nommaient l'onglet Allures.
   Arbitré par Mathieu le 22 septembre 2026 : les autres blocs n'y ont pas
   droit. L'action est en néon, la séance à faire en blanc sous un filet fort.
 - **Majuscule au premier mot de chaque ligne**, étiquettes comprises.
+- **Un seul bouton d'action** (`BoutonAction`) : pilule néon, libellé à
+  gauche, pastille blanche ronde à droite avec l'icône du geste. « Ouvrir le
+  carnet » est la référence (arbitré le 22 septembre 2026). Seuls les gestes
+  secondaires (annuler, désactiver, retirer) restent en contour.
+- **Détail de séance façon fiche AllTrails** : retour à gauche, titre en
+  grand, ligne de repères (pastille d'intensité en verts, catégorie, date,
+  semaine), rangée de chiffres à filets verticaux (distance, temps estimé,
+  allure, intensité), et **barre d'actions collée en bas** (Noter en néon,
+  Sauter, Déplacer, Donnée réelle, Remplacer), qui défile à l'horizontale.
+- Aujourd'hui n'a plus de bloc « ce que ça change » : l'adaptation se lit
+  sur la séance. Le carnet du jour n'y est qu'un résumé à jauges fines, la
+  saisie vit dans sa page.
+- Bandes et douleur en teintes vives depuis le 22 septembre : vert #4fe39a,
+  jaune #ffd23f, orange #ff9500, rouge #ff3b30, noir #1a1a1a.
 - Suivi : les courbes de douleur sont **lissées à l'affichage** (moyenne
   glissante de 7 jours, `lisser`), l'indice lit toujours les valeurs brutes.
   Deux graphiques de niveau en course (`NiveauChart`) : le marathon projeté

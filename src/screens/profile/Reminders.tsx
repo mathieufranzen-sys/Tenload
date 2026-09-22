@@ -7,6 +7,7 @@
  * rien n'arrive jamais. L'écran le dit avant de proposer le bouton, plutôt
  * que de laisser croire à une panne.
  */
+import { BoutonAction } from '../../components/BoutonAction'
 import { useEffect, useState } from 'react'
 import {
   activerRappels,
@@ -130,28 +131,31 @@ export function Reminders({ userId }: Props) {
           </p>
         ) : (
           <>
-            <button
-              onClick={basculer}
-              disabled={occupe || !userId || etat === null}
-              style={{
-                width: '100%',
-                padding: 14,
-                borderRadius: 'var(--pill)',
-                background: etat === 'actif' ? 'var(--surface-2)' : 'var(--ink)',
-                color: etat === 'actif' ? 'var(--ink)' : 'var(--bg)',
-                border: etat === 'actif' ? '1px solid var(--border-2)' : 0,
-                fontSize: 15,
-                fontWeight: 650,
-                cursor: occupe ? 'default' : 'pointer',
-                opacity: occupe || !userId ? 0.6 : 1,
-              }}
-            >
-              {etat === null
-                ? '…'
-                : etat === 'actif'
-                  ? 'Désactiver les rappels'
-                  : 'Activer les rappels'}
-            </button>
+            {/* Activer est l'action principale, au dessin commun des boutons
+                d'action ; désactiver reste un bouton en contour. */}
+            {etat === 'actif' ? (
+              <button
+                onClick={basculer}
+                disabled={occupe}
+                style={{
+                  width: '100%',
+                  padding: 14,
+                  borderRadius: 'var(--pill)',
+                  background: 'var(--surface-2)',
+                  color: 'var(--ink)',
+                  border: '1px solid var(--border-2)',
+                  fontSize: 15,
+                  fontWeight: 600,
+                  opacity: occupe ? 0.6 : 1,
+                }}
+              >
+                Désactiver les rappels
+              </button>
+            ) : (
+              <BoutonAction icone="check" onClick={basculer} disabled={occupe || !userId || etat === null}>
+                {etat === null ? '…' : 'Activer les rappels'}
+              </BoutonAction>
+            )}
             {etat === 'actif' && (
               <p style={{ color: 'var(--ink-2)', fontSize: 13, lineHeight: 1.45, margin: '10px 0 0' }}>
                 Cet appareil est abonné. Chaque appareil s'abonne séparément.

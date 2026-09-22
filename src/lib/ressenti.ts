@@ -89,17 +89,17 @@ export const rangRessenti = (v: number): number => Math.max(0, Math.min(10, Math
  *   2-3  jaune   aucun plancher non plus, mais on approche
  *   4-5  orange  plancher orange
  *   6-7  rouge   plancher rouge
- *   8-10 grenat  plancher noir
+ *   8-10 carmin  plancher noir
  *
  * Deux teintes par palier, la seconde plus soutenue : la progression reste
  * lisible à l'intérieur d'un même plancher. Le noir de la bande devient un
- * grenat : une pastille noire sur un fond presque noir ne se lirait pas.
+ * carmin : sur la jauge d'un curseur, un noir se confondrait avec le texte.
  * Teintes de la refonte du 21 septembre 2026, les mêmes que `TEINTE_BANDE`.
  */
 export const COULEUR_DOULEUR = [
-  '#6fe0b0', '#8fe0a0',
-  '#e6d77a', '#f2cf6b',
-  '#ffb45c', '#ff9b52',
-  '#ff7a5e', '#ff6b5e',
-  '#e0505a', '#c8404f', '#a83346',
+  '#4fe39a', '#86e27f',
+  '#ffe14d', '#ffd23f',
+  '#ffac1f', '#ff9500',
+  '#ff6a1a', '#ff3b30',
+  '#e8173f', '#c40d3c', '#9e0a38',
 ]

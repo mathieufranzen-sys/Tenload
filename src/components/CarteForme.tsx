@@ -23,7 +23,6 @@ export function CarteForme({
   objectif,
   tendance,
   lue,
-  ecartRessenti,
 }: {
   /** Marathon projeté aujourd'hui, en minutes. */
   minutes: number
@@ -33,8 +32,6 @@ export function CarteForme({
   tendance: PointTendance[]
   /** Assez de séances notées pour que le ressenti compte. */
   lue: boolean
-  /** Ce que le ressenti ajoute ou retire au test, en s/km. */
-  ecartRessenti: number
 }) {
   const gauche = objectif + 10
   const droite = objectif - 5
@@ -151,12 +148,6 @@ export function CarteForme({
         </div>
       )}
 
-      <p style={{ margin: '18px 0 0', fontSize: 15, lineHeight: 1.55, color: 'var(--ink-2)' }}>
-        La projection part de ton dernier test et suit l'effort perçu des quatre dernières semaines : des
-        séances notées plus faciles que prévu la font descendre, plus dures la font remonter
-        {ecartRessenti !== 0 ? ` (${ecartRessenti > 0 ? '+' : '−'}${Math.abs(ecartRessenti)} s/km en ce moment)` : ''}.
-        Sous trois séances notées sur 28 jours, elle revient au test et s'affiche en gris.
-      </p>
     </section>
   )
 }

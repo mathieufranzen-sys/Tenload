@@ -14,9 +14,9 @@ import type { ReactNode } from 'react'
 import type { DailyLogRow, FeedbackRow } from '../lib/buildPain'
 import type { SeancePlanifiee } from '../lib/adapt'
 import { addDays, formatNumber } from '../lib/dates'
-import { DOULEUR_MOT, EFFORT_MOT, rangRessenti } from '../lib/ressenti'
+import { COULEUR_DOULEUR, DOULEUR_MOT, rangRessenti } from '../lib/ressenti'
+import { BoutonAction } from './BoutonAction'
 import { JaugeRessenti } from './JaugeRessenti'
-import { BarreRessenti, LabelRessenti } from './BarreRessenti'
 import { useJournal } from '../hooks/DataProvider'
 import { useSaisieDifferee } from '../hooks/useSaisieDifferee'
 import { useFileAttente } from '../hooks/useFileAttente'
@@ -79,7 +79,7 @@ export function CarteCarnet({
   seances: SeanceDuCarnet[]
   onOuvrir: () => void
 }) {
-  const { ligne, enregistrerLog } = useJournal()
+  const { ligne } = useJournal()
   const enAttente = useFileAttente()
   const l = ligne(day)
   const notables = aNoter(seances)
@@ -101,60 +101,68 @@ export function CarteCarnet({
         </span>
       </div>
 
-      {/* Les deux mesures du carnet se saisissent ici même, avec les curseurs
-          pleine épaisseur de la version d'origine. Celles de la séance se
-          lisent seulement : elles se notent dans la feuille de séance. */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 14 }}>
-        <CurseurCarnet
+      {/* Un résumé, pas une saisie : des jauges fines, la valeur à droite du
+          libellé. Des barres épaisses laissaient croire qu'elles se
+          réglaient ici (retour du 22 septembre) ; on règle dans le carnet. */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
+        <Resume
           label="Raideur au réveil"
           valeur={l?.pain_wake ?? null}
-          onEcrire={(v) => enregistrerLog(day, { pain_wake: v })}
-          verrouille={vieux && l?.pain_wake == null}
+          attente={vieux ? 'Non saisi' : 'À noter'}
+          teinte="douleur"
         />
         {notables.length > 0 && (
           <>
-            <Lecture label="Douleur pendant l'effort" valeur={douleurEffort} teinte="douleur" mots={DOULEUR_MOT} />
-            <Lecture label="Effort perçu" valeur={effort} teinte="neutre" mots={EFFORT_MOT} />
+            <Resume label="Douleur pendant l'effort" valeur={douleurEffort} attente="Après la séance" teinte="douleur" />
+            <Resume label="Effort perçu" valeur={effort} attente="Après la séance" teinte="neutre" />
           </>
         )}
-        <CurseurCarnet
+        <Resume
           label="Douleur en fin de journée"
           valeur={l?.pain_evening ?? null}
-          onEcrire={(v) => enregistrerLog(day, { pain_evening: v })}
-          verrouille={vieux && l?.pain_evening == null}
+          attente={vieux ? 'Non saisi' : 'Ce soir'}
+          teinte="douleur"
         />
       </div>
 
-      <button type="button" className="bouton-pale" onClick={onOuvrir} style={{ marginTop: 18 }}>
+      <BoutonAction onClick={onOuvrir} style={{ marginTop: 18 }}>
         Ouvrir le carnet
-        <span className="pastille">
-          <Icon name="arrowUpRight" size={18} />
-        </span>
-      </button>
+      </BoutonAction>
     </section>
   )
 }
 
-/** Une mesure de séance, en lecture : la même barre, sans curseur. */
-function Lecture({
+/** Une ligne du résumé : libellé, valeur alignée à droite, jauge fine. */
+function Resume({
   label,
   valeur,
+  attente,
   teinte,
-  mots,
 }: {
   label: string
   valeur: number | null
+  attente: string
   teinte: 'douleur' | 'neutre'
-  mots: string[]
 }) {
+  const couleur =
+    valeur == null ? undefined : teinte === 'douleur' ? COULEUR_DOULEUR[rangRessenti(valeur)] : 'var(--accent-2)'
   return (
     <div>
-      <LabelRessenti>{label}</LabelRessenti>
-      <BarreRessenti
-        valeur={valeur}
-        court={valeur == null ? 'Après la séance' : mots[rangRessenti(valeur)]}
-        teinte={teinte}
-      />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, marginBottom: 7 }}>
+        <span style={{ fontSize: 15 }}>{label}</span>
+        {valeur != null ? (
+          <span className="chiffre" style={{ fontSize: 20 }}>
+            {formatNumber(valeur)}
+          </span>
+        ) : (
+          <span style={{ fontSize: 13.5, color: 'var(--ink-3)' }}>{attente}</span>
+        )}
+      </div>
+      <div style={{ height: 6, borderRadius: 3, background: valeur == null ? 'transparent' : 'var(--surface-3)', border: valeur == null ? '1px dashed var(--border-2)' : 'none', overflow: 'hidden' }}>
+        {valeur != null && (
+          <div style={{ height: '100%', width: `${Math.max(4, valeur * 10)}%`, borderRadius: 3, background: couleur }} />
+        )}
+      </div>
     </div>
   )
 }

@@ -3,6 +3,7 @@
  * Vivait dans Allures, déménagé ici pour laisser cet écran aux zones et
  * aux comparaisons — les réglages sont une action ponctuelle, pas une lecture.
  */
+import { BoutonAction } from '../../components/BoutonAction'
 import { useState } from 'react'
 import { MARATHON_KM, formatDuration, formatPace } from '../../lib/paces'
 import { today } from '../../lib/dates'
@@ -115,23 +116,9 @@ export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
             Format mm:ss — temps total sur 3 km
           </div>
         )}
-        <button
-          onClick={recalibrer}
-          disabled={!onSave}
-          style={{
-            display: 'block',
-            width: '100%',
-            padding: 15,
-            borderRadius: 'var(--pill)',
-            fontWeight: 700,
-            fontSize: 16,
-            background: 'var(--surface-2)',
-            color: onSave ? 'var(--ink)' : 'var(--ink-3)',
-            border: '1px solid var(--border-2)',
-          }}
-        >
+        <BoutonAction onClick={recalibrer} disabled={!onSave} icone="check">
           Mettre à jour ma forme
-        </button>
+        </BoutonAction>
         {!onSave && (
           <p style={{ color: 'var(--ink-3)', fontSize: 12.5, marginTop: 10 }}>Connecte-toi pour changer ces réglages.</p>
         )}

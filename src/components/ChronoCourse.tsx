@@ -9,6 +9,7 @@
  * Deux temps, parce que la forme projetée recalcule toute l'app : on voit
  * d'abord ce que le chrono donnerait, on l'applique ensuite.
  */
+import { BoutonAction } from './BoutonAction'
 import { useState } from 'react'
 import type { Session } from '../data/types'
 import { MARATHON_KM, chronoPlausible, formatDuration, formatPace, projeterMarathon } from '../lib/paces'
@@ -102,26 +103,16 @@ export function ChronoCourse({ km, chronoSaisi, formeActuelle, disabled, onValid
               ? 'Exactement ta forme projetée actuelle : la course confirme le test.'
               : `${Math.abs(ecart!)} s/km ${ecart! < 0 ? 'plus vite' : 'plus lent'} que ta forme projetée actuelle (${formatPace(formeActuelle)}/km). Les allures d'entraînement ne bougent pas : elles restent ancrées sur l'objectif.`}
           </p>
-          <button
+          <BoutonAction
+            icone="check"
+            disabled={disabled || applique}
             onClick={() => {
               onValider(secondes!, allure!)
               setApplique(true)
             }}
-            disabled={disabled || applique}
-            style={{
-              display: 'block',
-              width: '100%',
-              padding: 14,
-              borderRadius: 'var(--pill)',
-              fontWeight: 600,
-              fontSize: 15.5,
-              background: applique || disabled ? 'var(--surface-3)' : 'var(--neon)',
-              color: disabled ? 'var(--ink-3)' : 'var(--ink)',
-              border: 'none',
-            }}
           >
             {applique ? 'Forme recalée sur ce chrono' : 'Recaler ma forme sur ce chrono'}
-          </button>
+          </BoutonAction>
         </>
       )}
     </div>

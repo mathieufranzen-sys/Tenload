@@ -233,7 +233,6 @@ export function Paces({
           objectif={Math.round(gt / 60)}
           tendance={tendance}
           lue={forme.seances >= MIN_SEANCES}
-          ecartRessenti={forme.ecart}
         />
 
         <SectionDossards

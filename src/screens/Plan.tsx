@@ -23,6 +23,7 @@ import type { FeedbackRow } from '../lib/buildPain'
 import { cleEcart, type EcartPatch, type EcartRow } from '../lib/overrides'
 import { SessionCard } from '../components/SessionCard'
 import { Icon } from '../components/Icon'
+import { BoutonAction } from '../components/BoutonAction'
 import { EnteteEcran } from '../components/EnteteEcran'
 import { MeshBackground } from '../components/MeshBackground'
 import { Segmented } from '../components/Segmented'
@@ -397,16 +398,9 @@ export function Plan({
         </div>
 
         {semaineCourante && semaineCourante.n !== numeroSemaine && (
-          <button
-            onClick={() => onChangerSemaine(semaineCourante.n)}
-            className="bouton-pale"
-            style={{ marginTop: 14 }}
-          >
+          <BoutonAction icone="arrowRight" onClick={() => onChangerSemaine(semaineCourante.n)} style={{ marginTop: 14 }}>
             Aller à la semaine en cours
-            <span className="pastille">
-              <Icon name="arrowRight" size={18} />
-            </span>
-          </button>
+          </BoutonAction>
         )}
           </>
         )}

@@ -6,10 +6,20 @@
  * Les deux suivants l'accompagnent : ce sont des conséquences, pas des
  * décisions.
  */
+import type { ReactNode } from 'react'
 import type { Session } from '../data/types'
+import { styleSeance } from '../lib/seanceStyle'
+import { EchelleIntensite } from './MarqueSeance'
 import { formatNumber } from '../lib/dates'
-import { allureUnique, estimateDuration, formatDuration, formatPace } from '../lib/paces'
+import { allureUnique, estimateDuration, formatPace } from '../lib/paces'
 import { familleDe } from '../lib/insights'
+
+/** « 1 h 05 », « 45 min » : la forme la plus courte d'une durée. */
+const courte = (min: number): string => {
+  const h = Math.floor(min / 60)
+  const m = Math.round(min % 60)
+  return h ? `${h} h ${String(m).padStart(2, '0')}` : `${m} min`
+}
 
 export function StatsSeance({
   session: s,
@@ -34,79 +44,49 @@ export function StatsSeance({
   // juste et fait douter des trois chiffres à la fois.
   const allureCible = allureReelle ?? (estCourse ? allureUnique(s, marathonPace) : null)
 
-  /**
-   * Au-delà de l'heure, les minutes seules ne se lisent plus : 138 se traduit
-   * mentalement en 2 h 18, autant l'écrire. En dessous, la minute reste
-   * l'unité naturelle d'une séance.
-   */
-  const enHeures = dmax >= 60
-  const duree = enHeures
-    ? dmin === dmax
-      ? formatDuration(dmin)
-      : `${formatDuration(dmin)} à ${formatDuration(dmax)}`
-    : dmin === dmax
-      ? `${dmin}`
-      : `${dmin}-${dmax}`
-
+  const intensite = styleSeance(s.type).intensite
+  const colonnes: Array<{ valeur: ReactNode; label: string }> = []
   if (s.type === 'repos') {
-    return (
-      <div style={{ margin: '26px 0 4px' }}>
-        <Chiffre valeur="Repos" unite="" taille="cle" />
-      </div>
-    )
+    colonnes.push({ valeur: 'Repos', label: 'Aucune charge' })
+  } else {
+    if (s.dist) colonnes.push({ valeur: `${formatNumber(s.dist)} km`, label: 'Distance' })
+    if (dmin > 0)
+      colonnes.push(
+        // Une seule valeur, le milieu de la fourchette arrondi à 5 min, comme
+        // le « Temps estimé » d'AllTrails : « 1 h à 1 h 5 » se coupait sur
+        // deux lignes dans une colonne étroite. La durée réelle, elle, est
+        // unique par nature.
+        dmin === dmax
+          ? { valeur: courte(dmin), label: allureReelle != null ? 'Durée réelle' : 'Durée' }
+          : { valeur: courte(Math.round((dmin + dmax) / 10) * 5), label: 'Temps estimé' },
+      )
+    if (allureCible != null) colonnes.push({ valeur: formatPace(allureCible), label: allureReelle != null ? 'Allure tenue' : 'Allure' })
+    if (intensite > 0)
+      colonnes.push({ valeur: <EchelleIntensite niveau={intensite} hauteur={20} />, label: 'Intensité' })
   }
 
+  // La rangée de chiffres d'une fiche AllTrails : chaque valeur en haut, son
+  // libellé dessous, des filets verticaux entre les colonnes. Elle remplace
+  // les trois tailles de chiffres d'avant, qui hiérarchisaient des valeurs
+  // que l'œil compare plutôt qu'il ne les classe.
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'baseline',
-        flexWrap: 'wrap',
-        gap: '10px 22px',
-        margin: '26px 0 4px',
-      }}
-    >
-      {s.dist ? (
-        <>
-          <Chiffre valeur={formatNumber(s.dist)} unite="km" taille="cle" />
-          {dmin > 0 && <Chiffre valeur={duree} unite={enHeures ? '' : 'min'} taille="appui" />}
-        </>
-      ) : (
-        <Chiffre valeur={duree} unite={enHeures ? '' : 'min'} taille="cle" />
-      )}
-      {allureCible != null && (
-        <Chiffre valeur={formatPace(allureCible)} unite="/km" taille="appui" />
-      )}
-    </div>
-  )
-}
-
-function Chiffre({
-  valeur,
-  unite,
-  taille,
-}: {
-  valeur: string
-  unite: string
-  taille: 'cle' | 'appui'
-}) {
-  const cle = taille === 'cle'
-  return (
-    <div style={{ display: 'flex', alignItems: 'baseline', gap: cle ? 8 : 5 }}>
-      <span className="chiffre" style={{ fontSize: cle ? 60 : 28, lineHeight: 1 }}>
-        {valeur}
-      </span>
-      {unite && (
-        <span
+    <div style={{ display: 'flex', margin: '22px 0 4px' }}>
+      {colonnes.map((c, i) => (
+        <div
+          key={c.label}
           style={{
-            fontSize: cle ? 18 : 14,
-            fontWeight: 500,
-            color: 'var(--accent)',
+            flex: '1 1 0',
+            minWidth: 0,
+            padding: i === 0 ? '2px 12px 2px 0' : '2px 12px',
+            borderLeft: i === 0 ? 'none' : '1px solid var(--border-2)',
           }}
         >
-          {unite}
-        </span>
-      )}
+          <div style={{ fontSize: 19, fontWeight: 600, lineHeight: 1.2, minHeight: 24, display: 'flex', alignItems: 'flex-end' }}>
+            {c.valeur}
+          </div>
+          <div style={{ fontSize: 14, color: 'var(--ink-2)', marginTop: 5 }}>{c.label}</div>
+        </div>
+      ))}
     </div>
   )
 }

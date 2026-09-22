@@ -23,6 +23,7 @@ import {
 } from '../lib/dossards'
 import { ChronoCourse, formaterChronoLong, lireChrono } from './ChronoCourse'
 import { SubPage } from './SubPage'
+import { BoutonAction } from './BoutonAction'
 import { Icon } from './Icon'
 
 const DISTANCES: Array<[string, number]> = [
@@ -94,26 +95,11 @@ export function SectionDossards({
 
   return (
     <section style={{ marginTop: titre ? 26 : 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 2px 12px' }}>
-        {titre ? (
-          <h2 className="display" style={{ margin: 0, fontSize: 30 }}>
-            Dossards
-          </h2>
-        ) : (
-          <span />
-        )}
-        {modifiable && !ajout && (
-          <button
-            type="button"
-            onClick={() => setAjout(true)}
-            className="puce"
-            style={{ background: 'var(--neon)', color: 'var(--ink)', fontWeight: 600, padding: '9px 16px' }}
-          >
-            <Icon name="plus" size={15} />
-            Ajouter
-          </button>
-        )}
-      </div>
+      {titre && (
+        <h2 className="display" style={{ margin: '0 2px 12px', fontSize: 30 }}>
+          Dossards
+        </h2>
+      )}
 
       {indisponibles && (
         <p className="carte" style={{ margin: '0 0 12px', padding: '14px 16px', fontSize: 14, lineHeight: 1.5, color: 'var(--warning)' }}>
@@ -123,15 +109,6 @@ export function SectionDossards({
         </p>
       )}
 
-      {ajout && onSave && (
-        <FormulaireDossard
-          onAnnuler={() => setAjout(false)}
-          onValider={(l) => {
-            onSave(l)
-            setAjout(false)
-          }}
-        />
-      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {dossards.length === 0 && (
@@ -143,6 +120,24 @@ export function SectionDossards({
           <ResumeDossard key={d.id} dossard={d} now={now} onOuvrir={() => setOuvert(d.id)} />
         ))}
       </div>
+
+      <div style={{ marginTop: 12 }}>
+        {ajout && onSave && (
+          <FormulaireDossard
+            onAnnuler={() => setAjout(false)}
+            onValider={(l) => {
+              onSave(l)
+              setAjout(false)
+            }}
+          />
+        )}
+      </div>
+
+      {modifiable && !ajout && (
+        <BoutonAction icone="plus" onClick={() => setAjout(true)} style={{ marginTop: 12 }}>
+          Ajouter un dossard
+        </BoutonAction>
+      )}
 
       {/* Toucher un dossard ouvre sa page : c'est là que se saisissent le
           chrono réel et l'objectif, et que parle le coach. */}
@@ -513,11 +508,10 @@ function FormulaireDossard({
         S'il tombe sur une séance, c'est à toi de la déplacer ou de la remplacer.
       </p>
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button
-          type="button"
-          disabled={!pret}
-          onClick={() =>
+      <BoutonAction
+        icone="check"
+        disabled={!pret}
+        onClick={() =>
             onValider({
               id: nouvelIdDossard(),
               nom: nom.trim(),
@@ -527,23 +521,17 @@ function FormulaireDossard({
               chrono_s: null,
               supprime: false,
             })
-          }
-          style={{
-            flex: 1,
-            padding: 14,
-            borderRadius: 'var(--pill)',
-            background: pret ? 'var(--neon)' : 'var(--surface-3)',
-            color: pret ? 'var(--ink)' : 'var(--ink-3)',
-            fontSize: 15.5,
-            fontWeight: 600,
-          }}
-        >
-          Ajouter le dossard
-        </button>
-        <button type="button" onClick={onAnnuler} style={{ ...boutonDiscret, padding: '14px 18px', fontSize: 15 }}>
-          Annuler
-        </button>
-      </div>
+        }
+      >
+        Ajouter le dossard
+      </BoutonAction>
+      <button
+        type="button"
+        onClick={onAnnuler}
+        style={{ ...boutonDiscret, display: 'block', width: '100%', marginTop: 8, padding: '14px 18px', fontSize: 15 }}
+      >
+        Annuler
+      </button>
     </div>
   )
 }

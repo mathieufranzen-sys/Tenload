@@ -5,6 +5,7 @@
  * de l'écran Allures. Changer la valeur ici recalcule les zones là-bas, et la
  * prévisualisation évite d'avoir à changer d'écran pour vérifier l'effet.
  */
+import { BoutonAction } from '../../components/BoutonAction'
 import { useState } from 'react'
 import { HR_ZONES, hrRange } from '../../lib/paces'
 
@@ -89,23 +90,9 @@ export function HeartRateZones({ hrMax, onSave }: Props) {
             En battements par minute, mesurée sur un effort maximal
           </div>
         )}
-        <button
-          onClick={enregistrer}
-          disabled={!onSave}
-          style={{
-            display: 'block',
-            width: '100%',
-            padding: 15,
-            borderRadius: 'var(--pill)',
-            fontWeight: 700,
-            fontSize: 16,
-            background: 'var(--surface-2)',
-            color: onSave ? 'var(--ink)' : 'var(--ink-3)',
-            border: '1px solid var(--border-2)',
-          }}
-        >
+        <BoutonAction onClick={enregistrer} disabled={!onSave} icone="check">
           Recalibrer mes zones
-        </button>
+        </BoutonAction>
         {!onSave && (
           <p style={{ color: 'var(--ink-3)', fontSize: 12.5, marginTop: 10 }}>
             Connecte-toi pour changer ce réglage.

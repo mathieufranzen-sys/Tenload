@@ -6,6 +6,7 @@
  * le seul qui ne peut pas piloter son dégradé sur la bande de charge : il est
  * figé sur le vert, la couleur du tendon qui va bien.
  */
+import { BoutonAction } from '../components/BoutonAction'
 import { useState, type FormEvent } from 'react'
 import { CODE_MAX, CODE_MIN, codeValide, type Auth } from '../hooks/useAuth'
 import { MeshBackground } from '../components/MeshBackground'
@@ -153,24 +154,9 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                   {erreur}
                 </p>
               )}
-              <button
-                type="submit"
-                disabled={verif || !codeValide(code)}
-                style={{
-                  width: '100%',
-                  marginTop: 14,
-                  background: 'var(--neon)',
-                  color: 'var(--ink)',
-                  borderRadius: 'var(--pill)',
-                  padding: 15,
-                  font: 'inherit',
-                  fontSize: 16,
-                  fontWeight: 600,
-                  opacity: verif || !codeValide(code) ? 0.55 : 1,
-                }}
-              >
+              <BoutonAction type="submit" icone="arrowRight" disabled={verif || !codeValide(code)} style={{ marginTop: 14 }}>
                 {verif ? 'Vérification…' : 'Me connecter'}
-              </button>
+              </BoutonAction>
             </form>
 
             <p style={{ color: 'var(--sur-ink-3)', fontSize: 12, lineHeight: 1.5, margin: '13px 2px 0' }}>
@@ -242,26 +228,9 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                 {erreur}
               </p>
             )}
-            <button
-              type="submit"
-              disabled={statut === 'envoi'}
-              style={{
-                width: '100%',
-                marginTop: 14,
-                background: 'var(--neon)',
-                color: 'var(--ink)',
-                borderRadius: 'var(--pill)',
-                padding: 15,
-                font: 'inherit',
-                fontSize: 16,
-                fontWeight: 700,
-                cursor: statut === 'envoi' ? 'default' : 'pointer',
-                opacity: statut === 'envoi' ? 0.55 : 1,
-                transition: `opacity var(--dur-fast) var(--ease-out)`,
-              }}
-            >
+            <BoutonAction type="submit" icone="arrowRight" disabled={statut === 'envoi'} style={{ marginTop: 14 }}>
               {statut === 'envoi' ? 'Envoi…' : 'Recevoir le lien'}
-            </button>
+            </BoutonAction>
             <p
               style={{
                 color: 'var(--sur-ink-3)',

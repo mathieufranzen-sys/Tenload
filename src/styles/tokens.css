@@ -90,7 +90,7 @@
   --dur-fast: 0.15s;
   --dur: 0.3s;
 
-  --c-erreur: #c8321f;
+  --c-erreur: #e5261c;
 
   /* ─── data-viz ───────────────────────────────────────────────────────── */
   --series-1: #2e731a;
@@ -117,9 +117,9 @@
      n'y tiennent pas comme texte. Les bandes gardent leurs teintes vives,
      elles ne servent qu'en aplat. */
   --good: #2e731a;
-  --warning: #8a6300;
-  --serious: #b85c00;
-  --critical: #c8321f;
+  --warning: #a86b00;
+  --serious: #e86a00;
+  --critical: #e5261c;
 
   /* ─── cartes ─────────────────────────────────────────────────────────── */
   --glass: #efefec;
@@ -166,9 +166,9 @@
    sombre dessus, jamais comme couleur de texte.
    ══════════════════════════════════════════════════════════════════════════ */
 :root {
-  --bande-vert: #6fe0b0;
-  --bande-jaune: #f2cf6b;
-  --bande-orange: #ffb45c;
-  --bande-rouge: #ff6b5e;
-  --bande-noir: #0a0605;
+  --bande-vert: #4fe39a;
+  --bande-jaune: #ffd23f;
+  --bande-orange: #ff9500;
+  --bande-rouge: #ff3b30;
+  --bande-noir: #1a1a1a;
 }

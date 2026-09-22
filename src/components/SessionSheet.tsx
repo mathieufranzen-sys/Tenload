@@ -2,6 +2,7 @@
  * Feuille modale de détail de séance, portée depuis reference/tendo-v3.html
  * (`openSheet`, `segs`, `step`, `fbForm`).
  */
+import { BoutonAction } from './BoutonAction'
 import { useEffect, useMemo, useState } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan, Week, ZoneKey } from '../data/types'
@@ -28,7 +29,6 @@ import {
 import { formatPace, zonePace } from '../lib/paces'
 import type { FeedbackRow } from '../lib/buildPain'
 import { Icon } from './Icon'
-import { EchelleIntensite } from './MarqueSeance'
 import { encreZone, styleSeance } from '../lib/seanceStyle'
 import { deroulerSeance } from '../lib/deroule'
 import { DecoupageSeance, ProfilSeance } from './ProfilSeance'
@@ -166,29 +166,51 @@ export function SessionSheet({
           la place. */}
       <div aria-hidden className="braise" style={{ position: 'absolute', height: 460, bottom: 'auto' }} />
 
-      <div style={{ position: 'relative', padding: 'calc(14px + env(safe-area-inset-top)) var(--page-x) 40px' }}>
+      <div
+        style={{
+          position: 'relative',
+          // Place pour la barre d'actions collée en bas.
+          padding: `calc(14px + env(safe-area-inset-top)) var(--page-x) ${onSaveEcart ? 120 : 40}px`,
+        }}
+      >
         <div style={{ position: 'relative' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14 }}>
-            <p style={{ margin: '12px 0 0', fontSize: 13.5, color: 'var(--accent)', minWidth: 0 }}>
-              {formatDayLong(day)} · semaine {week.n}
-            </p>
-            <button onClick={onClose} aria-label="Fermer" className="rond">
-              <Icon name="x" size={18} />
-            </button>
-          </div>
+          {/* La tête d'une fiche AllTrails : retour à gauche, le titre en
+              grand, une ligne de repères dessous, puis la rangée de chiffres. */}
+          <button onClick={onClose} aria-label="Fermer" className="rond">
+            <Icon name="chevronLeft" size={20} />
+          </button>
 
-          <h2 className="display" style={{ margin: '8px 0 0', fontSize: 38, lineHeight: 1.06 }}>
+          <h2 className="display" style={{ margin: '18px 0 0', fontSize: 40, lineHeight: 1.05 }}>
             {s.title}
           </h2>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 14 }}>
-            <span className="puce">
-              {styleSeance(s.type).intensite > 0 && (
-                <EchelleIntensite niveau={styleSeance(s.type).intensite} hauteur={11} />
-              )}
-              {s.cat.toLowerCase()}
-            </span>
-          </div>
+          <p
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: '4px 8px',
+              margin: '12px 0 0',
+              fontSize: 15.5,
+              color: 'var(--ink)',
+            }}
+          >
+            <span
+              aria-hidden
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: '50%',
+                background: NIVEAU_COULEUR[styleSeance(s.type).intensite],
+                flex: 'none',
+              }}
+            />
+            <span style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>{s.cat}</span>
+            <span style={{ color: 'var(--ink-3)' }}>·</span>
+            <span>{formatDayLong(day)}</span>
+            <span style={{ color: 'var(--ink-3)' }}>·</span>
+            <span>Semaine {week.n}</span>
+          </p>
 
           {(s.adapted || s.ecart) && (
             <div style={{ margin: '14px 0 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -207,19 +229,16 @@ export function SessionSheet({
             </div>
           )}
 
-          {/* Distance, durée et allure sur une seule ligne, chacune à sa
-              propre échelle : le chiffre qui définit la séance reste le plus
-              gros, les deux autres l'accompagnent sans le concurrencer. */}
           <StatsSeance
             session={s}
             marathonPace={marathonPace}
             allureReelle={allureReelle}
           />
 
-          {/* Les actions au-dessus du déroulé (retour du 22 septembre) : ce
-              qu'on fait de la séance se décide en la regardant de haut. */}
+          {/* Les actions vivent dans la barre collée en bas ; leurs panneaux
+              (donnée réelle, remplacer) s'ouvrent ici, sous les chiffres. */}
           {onSaveEcart && (
-            <div style={{ marginTop: 22 }}>
+            <div style={{ marginTop: 14 }}>
               <ActionsSeance
                 origine={origine}
                 actuel={seance.ecart?.patch ?? null}
@@ -236,6 +255,11 @@ export function SessionSheet({
                 }
                 onSave={(patch, reason) => onSaveEcart(week.n, jourOrigine, slot, patch, reason)}
                 onDeplacer={onDeplacer && (() => onDeplacer(seance))}
+                onNoter={
+                  !ressentiImplicite && onSave && (!feedback || modifie)
+                    ? () => document.getElementById('ressenti-seance')?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+                    : undefined
+                }
               />
             </div>
           )}
@@ -322,7 +346,9 @@ export function SessionSheet({
               />
             </>
           )}
-          <TitreSection>Le ressenti, après</TitreSection>
+          <div id="ressenti-seance" style={{ scrollMarginTop: 16 }}>
+            <TitreSection>Le ressenti, après</TitreSection>
+          </div>
           {ressentiImplicite ? (
             <div
               className="glass"
@@ -393,6 +419,13 @@ export function SessionSheet({
     </div>
   )
 }
+
+/**
+ * La pastille d'intensité de la ligne de repères, comme le « Facile »
+ * d'AllTrails. En verts qui foncent, jamais en teintes de bande : l'orange et
+ * le rouge disent la charge du tendon, pas la dureté d'une séance.
+ */
+const NIVEAU_COULEUR = ['#a7a99f', '#65f67b', '#2e731a', '#274312', '#142800']
 
 /** Un titre de section : un vrai titre, en serif, pas une étiquette. */
 function TitreSection({ children }: { children: string }) {
@@ -516,28 +549,18 @@ function FormulaireRessenti({
         />
       </div>
 
-      <button
+      <BoutonAction
+        icone="check"
+        disabled={disabled}
+        style={{ marginTop: 12 }}
         onClick={() => {
           // Valider sans avoir touché un curseur vaut zéro : c'est une
           // affirmation volontaire, contrairement à l'affichage d'avant.
           onSave(pain ?? 0, rpe ?? 0, '')
         }}
-        disabled={disabled}
-        style={{
-          display: 'block',
-          width: '100%',
-          marginTop: 12,
-          padding: 15,
-          borderRadius: 'var(--pill)',
-          fontWeight: 600,
-          fontSize: 16,
-          background: disabled ? 'var(--surface-3)' : 'var(--neon)',
-          color: disabled ? 'var(--ink-3)' : 'var(--ink)',
-          opacity: disabled ? 0.6 : 1,
-        }}
       >
         Enregistrer mon ressenti
-      </button>
+      </BoutonAction>
       {disabled && (
         <p style={{ color: 'var(--ink-3)', fontSize: 12.5, marginTop: 8 }}>
           Connecte-toi pour enregistrer un ressenti.
