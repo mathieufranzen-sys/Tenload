@@ -60,55 +60,50 @@ export function SessionHero({
         // grises sans prendre le vert du coach.
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-        <p className="etiquette" style={{ color: 'var(--sur-ink-2)' }}>
-          {quand === "Aujourd'hui" ? 'Séance du jour' : `Séance · ${quand}`}
-        </p>
-        {rang && rang.total > 1 && (
-          <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--accent)' }}>
-            {rang.n} sur {rang.total}
-          </span>
-        )}
-      </div>
+      {/* Le bouton rond dans le coin, à 12 px du haut comme du bord droit
+          (retour du 22 septembre) : le titre passe dessous en entier. */}
+      {onClick && (
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            width: 52,
+            height: 52,
+            borderRadius: '50%',
+            // Encre fixe : dans le bloc bleu, `--ink` vaut blanc, et une
+            // flèche blanche sur néon ne se lit pas.
+            background: 'var(--neon)',
+            color: '#142800',
+            display: 'grid',
+            placeItems: 'center',
+          }}
+        >
+          <Icon name="arrowUpRight" size={20} />
+        </span>
+      )}
 
-      <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginTop: 8 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <h2 className="display" style={{ fontSize: 'var(--fs-t-page)', lineHeight: 1.08, margin: 0 }}>
-            {s.title}
-          </h2>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              marginTop: 6,
-              color: 'var(--accent)',
-              fontSize: 'var(--fs-meta)',
-            }}
-          >
-            <span>{s.cat}</span>
-            {st.intensite > 0 && <EchelleIntensite niveau={st.intensite} hauteur={11} />}
-          </div>
-        </div>
-        {onClick && (
-          <span
-            aria-hidden
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: '50%',
-              // Encre fixe : dans le bloc bleu, `--ink` vaut blanc, et une
-              // flèche blanche sur néon ne se lit pas.
-              background: 'var(--neon)',
-              color: '#142800',
-              display: 'grid',
-              placeItems: 'center',
-              flex: 'none',
-            }}
-          >
-            <Icon name="arrowUpRight" size={20} />
-          </span>
-        )}
+      <p className="etiquette" style={{ color: 'var(--sur-ink-2)', paddingRight: onClick ? 64 : 0 }}>
+        {quand === "Aujourd'hui" ? 'Séance du jour' : `Séance · ${quand}`}
+        {rang && rang.total > 1 && ` · ${rang.n} sur ${rang.total}`}
+      </p>
+
+      <h2 className="display" style={{ fontSize: 'var(--fs-t-page)', lineHeight: 1.08, margin: '8px 0 0', paddingRight: onClick ? 64 : 0 }}>
+        {s.title}
+      </h2>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          marginTop: 6,
+          color: 'var(--accent)',
+          fontSize: 'var(--fs-meta)',
+        }}
+      >
+        <span>{s.cat}</span>
+        {st.intensite > 0 && <EchelleIntensite niveau={st.intensite} hauteur={11} />}
       </div>
 
       {s.adapted && (

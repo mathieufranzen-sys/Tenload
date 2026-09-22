@@ -4,6 +4,9 @@
  * Fond clair depuis le 22 septembre 2026 : le vert profond est réservé au mot
  * du coach, c'est la seule voix de l'app et elle doit se distinguer.
  *
+ * Les compteurs de la semaine, un temps logés sous les bandes, sont partis
+ * dans Suivi le 22 septembre 2026 : la carte ne dit plus que la charge.
+ *
  * Refonte du 21 septembre 2026, d'après la maquette. La gélule verticale
  * remplace l'arc : elle se remplit comme un tube, du bas vers le haut, et ses
  * quatre graduations sont les seuils des bandes. Le chiffre est en serif, à
@@ -13,7 +16,6 @@
  * « je ne sais pas » : c'est la même règle qu'avant, un indice bas obtenu par
  * absence de mesure n'est pas un indice bas.
  */
-import type { ReactNode } from 'react'
 import type { Band, BandKey, IndexBreakdown } from '../lib/tendonIndex'
 import { BANDS } from '../lib/tendonIndex'
 import { ENCRE_BANDE, TEINTE_BANDE } from '../lib/teintes'
@@ -21,6 +23,9 @@ import { Icon } from './Icon'
 
 /** Les seuils des bandes, pour les graduations de la gélule. */
 const SEUILS = [30, 50, 65, 80]
+
+/** Retrait du bouton rond, identique en haut et à droite. */
+const COIN = 12
 
 const LIBELLE_PLAGE: Record<BandKey, string> = {
   vert: '0–29',
@@ -35,15 +40,12 @@ export function CarteCharge({
   bande,
   ecartVeille,
   onCalcul,
-  pied,
 }: {
   detail: IndexBreakdown
   bande: Band
   /** Mouvement depuis la veille, en points. Absent quand la veille est inconnue. */
   ecartVeille: number | null
   onCalcul: () => void
-  /** Les indicateurs de la semaine, sous l'échelle des bandes. */
-  pied?: ReactNode
 }) {
   const inconnu = detail.painInconnue
   const teinte = TEINTE_BANDE[bande.key]
@@ -57,6 +59,7 @@ export function CarteCharge({
       aria-label="Ouvrir le détail du calcul de l'indice"
       className={inconnu ? undefined : 'carte-bleu-pale'}
       style={{
+        position: 'relative',
         display: 'block',
         width: '100%',
         textAlign: 'left',
@@ -67,28 +70,37 @@ export function CarteCharge({
         ...(inconnu ? { border: '1.5px dashed var(--border-2)', background: 'transparent' } : null),
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '7px 14px',
-            borderRadius: 'var(--pill)',
-            border: `1px ${inconnu ? 'dashed' : 'solid'} var(--border-2)`,
-            fontSize: 'var(--fs-meta)',
-            color: 'var(--ink)',
-          }}
-        >
-          <Icon name="capsule" size={15} style={{ color: 'var(--accent)' }} />
-          Charge tendon
-        </span>
-        <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--accent)', textAlign: 'right' }}>
-          {inconnu ? 'Non calculé' : detail.stale ? 'Sur une estimation' : 'Voir le détail'}
-        </span>
+      {/* Le bouton rond dans le coin, à la même distance du haut et du bord
+          droit : le même geste que la séance du jour (retour du 22 septembre). */}
+      <span
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: COIN,
+          right: COIN,
+          width: 52,
+          height: 52,
+          borderRadius: '50%',
+          background: 'var(--neon)',
+          color: '#142800',
+          display: 'grid',
+          placeItems: 'center',
+        }}
+      >
+        <Icon name="arrowUpRight" size={20} />
+      </span>
+      <div style={{ paddingRight: 64, minHeight: 52 - (18 - COIN), display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <p className="etiquette" style={{ fontSize: 'var(--fs-meta)', color: 'var(--ink)', fontWeight: 600 }}>
+          Charge du tendon
+        </p>
+        {(inconnu || detail.stale) && (
+          <p style={{ margin: '2px 0 0', fontSize: 'var(--fs-detail)', color: 'var(--accent)' }}>
+            {inconnu ? 'Non calculée' : 'Sur une estimation'}
+          </p>
+        )}
       </div>
 
-      <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginTop: 18 }}>
+      <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginTop: 12 }}>
         <Gelule valeur={inconnu ? null : detail.idx} teinte={teinte} />
 
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -181,8 +193,6 @@ export function CarteCharge({
           })}
         </div>
       )}
-
-      {pied}
     </button>
   )
 }
@@ -201,8 +211,10 @@ function Gelule({ valeur, teinte }: { valeur: number | null; teinte: string }) {
         flex: 'none',
         borderRadius: W / 2,
         overflow: 'hidden',
-        background: valeur == null ? 'transparent' : 'color-mix(in srgb, var(--ink) 7%, transparent)',
-        border: valeur == null ? '1.5px dashed var(--border-2)' : '1px solid color-mix(in srgb, var(--ink) 12%, transparent)',
+        // Un tube blanc sur le bloc bleu pâle (retour du 22 septembre) :
+        // le remplissage de la bande s'y lit sans fond qui le teinte.
+        background: valeur == null ? 'transparent' : '#ffffff',
+        border: valeur == null ? '1.5px dashed var(--border-2)' : '1px solid var(--border-2)',
       }}
     >
       {valeur == null ? (

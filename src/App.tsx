@@ -478,6 +478,8 @@ function Coquille({
           formeTest={fitnessPaceTest}
           marathonPace={marathonPace}
           forme={forme}
+          ecarts={ecarts}
+          attestes={attestes}
           onVoirANoter={() => {
             setSectionProfil('anoter')
             setOnglet('profile')

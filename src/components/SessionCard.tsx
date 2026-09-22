@@ -83,7 +83,7 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
             display: 'grid',
             placeItems: 'center',
             flex: 'none',
-            background: 'rgba(111,224,176,.14)',
+            background: 'color-mix(in srgb, var(--neon) 22%, transparent)',
             color: 'var(--good)',
           }}
         >

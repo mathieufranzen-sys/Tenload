@@ -101,7 +101,7 @@ export const rangRessenti = (v: number): number => Math.max(0, Math.min(10, Math
 export const COULEUR_DOULEUR = [
   '#4fe39a', '#2fcf7f',
   '#ffd23f', '#f5bd1a',
-  '#ff9500', '#eb7f00',
-  '#ff3b30', '#e0241a',
+  '#ff9500', '#e86a00',
+  '#ff3b30', '#e5261c',
   '#333333', '#262626', '#1a1a1a',
 ]

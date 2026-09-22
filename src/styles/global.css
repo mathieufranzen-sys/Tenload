@@ -175,9 +175,9 @@ input[type='range']::-moz-range-thumb {
 /* Carte de tête et mot du coach : Green-300, le seul fond coloré de l'app. */
 .carte-braise {
   background:
-    radial-gradient(120% 90% at 20% 0%, rgba(106, 191, 94, 0.28), transparent 65%),
+    radial-gradient(120% 90% at 20% 0%, color-mix(in srgb, var(--neon) 24%, transparent), transparent 65%),
     linear-gradient(160deg, var(--braise) 0%, var(--braise-2) 100%);
-  border: 1px solid rgba(142, 242, 129, 0.18);
+  border: 1px solid color-mix(in srgb, var(--neon) 18%, transparent);
   border-radius: var(--radius);
 }
 /* Bouton principal : pilule pâle, avec la pastille ronde de la maquette. */
@@ -275,8 +275,8 @@ input[type='range']::-moz-range-thumb {
   white-space: normal;
 }
 .tag-adapte {
-  background: #ffe2b8;
-  color: #7a3e00;
+  background: var(--adapte-fond);
+  color: var(--adapte-encre);
 }
 .tag-ecart {
   background: #ffffff;

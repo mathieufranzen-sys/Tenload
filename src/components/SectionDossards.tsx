@@ -354,7 +354,7 @@ function CarteDossard({
               <button type="button" onClick={() => setConfirmer(false)} style={boutonDiscret}>
                 Garder
               </button>
-              <button type="button" onClick={onSupprimer} style={{ ...boutonDiscret, color: 'var(--critical)', borderColor: 'rgba(255,107,94,.4)' }}>
+              <button type="button" onClick={onSupprimer} style={{ ...boutonDiscret, color: 'var(--critical)', borderColor: 'color-mix(in srgb, var(--critical) 40%, transparent)' }}>
                 Retirer ce dossard
               </button>
             </>

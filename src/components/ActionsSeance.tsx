@@ -588,8 +588,8 @@ export function Alertes({ alertes }: { alertes: Alerte[] }) {
         borderRadius: 'var(--radius-sm)',
         padding: '12px 13px',
         margin: '4px 0 14px',
-        background: 'rgba(255,107,94,.12)',
-        border: '1px solid rgba(255,107,94,.32)',
+        background: 'color-mix(in srgb, var(--critical) 10%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--critical) 32%, transparent)',
       }}
     >
       <div style={{ fontSize: 'var(--fs-detail)', fontWeight: 800, color: 'var(--critical)', marginBottom: 6 }}>

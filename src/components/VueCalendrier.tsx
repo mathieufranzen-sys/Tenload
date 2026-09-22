@@ -479,7 +479,7 @@ export function VueCalendrier({
 function fondCible(enCours: boolean, cible: CibleDrop | undefined, survole: boolean): string {
   if (!enCours) return 'transparent'
   if (!cible) return 'transparent'
-  if (cible.conflits.length) return survole ? 'rgba(255,107,94,.26)' : 'rgba(255,107,94,.10)'
+  if (cible.conflits.length) return survole ? 'color-mix(in srgb, var(--critical) 24%, transparent)' : 'color-mix(in srgb, var(--critical) 9%, transparent)'
   return survole ? 'color-mix(in srgb, var(--ink) 16%, transparent)' : 'color-mix(in srgb, var(--ink) 5%, transparent)'
 }
 

@@ -217,7 +217,7 @@ export function SessionSheet({
               {/* Deux origines distinctes, deux couleurs : le jaune vient du
                   moteur d'adaptation, la pêche d'une décision de Mathieu. */}
               {s.adapted && (
-                <NoteSeance teinte="var(--warning)" fond="rgba(242,207,107,.07)">
+                <NoteSeance teinte="var(--warning)" fond="color-mix(in srgb, var(--adapte-fond) 45%, transparent)">
                   {s.adapted}
                 </NoteSeance>
               )}

@@ -17,9 +17,9 @@ export const TEINTE_BANDE: Record<BandKey, string> = {
 
 /** Encre lisible posée SUR la teinte : sombre partout, sauf sur le noir. */
 export const ENCRE_BANDE: Record<BandKey, string> = {
-  vert: '#10231a',
-  jaune: '#2a2006',
-  orange: '#2e1604',
+  vert: '#142800',
+  jaune: '#142800',
+  orange: '#142800',
   rouge: '#ffffff',
   noir: '#ffffff',
 }

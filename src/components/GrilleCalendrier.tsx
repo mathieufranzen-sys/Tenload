@@ -44,7 +44,7 @@ const STYLE_FORME: Record<Forme, { fond: string; encre: string; bord: string }> 
   qualite: { fond: '#4f63f2', encre: '#ffffff', bord: '1.5px solid transparent' },
   endurance: { fond: '#a7a99f', encre: '#142800', bord: '1.5px solid transparent' },
   velo: { fond: '#d6dafc', encre: '#2b3aa6', bord: '1.5px solid transparent' },
-  renfo: { fond: '#ffffff', encre: '#4c5c43', bord: '1.5px solid #8b9182' },
+  renfo: { fond: '#ffffff', encre: '#656e5e', bord: '1.5px solid #8b9182' },
   repos: { fond: 'transparent', encre: 'var(--ink-3)', bord: '1.5px dashed var(--border-2)' },
   dossard: { fond: '#1f2a78', encre: '#65f67b', bord: '2px solid #65f67b' },
 }
@@ -68,7 +68,7 @@ export const TEINTE_NATURE: Record<string, string> = {
   course: '#1f2a78',
   // Le néon : une reprise est un redémarrage, la couleur de l'action.
   reprise: '#49de61',
-  affutage: '#f2cf6b',
+  affutage: '#ffd23f',
 }
 
 const LEGENDE_NATURE: Array<[string, string]> = [

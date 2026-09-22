@@ -981,6 +981,13 @@ parce qu'ils nommaient l'onglet Allures.
   réservé au coach), la nature de la semaine sous les dates et trois puces
   seulement dans la carte du bloc. Calendrier : filets droits, sans icônes,
   mêmes corps que la vue semaine ; vue globale en pastilles aplaties.
+- **Aucune couleur hors famille** (rattachement du 22 septembre) : toute
+  teinte dérive d'une des sept principales (Neutral-0, Neutral-100,
+  Green-400, néon, Bleu 500, Green-300, les bandes) ; les fonds légers se
+  font par `color-mix` sur un jeton, jamais par un `rgba` d'une ancienne
+  palette. La jauge de charge a une gélule blanche et le bouton rond dans
+  le coin, comme la séance du jour (12 px du haut et du bord) ; ses
+  compteurs de la semaine sont partis dans les chiffres de Suivi.
 - **Profil → Bilans de la semaine** relit chaque semaine terminée
   (`BilansPasses`). Le calcul est sorti d'Aujourd'hui dans
   `construireBilan` (`bilanDeSemaine.ts`), lu à la date `ref` : aujourd'hui

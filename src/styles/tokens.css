@@ -139,6 +139,12 @@
 
   --c-erreur: #e5261c;
 
+  /* L'étiquette « adaptée » : un aplat pêche et son encre, dérivés de
+     l'orange de bande, assez foncée pour se lire sur le pêche comme sur le
+     bloc bleu. */
+  --adapte-fond: #ffe2b8;
+  --adapte-encre: #7a3e00;
+
   /* ─── data-viz ───────────────────────────────────────────────────────── */
   --series-1: #2e731a;
   --series-2: #4f63f2;

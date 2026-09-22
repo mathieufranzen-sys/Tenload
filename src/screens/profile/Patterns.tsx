@@ -75,8 +75,8 @@ export function Patterns({ carnet }: { carnet: JourCarnet[] }) {
                     fontWeight: 600,
                     padding: '3px 9px',
                     borderRadius: 'var(--pill)',
-                    background: aggrave ? 'rgba(242,207,107,.14)' : 'rgba(111,224,176,.18)',
-                    border: `1px solid ${aggrave ? 'rgba(242,207,107,.3)' : 'rgba(111,224,176,.3)'}`,
+                    background: aggrave ? 'var(--adapte-fond)' : 'color-mix(in srgb, var(--neon) 22%, transparent)',
+                    border: `1px solid ${aggrave ? 'transparent' : 'color-mix(in srgb, var(--neon-2) 45%, transparent)'}`,
                     color: aggrave ? 'var(--warning)' : 'var(--good)',
                   }}
                 >

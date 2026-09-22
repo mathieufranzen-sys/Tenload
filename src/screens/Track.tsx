@@ -12,8 +12,9 @@ import planJson from '../data/plan.json'
 import type { Plan } from '../data/types'
 import type { SessionType } from '../data/types'
 import { addDays, formatDay, formatNumber, mondayOf, today as todayISO } from '../lib/dates'
-import { adapt } from '../lib/adapt'
-import { familleDe, familleDuSport } from '../lib/insights'
+import { adapt, construireContexte, seancesDeLaSemaine } from '../lib/adapt'
+import { construireInsights, familleDe, familleDuSport } from '../lib/insights'
+import type { EcartRow } from '../lib/overrides'
 import { Icon } from '../components/Icon'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { ActivityRow, LoadParDiscipline } from '../lib/load'
@@ -53,6 +54,9 @@ interface Props {
   marathonPace: number
   /** La forme projetée du jour, ressenti compris. */
   forme: AjustementForme
+  /** Pour les compteurs de la semaine, calculés comme sur Aujourd'hui. */
+  ecarts?: Map<string, EcartRow>
+  attestes?: Set<string>
   onOuvrirProfil: () => void
 }
 
@@ -86,10 +90,31 @@ export function Track({
   formeTest,
   marathonPace,
   forme,
+  ecarts,
+  attestes,
   onOuvrirProfil,
 }: Props) {
   const now = todayISO()
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
+
+  // Les compteurs de la semaine ont quitté la jauge d'Aujourd'hui le
+  // 22 septembre. Ils se calculent ici exactement comme là-bas (charge
+  // attestée comprise), pour que l'indice d'hier cité soit le même chiffre.
+  const insights = useMemo(() => {
+    const aJour = adapt(load, pain, feedback, now, attestes)
+    const contexte = construireContexte(plan.weeks, feedback, pain, now, ecarts)
+    const semaine =
+      plan.weeks.find((w) => now >= w.monday && now <= addDays(w.monday, 6)) ??
+      plan.weeks[now < plan.weeks[0].monday ? 0 : plan.weeks.length - 1]
+    return construireInsights({
+      seances: seancesDeLaSemaine(plan.weeks, semaine, now, aJour.byDate, ecarts, contexte),
+      now,
+      feedback,
+      activities,
+      byDate: aJour.byDate,
+      ecarts,
+    })
+  }, [load, pain, feedback, now, attestes, ecarts, activities])
 
   const [vuePain, setVuePain] = useState<VuePain>('separee')
   const [vueVolume, setVueVolume] = useState<VueVolume>('course')
@@ -299,9 +324,9 @@ export function Track({
           onOuvrirProfil={onOuvrirProfil}
         />
 
-        {/* Les quatre chiffres posés sur le fond, sans carte (retour du
+        {/* Les six chiffres posés sur le fond, sans carte (retour du
             22 septembre) : ils se lisent comme l'en-tête des graphiques qui
-            suivent, pas comme quatre blocs de plus. */}
+            suivent, pas comme six blocs de plus. */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 16, marginBottom: 18 }}>
           <Kpi
             label="Charge vs semaine dernière"
@@ -312,10 +337,26 @@ export function Track({
             }
           />
           <Kpi
+            label="Indice depuis hier"
+            valeur={
+              insights.chargeEcart == null
+                ? '—'
+                : `${insights.chargeEcart > 0 ? '+' : insights.chargeEcart < 0 ? '−' : ''}${Math.abs(insights.chargeEcart)}`
+            }
+            suffix={insights.chargeEcart == null ? '' : ' pts'}
+            detail={insights.chargeVeille != null ? `${insights.chargeVeille} hier` : 'Hier inconnu'}
+          />
+          <Kpi
             label="Volume course · 7 jours"
             valeur={formatNumber(km7)}
             suffix=" km"
             detail={`${formatNumber(km28)} km sur 28 j`}
+          />
+          <Kpi
+            label="Séances de la semaine"
+            valeur={`${insights.seancesTotal.realise}`}
+            suffix={` / ${insights.seancesTotal.prevu}`}
+            detail={`${insights.seances.course.realise}/${insights.seances.course.prevu} course · ${insights.seances.velo.realise}/${insights.seances.velo.prevu} vélo · ${insights.seances.renfo.realise}/${insights.seances.renfo.prevu} renfo`}
           />
           <Kpi
             label="Santé du tendon"

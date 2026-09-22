@@ -34,7 +34,6 @@ import { CarteCharge } from '../components/CarteCharge'
 import { SubPage } from '../components/SubPage'
 import { ProfileButton } from '../components/ProfileButton'
 import { MeshBackground } from '../components/MeshBackground'
-import { InsightTiles } from '../components/InsightTiles'
 import { SessionHero } from '../components/SessionHero'
 import { ChargeSheet } from '../components/ChargeSheet'
 import { Icon } from '../components/Icon'
@@ -448,9 +447,6 @@ export function Today({
             bande={bande}
             ecartVeille={ecartVeille}
             onCalcul={() => setCalculOuvert(true)}
-            // Les compteurs parlent de la semaine en cours : les afficher en
-            // relisant un jour passé laisserait croire qu'ils le concernent.
-            pied={estAujourdhui ? <InsightTiles insights={insights} /> : undefined}
           />
 
           {detail.stale && !detail.painInconnue && (
@@ -493,7 +489,7 @@ export function Today({
                   width: 46,
                   height: 46,
                   borderRadius: '50%',
-                  background: faites.length ? 'rgba(111,224,176,.14)' : 'var(--surface-3)',
+                  background: faites.length ? 'color-mix(in srgb, var(--neon) 22%, transparent)' : 'var(--surface-3)',
                   color: faites.length ? 'var(--good)' : 'var(--accent)',
                   display: 'grid',
                   placeItems: 'center',
@@ -771,8 +767,8 @@ function BlocANoter({
       style={{
         padding: '16px 16px',
         borderRadius: 'var(--radius)',
-        background: 'rgba(255,149,0,.1)',
-        border: '1.5px solid rgba(255,149,0,.65)',
+        background: 'color-mix(in srgb, var(--bande-orange) 10%, transparent)',
+        border: '1.5px solid color-mix(in srgb, var(--bande-orange) 65%, transparent)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: 'var(--serious)' }}>

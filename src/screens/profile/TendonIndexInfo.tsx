@@ -45,14 +45,14 @@ export function TendonIndexInfo({ idx, band }: { idx: number; band: Band }) {
         <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5, margin: '0 0 14px' }}>
           Une note de 0 à 100 recalculée à chaque saisie. Elle pilote le programme toute seule : les
           séances se transforment sans que tu aies à demander. Aujourd'hui :{' '}
-          <b style={{ color: TEINTE_BANDE[band.key] }}>
+          <b>
             {idx} sur 100, {band.name.toLowerCase()}
           </b>
           .
         </p>
         {BANDS.map((b, i) => (
           <div key={b.key} style={{ display: 'flex', gap: 12, padding: '11px 0', borderBottom: i < BANDS.length - 1 ? '1px solid var(--border)' : undefined }}>
-            <div style={{ width: 5, borderRadius: 3, background: b.color, flex: 'none' }} />
+            <div style={{ width: 5, borderRadius: 3, background: TEINTE_BANDE[b.key], flex: 'none' }} />
             <div>
               <div style={{ fontSize: 'var(--fs-texte)', fontWeight: 700 }}>
                 {i === 0 ? 0 : BANDS[i - 1].max + 1} à {b.max} · {b.name} — {b.headline}

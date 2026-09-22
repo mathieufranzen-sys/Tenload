@@ -236,8 +236,8 @@ export function Profile({
                             letterSpacing: '.4px',
                             padding: '2.5px 7px',
                             borderRadius: 'var(--pill)',
-                            background: 'rgba(242,207,107,.18)',
-                            border: '1px solid rgba(242,207,107,.28)',
+                            background: 'var(--adapte-fond)',
+                            border: 'none',
                             color: 'var(--warning)',
                             verticalAlign: 'middle',
                           }}

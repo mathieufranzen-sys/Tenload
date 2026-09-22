@@ -84,8 +84,8 @@ export function ANoter({
                   letterSpacing: '.9px',
                   padding: '3px 8px',
                   borderRadius: 'var(--pill)',
-                  background: 'rgba(111,224,176,.18)',
-                  border: '1px solid rgba(111,224,176,.3)',
+                  background: 'color-mix(in srgb, var(--neon) 22%, transparent)',
+                  border: '1px solid color-mix(in srgb, var(--neon-2) 45%, transparent)',
                   color: 'var(--good)',
                 }}
               >

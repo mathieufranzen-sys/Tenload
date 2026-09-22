@@ -24,12 +24,12 @@ export function PlanStructure() {
                 fontWeight: 600,
                 padding: '5px 11px',
                 borderRadius: 'var(--pill)',
-                background: 'rgba(62,122,44,.14)',
+                background: 'var(--surface-3)',
                 color: 'var(--accent)',
                 marginBottom: 6,
               }}
             >
-              bloc {b.id} · {b.name.toLowerCase()}
+              Bloc {b.id} · {b.name}
             </span>
             <div style={{ fontSize: 'var(--fs-meta)', color: 'var(--ink-2)', fontWeight: 600, marginBottom: 4 }}>
               Semaines {b.weeks[0]} à {b.weeks[1]} · {formatDay(semaines[0].monday)} → {formatDay(addDays(derniere.monday, 6))} ·

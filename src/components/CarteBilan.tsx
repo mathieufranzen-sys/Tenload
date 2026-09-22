@@ -67,7 +67,7 @@ function Ligne({
               borderRadius: 'var(--pill)',
               marginLeft: 8,
               whiteSpace: 'nowrap',
-              background: pastille.bonne ? 'rgba(111,224,176,.16)' : 'rgba(242,207,107,.14)',
+              background: pastille.bonne ? 'color-mix(in srgb, var(--neon) 22%, transparent)' : 'var(--adapte-fond)',
               color: pastille.bonne ? 'var(--good)' : 'var(--warning)',
             }}
           >
@@ -365,8 +365,8 @@ function Tuile({
       className="carte"
       style={{
         padding: '16px 16px 15px',
-        borderColor: bonne ? 'rgba(111,224,176,.4)' : undefined,
-        background: bonne ? 'rgba(111,224,176,.05)' : undefined,
+        borderColor: bonne ? 'color-mix(in srgb, var(--neon-2) 55%, transparent)' : undefined,
+        background: bonne ? 'color-mix(in srgb, var(--neon) 8%, transparent)' : undefined,
       }}
     >
       <span className="chiffre" style={{ fontSize: 'var(--fs-c-xl)', lineHeight: 1, color: bonne ? 'var(--good)' : undefined }}>

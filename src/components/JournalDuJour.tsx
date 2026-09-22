@@ -334,7 +334,7 @@ function LigneSeance({
           display: 'grid',
           placeItems: 'center',
           border: fb ? 'none' : '1.5px dashed var(--border-2)',
-          background: fb ? 'rgba(111,224,176,.14)' : 'transparent',
+          background: fb ? 'color-mix(in srgb, var(--neon) 22%, transparent)' : 'transparent',
           color: fb ? 'var(--good)' : 'var(--sur-ink-2)',
           fontSize: 'var(--fs-lead)',
         }}
