@@ -51,7 +51,7 @@ export function CarteCharge({
       type="button"
       onClick={onCalcul}
       aria-label="Ouvrir le détail du calcul de l'indice"
-      className={inconnu ? undefined : 'carte'}
+      className={inconnu ? undefined : 'carte-bleu-pale'}
       style={{
         display: 'block',
         width: '100%',

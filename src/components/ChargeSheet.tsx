@@ -395,7 +395,7 @@ export function ChargeSheet({
 }
 
 /** Une teinte par terme, lisible sur blanc ; la douleur garde l'ocre de la bande jaune. */
-const TEINTE_TERME = ['#b07d00', '#2e731a', '#2c5601', '#4f63f2', '#656e5e', '#274312']
+const TEINTE_TERME = ['#b07d00', '#4f63f2', '#2b3aa6', '#8e9af6', '#656e5e', '#49de61']
 
 function Avertissement({ children, sourd = false }: { children: ReactNode; sourd?: boolean }) {
   return (

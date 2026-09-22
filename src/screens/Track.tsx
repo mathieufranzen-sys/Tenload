@@ -24,7 +24,8 @@ import { VolumeChart, type BarRow, type VueVolume } from '../components/charts/V
 import { LoadChart, type StackRow } from '../components/charts/LoadChart'
 import { MeshBackground } from '../components/MeshBackground'
 import { EffortChart, FormeChart } from '../components/charts/NiveauChart'
-import { MIN_SEANCES, ecartEffortSemaine, serieForme } from '../lib/forme'
+import { MIN_SEANCES, ecartEffortSemaine, serieForme, type AjustementForme } from '../lib/forme'
+import { CarteForme } from '../components/CarteForme'
 import { MARATHON_KM } from '../lib/paces'
 import { Segmented } from '../components/Segmented'
 import { EnteteEcran } from '../components/EnteteEcran'
@@ -50,6 +51,8 @@ interface Props {
   formeTest: number
   /** Allure marathon visée, pour la ligne d'objectif. */
   marathonPace: number
+  /** La forme projetée du jour, ressenti compris. */
+  forme: AjustementForme
   onOuvrirProfil: () => void
 }
 
@@ -82,6 +85,7 @@ export function Track({
   onVoirANoter,
   formeTest,
   marathonPace,
+  forme,
   onOuvrirProfil,
 }: Props) {
   const now = todayISO()
@@ -269,6 +273,7 @@ export function Track({
     const forme = serieForme(formeTest, feedback, dates).map((f, i) => ({
       label: i === dates.length - 1 ? "auj." : formatDay(dates[i]),
       minutes: Math.round((f.allure * MARATHON_KM) / 60),
+      secondes: Math.round(f.allure * MARATHON_KM),
       lu: f.seances >= MIN_SEANCES,
     }))
     const effort = lundis.map((l) => ({ label: formatDay(l), ecart: ecartEffortSemaine(feedback, l).ecart }))
@@ -357,6 +362,17 @@ export function Track({
         >
           <PainChart rows={painRows} vue={vuePain} />
         </Viz>
+
+        {/* La forme projetée a quitté Objectif le 22 septembre 2026 : c'est
+            une lecture de l'entraînement, elle vit avec les autres. */}
+        <CarteForme
+          minutes={Math.round((forme.allure * MARATHON_KM) / 60)}
+          objectif={Math.round((marathonPace * MARATHON_KM) / 60)}
+          tendance={niveau.forme.slice(-4).map((p) => ({ minutes: p.minutes, secondes: p.secondes }))}
+          lue={forme.seances >= MIN_SEANCES}
+          seances={forme.seances}
+        />
+        <div style={{ height: 12 }} />
 
         <Viz
           titre="Niveau en course"

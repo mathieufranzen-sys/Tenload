@@ -182,11 +182,32 @@ export function roleDe(
   return 'effort'
 }
 
+/**
+ * Le déroulé se dessine en bleu, la couleur secondaire de l'app (arbitré par
+ * Mathieu le 22 septembre 2026). Quand la séance change d'allure en route,
+ * les segments d'effort passent au vert : c'est là que l'œil doit voir le
+ * changement de rythme. Une séance d'une seule allure reste tout en bleu.
+ */
 export const COULEUR_ROLE: Record<RoleSegment, string> = {
-  facile: '#a7a99f',
-  effort: '#2e731a',
-  recup: '#dbdad2',
+  facile: '#8e9af6',
+  effort: '#4f63f2',
+  recup: '#d6dafc',
 }
+
+const EFFORT_AUTRE_ALLURE = '#49de61'
+
+/** Vrai quand le déroulé porte plus d'une allure (zones distinctes). */
+export function plusieursAllures(blocs: BlocDeroule[]): boolean {
+  const zones = new Set<string>()
+  for (const b of blocs) {
+    if (b.effort.zone) zones.add(b.effort.zone)
+    if (b.recup?.zone) zones.add(b.recup.zone)
+  }
+  return zones.size > 1
+}
+
+export const couleurRole = (role: RoleSegment, varie: boolean): string =>
+  role === 'effort' && varie ? EFFORT_AUTRE_ALLURE : COULEUR_ROLE[role]
 
 /**
  * Hauteur relative d'une barre, de 0 à 1. L'échelle suit le rang de la zone :

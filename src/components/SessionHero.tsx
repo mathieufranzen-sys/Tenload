@@ -44,6 +44,7 @@ export function SessionHero({
   return (
     <Balise
       onClick={onClick}
+      className="carte-bleue"
       style={{
         position: 'relative',
         display: 'block',
@@ -51,14 +52,12 @@ export function SessionHero({
         textAlign: 'left',
         borderRadius: 'var(--radius)',
         overflow: 'hidden',
-        color: 'inherit',
+        color: 'var(--ink)',
         padding: '18px 18px 18px 20px',
         cursor: onClick ? 'pointer' : 'default',
-        // La séance à faire se détache des cartes grises : fond blanc et filet
-        // Stroke/Container/Strong. C'est la seule carte de l'écran qui appelle
-        // un geste. Le vert profond, lui, est réservé au mot du coach.
-        background: 'var(--surface-2)',
-        border: '1.5px solid var(--ink)',
+        // La séance à faire est un bloc bleu, la couleur secondaire des blocs
+        // de page (arbitré le 22 septembre) : elle se détache des cartes
+        // grises sans prendre le vert du coach.
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>

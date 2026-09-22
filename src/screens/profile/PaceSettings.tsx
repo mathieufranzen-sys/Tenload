@@ -81,6 +81,22 @@ export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
 
   return (
     <>
+      {/* L'allure visée vit ici seule depuis le 22 septembre 2026 : c'est un
+          réglage, elle n'a pas à occuper la tête de l'écran Objectif. */}
+      <div className="carte-bleu-pale" style={{ padding: '18px 18px 20px', marginBottom: 14 }}>
+        <p className="etiquette">Allure marathon visée</p>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 4 }}>
+          <span className="chiffre" style={{ fontSize: 64, lineHeight: 1 }}>
+            {formatPace(marathonPace)}
+          </span>
+          <span style={{ fontSize: 16, color: 'var(--ink-2)' }}>/ km</span>
+        </div>
+        <p style={{ margin: '8px 0 0', fontSize: 14.5, color: 'var(--ink-2)' }}>
+          {formatDuration(Math.round((marathonPace * MARATHON_KM) / 60))} au marathon. Toutes les zones
+          d'allure et de fréquence cardiaque en découlent.
+        </p>
+      </div>
+
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
         <b style={{ fontSize: 16 }}>Recalibrer</b>
         <p style={{ color: 'var(--ink-2)', fontSize: 14.5, lineHeight: 1.5, margin: '6px 0 14px' }}>

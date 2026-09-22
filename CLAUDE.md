@@ -906,6 +906,18 @@ parce qu'ils nommaient l'onglet Allures.
   composant posé dedans s'inverse sans rien savoir. Blue (AllTrails+) pour
   la courbe d'effort, valeur `#4f63f2` relevée à l'œil, à confirmer. Les
   noms `pale` et `braise` sont restés des versions précédentes.
+- **Trois familles de couleur, trois rôles** (arbitré le 22 septembre 2026) :
+  le **vert foncé** n'appartient qu'au coach ; le **vert clair** (néon) à ce
+  qui se touche, boutons, sélection, bascules (`--pale` vaut désormais le
+  néon) ; le **bleu** (gamme `--bleu-50` à `--bleu-900`, autour des deux
+  bleus d'origine 100 et 500) et le gris aux blocs de page, au déroulé et aux
+  allures. La jauge est un bloc bleu pâle (`.carte-bleu-pale`), la séance du
+  jour un bloc bleu (`.carte-bleue`, qui inverse les jetons comme la carte du
+  coach). Le déroulé est en bleu, ses segments d'effort passent au néon quand
+  la séance change d'allure (`couleurRole`). Suivi garde le bleu et le vert.
+- L'allure marathon visée ne vit plus que dans Profil → Réglages d'allure ;
+  la forme projetée (`CarteForme`) est dans Suivi, avec le gain sur quatre
+  semaines en secondes.
 - **Les teintes de bande vivent dans `src/lib/teintes.ts`**, pas dans `BANDS`
   (tendonIndex.ts), qui est un fichier du modèle. La bande jaune y est enfin
   jaune. `COULEUR_DOULEUR` (ressenti.ts) suit les mêmes teintes, le noir

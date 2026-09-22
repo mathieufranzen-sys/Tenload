@@ -199,11 +199,12 @@ function CarteCompacte({ session: s, marathonPace, feedback, onClick, etat }: Om
   return (
     <button
       onClick={onClick}
+      className={etat === 'aFaire' && !repos ? 'carte-bleue' : undefined}
       style={{
         display: 'block',
         width: '100%',
         textAlign: 'left',
-        color: 'inherit',
+        color: 'var(--ink)',
         padding: '14px 16px',
         borderRadius: 22,
         // Le repos se dessine en pointillés : un jour vide n'est pas une
@@ -211,9 +212,9 @@ function CarteCompacte({ session: s, marathonPace, feedback, onClick, etat }: Om
         border: repos
           ? '1.5px dashed var(--border-2)'
           : etat === 'aFaire'
-            ? '1.5px solid var(--ink)'
+            ? 'none'
             : '1px solid var(--glass-border)',
-        background: repos ? 'transparent' : etat === 'aFaire' ? 'var(--surface-2)' : 'var(--surface)',
+        background: repos ? 'transparent' : etat === 'aFaire' ? '#4f63f2' : 'var(--surface)',
         opacity: s.saute ? 0.45 : etat === 'passe' ? 0.55 : 1,
       }}
     >

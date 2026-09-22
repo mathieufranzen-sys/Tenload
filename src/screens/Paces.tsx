@@ -2,22 +2,19 @@
  * Écran Objectif, ex-Allures.
  *
  * Renommé le 21 septembre 2026 avec la refonte : il porte désormais les
- * dossards, et les allures n'en sont qu'une conséquence. De haut en bas :
- * l'allure marathon visée (la seule valeur qui règle tout), les sept zones,
- * la forme projetée, puis les dossards. Les réglages restent dans Profil ;
- * le bouton « modifier » y mène.
+ * dossards, et les allures n'en sont qu'une conséquence. Les zones, puis les
+ * dossards. Depuis le 22 septembre 2026, l'allure marathon visée ne vit plus
+ * que dans Profil → Réglages d'allure, et la forme projetée dans Suivi.
  */
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan, ZoneKey } from '../data/types'
-import { addDays, mondayOf, today as todayISO } from '../lib/dates'
+import { today as todayISO } from '../lib/dates'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { FeedbackRow } from '../lib/buildPain'
 import type { EcartPatch, EcartRow } from '../lib/overrides'
 import type { DossardRow } from '../lib/dossards'
-import { MARATHON_KM, ZONE_OFFSETS, formatPace, zonePace, zoneHrRange } from '../lib/paces'
-import { MIN_SEANCES, serieForme } from '../lib/forme'
-import { CarteForme } from '../components/CarteForme'
+import { ZONE_OFFSETS, formatPace, zonePace, zoneHrRange } from '../lib/paces'
 import type { AjustementForme } from '../lib/forme'
 import { EnteteEcran } from '../components/EnteteEcran'
 import { MeshBackground } from '../components/MeshBackground'
@@ -37,19 +34,18 @@ const ZONE_DESC: Record<ZoneKey, string> = {
 }
 
 /**
- * Le camaïeu des zones, pris dans les seules couleurs de Trailblazer : les
- * neutres pour les allures lentes, le néon pour l'allure marathon (l'ancre),
- * puis les quatre verts de plus en plus sombres jusqu'aux répétitions. Le
- * mélange précédent donnait des olives boueuses (retour du 22 septembre).
+ * Le camaïeu des zones, dans la gamme bleue, la couleur secondaire des
+ * allures (arbitré par Mathieu le 22 septembre 2026) : du bleu pâle de la
+ * récupération au bleu nuit des répétitions.
  */
 const TEINTE_ZONE: Array<{ fond: string; encre: string }> = [
-  { fond: '#dbdad2', encre: '#142800' },
-  { fond: '#c2c2b8', encre: '#142800' },
-  { fond: '#65f67b', encre: '#142800' },
-  { fond: '#2e731a', encre: '#ffffff' },
-  { fond: '#2c5601', encre: '#ffffff' },
-  { fond: '#274312', encre: '#ffffff' },
-  { fond: '#142800', encre: '#ffffff' },
+  { fond: '#d6dafc', encre: '#1f2a78' },
+  { fond: '#b3bbf9', encre: '#1f2a78' },
+  { fond: '#6e7ff4', encre: '#ffffff' },
+  { fond: '#4f63f2', encre: '#ffffff' },
+  { fond: '#3b4dd6', encre: '#ffffff' },
+  { fond: '#2b3aa6', encre: '#ffffff' },
+  { fond: '#1f2a78', encre: '#ffffff' },
 ]
 
 /**
@@ -102,11 +98,8 @@ interface Props {
 export function Paces({
   marathonPace,
   fitnessPace,
-  feedback,
-  forme,
   hrMax,
   onOuvrirProfil,
-  onModifierAllure,
   ecarts,
   dossards,
   dossardsIndisponibles,
@@ -118,19 +111,6 @@ export function Paces({
   const now = todayISO()
   const [discipline, setDiscipline] = useState<'course' | 'velo'>('course')
 
-  const gt = marathonPace * MARATHON_KM
-  const ft = fitnessPace * MARATHON_KM
-
-  // La tendance de la carte « Forme projetée » : les trois derniers lundis et
-  // aujourd'hui, la forme telle que l'app l'affichait ces jours-là.
-  const tendance = useMemo(() => {
-    const lundi = mondayOf(now)
-    const dates = [addDays(lundi, -21), addDays(lundi, -14), addDays(lundi, -7), now]
-    return serieForme(formeTest, feedback, dates).map((f) => ({
-      minutes: Math.round((f.allure * MARATHON_KM) / 60),
-      secondes: Math.round(f.allure * MARATHON_KM),
-    }))
-  }, [formeTest, feedback, now])
 
   // Du plus lent au plus rapide : l'allure semi, ajoutée après coup, était
   // rangée en fin de liste, derrière les répétitions.
@@ -147,33 +127,6 @@ export function Paces({
           titre="Objectif"
           onOuvrirProfil={onOuvrirProfil}
         />
-
-        {/* L'allure visée, en tête : c'est la seule valeur qui règle tout. */}
-        <section className="carte" style={{ padding: '20px 20px 22px', borderRadius: 'var(--radius-lg)' }}>
-          <p style={{ margin: 0, fontSize: 14.5, color: 'var(--ink)' }}>Allure marathon visée</p>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 6 }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <span className="chiffre" style={{ fontSize: 84, lineHeight: 0.95 }}>
-                {formatPace(marathonPace)}
-              </span>
-              <span style={{ fontSize: 17, color: 'var(--sur-ink-2)' }}>/ km</span>
-            </div>
-            <button
-              type="button"
-              onClick={onModifierAllure}
-              style={{
-                padding: '11px 20px',
-                borderRadius: 'var(--pill)',
-                border: '1px solid color-mix(in srgb, var(--ink) 35%, transparent)',
-                fontSize: 15,
-                color: 'var(--ink)',
-                flex: 'none',
-              }}
-            >
-              Modifier
-            </button>
-          </div>
-        </section>
 
         {/* Les zones en barres qui s'allongent avec la vitesse, comme dans la
             maquette : l'échelle se lit avant les chiffres. L'allure marathon
@@ -230,14 +183,6 @@ export function Paces({
             tiennent compte.
           </p>
         )}
-
-        <CarteForme
-          minutes={Math.round(ft / 60)}
-          objectif={Math.round(gt / 60)}
-          tendance={tendance}
-          lue={forme.seances >= MIN_SEANCES}
-          seances={forme.seances}
-        />
 
         <SectionDossards
           periode="avenir"

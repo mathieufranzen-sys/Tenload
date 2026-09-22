@@ -36,17 +36,19 @@
   --border-2: #c2c2b8;
 
   /* ─── accent ─────────────────────────────────────────────────────────────
-     `--accent` écrit les étiquettes et les métadonnées : c'est Text/Subtle.
-     `--pale` est Background/Button/Focus (Green-300, texte Neutral-0), la
-     sélection. `--neon` est Background/Button/Accent (NeonGreen-100, survol
-     NeonGreen-200), le bouton d'action principal. `--braise` est
-     Container/Tertiary et `--braise-2` Container/Brand. Les noms `pale` et
+     Trois familles, trois rôles, arbitrés par Mathieu le 22 septembre 2026 :
+     - le VERT FONCÉ (`--braise`, `--braise-2`) n'appartient qu'au coach ;
+     - le VERT CLAIR (`--neon`, `--pale`) à tout ce qui se touche : boutons
+       d'action, sélection, bascules ;
+     - le BLEU (`--accent-2`, gamme `--bleu-*`) et le gris aux blocs de page
+       (jauge, séance du jour), au déroulé des séances et aux allures.
+     `--accent` écrit les étiquettes : Text/Subtle. Les noms `pale` et
      `braise` sont restés des versions précédentes. */
   --accent: #656e5e;
-  --accent-2: #2c5601;
+  --accent-2: #4f63f2;
   --accent-doux: #a7a99f;
-  --pale: #274312;
-  --pale-ink: #ffffff;
+  --pale: #65f67b;
+  --pale-ink: #142800;
   --braise: #274312;
   --braise-2: #142800;
   --neon: #65f67b;
@@ -118,13 +120,13 @@
   --muted: #8b9182;
 
   /* ─── graphiques du Suivi ────────────────────────────────────────────────
-     Réveil et course en NeonGreen-200 (le gris d'avant faisait fade, retour
-     du 22 septembre), effort et vélo en Blue, soir et « autres » en
-     Green-300, le trait le plus épais. Clair, bleu, foncé : trois teintes
-     séparées par la clarté autant que par la couleur. */
+     Bleu et vert seulement sur Suivi : réveil et course en NeonGreen-200,
+     effort et vélo en Bleu 500, soir, « autres » et objectif en Bleu 800,
+     le trait le plus épais. Clair, moyen, foncé : trois teintes séparées par
+     la clarté autant que par la couleur. */
   --chart-1: #49de61;
   --chart-2: #4f63f2;
-  --chart-3: #274312;
+  --chart-3: #1f2a78;
   --chart-ligne: #142800;
   --chart-grille: color-mix(in srgb, var(--ink) 9%, transparent);
   --chart-texte: color-mix(in srgb, var(--ink) 55%, transparent);
@@ -147,6 +149,34 @@
 
   --sur-ink-2: color-mix(in srgb, var(--ink) 72%, transparent);
   --sur-ink-3: color-mix(in srgb, var(--ink) 52%, transparent);
+}
+
+/* Le bloc bleu : la séance du jour, et tout bloc de page qui doit se
+   détacher sans prendre le vert du coach. Même mécanique que la carte du
+   coach : il redéfinit les jetons pour ses enfants. */
+.carte-bleue {
+  --ink: #ffffff;
+  --ink-2: #d6dafc;
+  --ink-3: #b3bbf9;
+  --sur-ink-2: rgba(255, 255, 255, 0.8);
+  --sur-ink-3: rgba(255, 255, 255, 0.62);
+  --accent: #d6dafc;
+  --border: rgba(255, 255, 255, 0.18);
+  --border-2: rgba(255, 255, 255, 0.3);
+  --surface-2: rgba(255, 255, 255, 0.14);
+  --surface-3: rgba(255, 255, 255, 0.2);
+  background: #4f63f2;
+  color: var(--ink);
+  border-radius: var(--radius);
+}
+/* Le bloc bleu pâle : la jauge de charge. Le texte reste l'encre de l'app. */
+.carte-bleu-pale {
+  --surface-3: #d6dafc;
+  --border: #d6dafc;
+  --border-2: #b3bbf9;
+  background: #f0f2fe;
+  border: 1px solid #d6dafc;
+  border-radius: var(--radius);
 }
 
 /* Les cartes vertes profondes (tête, mot du coach) repassent en encres

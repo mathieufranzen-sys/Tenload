@@ -40,7 +40,7 @@ export function largeurRemplissage(valeur: number): string {
 }
 
 /** Teinte neutre de l'effort perçu : un 9 sur une séance de qualité est une réussite. */
-const NEUTRE = '#2e731a'
+const NEUTRE = '#4f63f2'
 
 export type TeinteRessenti = 'douleur' | 'neutre'
 

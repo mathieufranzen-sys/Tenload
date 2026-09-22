@@ -296,8 +296,8 @@ export function Plan({
 
         {/* Le bloc en tête de semaine, avec les chiffres de la semaine dedans
             (retour du 22 septembre) : c'est lui qui dit pourquoi la semaine
-            ressemble à ça. Les semaines déjà passées du bloc sont en vert
-            foncé, celle d'aujourd'hui en néon. */}
+            ressemble à ça. Les semaines déjà passées du bloc sont en bleu
+            foncé (le vert foncé est au coach), celle d'aujourd'hui en néon. */}
         <div className="carte" style={{ padding: '16px 18px', marginBottom: 16 }}>
           <p className="etiquette">
             Bloc {bloc.id} · {bloc.name} · semaine {rangDansBloc} sur {dureeBloc}
@@ -316,7 +316,7 @@ export function Plan({
                     height: premiere + i === semaine.n ? 9 : 6,
                     alignSelf: 'center',
                     borderRadius: 'var(--pill)',
-                    background: finie ? 'var(--braise-2)' : enCours ? 'var(--neon-2)' : 'var(--surface-3)',
+                    background: finie ? '#2b3aa6' : enCours ? 'var(--neon-2)' : 'var(--surface-3)',
                   }}
                 />
               )

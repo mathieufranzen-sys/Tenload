@@ -454,7 +454,7 @@ export function VueCalendrier({
             width: 180,
             padding: '9px 12px',
             borderRadius: 'var(--pill)',
-            background: 'linear-gradient(135deg, #2e731a, #274312)',
+            background: 'linear-gradient(135deg, #4f63f2, #2b3aa6)',
             color: '#ffffff',
             fontSize: 14,
             fontWeight: 600,

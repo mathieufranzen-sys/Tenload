@@ -422,10 +422,10 @@ export function SessionSheet({
 
 /**
  * La pastille d'intensité de la ligne de repères, comme le « Facile »
- * d'AllTrails. En verts qui foncent, jamais en teintes de bande : l'orange et
+ * d'AllTrails. En bleus qui foncent, jamais en teintes de bande : l'orange et
  * le rouge disent la charge du tendon, pas la dureté d'une séance.
  */
-const NIVEAU_COULEUR = ['#a7a99f', '#65f67b', '#2e731a', '#274312', '#142800']
+const NIVEAU_COULEUR = ['#a7a99f', '#b3bbf9', '#6e7ff4', '#3b4dd6', '#1f2a78']
 
 /** Un titre de section : un vrai titre, en serif, pas une étiquette. */
 function TitreSection({ children }: { children: string }) {
