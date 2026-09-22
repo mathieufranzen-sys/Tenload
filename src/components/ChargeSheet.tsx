@@ -187,7 +187,9 @@ export function ChargeSheet({
             avec le seuil de l'orange repéré. */}
         <section className="carte" style={{ padding: '20px 20px 18px', borderRadius: 'var(--radius-lg)' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
-            <span className="chiffre" style={{ fontSize: 'var(--fs-c-3xl)', lineHeight: 0.9, color: TEINTE_BANDE[band.key] }}>
+            {/* L'encre de l'app, pas la teinte de la bande : en m4 elle est
+                claire, et un 29 vert d'eau sur une carte grise ne se lit pas. */}
+            <span className="chiffre" style={{ fontSize: 'var(--fs-c-3xl)', lineHeight: 0.9 }}>
               {b.idx}
             </span>
             <span style={{ fontSize: 'var(--fs-texte)', color: 'var(--accent)', lineHeight: 1.4, flex: 1, minWidth: 150 }}>
@@ -272,7 +274,7 @@ export function ChargeSheet({
                       className="chiffre"
                       style={{
                         fontSize: 'var(--fs-c-m)',
-                        color: t.valeur === 0 ? 'var(--ink-3)' : soinLigne ? 'var(--pale)' : TEINTE_TERME[i],
+                        color: t.valeur === 0 ? 'var(--ink-3)' : TEINTE_TERME[i],
                       }}
                     >
                       {t.valeur > 0 ? '+' : t.valeur < 0 ? '−' : ''}
@@ -299,7 +301,7 @@ export function ChargeSheet({
                       [soinLigne ? 'right' : 'left']: 0,
                       width: `${part * 100}%`,
                       borderRadius: 3,
-                      background: soinLigne ? 'var(--pale)' : TEINTE_TERME[i],
+                      background: soinLigne ? 'var(--neon-2)' : TEINTE_TERME[i],
                     }}
                   />
                 </div>
@@ -394,8 +396,20 @@ export function ChargeSheet({
   )
 }
 
-/** Une teinte par terme, lisible sur blanc ; la douleur garde l'ocre de la bande jaune. */
-const TEINTE_TERME = ['var(--orange-700)', '#4f63f2', '#2b3aa6', '#8e9af6', '#656e5e', '#49de61']
+/**
+ * Une teinte par terme, dans l'ordre des six lignes. Elles servent à deux
+ * endroits, le chiffre et la barre, donc chacune doit se lire comme texte
+ * sur une carte claire : le néon et le vert clair n'y tenaient pas, et le
+ * bleu 300 non plus (retour du 22 septembre).
+ */
+const TEINTE_TERME = [
+  'var(--orange-700)',
+  'var(--bleu-500)',
+  'var(--bleu-700)',
+  'var(--bleu-400)',
+  'var(--ink-2)',
+  'var(--good)',
+]
 
 function Avertissement({ children, sourd = false }: { children: ReactNode; sourd?: boolean }) {
   return (

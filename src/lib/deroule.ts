@@ -189,6 +189,9 @@ export function roleDe(
  * les segments d'effort passent au vert : c'est là que l'œil doit voir le
  * changement de rythme. Une séance d'une seule allure reste tout en bleu.
  */
+/** La récupération entre deux tours : le vert clair de la marque. */
+const COULEUR_RECUP = '#8ef79d'
+
 export const COULEUR_ROLE: Record<RoleSegment, string> = {
   facile: '#8e9af6',
   effort: '#4f63f2',
@@ -205,7 +208,10 @@ export const COULEUR_ROLE: Record<RoleSegment, string> = {
  * précisément ce que le déroulé doit montrer (retour du 22 septembre 2026).
  */
 export const couleurSegment = (seg: SegmentDeroule, role: RoleSegment): string =>
-  seg.zone ? COULEUR_ZONE[seg.zone] : COULEUR_ROLE[role]
+  // Le vert des récupérations contre le bleu des allures : le graphique se
+  // lit d'un coup d'œil comme une alternance effort / souffle, même sans
+  // distinguer deux crans de bleu (retour du 22 septembre).
+  role === 'recup' ? COULEUR_RECUP : seg.zone ? COULEUR_ZONE[seg.zone] : COULEUR_ROLE[role]
 
 /**
  * Hauteur relative d'une barre, de 0 à 1. L'échelle suit le rang de la zone :

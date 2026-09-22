@@ -210,8 +210,18 @@ function ResumeDossard({ dossard: d, now, onOuvrir }: { dossard: Dossard; now: s
     <button
       type="button"
       onClick={onOuvrir}
-      className="carte"
-      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '16px 18px', color: 'inherit' }}
+      style={{
+        display: 'block',
+        width: '100%',
+        textAlign: 'left',
+        padding: '16px 18px',
+        color: 'inherit',
+        // Un fond bleu clair plutôt que le gris des cartes : un dossard est un
+        // rendez-vous, pas une ligne de liste (retour du 22 septembre).
+        background: passe ? 'var(--surface)' : 'var(--bleu-50)',
+        border: `1px solid ${passe ? 'var(--border)' : 'var(--bleu-100)'}`,
+        borderRadius: 'var(--radius)',
+      }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
         <div style={{ minWidth: 0 }}>
@@ -226,7 +236,9 @@ function ResumeDossard({ dossard: d, now, onOuvrir }: { dossard: Dossard; now: s
           className="puce"
           style={{
             flex: 'none',
-            background: jours === 0 ? 'var(--neon)' : 'var(--surface-2)',
+            background: jours === 0 ? 'var(--neon)' : '#ffffff',
+            color: jours === 0 ? 'var(--pale-ink)' : 'var(--bleu-700)',
+            fontWeight: 600,
           }}
         >
           {jours === 0 ? "Aujourd'hui" : passe ? `Il y a ${-jours} j` : `Dans ${jours} j`}
@@ -239,7 +251,7 @@ function ResumeDossard({ dossard: d, now, onOuvrir }: { dossard: Dossard; now: s
         </div>
         <div>
           <div style={{ fontSize: 'var(--fs-detail)', color: 'var(--ink-2)' }}>{passe || jours === 0 ? 'Chrono' : 'Allure visée'}</div>
-          <div className="chiffre" style={{ fontSize: 'var(--fs-c-m)' }}>
+          <div className="chiffre" style={{ fontSize: 'var(--fs-c-m)', color: passe ? 'var(--ink)' : 'var(--bleu-700)' }}>
             {passe || jours === 0
               ? d.chronoS != null
                 ? formatChrono(d.chronoS)
@@ -317,9 +329,26 @@ function CarteDossard({
         )}
       </div>
       {d.objectifS != null && (
-        <p style={{ margin: '8px 2px 0', fontSize: 'var(--fs-meta)', color: 'var(--ink-2)' }}>
-          Soit {formatPace(d.objectifS / d.km)}/km
-        </p>
+        // L'allure visée est ce qu'on emporte sur la ligne de départ : elle a
+        // son bloc, pas une note de bas de page (retour du 22 septembre).
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            justifyContent: 'space-between',
+            gap: 12,
+            marginTop: 10,
+            padding: '14px 16px',
+            borderRadius: 18,
+            background: 'var(--bleu-50)',
+            border: '1px solid var(--bleu-100)',
+          }}
+        >
+          <span style={{ fontSize: 'var(--fs-texte)', color: 'var(--bleu-700)' }}>Allure visée</span>
+          <span className="chiffre" style={{ fontSize: 'var(--fs-c-l)', color: 'var(--bleu-700)', lineHeight: 1 }}>
+            {formatPace(d.objectifS / d.km)}/km
+          </span>
+        </div>
       )}
 
       {(passe || jours === 0) && onChronoRecale && (

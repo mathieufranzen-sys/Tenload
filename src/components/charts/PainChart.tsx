@@ -31,9 +31,10 @@ export interface PainRow {
 const SERIES: Array<{ cle: keyof Omit<PainRow, 'day'>; couleur: string; epaisseur: number }> = [
   { cle: 'wake', couleur: 'var(--chart-1)', epaisseur: 2 },
   { cle: 'effort', couleur: 'var(--chart-2)', epaisseur: 2 },
-  // La fin de journée est le signal le plus fiable : on l'épaissit pour
-  // qu'elle se lise en premier quand les trois courbes se croisent.
-  { cle: 'evening', couleur: 'var(--chart-3)', epaisseur: 2.8 },
+  // Même épaisseur pour les trois depuis le 22 septembre : la fin de journée
+  // se distingue déjà par sa couleur, et un trait plus gros la faisait lire
+  // comme un total.
+  { cle: 'evening', couleur: 'var(--chart-3)', epaisseur: 2 },
 ]
 
 /**

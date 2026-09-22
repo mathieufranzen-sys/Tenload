@@ -328,9 +328,8 @@ export function Track({
           onOuvrirProfil={onOuvrirProfil}
         />
 
-        {/* Les six chiffres, chacun dans un bloc blanc (retour du
-            22 septembre) : sans bloc ils flottaient, en gris ils se
-            confondaient avec les graphiques. */}
+        {/* Les six chiffres, chacun dans une carte grise comme les
+            graphiques qui suivent (retour du 22 septembre). */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
           <Kpi
             label="Indice depuis la semaine dernière"
@@ -518,6 +517,7 @@ function Kpi({
   const Balise = onClick ? 'button' : 'div'
   return (
     <Balise
+      className="carte"
       onClick={onClick}
       style={{
         padding: '14px 14px 13px',
@@ -526,10 +526,6 @@ function Kpi({
         color: 'inherit',
         cursor: onClick ? 'pointer' : 'default',
         display: 'block',
-        // Un bloc blanc sous un filet : les chiffres se groupent sans prendre
-        // le gris des graphiques qui suivent.
-        background: 'var(--surface-2)',
-        border: '1px solid var(--border)',
         borderRadius: 22,
       }}
     >

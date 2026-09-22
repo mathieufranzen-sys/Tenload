@@ -978,7 +978,9 @@ parce qu'ils nommaient l'onglet Allures.
   palier. Deux notes de 0 à 10 sur la même séance ne peuvent pas avoir l'une
   une échelle et l'autre un bleu fixe.
 - **Une couleur par allure** (`COULEUR_ZONE`, seanceStyle.ts), la même dans
-  les barres d'Objectif et dans le déroulé d'une séance. L'ancienne règle du
+  les barres d'Objectif et dans le déroulé d'une séance ; **les
+  récupérations entre deux tours sont en vert clair**, ce qui fait lire le
+  graphique du déroulé comme une alternance effort / souffle. L'ancienne règle du
   néon quand la séance change d'allure est retirée : on ne voyait pas OÙ
   l'allure changeait, ce qui est justement ce que le déroulé montre.
 - **Un seul orange** (`--orange-100` à `--orange-900`) : l'aplat des
@@ -993,6 +995,8 @@ parce qu'ils nommaient l'onglet Allures.
   écrasaient la lecture du dosage d'intensité (`ORDRE_COURSE`).
 - Suivi : les courbes de douleur sont **lissées à l'affichage** (moyenne
   glissante de 7 jours, `lisser`), l'indice lit toujours les valeurs brutes.
+  Les trois courbes de douleur ont la même épaisseur : la fin de journée se
+  distingue par sa couleur, pas par un trait plus gros.
   Deux graphiques de niveau en course (`NiveauChart`) : le marathon projeté
   semaine par semaine (`serieForme`, l'ancre est le test actuel) et l'effort
   perçu contre l'effort attendu (`ecartEffortSemaine`), soit exactement ce
@@ -1030,7 +1034,7 @@ parce qu'ils nommaient l'onglet Allures.
 - La date d'Aujourd'hui tient sur une ligne : si « Mardi 22 septembre » ne
   tient pas, le mois s'abrège (`TitreUneLigne`), jamais le jour. Les flèches
   de jour sont à côté du bouton profil.
-- Suivi : six chiffres en blocs blancs, et la **répartition de la semaine**
+- Suivi : six chiffres en cartes grises, et la **répartition de la semaine**
   en anneau (`repartition.ts`, 4 tests), en temps par intensité (endurance,
   allure marathon, seuil, vitesse, vélo, renfo) sur le plan de la semaine,
   écarts compris et séances sautées exclues.
@@ -1039,6 +1043,11 @@ parce qu'ils nommaient l'onglet Allures.
   `construireBilan` (`bilanDeSemaine.ts`), lu à la date `ref` : aujourd'hui
   pour le bilan courant, le lundi suivant pour une semaine passée, sans la
   forme projetée, qui ne vaut que pour aujourd'hui.
+
+- Le détail du calcul prend six teintes lisibles comme TEXTE (`TEINTE_TERME`,
+  ChargeSheet) : le néon et le vert clair disparaissaient sur la carte, et le
+  total reprend l'encre de l'app, la teinte m4 d'une bande étant trop claire
+  pour un chiffre de 72 px.
 
 ### Les dossards
 
@@ -1060,6 +1069,9 @@ le dit et n'enregistre rien, sans allumer la bannière de synchronisation.
 - La page d'un dossard porte toujours l'objectif ET le chrono réel ; avant
   la course, le chrono attend « le jour J ». Le bouton d'ajout est à côté
   du titre.
+- Une carte de dossard à venir est bleu clair et non grise, avec sa pastille
+  de compte à rebours en blanc : un dossard est un rendez-vous, pas une ligne
+  de liste. Sur sa page, l'allure visée a son propre bloc.
 - Objectif ne liste que les dossards à venir ; **les passés vivent dans
   Profil → Dossards passés**. Une carte ouvre la page du dossard (par un
   portail, pour s'ouvrir aussi depuis une sous-page), où se saisissent

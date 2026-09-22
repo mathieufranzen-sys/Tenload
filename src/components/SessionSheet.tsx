@@ -406,7 +406,9 @@ export function SessionSheet({
 
           {butDeLaSeance(s.type) && (
             <section className="carte" style={{ padding: '18px 20px', marginTop: 16 }}>
-              <p className="display" style={{ margin: 0, fontSize: 'var(--fs-t-carte)' }}>Ce que la séance travaille</p>
+              {/* Même étiquette que « Le mot du coach » juste en dessous :
+                  deux cartes de même nature, deux titres de même taille. */}
+              <p className="etiquette">Ce que la séance travaille</p>
               <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-body)', lineHeight: 1.55 }}>
                 {butDeLaSeance(s.type)!.replace(/^À quoi ça sert\s*:\s*/i, '')}
               </p>

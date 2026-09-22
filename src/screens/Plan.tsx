@@ -307,7 +307,7 @@ export function Plan({
             trois puces qui tiennent sur une ligne : la nature de la semaine
             est montée sous les dates, où elle qualifie la semaine. */}
         <div className="carte" style={{ padding: '16px 18px', marginBottom: 16 }}>
-          <h2 className="display" style={{ fontSize: 'var(--fs-t-carte)', lineHeight: 1.2, margin: 0 }}>
+          <h2 className="display" style={{ fontSize: 'var(--fs-t-liste)', lineHeight: 1.25, margin: 0 }}>
             {/* Espaces insécables avant chaque point : une ligne ne commence
                 jamais par « · ». */}
             {`Bloc ${bloc.id}\u00a0· ${bloc.name}\u00a0· semaine ${rangDansBloc} sur ${dureeBloc}`}
