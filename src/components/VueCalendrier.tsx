@@ -62,6 +62,8 @@ interface Props {
   onOuvrirSeance?: (seance: SeancePlanifiee) => void
   /** Absent en lecture seule : le calendrier reste alors consultable. */
   onDeplacer?: (seance: SeancePlanifiee, jour: number, semaines: number) => void
+  /** Vrai quand la séance a son ressenti : elle n'est plus « à faire ». */
+  estNotee?: (seance: SeancePlanifiee) => boolean
 }
 
 export function VueCalendrier({
@@ -75,6 +77,7 @@ export function VueCalendrier({
   focus,
   onOuvrirSeance,
   onDeplacer,
+  estNotee,
 }: Props) {
   const [initial, setInitial] = useState(false)
   const [prise, setPrise] = useState<SeancePlanifiee | null>(null)
@@ -355,6 +358,7 @@ export function VueCalendrier({
                       seance={x}
                       priseEnCours={prise?.day === x.day && prise?.slot === x.slot}
                       passe={jour < now}
+                      aFaire={jour === now && x.s.type !== 'repos' && !x.s.saute && !estNotee?.(x)}
                       misEnAvant={focus === cleEcart(x.semaineOrigine, x.jourOrigine, x.slot)}
                       onOuvrir={
                         onOuvrirSeance && !prise
@@ -564,12 +568,15 @@ function CarteJour({
   seance,
   priseEnCours,
   passe,
+  aFaire,
   misEnAvant,
   onOuvrir,
   onPrise,
 }: {
   seance: SeancePlanifiee
   priseEnCours: boolean
+  /** La séance du jour pas encore notée : le même bloc bleu que dans la vue semaine. */
+  aFaire?: boolean
   /** Jour révolu : grisé, comme dans la vue semaine. */
   passe: boolean
   misEnAvant: boolean
@@ -580,14 +587,18 @@ function CarteJour({
     <div
       onPointerDown={onPrise}
       onClick={onOuvrir}
+      // La classe inverse les encres (texte blanc, filets clairs) pour tout ce
+      // que la carte contient, comme la séance du jour d'Aujourd'hui.
+      className={aFaire ? 'carte-bleue' : undefined}
       style={{
         display: 'flex',
         alignItems: 'center',
         gap: 9,
         padding: '10px 13px',
         borderRadius: 16,
-        background: 'var(--surface)',
-        border: misEnAvant ? '1.5px solid var(--accent)' : '1px solid var(--glass-border)',
+        background: aFaire ? 'var(--bleu-500)' : 'var(--surface)',
+        color: aFaire ? '#ffffff' : undefined,
+        border: misEnAvant ? '1.5px solid var(--accent)' : aFaire ? '1px solid transparent' : '1px solid var(--glass-border)',
         opacity: priseEnCours ? 0.3 : seance.s.saute ? 0.4 : passe ? 0.55 : 1,
         cursor: onOuvrir ? 'pointer' : 'default',
         userSelect: 'none',

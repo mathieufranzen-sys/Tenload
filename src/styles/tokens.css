@@ -203,13 +203,15 @@
   color: var(--ink);
   border-radius: var(--radius);
 }
-/* Le bloc bleu pâle : la jauge de charge. Le texte reste l'encre de l'app. */
+/* Le bloc bleu clair : la jauge de charge. Le texte reste l'encre de l'app.
+   Bleu 100 et non plus 50 depuis le 22 septembre : sur fond blanc, le 50
+   se lisait comme un gris et le bloc paraissait délavé. */
 .carte-bleu-pale {
-  --surface-3: #d6dafc;
-  --border: #d6dafc;
-  --border-2: #b3bbf9;
-  background: #f0f2fe;
-  border: 1px solid #d6dafc;
+  --surface-3: #b3bbf9;
+  --border: #b3bbf9;
+  --border-2: #8e9af6;
+  background: #d6dafc;
+  border: none;
   border-radius: var(--radius);
 }
 

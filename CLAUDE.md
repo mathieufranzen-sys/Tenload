@@ -988,6 +988,26 @@ parce qu'ils nommaient l'onglet Allures.
   palette. La jauge de charge a une gélule blanche et le bouton rond dans
   le coin, comme la séance du jour (12 px du haut et du bord) ; ses
   compteurs de la semaine sont partis dans les chiffres de Suivi.
+- **Règle de rédaction** (audit du 22 septembre) :
+  - **titres** d'écran, de section et de carte : un groupe nominal, sans
+    article ni possessif (« Déroulé », « Ressenti », « Contraintes »,
+    « Zones cardiaques »), jamais de point final ;
+  - **boutons** : un verbe à l'infinitif et un article, jamais « mon, ma,
+    mes » (« Enregistrer le ressenti », « Recalibrer les zones ») ; une
+    action de la barre de séance est un verbe seul (Noter, Sauter,
+    Déplacer, Corriger, Remplacer) ;
+  - **descriptions** (rubriques du Profil) : un groupe nominal avec article,
+    sans verbe conjugué ni point final ;
+  - **texte courant** au tutoiement, phrases complètes avec point ; la
+    première personne n'appartient qu'au coach ;
+  - aucun mot anglais (« vs ») ; un point médian n'ouvre jamais une ligne.
+- La date d'Aujourd'hui tient sur une ligne : si « Mardi 22 septembre » ne
+  tient pas, le mois s'abrège (`TitreUneLigne`), jamais le jour. Les flèches
+  de jour sont à côté du bouton profil.
+- Suivi : six chiffres en blocs blancs, et la **répartition de la semaine**
+  en anneau (`repartition.ts`, 4 tests), en temps par intensité (endurance,
+  allure marathon, seuil, vitesse, vélo, renfo) sur le plan de la semaine,
+  écarts compris et séances sautées exclues.
 - **Profil → Bilans de la semaine** relit chaque semaine terminée
   (`BilansPasses`). Le calcul est sorti d'Aujourd'hui dans
   `construireBilan` (`bilanDeSemaine.ts`), lu à la date `ref` : aujourd'hui

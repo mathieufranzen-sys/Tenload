@@ -27,6 +27,8 @@ import { MeshBackground } from '../components/MeshBackground'
 import { EffortChart, FormeChart } from '../components/charts/NiveauChart'
 import { MIN_SEANCES, ecartEffortSemaine, serieForme, type AjustementForme } from '../lib/forme'
 import { CarteForme } from '../components/CarteForme'
+import { RepartitionChart } from '../components/charts/RepartitionChart'
+import { repartitionSemaine } from '../lib/repartition'
 import { MARATHON_KM } from '../lib/paces'
 import { Segmented } from '../components/Segmented'
 import { EnteteEcran } from '../components/EnteteEcran'
@@ -100,21 +102,23 @@ export function Track({
   // Les compteurs de la semaine ont quitté la jauge d'Aujourd'hui le
   // 22 septembre. Ils se calculent ici exactement comme là-bas (charge
   // attestée comprise), pour que l'indice d'hier cité soit le même chiffre.
-  const insights = useMemo(() => {
+  const { insights, semaineN, seancesSemaine } = useMemo(() => {
     const aJour = adapt(load, pain, feedback, now, attestes)
     const contexte = construireContexte(plan.weeks, feedback, pain, now, ecarts)
     const semaine =
       plan.weeks.find((w) => now >= w.monday && now <= addDays(w.monday, 6)) ??
       plan.weeks[now < plan.weeks[0].monday ? 0 : plan.weeks.length - 1]
-    return construireInsights({
-      seances: seancesDeLaSemaine(plan.weeks, semaine, now, aJour.byDate, ecarts, contexte),
-      now,
-      feedback,
-      activities,
-      byDate: aJour.byDate,
-      ecarts,
-    })
+    const seances = seancesDeLaSemaine(plan.weeks, semaine, now, aJour.byDate, ecarts, contexte)
+    return {
+      semaineN: semaine.n,
+      seancesSemaine: seances,
+      insights: construireInsights({ seances, now, feedback, activities, byDate: aJour.byDate, ecarts }),
+    }
   }, [load, pain, feedback, now, attestes, ecarts, activities])
+  const repartition = useMemo(
+    () => repartitionSemaine(seancesSemaine.map((x) => x.s), marathonPace),
+    [seancesSemaine, marathonPace],
+  )
 
   const [vuePain, setVuePain] = useState<VuePain>('separee')
   const [vueVolume, setVueVolume] = useState<VueVolume>('course')
@@ -324,12 +328,12 @@ export function Track({
           onOuvrirProfil={onOuvrirProfil}
         />
 
-        {/* Les six chiffres posés sur le fond, sans carte (retour du
-            22 septembre) : ils se lisent comme l'en-tête des graphiques qui
-            suivent, pas comme six blocs de plus. */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 16, marginBottom: 18 }}>
+        {/* Les six chiffres, chacun dans un bloc blanc (retour du
+            22 septembre) : sans bloc ils flottaient, en gris ils se
+            confondaient avec les graphiques. */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
           <Kpi
-            label="Charge vs semaine dernière"
+            label="Indice depuis la semaine dernière"
             valeur={idxEcart == null ? '—' : `${idxEcart > 0 ? '+' : idxEcart < 0 ? '−' : ''}${Math.abs(idxEcart)}`}
             suffix={idxEcart == null ? '' : ' pts'}
             couleur={
@@ -347,7 +351,7 @@ export function Track({
             detail={insights.chargeVeille != null ? `${insights.chargeVeille} hier` : 'Hier inconnu'}
           />
           <Kpi
-            label="Volume course · 7 jours"
+            label="Course sur 7 jours"
             valeur={formatNumber(km7)}
             suffix=" km"
             detail={`${formatNumber(km28)} km sur 28 j`}
@@ -382,7 +386,7 @@ export function Track({
         </Viz>
 
         <Viz
-          titre="Douleur au fil des jours"
+          titre="Douleur par jour"
           controle={
             <Segmented
               label="Lecture de la douleur"
@@ -414,7 +418,6 @@ export function Track({
           lue={forme.seances >= MIN_SEANCES}
           seances={forme.seances}
         />
-        <div style={{ height: 12 }} />
 
         <Viz
           titre="Niveau en course"
@@ -439,6 +442,13 @@ export function Track({
           ]}
         >
           <EffortChart points={niveau.effort} />
+        </Viz>
+
+        {/* Le temps de la semaine par intensité, en anneau (demandé le
+            22 septembre) : le plan de la semaine en cours, écarts et
+            adaptations compris, séances sautées exclues. */}
+        <Viz titre={`Répartition de la semaine ${semaineN}`}>
+          <RepartitionChart minutes={repartition} />
         </Viz>
 
         <Viz
@@ -510,13 +520,17 @@ function Kpi({
     <Balise
       onClick={onClick}
       style={{
-        padding: '14px 0 14px',
+        padding: '14px 14px 13px',
         width: '100%',
         textAlign: 'left',
         color: 'inherit',
         cursor: onClick ? 'pointer' : 'default',
         display: 'block',
-        borderTop: '1px solid var(--border)',
+        // Un bloc blanc sous un filet : les chiffres se groupent sans prendre
+        // le gris des graphiques qui suivent.
+        background: 'var(--surface-2)',
+        border: '1px solid var(--border)',
+        borderRadius: 22,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>

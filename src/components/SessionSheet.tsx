@@ -272,7 +272,7 @@ export function SessionSheet({
             <section style={{ marginTop: 8 }}>
               {deroule.length > 0 && (
                 <>
-                  <TitreSection>{['race', 'course'].includes(s.type) ? 'La course' : 'Le déroulé'}</TitreSection>
+                  <TitreSection>{['race', 'course'].includes(s.type) ? 'Course' : 'Déroulé'}</TitreSection>
                   <ProfilSeance blocs={deroule} />
                   <DecoupageSeance session={s} blocs={deroule} marathonPace={marathonPace} />
                 </>
@@ -280,7 +280,7 @@ export function SessionSheet({
 
               {s.ex && (
                 <>
-                  <TitreSection>{deroule.length > 0 ? 'Renforcement enchaîné' : 'Les exercices'}</TitreSection>
+                  <TitreSection>{deroule.length > 0 ? 'Renforcement enchaîné' : 'Exercices'}</TitreSection>
                   {s.ex.map(([nom, serie, precision], i) => (
                     <div
                       key={i}
@@ -308,7 +308,7 @@ export function SessionSheet({
 
               {(s.type === 'escalade' || s.type === 'repos') && (
                 <>
-                  <TitreSection>{s.type === 'repos' ? 'Les consignes' : 'La séance'}</TitreSection>
+                  <TitreSection>{s.type === 'repos' ? 'Consignes' : 'Séance'}</TitreSection>
                   <StepView
                     main={s.type === 'repos' ? 'Aucune charge sur les jambes' : 'Escalade en salle'}
                     zone={null}
@@ -326,7 +326,7 @@ export function SessionSheet({
 
           {recalageSurCourse(s) && day <= today() && formeActuelle != null && (
             <>
-              <TitreSection>Ton chrono</TitreSection>
+              <TitreSection>Chrono</TitreSection>
               <ChronoCourse
                 km={s.dist!}
                 chronoSaisi={
@@ -347,7 +347,7 @@ export function SessionSheet({
             </>
           )}
           <div id="ressenti-seance" style={{ scrollMarginTop: 16 }}>
-            <TitreSection>Le ressenti, après</TitreSection>
+            <TitreSection>Ressenti</TitreSection>
           </div>
           {ressentiImplicite ? (
             <div
@@ -406,7 +406,7 @@ export function SessionSheet({
 
           {butDeLaSeance(s.type) && (
             <section className="carte" style={{ padding: '18px 20px', marginTop: 16 }}>
-              <p className="display" style={{ margin: 0, fontSize: 'var(--fs-t-carte)' }}>Ce que travaille cette séance</p>
+              <p className="display" style={{ margin: 0, fontSize: 'var(--fs-t-carte)' }}>Ce que la séance travaille</p>
               <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-body)', lineHeight: 1.55 }}>
                 {butDeLaSeance(s.type)!.replace(/^À quoi ça sert\s*:\s*/i, '')}
               </p>
@@ -563,7 +563,7 @@ function FormulaireRessenti({
           onSave(pain ?? 0, rpe ?? 0, '')
         }}
       >
-        Enregistrer mon ressenti
+        Enregistrer le ressenti
       </BoutonAction>
       {disabled && (
         <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', marginTop: 8 }}>

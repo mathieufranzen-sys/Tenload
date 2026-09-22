@@ -178,7 +178,7 @@ export function CarteBilan({
         <Tuile valeur={`${b.sautees}`} libelle={b.sautees > 1 ? 'Séances sautées' : 'Séance sautée'} bonne={b.sautees === 0} />
       </div>
 
-      <Bloc titre="Ce que tu as fait">
+      <Bloc titre="Entraînement">
       <Ligne
         libelle="Séances"
         pastille={b.nonNotees ? { texte: `${b.nonNotees} à noter`, bonne: false } : undefined}
@@ -220,7 +220,7 @@ export function CarteBilan({
 
       </Bloc>
 
-      <Bloc titre="Ce que ton corps en dit">
+      <Bloc titre="Tendon et récupération">
       {b.indice.moyen != null && (
         <Ligne libelle="Indice de charge">
           {b.indice.moyen} en moyenne<Secondaire>pic {b.indice.pic}</Secondaire>
@@ -286,7 +286,7 @@ export function CarteBilan({
 
       </Bloc>
 
-      <Bloc titre="Ce que ça vaut pour le 4 avril">
+      <Bloc titre="Cap sur le 4 avril">
       {b.forme && (
         <>
           <Ligne libelle="Forme projetée">
@@ -315,7 +315,7 @@ export function CarteBilan({
       </Bloc>
 
       {b.echeances.dixKm != null && (
-        <Bloc titre="Ce que ça vaut pour le 15 novembre">
+        <Bloc titre="Cap sur le 15 novembre">
           <Ligne libelle="Échéance">
             J−{b.echeances.dixKm}<Secondaire>10 km Hoka</Secondaire>
           </Ligne>
@@ -326,13 +326,13 @@ export function CarteBilan({
       )}
 
       <Liste
-        titre={`Tes erreurs de la semaine · ${b.erreurs.length}`}
+        titre={`Erreurs de la semaine · ${b.erreurs.length}`}
         items={b.erreurs}
         teintes={['var(--warning)']}
       />
-      <Liste titre="Ce que je te propose de changer" items={b.adaptations} teintes={['var(--accent)']} />
+      <Liste titre="À ajuster" items={b.adaptations} teintes={['var(--accent)']} />
       <Liste
-        titre={`Ce que la semaine ${b.n + 1} change`}
+        titre={`La semaine ${b.n + 1}`}
         items={b.suivante}
         teintes={['var(--pale)', 'var(--accent)', 'var(--accent-doux)']}
       />

@@ -245,6 +245,7 @@ export function Plan({
             ecarts={ecarts}
             now={now}
             semaineVisee={semaine.n}
+            estNotee={(x) => feedbackDe(x) != null}
             jourVise={jourVise ?? (focusSeance ? null : now)}
             focus={focusSeance}
             onOuvrirSeance={onOuvrirSeance}
@@ -266,7 +267,8 @@ export function Plan({
           <>
         {/* La semaine se choisit par deux flèches rondes de part et d'autre du
             numéro ; la plage de dates seule dessous, le bloc a sa carte. */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        {/* Plus d'air autour du numéro de semaine (retour du 22 septembre). */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0 24px' }}>
           <button
             onClick={() => onChangerSemaine(numeroSemaine - 1)}
             disabled={numeroSemaine <= 1}
@@ -306,7 +308,9 @@ export function Plan({
             est montée sous les dates, où elle qualifie la semaine. */}
         <div className="carte" style={{ padding: '16px 18px', marginBottom: 16 }}>
           <h2 className="display" style={{ fontSize: 'var(--fs-t-carte)', lineHeight: 1.2, margin: 0 }}>
-            Bloc {bloc.id} · {bloc.name} · semaine {rangDansBloc} sur {dureeBloc}
+            {/* Espaces insécables avant chaque point : une ligne ne commence
+                jamais par « · ». */}
+            {`Bloc ${bloc.id}\u00a0· ${bloc.name}\u00a0· semaine ${rangDansBloc} sur ${dureeBloc}`}
           </h2>
           <div style={{ display: 'flex', gap: 3, margin: '14px 0 0' }}>
             {Array.from({ length: dureeBloc }, (_, i) => {

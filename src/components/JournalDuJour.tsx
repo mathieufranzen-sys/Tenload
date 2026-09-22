@@ -235,7 +235,7 @@ export function PageCarnet({
       </Section>
 
       <Section
-        titre="Les gestes de soin"
+        titre="Gestes de soin"
         aDroite={`−${credit} point${credit > 1 ? 's' : ''} sur −10 possibles`}
       >
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>

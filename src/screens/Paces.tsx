@@ -137,8 +137,8 @@ export function Paces({
             valeur={discipline}
             onChange={setDiscipline}
             options={[
-              { cle: 'course', libelle: 'Fréquence en course' },
-              { cle: 'velo', libelle: 'Fréquence à vélo' },
+              { cle: 'course', libelle: 'Course' },
+              { cle: 'velo', libelle: 'Vélo' },
             ]}
           />
         </div>

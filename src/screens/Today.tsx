@@ -7,7 +7,7 @@
  * scroll. Le reste (règles d'adaptation, carnet, mot du coach) suit
  * en dessous, sur le fond sombre habituel.
  */
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan, Week } from '../data/types'
 import {
@@ -432,6 +432,7 @@ export function Today({
         <EnteteJour
           surtitre="Bonjour Mathieu,"
           titre={sousTitreLong(jour)}
+          titresCourts={[sousTitreCourt(jour)]}
           relatif={avantPlan ? `J-${jDebut} avant la semaine 1` : estAujourdhui ? null : titreJour(jour, now)}
           jour={jour}
           now={now}
@@ -642,6 +643,14 @@ export function Today({
 }
 
 /** « lundi 21 septembre » : le titre de l'écran, en toutes lettres. */
+const MOIS_COURT = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
+
+/** « Mardi 22 sept. » : seul le mois s'abrège, jamais le jour. */
+function sousTitreCourt(jour: string): string {
+  const [, m, d] = jour.split('-').map(Number)
+  return `${DAYS_LONG[weekdayIndex(jour)]} ${d} ${MOIS_COURT[m - 1]}`
+}
+
 function sousTitreLong(jour: string): string {
   const [, m, d] = jour.split('-').map(Number)
   return `${DAYS_LONG[weekdayIndex(jour)]} ${d} ${MOIS[m - 1]}`
@@ -671,6 +680,7 @@ const MOIS = [
 function EnteteJour({
   surtitre,
   titre,
+  titresCourts,
   relatif,
   jour,
   now,
@@ -681,6 +691,8 @@ function EnteteJour({
 }: {
   surtitre: string
   titre: string
+  /** Les replis quand le titre ne tient pas sur une ligne, du plus long au plus court. */
+  titresCourts: string[]
   relatif: string | null
   jour: string
   now: string
@@ -690,28 +702,26 @@ function EnteteJour({
   onOuvrirProfil: () => void
 }) {
   return (
-    <header style={{ padding: 'calc(18px + env(safe-area-inset-top)) 0 18px' }}>
+    // Plus d'air au-dessus et en dessous de la date (retour du 22 septembre).
+    <header style={{ padding: 'calc(24px + env(safe-area-inset-top)) 0 28px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
         <p className="display" style={{ margin: 0, fontSize: 'var(--fs-t-liste)', color: 'var(--ink-2)', minWidth: 0 }}>
           {surtitre}
         </p>
-        <ProfileButton onClick={onOuvrirProfil} />
+        {/* Les flèches montent à côté du profil : la date prend toute la
+            largeur, et « Mercredi 30 sept. » tient sur une ligne. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>
+          <NavigationJour jour={jour} now={now} plusAncien={plusAncien} onDecaler={onDecaler} />
+          <ProfileButton onClick={onOuvrirProfil} />
+        </div>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, marginTop: 6 }}>
+      <div style={{ marginTop: 12 }}>
         <div style={{ minWidth: 0 }}>
           {relatif && (
             <p style={{ margin: '0 0 2px', fontSize: 'var(--fs-texte)', color: 'var(--sur-ink-2)' }}>{relatif}</p>
           )}
-          <h1 className="display" style={{ margin: 0, fontSize: 'var(--fs-t-ecran)', lineHeight: 1.04 }}>
-            {titre}
-          </h1>
+          <TitreUneLigne variantes={[titre, ...titresCourts]} />
         </div>
-        <NavigationJour
-          jour={jour}
-          now={now}
-          plusAncien={plusAncien}
-          onDecaler={onDecaler}
-        />
       </div>
       {jour !== now && (
         <BoutonAction icone="arrowRight" onClick={onAujourdhui} style={{ marginTop: 14 }}>
@@ -719,6 +729,56 @@ function EnteteJour({
         </BoutonAction>
       )}
     </header>
+  )
+}
+
+/**
+ * La date sur une seule ligne, toujours (retour du 22 septembre) : sur deux
+ * lignes elle poussait tout l'écran vers le bas. On essaie le titre entier,
+ * puis le mois abrégé, et on garde le premier qui tient dans la largeur
+ * réellement disponible.
+ */
+function TitreUneLigne({ variantes }: { variantes: string[] }) {
+  const ref = useRef<HTMLHeadingElement>(null)
+  const [rang, setRang] = useState(0)
+  const cle = variantes.join('|')
+
+  // On repart du titre entier quand la date change ou quand la place grandit.
+  useLayoutEffect(() => setRang(0), [cle])
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (el.scrollWidth > el.clientWidth + 1 && rang < variantes.length - 1) setRang(rang + 1)
+  }, [rang, cle, variantes.length])
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    let largeur = el.clientWidth
+    const obs = new ResizeObserver(() => {
+      if (el.clientWidth !== largeur) {
+        largeur = el.clientWidth
+        setRang(0)
+      }
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  return (
+    <h1
+      ref={ref}
+      className="display"
+      style={{
+        margin: 0,
+        fontSize: 'var(--fs-t-ecran)',
+        lineHeight: 1.04,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+      }}
+    >
+      {variantes[rang]}
+    </h1>
   )
 }
 

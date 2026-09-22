@@ -66,14 +66,18 @@ export function CarteForme({
   const chemin = tendance.map((p, i) => `${i ? 'L' : 'M'}${px(i)} ${py(p.minutes)}`).join(' ')
 
   return (
-    <section className="carte" style={{ padding: '20px 20px 22px', marginTop: 20, opacity: lue ? 1 : 0.85 }}>
-      <p className="etiquette">Forme projetée</p>
+    // Même titre et même corps de chiffre que les autres cartes de Suivi
+    // (retour du 22 septembre) : elle était la seule à parler plus fort.
+    <section className="carte" style={{ padding: '18px 18px 20px', marginBottom: 12, opacity: lue ? 1 : 0.85 }}>
+      <h2 className="display" style={{ margin: 0, fontSize: 'var(--fs-t-carte)', lineHeight: 1.2 }}>
+        Forme projetée
+      </h2>
 
-      <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: '4px 12px', marginTop: 10 }}>
-        <span className="chiffre" style={{ fontSize: 'var(--fs-c-2xl)', lineHeight: 1, color: teinte }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: '4px 12px', marginTop: 12 }}>
+        <span className="chiffre" style={{ fontSize: 'var(--fs-c-xl)', lineHeight: 1, color: teinte }}>
           {court(minutes)}
         </span>
-        <span style={{ fontSize: 'var(--fs-lead)', color: 'var(--ink-2)' }}>
+        <span style={{ fontSize: 'var(--fs-texte)', color: 'var(--ink-2)' }}>
           {aReprendre > 0 ? `soit ${aReprendre} min à reprendre` : aReprendre === 0 ? "pile sur l'objectif" : `${-aReprendre} min sous l'objectif`}
         </span>
       </div>

@@ -180,11 +180,11 @@ export function CarteCharge({
                   borderRadius: 'var(--pill)',
                   fontSize: 'var(--fs-micro)',
                   fontWeight: courante ? 700 : 500,
-                  background: courante ? TEINTE_BANDE[b.key] : 'transparent',
-                  color: courante ? ENCRE_BANDE[b.key] : 'var(--sur-ink-3)',
+                  background: courante ? TEINTE_BANDE[b.key] : '#ffffff',
+                  color: courante ? ENCRE_BANDE[b.key] : 'var(--ink-2)',
                   // Le contour de chaque plage prend sa bande, en sourdine :
                   // la rangée se lit comme une échelle avant d'être lue.
-                  border: `1px solid ${courante ? 'transparent' : `${TEINTE_BANDE[b.key]}44`}`,
+                  border: `1px solid ${courante ? 'transparent' : `${TEINTE_BANDE[b.key]}88`}`,
                 }}
               >
                 {LIBELLE_PLAGE[b.key]}
@@ -214,7 +214,9 @@ function Gelule({ valeur, teinte }: { valeur: number | null; teinte: string }) {
         // Un tube blanc sur le bloc bleu pâle (retour du 22 septembre) :
         // le remplissage de la bande s'y lit sans fond qui le teinte.
         background: valeur == null ? 'transparent' : '#ffffff',
-        border: valeur == null ? '1.5px dashed var(--border-2)' : '1px solid var(--border-2)',
+        // Filet gris et non bleu (retour du 22 septembre) : le tube reste un
+        // objet blanc posé sur le bloc, pas une partie du bloc.
+        border: valeur == null ? '1.5px dashed var(--border-2)' : '1px solid #c2c2b8',
       }}
     >
       {valeur == null ? (

@@ -27,7 +27,7 @@ const HORAIRES = [
   { heure: '08:00', titre: 'Raideur au réveil', detail: 'Avant de poser le pied par terre' },
   {
     heure: '23:00',
-    titre: 'Le point du soir',
+    titre: 'Point du soir',
     detail: 'Effort perçu, douleur à l’effort, douleur de fin de journée',
   },
 ]
@@ -57,7 +57,7 @@ export function Reminders({ userId }: Props) {
   return (
     <>
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
-        <b style={{ fontSize: 'var(--fs-body)' }}>Deux rappels, pas trois</b>
+        <b style={{ fontSize: 'var(--fs-body)' }}>Deux rappels par jour</b>
         <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-texte)', lineHeight: 1.5, margin: '6px 0 14px' }}>
           Le carnet ne vaut que s'il est tenu. La raideur au réveil pèse 45 % de la part douleur, et
           au bout de trois jours sans saisie l'indice cesse de mesurer quoi que ce soit et bloque

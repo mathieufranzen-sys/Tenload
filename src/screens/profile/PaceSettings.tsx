@@ -98,7 +98,7 @@ export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
       </div>
 
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
-        <b style={{ fontSize: 'var(--fs-body)' }}>Recalibrer</b>
+        <b style={{ fontSize: 'var(--fs-body)' }}>Recalibrage</b>
         <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-texte)', lineHeight: 1.5, margin: '6px 0 14px' }}>
           Après un test sur 3 km, entre ton temps. Ça met à jour ta forme projetée et l'écart, sans
           toucher aux allures d'entraînement. Une course de 10 km ou plus se recale depuis sa
@@ -133,7 +133,7 @@ export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
           </div>
         )}
         <BoutonAction onClick={recalibrer} disabled={!onSave} icone="check">
-          Mettre à jour ma forme
+          Mettre à jour la forme
         </BoutonAction>
         {!onSave && (
           <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', marginTop: 10 }}>Connecte-toi pour changer ces réglages.</p>
@@ -144,7 +144,7 @@ export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
       </div>
 
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px' }}>
-        <b style={{ fontSize: 'var(--fs-body)' }}>Changer l'objectif</b>
+        <b style={{ fontSize: 'var(--fs-body)' }}>Objectif marathon</b>
         <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-texte)', lineHeight: 1.5, margin: '6px 0 12px' }}>
           Toutes les allures du plan se recalculent. Le point de décision est prévu après le semi
           test du 30 janvier.

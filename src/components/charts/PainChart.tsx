@@ -179,7 +179,7 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
   }
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Douleur au fil des jours">
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Douleur par jour">
       {graduations.map((v) => (
         <g key={v}>
           <line x1={P.l} x2={W - P.r} y1={y(v)} y2={y(v)} stroke="var(--chart-grille)" strokeWidth={1} />

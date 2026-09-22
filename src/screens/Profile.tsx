@@ -56,26 +56,26 @@ const GROUPES: Array<{ titre: string; rubriques: Rubrique[] }> = [
   {
     titre: 'Le plan',
     rubriques: [
-      { key: 'contraintes', titre: 'Tes contraintes', description: 'Les règles non négociables', icone: 'alert' },
-      { key: 'structure', titre: 'Structure des 34 semaines', description: 'Les cinq blocs du plan', icone: 'clip' },
+      { key: 'contraintes', titre: 'Contraintes', description: 'Les règles non négociables du plan', icone: 'alert' },
+      { key: 'structure', titre: 'Structure des 34 semaines', description: 'Les cinq blocs, de la reprise à l’affûtage', icone: 'clip' },
     ],
   },
   {
     titre: 'Ton corps',
     rubriques: [
-      { key: 'bilans', titre: 'Bilans de la semaine', description: 'Chaque semaine terminée, relue', icone: 'clip' },
-      { key: 'anoter', titre: 'Séances à noter', description: 'Les journées que l’indice ne mesure pas', icone: 'clip' },
-      { key: 'patterns', titre: 'Tes patterns', description: 'Ce qui suit ta douleur, et l’export pour une IA', icone: 'chart' },
+      { key: 'bilans', titre: 'Bilans de la semaine', description: 'Chaque semaine terminée et son bilan', icone: 'clip' },
+      { key: 'anoter', titre: 'Séances à noter', description: 'Les journées que l’indice ne mesure pas encore', icone: 'clip' },
+      { key: 'patterns', titre: 'Patterns', description: 'Les liens entre douleur et entraînement', icone: 'chart' },
       { key: 'indice', titre: 'Indice de charge du tendon', description: 'Les bandes et le détail du calcul', icone: 'chart' },
-      { key: 'coeur', titre: 'Fréquence cardiaque', description: 'Recalibre ta FC max et tes zones', icone: 'heart' },
-      { key: 'dossards', titre: 'Dossards passés', description: 'Tes courses, leurs chronos et le mot du coach', icone: 'flag' },
+      { key: 'coeur', titre: 'Fréquence cardiaque', description: 'La FC max et les zones cardiaques', icone: 'heart' },
+      { key: 'dossards', titre: 'Dossards passés', description: 'Les courses courues, leurs chronos et le mot du coach', icone: 'flag' },
     ],
   },
   {
     titre: 'Réglages',
     rubriques: [
-      { key: 'allure', titre: 'Réglages d’allure', description: 'Recalibrer ta forme, changer l’objectif', icone: 'gauge' },
-      { key: 'rappels', titre: 'Rappels du carnet', description: 'Raideur à 8 h, point du soir à 23 h', icone: 'sun' },
+      { key: 'allure', titre: 'Réglages d’allure', description: 'La forme projetée et l’objectif marathon', icone: 'gauge' },
+      { key: 'rappels', titre: 'Rappels du carnet', description: 'La raideur à 8 h, le point du soir à 23 h', icone: 'sun' },
     ],
   },
 ]
@@ -177,7 +177,7 @@ export function Profile({
         zIndex: 5,
         padding: '0 var(--page-x) 0',
       }}>
-          <EnteteEcran titre="Profil" contexte={<>Règles du plan, calcul de l'indice, réglages</>} />
+          <EnteteEcran titre="Profil"  />
 
           {GROUPES.map((groupe) => (
             <section key={groupe.titre} style={{ marginBottom: 22 }}>

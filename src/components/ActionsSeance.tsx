@@ -124,7 +124,7 @@ export function ActionsSeance({
           {!estRepos && (
             <Action
               icone="clip"
-              label="Donnée réelle"
+              label="Corriger"
               actif={patch.dist != null || patch.durMin != null || panneau === 'reel'}
               onClick={() => setPanneau((p) => (p === 'reel' ? null : 'reel'))}
             />
@@ -139,7 +139,7 @@ export function ActionsSeance({
       </div>
 
       {panneau === 'reel' && (
-        <Panneau titre="Ce que tu as vraiment fait">
+        <Panneau titre="Données réelles">
           {/* Le plan fixe une distance à toute séance de course, mais un écart
               qui CONVERTIT une autre discipline en course n'en hérite d'aucune :
               `versType` efface `dist` avec le reste de l'ancienne séance. Sans

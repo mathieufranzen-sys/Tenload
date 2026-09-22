@@ -55,7 +55,7 @@ export function Patterns({ carnet }: { carnet: JourCarnet[] }) {
         ressenti ne dit pas ce qui a été fait.
       </p>
 
-      <h3 style={titreSection}>Ce qui suit ta douleur</h3>
+      <h3 style={titreSection}>Liens avec la douleur</h3>
       {patterns.length === 0 ? (
         <div className="glass" style={{ borderRadius: 16, padding: '14px 15px' }}>
           <p style={{ fontSize: 'var(--fs-meta)', color: 'var(--ink-2)', lineHeight: 1.5, margin: 0 }}>
@@ -94,7 +94,7 @@ export function Patterns({ carnet }: { carnet: JourCarnet[] }) {
         })
       )}
 
-      <h3 style={titreSection}>La tenue du carnet</h3>
+      <h3 style={titreSection}>Tenue du carnet</h3>
       <div className="glass" style={{ borderRadius: 16, padding: '4px 15px' }}>
         {[
           ['Jours entièrement notés', `${tenue.complets} sur ${tenue.jours}`],
@@ -121,7 +121,7 @@ export function Patterns({ carnet }: { carnet: JourCarnet[] }) {
         ))}
       </div>
 
-      <h3 style={titreSection}>Aller plus loin</h3>
+      <h3 style={titreSection}>Export pour une IA</h3>
       <p style={{ fontSize: 'var(--fs-meta)', color: 'var(--ink-2)', lineHeight: 1.55, margin: '0 0 12px 2px' }}>
         Le carnet complet en texte, avec les échelles et une consigne d'analyse. Colle-le dans Claude
         ou ChatGPT pour chercher des patterns plus fins que ces comparaisons.
