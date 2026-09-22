@@ -114,16 +114,16 @@ export function GrilleCalendrier({
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
-        <span style={{ fontSize: 14, color: 'var(--accent)' }}>
+        <span style={{ fontSize: 'var(--fs-meta)', color: 'var(--accent)' }}>
           {nbJours} jours · {nbSeances} séances
         </span>
-        {rang >= 1 && rang <= nbJours && <span style={{ fontSize: 14, color: 'var(--accent)' }}>Jour {rang}</span>}
+        {rang >= 1 && rang <= nbJours && <span style={{ fontSize: 'var(--fs-meta)', color: 'var(--accent)' }}>Jour {rang}</span>}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '38px repeat(7, 1fr)', columnGap: 5, rowGap: 6 }}>
         <span />
         {JOURS.map((j, i) => (
-          <span key={i} style={{ textAlign: 'center', fontSize: 12, color: 'var(--sur-ink-3)' }}>
+          <span key={i} style={{ textAlign: 'center', fontSize: 'var(--fs-micro)', color: 'var(--sur-ink-3)' }}>
             {j}
           </span>
         ))}
@@ -141,7 +141,7 @@ export function GrilleCalendrier({
       </div>
 
       <div className="carte" style={{ padding: '16px 18px', marginTop: 18 }}>
-        <p style={{ margin: 0, fontSize: 14, color: 'var(--accent)' }}>Derrière : la bande du jour</p>
+        <p style={{ margin: 0, fontSize: 'var(--fs-meta)', color: 'var(--accent)' }}>Derrière : la bande du jour</p>
         <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
           {(['vert', 'jaune', 'orange', 'rouge', 'noir'] as const).map((b) => (
             <span
@@ -156,7 +156,7 @@ export function GrilleCalendrier({
             />
           ))}
         </div>
-        <p style={{ margin: '16px 0 0', fontSize: 14, color: 'var(--accent)' }}>Devant : ce qui est écrit</p>
+        <p style={{ margin: '16px 0 0', fontSize: 'var(--fs-meta)', color: 'var(--accent)' }}>Devant : ce qui est écrit</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
           {LEGENDE_FORME.map(([f, l]) => (
             <span
@@ -164,7 +164,7 @@ export function GrilleCalendrier({
               style={{
                 padding: '5px 12px',
                 borderRadius: 'var(--pill)',
-                fontSize: 13,
+                fontSize: 'var(--fs-detail)',
                 background: STYLE_FORME[f].fond,
                 color: STYLE_FORME[f].encre,
                 border: STYLE_FORME[f].bord,
@@ -177,7 +177,7 @@ export function GrilleCalendrier({
         <div style={{ height: 1, background: 'var(--border)', margin: '16px 0 12px' }} />
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px' }}>
           {LEGENDE_NATURE.map(([n, l]) => (
-            <span key={n} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: 'var(--sur-ink-2)' }}>
+            <span key={n} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-2)' }}>
               <span style={{ width: 3, height: 14, borderRadius: 2, background: TEINTE_NATURE[n] }} />
               {l}
             </span>
@@ -204,7 +204,7 @@ function Ligne({
   const nature = w.nature ?? (w.deload ? 'decharge' : 'charge')
   return (
     <>
-      <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--sur-ink-3)' }}>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)' }}>
         <span style={{ width: 3, height: 22, borderRadius: 2, background: TEINTE_NATURE[nature] ?? 'var(--accent)' }} />
         {libelleLigne(w)}
       </span>
@@ -246,7 +246,7 @@ function Ligne({
               borderRadius: 'var(--pill)',
               display: 'grid',
               placeItems: 'center',
-              fontSize: 13.5,
+              fontSize: 'var(--fs-meta)',
               fontVariantNumeric: 'tabular-nums',
               background: fond,
               color: encre,

@@ -162,15 +162,15 @@ export function Paces({
                     color: TEINTE_ZONE[i].encre,
                   }}
                 >
-                  <span style={{ fontSize: 15.5, fontWeight: ancre ? 600 : 500, lineHeight: 1.2 }}>
+                  <span style={{ fontSize: 'var(--fs-texte)', fontWeight: ancre ? 600 : 500, lineHeight: 1.2 }}>
                     {z.label}
                   </span>
-                  <span className="chiffre" style={{ fontSize: 20, flex: 'none' }}>
+                  <span className="chiffre" style={{ fontSize: 'var(--fs-c-s)', flex: 'none' }}>
                     {formatPace(zonePace(marathonPace, k))}
                     {PLAGE_LENTE[k] != null && ` – ${formatPace(marathonPace + PLAGE_LENTE[k]!)}`}
                   </span>
                 </div>
-                <div style={{ margin: '6px 20px 0', fontSize: 13, color: 'var(--sur-ink-3)', lineHeight: 1.4 }}>
+                <div style={{ margin: '6px 20px 0', fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)', lineHeight: 1.4 }}>
                   {discipline === 'velo' ? 'FC vélo' : 'FC'} {lo}–{hi} · {desc.charAt(0).toLowerCase() + desc.slice(1)}
                 </div>
               </div>
@@ -178,7 +178,7 @@ export function Paces({
           })}
         </div>
         {discipline === 'velo' && (
-          <p style={{ margin: '12px 20px 0', fontSize: 12.5, color: 'var(--sur-ink-3)', lineHeight: 1.4 }}>
+          <p style={{ margin: '12px 20px 0', fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)', lineHeight: 1.4 }}>
             À vélo, ta FC est inférieure de 20 bpm à la FC course à effort équivalent : les fourchettes en
             tiennent compte.
           </p>

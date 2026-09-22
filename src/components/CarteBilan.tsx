@@ -50,7 +50,7 @@ function Ligne({
         gap: 12,
         padding: '10px 0',
         borderTop: '1px solid var(--border)',
-        fontSize: 14.5,
+        fontSize: 'var(--fs-texte)',
         fontVariantNumeric: 'tabular-nums',
       }}
     >
@@ -61,7 +61,7 @@ function Ligne({
           <span
             style={{
               display: 'inline-block',
-              fontSize: 12,
+              fontSize: 'var(--fs-micro)',
               fontWeight: 600,
               padding: '3px 9px',
               borderRadius: 'var(--pill)',
@@ -101,7 +101,7 @@ function Liste({ titre, items, teintes }: { titre: string; items: string[]; tein
                 background: teintes?.[i % teintes.length] ?? 'var(--accent-doux)',
               }}
             />
-            <span style={{ fontSize: 15, lineHeight: 1.5 }}>{x}</span>
+            <span style={{ fontSize: 'var(--fs-texte)', lineHeight: 1.5 }}>{x}</span>
           </div>
         ))}
       </div>
@@ -130,12 +130,12 @@ export function CarteBilan({
           sept pastilles de bande, dont la hauteur suit l'indice du jour. */}
       <section className="carte" style={{ padding: '20px 20px 18px', borderRadius: 'var(--radius-lg)' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-          <span className="chiffre" style={{ fontSize: 76, lineHeight: 0.95 }}>
+          <span className="chiffre" style={{ fontSize: 'var(--fs-c-3xl)', lineHeight: 0.95 }}>
             {formatNumber(b.kmRealises)}
           </span>
-          <span style={{ fontSize: 17, color: 'var(--sur-ink-2)' }}>km sur {formatNumber(b.kmPrevus)} prévus</span>
+          <span style={{ fontSize: 'var(--fs-lead)', color: 'var(--sur-ink-2)' }}>km sur {formatNumber(b.kmPrevus)} prévus</span>
         </div>
-        <p style={{ margin: '10px 0 0', fontSize: 15, color: 'var(--accent)' }}>
+        <p style={{ margin: '10px 0 0', fontSize: 'var(--fs-texte)', color: 'var(--accent)' }}>
           {b.faites} séance{b.faites > 1 ? 's' : ''} sur {b.prevues}
           {b.nonNotees === 0 ? ', toutes notées' : `, ${b.nonNotees} à noter`}
         </p>
@@ -155,7 +155,7 @@ export function CarteBilan({
                     border: j == null ? '1.5px dashed var(--border-2)' : undefined,
                   }}
                 />
-                <span style={{ display: 'block', marginTop: 8, fontSize: 12.5, color: 'var(--sur-ink-3)' }}>
+                <span style={{ display: 'block', marginTop: 8, fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)' }}>
                   {'LMMJVSD'[i]}
                 </span>
               </div>
@@ -341,7 +341,7 @@ export function CarteBilan({
         <p className="etiquette" style={{ color: 'var(--pale)', opacity: 0.85 }}>
           Dans la tête, la semaine qui vient
         </p>
-        <p className="display-it" style={{ margin: '10px 0 0', fontSize: 22, lineHeight: 1.35 }}>
+        <p className="display-it" style={{ margin: '10px 0 0', fontSize: 'var(--fs-coach)', lineHeight: 1.35 }}>
           {b.mental}
         </p>
       </section>
@@ -369,11 +369,11 @@ function Tuile({
         background: bonne ? 'rgba(111,224,176,.05)' : undefined,
       }}
     >
-      <span className="chiffre" style={{ fontSize: 38, lineHeight: 1, color: bonne ? 'var(--good)' : undefined }}>
+      <span className="chiffre" style={{ fontSize: 'var(--fs-c-xl)', lineHeight: 1, color: bonne ? 'var(--good)' : undefined }}>
         {valeur}
       </span>
-      {unite && <span style={{ fontSize: 15, color: 'var(--accent)' }}> {unite}</span>}
-      <div style={{ fontSize: 13.5, marginTop: 8, color: bonne ? 'var(--good)' : 'var(--accent)', lineHeight: 1.3 }}>
+      {unite && <span style={{ fontSize: 'var(--fs-texte)', color: 'var(--accent)' }}> {unite}</span>}
+      <div style={{ fontSize: 'var(--fs-meta)', marginTop: 8, color: bonne ? 'var(--good)' : 'var(--accent)', lineHeight: 1.3 }}>
         {libelle}
       </div>
     </div>

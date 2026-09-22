@@ -70,16 +70,16 @@ export function CarteForme({
       <p className="etiquette">Forme projetée</p>
 
       <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: '4px 12px', marginTop: 10 }}>
-        <span className="chiffre" style={{ fontSize: 60, lineHeight: 1, color: teinte }}>
+        <span className="chiffre" style={{ fontSize: 'var(--fs-c-2xl)', lineHeight: 1, color: teinte }}>
           {court(minutes)}
         </span>
-        <span style={{ fontSize: 17, color: 'var(--ink-2)' }}>
+        <span style={{ fontSize: 'var(--fs-lead)', color: 'var(--ink-2)' }}>
           {aReprendre > 0 ? `soit ${aReprendre} min à reprendre` : aReprendre === 0 ? "pile sur l'objectif" : `${-aReprendre} min sous l'objectif`}
         </span>
       </div>
 
       <div style={{ position: 'relative', margin: '28px 4px 0', height: 44 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--ink-3)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-detail)', color: 'var(--ink-3)' }}>
           <span>{court(gauche)}</span>
           <span>{court(droite)}</span>
         </div>
@@ -121,7 +121,7 @@ export function CarteForme({
           }}
         />
       </div>
-      <div style={{ position: 'relative', height: 20, margin: '4px 4px 0', fontSize: 13 }}>
+      <div style={{ position: 'relative', height: 20, margin: '4px 4px 0', fontSize: 'var(--fs-detail)' }}>
         <span style={{ position: 'absolute', left: `${pos(minutes)}%`, transform: 'translateX(-50%)', color: teinte, whiteSpace: 'nowrap' }}>
           {court(minutes)}
         </span>
@@ -162,10 +162,10 @@ export function CarteForme({
               chronos arrondis à la minute (« 3 h 21 → 3 h 20 → 3 h 20 »)
               ne disait rien (retour du 22 septembre). */}
           <div style={{ minWidth: 0 }}>
-            <div className="chiffre" style={{ fontSize: 30, lineHeight: 1, color: teinte }}>
+            <div className="chiffre" style={{ fontSize: 'var(--fs-c-l)', lineHeight: 1, color: teinte }}>
               {ecartTendance === 0 ? 'Stable' : `${ecartTendance < 0 ? '−' : '+'}${formatEcartCourt(Math.abs(ecartTendance))}`}
             </div>
-            <div style={{ fontSize: 13.5, color: 'var(--ink-2)', marginTop: 5, lineHeight: 1.35 }}>
+            <div style={{ fontSize: 'var(--fs-meta)', color: 'var(--ink-2)', marginTop: 5, lineHeight: 1.35 }}>
               en 4 semaines, sur {seances} séance{seances > 1 ? 's' : ''} notée{seances > 1 ? 's' : ''}
             </div>
           </div>

@@ -57,8 +57,8 @@ export function Reminders({ userId }: Props) {
   return (
     <>
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
-        <b style={{ fontSize: 16 }}>Deux rappels, pas trois</b>
-        <p style={{ color: 'var(--ink-2)', fontSize: 14.5, lineHeight: 1.5, margin: '6px 0 14px' }}>
+        <b style={{ fontSize: 'var(--fs-body)' }}>Deux rappels, pas trois</b>
+        <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-texte)', lineHeight: 1.5, margin: '6px 0 14px' }}>
           Le carnet ne vaut que s'il est tenu. La raideur au réveil pèse 45 % de la part douleur, et
           au bout de trois jours sans saisie l'indice cesse de mesurer quoi que ce soit et bloque
           toute hausse de volume.
@@ -78,7 +78,7 @@ export function Reminders({ userId }: Props) {
             >
               <span
                 style={{
-                  fontSize: 17,
+                  fontSize: 'var(--fs-lead)',
                   fontWeight: 700,
                   letterSpacing: '-.4px',
                   fontVariantNumeric: 'tabular-nums',
@@ -89,8 +89,8 @@ export function Reminders({ userId }: Props) {
                 {h.heure}
               </span>
               <span style={{ minWidth: 0 }}>
-                <b style={{ display: 'block', fontSize: 14.5, fontWeight: 600 }}>{h.titre}</b>
-                <span style={{ display: 'block', color: 'var(--ink-2)', fontSize: 13, lineHeight: 1.35, marginTop: 1 }}>
+                <b style={{ display: 'block', fontSize: 'var(--fs-texte)', fontWeight: 600 }}>{h.titre}</b>
+                <span style={{ display: 'block', color: 'var(--ink-2)', fontSize: 'var(--fs-detail)', lineHeight: 1.35, marginTop: 1 }}>
                   {h.detail}
                 </span>
               </span>
@@ -101,7 +101,7 @@ export function Reminders({ userId }: Props) {
         {/* Le silence est la moitié du dispositif : un rappel qui redemande ce
             qui est déjà saisi se fait couper en trois jours, et emporte avec
             lui celui qui servait. */}
-        <p style={{ color: 'var(--ink-3)', fontSize: 12.5, lineHeight: 1.45, margin: '12px 0 0' }}>
+        <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', lineHeight: 1.45, margin: '12px 0 0' }}>
           Rien n'est envoyé si la saisie est déjà faite. Le dimanche, seul le point du soir part :
           c'est ton repos jambes, il n'y a pas de séance à noter.
         </p>
@@ -109,14 +109,14 @@ export function Reminders({ userId }: Props) {
 
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
         {!installee && (
-          <p style={{ color: 'var(--warning)', fontSize: 13.5, lineHeight: 1.45, margin: '0 0 12px', fontWeight: 500 }}>
+          <p style={{ color: 'var(--warning)', fontSize: 'var(--fs-meta)', lineHeight: 1.45, margin: '0 0 12px', fontWeight: 500 }}>
             Tu ouvres Tenload dans un onglet. Sur iPhone, les notifications ne partent que vers
             l'app installée sur l'écran d'accueil : ouvre-la depuis son icône avant d'activer.
           </p>
         )}
 
         {etat === 'indisponible' ? (
-          <p style={{ color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, margin: 0 }}>
+          <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5, margin: 0 }}>
             {!cleConfiguree()
               ? "La clé d'envoi manque à cette version de l'app : ajoute VITE_VAPID_PUBLIC_KEY aux variables de Netlify, puis redéploie."
               : !installee
@@ -124,7 +124,7 @@ export function Reminders({ userId }: Props) {
                 : 'Ce navigateur ne sait pas recevoir de notifications.'}
           </p>
         ) : etat === 'refuse' ? (
-          <p style={{ color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, margin: 0 }}>
+          <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5, margin: 0 }}>
             Les notifications sont bloquées pour Tenload. Il faut les réautoriser dans les réglages
             de ton téléphone : une fois refusée, la permission ne peut plus être redemandée depuis
             l'app.
@@ -144,7 +144,7 @@ export function Reminders({ userId }: Props) {
                   background: 'var(--surface-2)',
                   color: 'var(--ink)',
                   border: '1px solid var(--border-2)',
-                  fontSize: 15,
+                  fontSize: 'var(--fs-texte)',
                   fontWeight: 600,
                   opacity: occupe ? 0.6 : 1,
                 }}
@@ -157,12 +157,12 @@ export function Reminders({ userId }: Props) {
               </BoutonAction>
             )}
             {etat === 'actif' && (
-              <p style={{ color: 'var(--ink-2)', fontSize: 13, lineHeight: 1.45, margin: '10px 0 0' }}>
+              <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-detail)', lineHeight: 1.45, margin: '10px 0 0' }}>
                 Cet appareil est abonné. Chaque appareil s'abonne séparément.
               </p>
             )}
             {!userId && (
-              <p style={{ color: 'var(--ink-3)', fontSize: 12.5, lineHeight: 1.45, margin: '10px 0 0' }}>
+              <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', lineHeight: 1.45, margin: '10px 0 0' }}>
                 Indisponible en démonstration : il n'y a pas de compte à qui envoyer.
               </p>
             )}

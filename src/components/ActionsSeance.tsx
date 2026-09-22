@@ -212,7 +212,7 @@ export function ActionsSeance({
                   padding: '12px 13px',
                   borderRadius: 'var(--radius-sm)',
                   textAlign: 'left',
-                  fontSize: 15,
+                  fontSize: 'var(--fs-texte)',
                   fontWeight: 600,
                   color: 'var(--ink)',
                   background:
@@ -331,7 +331,7 @@ function ComposeurQualite({
           padding: '12px 13px',
           borderRadius: 'var(--radius-sm)',
           textAlign: 'left',
-          fontSize: 15,
+          fontSize: 'var(--fs-texte)',
           fontWeight: 600,
           color: 'var(--ink)',
           background: actif ? 'color-mix(in srgb, var(--ink) 11%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
@@ -367,7 +367,7 @@ function ComposeurQualite({
               </Choix>
             ))}
           </Reglage>
-          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--sur-ink-3)', lineHeight: 1.45 }}>
+          <p style={{ margin: 0, fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)', lineHeight: 1.45 }}>
             {formatNumber(Math.round((q.reps * q.km + 4.5) * 10) / 10)} km au total, échauffement de
             2,5 km et retour au calme de 2 km compris. Le contrôle des contraintes la traite comme
             une séance de vitesse.
@@ -383,7 +383,7 @@ function Reglage({ label, children }: { label: string; children: ReactNode }) {
     <div>
       <div
         style={{
-          fontSize: 13,
+          fontSize: 'var(--fs-detail)',
           fontWeight: 500,
           color: 'var(--accent)',
           marginBottom: 7,
@@ -412,7 +412,7 @@ function Choix({
       style={{
         padding: '7px 12px',
         borderRadius: 'var(--pill)',
-        fontSize: 13,
+        fontSize: 'var(--fs-detail)',
         fontWeight: 650,
         fontVariantNumeric: 'tabular-nums',
         color: actif ? 'var(--pale-ink)' : 'var(--ink)',
@@ -452,7 +452,7 @@ function Action({
         gap: 9,
         padding: '14px 22px',
         borderRadius: 'var(--pill)',
-        fontSize: 16,
+        fontSize: 'var(--fs-body)',
         fontWeight: 600,
         whiteSpace: 'nowrap',
         color: actif ? 'var(--pale-ink)' : 'var(--ink)',
@@ -474,7 +474,7 @@ function Panneau({ titre, children }: { titre: string; children: ReactNode }) {
       className="glass"
       style={{ borderRadius: 'var(--radius)', padding: '15px 16px', marginTop: 13 }}
     >
-      <h4 style={{ margin: '0 0 13px', fontSize: 15.5, fontWeight: 800 }}>{titre}</h4>
+      <h4 style={{ margin: '0 0 13px', fontSize: 'var(--fs-texte)', fontWeight: 800 }}>{titre}</h4>
       {children}
     </div>
   )
@@ -553,7 +553,7 @@ function Boutons({
             padding: '14px 18px',
             borderRadius: 'var(--pill)',
             fontWeight: 700,
-            fontSize: 15.5,
+            fontSize: 'var(--fs-texte)',
             color: 'var(--ink-2)',
             border: '1px solid var(--border-2)',
           }}
@@ -592,19 +592,19 @@ export function Alertes({ alertes }: { alertes: Alerte[] }) {
         border: '1px solid rgba(255,107,94,.32)',
       }}
     >
-      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--critical)', marginBottom: 6 }}>
+      <div style={{ fontSize: 'var(--fs-detail)', fontWeight: 800, color: 'var(--critical)', marginBottom: 6 }}>
         {alertes.length > 1
           ? `${alertes.length} contraintes ne tiennent plus`
           : 'Une contrainte ne tient plus'}
       </div>
-      <ul style={{ margin: 0, paddingLeft: 17, color: 'var(--ink)', fontSize: 13.5, lineHeight: 1.55 }}>
+      <ul style={{ margin: 0, paddingLeft: 17, color: 'var(--ink)', fontSize: 'var(--fs-meta)', lineHeight: 1.55 }}>
         {alertes.map((a, i) => (
           <li key={i}>
             {a.texte} <span style={{ color: 'var(--ink-3)' }}>(contrainte {a.contrainte})</span>
           </li>
         ))}
       </ul>
-      <p style={{ margin: '8px 0 0', fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.5 }}>
+      <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-detail)', color: 'var(--ink-2)', lineHeight: 1.5 }}>
         Tu peux enregistrer quand même. C'est ton tendon qui tranche, pas l'app.
       </p>
     </div>
@@ -614,7 +614,7 @@ export function Alertes({ alertes }: { alertes: Alerte[] }) {
 function Champ({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div style={{ marginBottom: 13 }}>
-      <div style={{ fontSize: 14, color: 'var(--accent)', marginBottom: 7, textTransform: 'none' }}>
+      <div style={{ fontSize: 'var(--fs-meta)', color: 'var(--accent)', marginBottom: 7, textTransform: 'none' }}>
         {label}
       </div>
       {children}
@@ -629,6 +629,6 @@ const styleChamp: React.CSSProperties = {
   background: 'var(--surface-2)',
   border: '1px solid var(--border-2)',
   color: 'var(--ink)',
-  fontSize: 15,
+  fontSize: 'var(--fs-texte)',
   fontWeight: 600,
 }

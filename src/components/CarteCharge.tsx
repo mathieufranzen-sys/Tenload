@@ -76,14 +76,14 @@ export function CarteCharge({
             padding: '7px 14px',
             borderRadius: 'var(--pill)',
             border: `1px ${inconnu ? 'dashed' : 'solid'} var(--border-2)`,
-            fontSize: 14,
+            fontSize: 'var(--fs-meta)',
             color: 'var(--ink)',
           }}
         >
           <Icon name="capsule" size={15} style={{ color: 'var(--accent)' }} />
           Charge tendon
         </span>
-        <span style={{ fontSize: 13, color: 'var(--accent)', textAlign: 'right' }}>
+        <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--accent)', textAlign: 'right' }}>
           {inconnu ? 'Non calculé' : detail.stale ? 'Sur une estimation' : 'Voir le détail'}
         </span>
       </div>
@@ -94,10 +94,10 @@ export function CarteCharge({
         <div style={{ flex: 1, minWidth: 0 }}>
           {inconnu ? (
             <>
-              <div className="display" style={{ fontSize: 44, lineHeight: 1 }}>
+              <div className="display" style={{ fontSize: 'var(--fs-t-etat)', lineHeight: 1 }}>
                 Je ne sais pas
               </div>
-              <p style={{ margin: '12px 0 0', fontSize: 15, lineHeight: 1.5, color: 'var(--sur-ink-2)' }}>
+              <p style={{ margin: '12px 0 0', fontSize: 'var(--fs-texte)', lineHeight: 1.5, color: 'var(--sur-ink-2)' }}>
                 Aucune douleur saisie depuis {detail.joursSansDouleur ?? 'plus de 60'} jours.
                 L'indice n'est pas bas : il est inconnu. La charge mécanique, elle, est connue :{' '}
                 {Math.round(detail.ratio + detail.freshness + detail.monotony)} points sur 58.
@@ -106,10 +106,10 @@ export function CarteCharge({
           ) : (
             <>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                <span className="chiffre" style={{ fontSize: 96, lineHeight: 0.9 }}>
+                <span className="chiffre" style={{ fontSize: 'var(--fs-c-hero)', lineHeight: 0.9 }}>
                   {detail.idx}
                 </span>
-                <span style={{ fontSize: 17, color: 'var(--accent)' }}>/ 100</span>
+                <span style={{ fontSize: 'var(--fs-lead)', color: 'var(--accent)' }}>/ 100</span>
               </div>
               <span
                 style={{
@@ -120,7 +120,7 @@ export function CarteCharge({
                   background: teinte,
                   color: ENCRE_BANDE[bande.key],
                   border: bande.key === 'noir' ? '1px solid var(--border-2)' : undefined,
-                  fontSize: 14,
+                  fontSize: 'var(--fs-meta)',
                   fontWeight: 600,
                   lineHeight: 1.25,
                 }}
@@ -134,12 +134,12 @@ export function CarteCharge({
                     alignItems: 'center',
                     gap: 6,
                     marginTop: 10,
-                    fontSize: 14,
+                    fontSize: 'var(--fs-meta)',
                     color: 'var(--accent)',
                   }}
                 >
                   {ecartVeille !== 0 && (
-                    <span aria-hidden style={{ fontSize: 15 }}>
+                    <span aria-hidden style={{ fontSize: 'var(--fs-texte)' }}>
                       {ecartVeille > 0 ? '↑' : '↓'}
                     </span>
                   )}
@@ -166,7 +166,7 @@ export function CarteCharge({
                   textAlign: 'center',
                   padding: '7px 0',
                   borderRadius: 'var(--pill)',
-                  fontSize: 12,
+                  fontSize: 'var(--fs-micro)',
                   fontWeight: courante ? 700 : 500,
                   background: courante ? TEINTE_BANDE[b.key] : 'transparent',
                   color: courante ? ENCRE_BANDE[b.key] : 'var(--sur-ink-3)',
@@ -213,7 +213,7 @@ function Gelule({ valeur, teinte }: { valeur: number | null; teinte: string }) {
             inset: 0,
             display: 'grid',
             placeItems: 'center',
-            fontSize: 44,
+            fontSize: 'var(--fs-t-etat)',
             color: 'var(--sur-ink-3)',
           }}
         >

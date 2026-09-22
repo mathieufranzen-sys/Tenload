@@ -76,13 +76,13 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
         }}
       >
         <header style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <h1 className="display" style={{ margin: 0, fontSize: 58, lineHeight: 1 }}>
+          <h1 className="display" style={{ margin: 0, fontSize: 'var(--fs-c-2xl)', lineHeight: 1 }}>
             Tenload
           </h1>
           <p
             style={{
               color: 'var(--sur-ink-2)',
-              fontSize: 15,
+              fontSize: 'var(--fs-texte)',
               fontWeight: 500,
               lineHeight: 1.5,
               margin: '12px 0 0',
@@ -94,7 +94,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
           <p
             style={{
               color: 'var(--sur-ink-3)',
-              fontSize: 13,
+              fontSize: 'var(--fs-detail)',
               fontWeight: 500,
               margin: '6px 0 0',
             }}
@@ -109,9 +109,9 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
               <span style={{ color: 'var(--good)', display: 'flex' }}>
                 <Icon name="check" size={20} />
               </span>
-              <b style={{ fontSize: 16.5, fontWeight: 700 }}>Code envoyé</b>
+              <b style={{ fontSize: 'var(--fs-body)', fontWeight: 700 }}>Code envoyé</b>
             </div>
-            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.55, color: 'var(--ink)' }}>
+            <p style={{ margin: 0, fontSize: 'var(--fs-texte)', lineHeight: 1.55, color: 'var(--ink)' }}>
               Va chercher le mail envoyé à {email}, puis recopie ici le code qu'il contient.
             </p>
 
@@ -139,7 +139,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                   padding: '14px 15px',
                   color: 'var(--ink)',
                   font: 'inherit',
-                  fontSize: 26,
+                  fontSize: 'var(--fs-c-m)',
                   fontWeight: 600,
                   // Dix chiffres à 10 px d'écart débordent d'un écran de 375 :
                   // l'espacement se resserre dès que le code s'allonge.
@@ -150,7 +150,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                 }}
               />
               {erreur && (
-                <p style={{ color: 'var(--critical)', fontSize: 12.5, fontWeight: 600, margin: '9px 2px 0' }}>
+                <p style={{ color: 'var(--critical)', fontSize: 'var(--fs-detail)', fontWeight: 600, margin: '9px 2px 0' }}>
                   {erreur}
                 </p>
               )}
@@ -159,7 +159,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
               </BoutonAction>
             </form>
 
-            <p style={{ color: 'var(--sur-ink-3)', fontSize: 12, lineHeight: 1.5, margin: '13px 2px 0' }}>
+            <p style={{ color: 'var(--sur-ink-3)', fontSize: 'var(--fs-micro)', lineHeight: 1.5, margin: '13px 2px 0' }}>
               Le mail contient aussi un lien, mais si tu as installé Tenload sur ton écran
               d'accueil, c'est le code qu'il faut : le lien ouvrirait Safari, qui est un espace
               séparé de l'app.
@@ -177,7 +177,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                 marginTop: 12,
                 padding: 14,
                 borderRadius: 'var(--pill)',
-                fontSize: 15.5,
+                fontSize: 'var(--fs-texte)',
                 fontWeight: 700,
                 color: 'var(--sur-ink-2)',
                 border: '1px solid var(--glass-border)',
@@ -192,7 +192,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
               htmlFor="email"
               style={{
                 display: 'block',
-                fontSize: 13,
+                fontSize: 'var(--fs-detail)',
                 fontWeight: 500,
                 color: 'var(--accent)',
                 marginBottom: 9,
@@ -218,13 +218,13 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                 padding: '14px 15px',
                 color: 'var(--ink)',
                 font: 'inherit',
-                fontSize: 16.5,
+                fontSize: 'var(--fs-body)',
                 fontWeight: 500,
                 outline: 'none',
               }}
             />
             {erreur && (
-              <p style={{ color: 'var(--critical)', fontSize: 12.5, fontWeight: 600, margin: '9px 2px 0' }}>
+              <p style={{ color: 'var(--critical)', fontSize: 'var(--fs-detail)', fontWeight: 600, margin: '9px 2px 0' }}>
                 {erreur}
               </p>
             )}
@@ -234,7 +234,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
             <p
               style={{
                 color: 'var(--sur-ink-3)',
-                fontSize: 12,
+                fontSize: 'var(--fs-micro)',
                 lineHeight: 1.5,
                 margin: '13px 2px 0',
                 textAlign: 'center',
@@ -257,7 +257,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
               borderRadius: 'var(--pill)',
               padding: 14,
               font: 'inherit',
-              fontSize: 14.5,
+              fontSize: 'var(--fs-texte)',
               fontWeight: 600,
               color: 'var(--sur-ink-2)',
               cursor: 'pointer',

@@ -63,11 +63,11 @@ export function EnteteEcran({
       }}
     >
       <div style={{ minWidth: 0 }}>
-        <h1 className="display" style={{ margin: 0, fontSize: 38, lineHeight: 1.05 }}>
+        <h1 className="display" style={{ margin: 0, fontSize: 'var(--fs-t-ecran)', lineHeight: 1.05 }}>
           {titre}
         </h1>
         {contexte && (
-          <p style={{ color: 'var(--accent)', fontSize: 13.5, fontWeight: 500, margin: '6px 0 0' }}>
+          <p style={{ color: 'var(--accent)', fontSize: 'var(--fs-meta)', fontWeight: 500, margin: '6px 0 0' }}>
             {contexte}
           </p>
         )}

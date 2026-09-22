@@ -602,7 +602,7 @@ function BandeauDemo({ onQuitter }: { onQuitter?: () => void }) {
         border: '1px solid var(--border-2)',
         borderRadius: 'var(--radius-sm)',
         padding: '11px 12px',
-        fontSize: 13,
+        fontSize: 'var(--fs-detail)',
         lineHeight: 1.45,
         color: 'var(--ink-2)',
       }}
@@ -618,7 +618,7 @@ function BandeauDemo({ onQuitter }: { onQuitter?: () => void }) {
             border: 'none',
             background: 'var(--neon)',
             color: 'var(--ink)',
-            fontSize: 12.5,
+            fontSize: 'var(--fs-detail)',
             fontWeight: 650,
             cursor: 'pointer',
           }}
@@ -640,7 +640,7 @@ function BandeauSeed() {
         border: '1px solid var(--border-2)',
         borderRadius: 'var(--radius-sm)',
         padding: '13px 14px',
-        fontSize: 13.5,
+        fontSize: 'var(--fs-meta)',
         lineHeight: 1.5,
         color: 'var(--ink-2)',
       }}
@@ -661,7 +661,7 @@ function BandeauErreur() {
         border: '1px solid var(--c-erreur)',
         borderRadius: 'var(--radius-sm)',
         padding: '13px 14px',
-        fontSize: 13.5,
+        fontSize: 'var(--fs-meta)',
         lineHeight: 1.5,
         color: 'var(--ink-2)',
       }}

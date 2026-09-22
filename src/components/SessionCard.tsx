@@ -98,7 +98,7 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
           className="display"
           style={{
             margin: '0 0 4px',
-            fontSize: 20,
+            fontSize: 'var(--fs-t-liste)',
             lineHeight: 1.18,
           }}
         >
@@ -110,7 +110,7 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
             l'en-tête du jour sur Programme — et elle occupait la place des
             deux seuls chiffres qui décident de la séance. */}
         {s.type !== 'repos' && (
-          <div style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500 }}>
+          <div style={{ color: 'var(--sur-ink-2)', fontSize: 'var(--fs-detail)', fontWeight: 500 }}>
             {[duration, volume].filter(Boolean).join(' · ')}
           </div>
         )}
@@ -130,7 +130,7 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
                 padding: '4px 10px',
                 borderRadius: 'var(--pill)',
                 background: 'var(--surface-3)',
-                fontSize: 12,
+                fontSize: 'var(--fs-micro)',
                 fontWeight: 500,
                 whiteSpace: 'nowrap',
               }}
@@ -146,7 +146,7 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
         </div>
 
         {feedback && (
-          <div style={{ marginTop: 9, color: 'var(--good)', fontSize: 13, fontWeight: 500 }}>
+          <div style={{ marginTop: 9, color: 'var(--good)', fontSize: 'var(--fs-detail)', fontWeight: 500 }}>
             Noté · douleur {formatNumber(feedback.pain)}/10 · effort {feedback.rpe}/10
           </div>
         )}
@@ -195,7 +195,7 @@ function CarteCompacte({ session: s, marathonPace, feedback, onClick, etat }: Om
         <span
           className={repos ? undefined : 'display'}
           style={{
-            fontSize: repos ? 16 : 19,
+            fontSize: repos ? 'var(--fs-body)' : 'var(--fs-t-liste)',
             lineHeight: 1.2,
             color: repos ? 'var(--sur-ink-3)' : 'var(--ink)',
             textDecoration: s.saute ? 'line-through' : undefined,
@@ -204,9 +204,9 @@ function CarteCompacte({ session: s, marathonPace, feedback, onClick, etat }: Om
           {s.title}
         </span>
         {feedback ? (
-          <span style={{ fontSize: 13.5, color: 'var(--good)', flex: 'none' }}>Noté</span>
+          <span style={{ fontSize: 'var(--fs-meta)', color: 'var(--good)', flex: 'none' }}>Noté</span>
         ) : s.dist ? (
-          <span style={{ fontSize: 14, color: 'var(--accent)', flex: 'none' }}>{formatNumber(s.dist)} km</span>
+          <span style={{ fontSize: 'var(--fs-meta)', color: 'var(--accent)', flex: 'none' }}>{formatNumber(s.dist)} km</span>
         ) : null}
       </div>
       {!repos && (
@@ -216,7 +216,7 @@ function CarteCompacte({ session: s, marathonPace, feedback, onClick, etat }: Om
             alignItems: 'center',
             gap: 8,
             marginTop: 4,
-            fontSize: 13.5,
+            fontSize: 'var(--fs-meta)',
             color: 'var(--sur-ink-2)',
           }}
         >

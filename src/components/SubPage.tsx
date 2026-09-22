@@ -50,9 +50,9 @@ export function SubPage({
           </button>
           <div style={{ minWidth: 0, paddingTop: surtitre ? 0 : 8 }}>
             {surtitre && (
-              <p style={{ margin: '0 0 3px', fontSize: 13.5, color: 'var(--accent)' }}>{surtitre}</p>
+              <p style={{ margin: '0 0 3px', fontSize: 'var(--fs-meta)', color: 'var(--accent)' }}>{surtitre}</p>
             )}
-            <h2 className="display" style={{ margin: 0, fontSize: 28, lineHeight: 1.1 }}>
+            <h2 className="display" style={{ margin: 0, fontSize: 'var(--fs-t-page)', lineHeight: 1.1 }}>
               {titre}
             </h2>
           </div>

@@ -40,7 +40,7 @@ export function Segmented<T extends string>({
               flex: 1,
               padding: '8px 12px',
               borderRadius: 'var(--pill)',
-              fontSize: 13,
+              fontSize: 'var(--fs-detail)',
               fontWeight: 600,
               whiteSpace: 'nowrap',
               // Button/Accent : le néon, texte Green-400 (retour du 22 septembre).

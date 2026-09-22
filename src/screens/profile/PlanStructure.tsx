@@ -20,7 +20,7 @@ export function PlanStructure() {
             <span
               style={{
                 display: 'inline-block',
-                fontSize: 13,
+                fontSize: 'var(--fs-detail)',
                 fontWeight: 600,
                 padding: '5px 11px',
                 borderRadius: 'var(--pill)',
@@ -31,11 +31,11 @@ export function PlanStructure() {
             >
               bloc {b.id} · {b.name.toLowerCase()}
             </span>
-            <div style={{ fontSize: 13.5, color: 'var(--ink-2)', fontWeight: 600, marginBottom: 4 }}>
+            <div style={{ fontSize: 'var(--fs-meta)', color: 'var(--ink-2)', fontWeight: 600, marginBottom: 4 }}>
               Semaines {b.weeks[0]} à {b.weeks[1]} · {formatDay(semaines[0].monday)} → {formatDay(addDays(derniere.monday, 6))} ·
               sortie longue {slMin} à {slMax} km
             </div>
-            <div style={{ fontSize: 15, lineHeight: 1.5 }}>{b.focus}</div>
+            <div style={{ fontSize: 'var(--fs-texte)', lineHeight: 1.5 }}>{b.focus}</div>
           </div>
         )
       })}

@@ -180,7 +180,7 @@ export function SessionSheet({
             <Icon name="chevronLeft" size={20} />
           </button>
 
-          <h2 className="display" style={{ margin: '18px 0 0', fontSize: 40, lineHeight: 1.05 }}>
+          <h2 className="display" style={{ margin: '18px 0 0', fontSize: 'var(--fs-t-ecran)', lineHeight: 1.05 }}>
             {s.title}
           </h2>
 
@@ -191,7 +191,7 @@ export function SessionSheet({
               alignItems: 'center',
               gap: '4px 8px',
               margin: '12px 0 0',
-              fontSize: 15.5,
+              fontSize: 'var(--fs-texte)',
               color: 'var(--ink)',
             }}
           >
@@ -292,15 +292,15 @@ export function SessionSheet({
                         borderBottom: i < s.ex!.length - 1 ? '1px solid var(--border)' : undefined,
                       }}
                     >
-                      <div style={{ fontSize: 15.5 }}>
+                      <div style={{ fontSize: 'var(--fs-texte)' }}>
                         {nom}
                         {precision && (
-                          <em style={{ display: 'block', fontStyle: 'normal', color: 'var(--ink-3)', fontSize: 13, marginTop: 2 }}>
+                          <em style={{ display: 'block', fontStyle: 'normal', color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', marginTop: 2 }}>
                             {precision}
                           </em>
                         )}
                       </div>
-                      <div style={{ fontSize: 14.5, color: 'var(--sur-ink-2)', whiteSpace: 'nowrap' }}>{serie}</div>
+                      <div style={{ fontSize: 'var(--fs-texte)', color: 'var(--sur-ink-2)', whiteSpace: 'nowrap' }}>{serie}</div>
                     </div>
                   ))}
                 </>
@@ -357,7 +357,7 @@ export function SessionSheet({
               <h4
                 style={{
                   margin: '0 0 8px',
-                  fontSize: 15.5,
+                  fontSize: 'var(--fs-texte)',
                   fontWeight: 800,
                   color: 'var(--good)',
                   display: 'flex',
@@ -368,11 +368,11 @@ export function SessionSheet({
                 <Icon name="check" size={18} />
                 Douleur à l&apos;effort 0, effort perçu 0
               </h4>
-              <p style={{ margin: 0, color: 'var(--sur-ink-2)', fontSize: 14, lineHeight: 1.5 }}>
+              <p style={{ margin: 0, color: 'var(--sur-ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5 }}>
                 Ce ne sont pas des estimations : il n&apos;y a pas eu d&apos;effort. Rien à saisir,
                 sauf si tu enregistres un écart et que la journée devient autre chose.
               </p>
-              <p style={{ margin: '10px 0 0', color: 'var(--sur-ink-3)', fontSize: 12.5, lineHeight: 1.5 }}>
+              <p style={{ margin: '10px 0 0', color: 'var(--sur-ink-3)', fontSize: 'var(--fs-detail)', lineHeight: 1.5 }}>
                 La raideur au réveil et la douleur du soir, elles, restent à noter dans le carnet de
                 l&apos;écran Aujourd&apos;hui : un jour sans course n&apos;est pas un jour sans tendon.
               </p>
@@ -406,8 +406,8 @@ export function SessionSheet({
 
           {butDeLaSeance(s.type) && (
             <section className="carte" style={{ padding: '18px 20px', marginTop: 16 }}>
-              <p className="display" style={{ margin: 0, fontSize: 21 }}>Ce que travaille cette séance</p>
-              <p style={{ margin: '8px 0 0', fontSize: 16, lineHeight: 1.55 }}>
+              <p className="display" style={{ margin: 0, fontSize: 'var(--fs-t-carte)' }}>Ce que travaille cette séance</p>
+              <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-body)', lineHeight: 1.55 }}>
                 {butDeLaSeance(s.type)!.replace(/^À quoi ça sert\s*:\s*/i, '')}
               </p>
             </section>
@@ -430,7 +430,7 @@ const NIVEAU_COULEUR = ['#a7a99f', '#b3bbf9', '#6e7ff4', '#3b4dd6', '#1f2a78']
 /** Un titre de section : un vrai titre, en serif, pas une étiquette. */
 function TitreSection({ children }: { children: string }) {
   return (
-    <h3 className="display" style={{ margin: '28px 0 12px', fontSize: 23, fontWeight: 400, lineHeight: 1.2 }}>
+    <h3 className="display" style={{ margin: '28px 0 12px', fontSize: 'var(--fs-t-carte)', fontWeight: 400, lineHeight: 1.2 }}>
       {children}
     </h3>
   )
@@ -451,7 +451,7 @@ function NoteSeance({ teinte, fond, children }: { teinte: string; fond: string; 
       }}
     >
       <span aria-hidden style={{ width: 4, borderRadius: 2, background: teinte, flex: 'none' }} />
-      <span style={{ fontSize: 14.5, lineHeight: 1.45, color: 'var(--ink)' }}>{children}</span>
+      <span style={{ fontSize: 'var(--fs-texte)', lineHeight: 1.45, color: 'var(--ink)' }}>{children}</span>
     </div>
   )
 }
@@ -485,8 +485,8 @@ function StepView({
         aria-hidden
         style={{ position: 'absolute', left: 0, top: 2, bottom: 2, width: 4.5, borderRadius: 3, background: couleur }}
       />
-      <b style={{ display: 'block', fontSize: 16, fontWeight: 700, letterSpacing: '-.2px' }}>{label}</b>
-      {texte && <span style={{ display: 'block', color: 'var(--ink-2)', fontSize: 14.5, fontWeight: 500, marginTop: 1 }}>{texte}</span>}
+      <b style={{ display: 'block', fontSize: 'var(--fs-body)', fontWeight: 700, letterSpacing: '-.2px' }}>{label}</b>
+      {texte && <span style={{ display: 'block', color: 'var(--ink-2)', fontSize: 'var(--fs-texte)', fontWeight: 500, marginTop: 1 }}>{texte}</span>}
     </div>
   )
 }
@@ -523,7 +523,7 @@ function FormulaireRessenti({
 
   return (
     <div>
-      <p style={{ color: 'var(--sur-ink-2)', fontSize: 14, lineHeight: 1.5, margin: '0 0 18px' }}>
+      <p style={{ color: 'var(--sur-ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5, margin: '0 0 18px' }}>
         Deux curseurs après chaque séance. C'est ce qui pilote l'adaptation du plan.
       </p>
 
@@ -566,7 +566,7 @@ function FormulaireRessenti({
         Enregistrer mon ressenti
       </BoutonAction>
       {disabled && (
-        <p style={{ color: 'var(--ink-3)', fontSize: 12.5, marginTop: 8 }}>
+        <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', marginTop: 8 }}>
           Connecte-toi pour enregistrer un ressenti.
         </p>
       )}

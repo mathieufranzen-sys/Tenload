@@ -99,7 +99,7 @@ export function SectionDossards({
           en bas de liste, il descendait à chaque dossard ajouté. */}
       {titre && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '0 2px 12px' }}>
-          <h2 className="display" style={{ margin: 0, fontSize: 30 }}>
+          <h2 className="display" style={{ margin: 0, fontSize: 'var(--fs-t-page)' }}>
             Dossards
           </h2>
           {modifiable && !ajout && (
@@ -111,7 +111,7 @@ export function SectionDossards({
       )}
 
       {indisponibles && (
-        <p className="carte" style={{ margin: '0 0 12px', padding: '14px 16px', fontSize: 14, lineHeight: 1.5, color: 'var(--warning)' }}>
+        <p className="carte" style={{ margin: '0 0 12px', padding: '14px 16px', fontSize: 'var(--fs-meta)', lineHeight: 1.5, color: 'var(--warning)' }}>
           La table des dossards n'existe pas encore en base. Colle{' '}
           <code style={{ color: 'var(--ink)' }}>supabase/dossards.sql</code> dans l'éditeur SQL de
           Supabase : en attendant, les dossards du plan s'affichent mais rien ne s'enregistre.
@@ -134,7 +134,7 @@ export function SectionDossards({
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {dossards.length === 0 && (
-          <p style={{ margin: '4px 2px', fontSize: 15, color: 'var(--ink-2)' }}>
+          <p style={{ margin: '4px 2px', fontSize: 'var(--fs-texte)', color: 'var(--ink-2)' }}>
             {periode === 'passe' ? 'Aucun dossard couru pour l’instant.' : 'Aucun dossard à venir.'}
           </p>
         )}
@@ -215,10 +215,10 @@ function ResumeDossard({ dossard: d, now, onOuvrir }: { dossard: Dossard; now: s
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
         <div style={{ minWidth: 0 }}>
-          <h3 className="display" style={{ margin: 0, fontSize: 22, lineHeight: 1.15, fontWeight: 400 }}>
+          <h3 className="display" style={{ margin: 0, fontSize: 'var(--fs-t-carte)', lineHeight: 1.15, fontWeight: 400 }}>
             {d.nom}
           </h3>
-          <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--ink-2)' }}>
+          <p style={{ margin: '4px 0 0', fontSize: 'var(--fs-meta)', color: 'var(--ink-2)' }}>
             {formatDayLong(d.day)} · {formatNumber(Math.round(d.km * 10) / 10)} km
           </p>
         </div>
@@ -234,12 +234,12 @@ function ResumeDossard({ dossard: d, now, onOuvrir }: { dossard: Dossard; now: s
       </div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 18, marginTop: 14 }}>
         <div>
-          <div style={{ fontSize: 12.5, color: 'var(--ink-2)' }}>Objectif</div>
-          <div className="chiffre" style={{ fontSize: 22 }}>{d.objectifS != null ? formatChrono(d.objectifS) : '—'}</div>
+          <div style={{ fontSize: 'var(--fs-detail)', color: 'var(--ink-2)' }}>Objectif</div>
+          <div className="chiffre" style={{ fontSize: 'var(--fs-c-m)' }}>{d.objectifS != null ? formatChrono(d.objectifS) : '—'}</div>
         </div>
         <div>
-          <div style={{ fontSize: 12.5, color: 'var(--ink-2)' }}>{passe || jours === 0 ? 'Chrono' : 'Allure visée'}</div>
-          <div className="chiffre" style={{ fontSize: 22 }}>
+          <div style={{ fontSize: 'var(--fs-detail)', color: 'var(--ink-2)' }}>{passe || jours === 0 ? 'Chrono' : 'Allure visée'}</div>
+          <div className="chiffre" style={{ fontSize: 'var(--fs-c-m)' }}>
             {passe || jours === 0
               ? d.chronoS != null
                 ? formatChrono(d.chronoS)
@@ -317,7 +317,7 @@ function CarteDossard({
         )}
       </div>
       {d.objectifS != null && (
-        <p style={{ margin: '8px 2px 0', fontSize: 13.5, color: 'var(--ink-2)' }}>
+        <p style={{ margin: '8px 2px 0', fontSize: 'var(--fs-meta)', color: 'var(--ink-2)' }}>
           Soit {formatPace(d.objectifS / d.km)}/km
         </p>
       )}
@@ -341,10 +341,10 @@ function CarteDossard({
         <p className="etiquette" style={{ color: 'var(--pale)', opacity: 0.85 }}>
           Le mot du coach
         </p>
-        <p className="display-it" style={{ margin: '6px 0 0', fontSize: 18, lineHeight: 1.35 }}>
+        <p className="display-it" style={{ margin: '6px 0 0', fontSize: 'var(--fs-coach-s)', lineHeight: 1.35 }}>
           {mot.constat}
         </p>
-        <p style={{ margin: '8px 0 0', fontSize: 14, lineHeight: 1.5, color: 'var(--sur-ink-2)' }}>{mot.conseil}</p>
+        <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-meta)', lineHeight: 1.5, color: 'var(--sur-ink-2)' }}>{mot.conseil}</p>
       </div>
 
       {onSupprimer && modifiable && (
@@ -373,15 +373,15 @@ const boutonDiscret = {
   padding: '8px 14px',
   borderRadius: 'var(--pill)',
   border: '1px solid var(--border-2)',
-  fontSize: 13.5,
+  fontSize: 'var(--fs-meta)',
   color: 'var(--sur-ink-2)',
 } as const
 
 function Valeur({ label, texte, attente }: { label: string; texte: string; attente?: boolean }) {
   return (
     <div style={{ padding: '12px 14px', borderRadius: 18, background: 'var(--surface)' }}>
-      <div style={{ fontSize: 13, color: 'var(--accent)' }}>{label}</div>
-      <div className="chiffre" style={{ fontSize: 24, marginTop: 2, color: attente ? 'var(--ink-3)' : undefined }}>
+      <div style={{ fontSize: 'var(--fs-detail)', color: 'var(--accent)' }}>{label}</div>
+      <div className="chiffre" style={{ fontSize: 'var(--fs-c-m)', marginTop: 2, color: attente ? 'var(--ink-3)' : undefined }}>
         {texte}
       </div>
     </div>
@@ -418,7 +418,7 @@ function ChampChrono({
         border: `1px ${saisie ? 'solid' : 'dashed'} ${invalide ? 'var(--c-erreur)' : 'var(--border-2)'}`,
       }}
     >
-      <div style={{ fontSize: 13, color: invalide ? 'var(--c-erreur)' : 'var(--accent)' }}>
+      <div style={{ fontSize: 'var(--fs-detail)', color: invalide ? 'var(--c-erreur)' : 'var(--accent)' }}>
         {invalide ? 'Chrono hors plage' : label}
       </div>
       <input
@@ -439,7 +439,7 @@ function ChampChrono({
           outline: 'none',
           padding: 0,
           fontFamily: 'var(--font-display)',
-          fontSize: 24,
+          fontSize: 'var(--fs-c-m)',
           color: 'var(--ink)',
           fontVariantNumeric: 'tabular-nums',
         }}
@@ -468,7 +468,7 @@ function FormulaireDossard({
 
   return (
     <div className="carte" style={{ padding: '18px 18px', marginBottom: 12, borderColor: 'var(--border-2)' }}>
-      <p className="etiquette" style={{ fontSize: 14 }}>Nouveau dossard</p>
+      <p className="etiquette" style={{ fontSize: 'var(--fs-meta)' }}>Nouveau dossard</p>
 
       <Champ label="Nom de la course">
         <input value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Corrida de Noël" style={styleChamp} />
@@ -514,7 +514,7 @@ function FormulaireDossard({
         />
       </Champ>
 
-      <p style={{ margin: '4px 2px 14px', fontSize: 13, lineHeight: 1.5, color: 'var(--sur-ink-3)' }}>
+      <p style={{ margin: '4px 2px 14px', fontSize: 'var(--fs-detail)', lineHeight: 1.5, color: 'var(--sur-ink-3)' }}>
         Un dossard ajouté ne change rien au programme ni à l'indice : le plan reste celui qui est écrit.
         S'il tombe sur une séance, c'est à toi de la déplacer ou de la remplacer.
       </p>
@@ -539,7 +539,7 @@ function FormulaireDossard({
       <button
         type="button"
         onClick={onAnnuler}
-        style={{ ...boutonDiscret, display: 'block', width: '100%', marginTop: 8, padding: '14px 18px', fontSize: 15 }}
+        style={{ ...boutonDiscret, display: 'block', width: '100%', marginTop: 8, padding: '14px 18px', fontSize: 'var(--fs-texte)' }}
       >
         Annuler
       </button>
@@ -550,7 +550,7 @@ function FormulaireDossard({
 function Champ({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div style={{ marginTop: 14 }}>
-      <div style={{ fontSize: 13.5, color: 'var(--accent)', marginBottom: 7 }}>{label}</div>
+      <div style={{ fontSize: 'var(--fs-meta)', color: 'var(--accent)', marginBottom: 7 }}>{label}</div>
       {children}
     </div>
   )
@@ -563,6 +563,6 @@ const styleChamp = {
   background: 'var(--surface-2)',
   border: '1px solid var(--border-2)',
   color: 'var(--ink)',
-  fontSize: 16,
+  fontSize: 'var(--fs-body)',
   colorScheme: 'light',
 } as const

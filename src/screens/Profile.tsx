@@ -183,7 +183,7 @@ export function Profile({
             <section key={groupe.titre} style={{ marginBottom: 22 }}>
               <h2
                 style={{
-                  fontSize: 13,
+                  fontSize: 'var(--fs-detail)',
                   fontWeight: 500,
                   color: 'var(--accent)',
                   margin: '0 0 10px 2px',
@@ -225,13 +225,13 @@ export function Profile({
                     <Icon name={r.icone} size={18} />
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <b className="display" style={{ display: 'block', fontSize: 19, fontWeight: 400, lineHeight: 1.2 }}>
+                    <b className="display" style={{ display: 'block', fontSize: 'var(--fs-t-liste)', fontWeight: 400, lineHeight: 1.2 }}>
                       {r.titre}
                       {r.key === 'anoter' && enRetard > 0 && (
                         <span
                           style={{
                             marginLeft: 7,
-                            fontSize: 10.5,
+                            fontSize: 'var(--fs-micro)',
                             fontWeight: 800,
                             letterSpacing: '.4px',
                             padding: '2.5px 7px',
@@ -246,7 +246,7 @@ export function Profile({
                         </span>
                       )}
                     </b>
-                    <span style={{ display: 'block', color: 'var(--sur-ink-2)', fontSize: 13.5, marginTop: 2 }}>
+                    <span style={{ display: 'block', color: 'var(--sur-ink-2)', fontSize: 'var(--fs-meta)', marginTop: 2 }}>
                       {r.description}
                     </span>
                   </div>
@@ -270,7 +270,7 @@ export function Profile({
                 padding: 14,
                 borderRadius: 'var(--pill)',
                 border: '1px solid var(--border-2)',
-                fontSize: 15,
+                fontSize: 'var(--fs-texte)',
                 color: 'var(--sur-ink-2)',
                 cursor: 'pointer',
               }}

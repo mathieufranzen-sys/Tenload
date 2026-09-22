@@ -924,7 +924,12 @@ parce qu'ils nommaient l'onglet Allures.
   devenant un grenat lisible sur fond sombre.
 - **Typographie** : Fraunces (serif, axes SOFT et opsz) pour les titres, les
   grands chiffres (`.chiffre`) et le mot du coach en italique (`.display-it`) ;
-  Instrument Sans pour le texte courant. Les deux sont embarquées par
+  Instrument Sans pour le texte courant. **Toutes les tailles passent par
+  l'échelle de `tokens.css`** (`--fs-micro` à `--fs-lead` pour la linéale,
+  `--fs-t-*` pour les titres, `--fs-c-*` pour les chiffres, `--fs-coach*`),
+  resserrée le 22 septembre 2026 : onze tailles de linéale au demi-pixel
+  près ramenées à six. Aucune valeur en dur dans un composant ; seuls les
+  axes des graphiques SVG gardent la leur, en unités du dessin. Les deux sont embarquées par
   `@fontsource` et préchargées par la PWA, sous-ensemble vietnamien exclu.
 - **Allures devient Objectif.** La clé d'onglet reste `paces` pour ne toucher
   aucun appelant. L'écran porte l'allure visée, les zones en barres, la forme

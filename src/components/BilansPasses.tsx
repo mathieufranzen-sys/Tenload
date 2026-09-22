@@ -48,7 +48,7 @@ export function BilansPasses({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
       {semaines.length === 0 && (
-        <p style={{ margin: '4px 2px', fontSize: 15, color: 'var(--ink-2)' }}>Aucune semaine terminée pour l'instant.</p>
+        <p style={{ margin: '4px 2px', fontSize: 'var(--fs-texte)', color: 'var(--ink-2)' }}>Aucune semaine terminée pour l'instant.</p>
       )}
       {semaines.map((w) => (
         <button
@@ -68,10 +68,10 @@ export function BilansPasses({
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
-            <b className="display" style={{ display: 'block', fontSize: 19, fontWeight: 400, lineHeight: 1.2 }}>
+            <b className="display" style={{ display: 'block', fontSize: 'var(--fs-t-liste)', fontWeight: 400, lineHeight: 1.2 }}>
               Semaine {w.n}
             </b>
-            <span style={{ display: 'block', color: 'var(--sur-ink-2)', fontSize: 13.5, marginTop: 2 }}>
+            <span style={{ display: 'block', color: 'var(--sur-ink-2)', fontSize: 'var(--fs-meta)', marginTop: 2 }}>
               {formatDay(w.monday)} → {formatDay(addDays(w.monday, 6))} · {majuscule(libelleNature(w, { charge: true }))}
             </span>
           </div>

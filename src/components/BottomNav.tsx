@@ -51,7 +51,7 @@ export function BottomNav({ actif, onChange }: { actif: Onglet; onChange: (o: On
                 alignItems: 'center',
                 gap: 4,
                 color: courant ? 'var(--ink)' : 'var(--ink-3)',
-                fontSize: 12,
+                fontSize: 'var(--fs-micro)',
                 fontWeight: courant ? 600 : 500,
               }}
             >

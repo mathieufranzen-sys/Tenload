@@ -71,7 +71,7 @@ export function JaugeRessenti({
         // tout ce qui suit sous le pouce.
         <p
           style={{
-            fontSize: 12.5,
+            fontSize: 'var(--fs-detail)',
             fontWeight: 500,
             lineHeight: 1.4,
             color: 'var(--sur-ink-2)',

@@ -120,7 +120,7 @@ export function BarreRessenti({
       >
         <span
           style={{
-            fontSize: 16.5,
+            fontSize: 'var(--fs-body)',
             fontWeight: 700,
             color: encre,
             fontVariantNumeric: 'tabular-nums',
@@ -132,7 +132,7 @@ export function BarreRessenti({
         </span>
         <span
           style={{
-            fontSize: 12.5,
+            fontSize: 'var(--fs-detail)',
             fontWeight: 600,
             // Le mot n'est rejoint par le remplissage qu'en toute fin de
             // course : ailleurs il reste sur le fond sombre. Aux valeurs
@@ -160,7 +160,7 @@ export function LabelRessenti({ children }: { children: string }) {
   return (
     <div
       style={{
-        fontSize: 15,
+        fontSize: 'var(--fs-texte)',
         fontWeight: 500,
         color: 'var(--ink)',
         marginBottom: 9,

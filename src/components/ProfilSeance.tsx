@@ -155,7 +155,7 @@ export function DecoupageSeance({
                   borderRadius: 'var(--pill)',
                   background: 'var(--surface)',
                   border: '1px solid var(--border)',
-                  fontSize: 12.5,
+                  fontSize: 'var(--fs-detail)',
                   fontWeight: 500,
                   color: 'var(--accent)',
                 }}
@@ -193,7 +193,7 @@ export function DecoupageSeance({
                 >
                   <span
                     style={{
-                      fontSize: 22,
+                      fontSize: 'var(--fs-c-m)',
                       fontFamily: 'var(--font-display)',
                       fontVariantNumeric: 'tabular-nums',
                     }}
@@ -202,7 +202,7 @@ export function DecoupageSeance({
                       aria-hidden
                       style={{
                         fontStyle: 'normal',
-                        fontSize: 14,
+                        fontSize: 'var(--fs-meta)',
                         fontWeight: 600,
                         color: 'var(--ink-2)',
                       }}
@@ -247,10 +247,10 @@ function Ligne({
         }}
       />
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--ink-2)', lineHeight: 1.25 }}>
+        <div style={{ fontSize: 'var(--fs-meta)', fontWeight: 500, color: 'var(--ink-2)', lineHeight: 1.25 }}>
           {seg.libelle}
         </div>
-        <div style={{ fontSize: 17, fontWeight: 600, marginTop: 2 }}>
+        <div style={{ fontSize: 'var(--fs-lead)', fontWeight: 600, marginTop: 2 }}>
           {seg.quantite}
           {allure && (
             <>

@@ -87,12 +87,40 @@
   --font: 'Instrument Sans Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui,
     sans-serif;
   --font-display: 'Fraunces Variable', 'Iowan Old Style', Georgia, serif;
-  --fs-hero: 30px;
-  --fs-title: 27px;
-  --fs-card: 20.5px;
-  --fs-body: 16px;
-  --fs-meta: 14px;
-  --fs-micro: 12px;
+  /* ─── échelle ────────────────────────────────────────────────────────────
+     L'échelle, resserrée le 22 septembre 2026 à la demande de Mathieu : le
+     relevé comptait onze tailles de linéale entre 12 et 17 px, chaque
+     composant avait la sienne. Six tailles de texte, six de titres, sept de
+     chiffres. Aucune valeur en dur dans les composants : tout passe ici. */
+
+  /* Texte courant et labels, Instrument Sans. */
+  --fs-micro: 12px; /* navigation, légendes */
+  --fs-detail: 13px; /* étiquettes, sous-lignes, étiquettes de séance */
+  --fs-meta: 14px; /* dates, puces, notes */
+  --fs-texte: 15px; /* paragraphes dans une carte */
+  --fs-body: 16px; /* texte de base, boutons, champs */
+  --fs-lead: 17px; /* texte mis en avant */
+
+  /* Titres, Fraunces. */
+  --fs-t-ligne: 17px; /* une séance dans le calendrier */
+  --fs-t-liste: 19px; /* une carte dans une liste */
+  --fs-t-carte: 22px; /* le titre d'une carte */
+  --fs-t-page: 28px; /* sous-page, section, séance du jour */
+  --fs-t-ecran: 40px; /* titre d'écran, fiche de séance */
+  --fs-t-etat: 44px; /* « Je ne sais pas » */
+
+  /* Chiffres, Fraunces tabulaire. */
+  --fs-c-s: 20px;
+  --fs-c-m: 24px;
+  --fs-c-l: 30px;
+  --fs-c-xl: 40px;
+  --fs-c-2xl: 60px;
+  --fs-c-3xl: 72px;
+  --fs-c-hero: 96px;
+
+  /* Le mot du coach, Fraunces italique. */
+  --fs-coach: 22px;
+  --fs-coach-s: 18px;
 
   /* ─── espacement ─────────────────────────────────────────────────────── */
   --gap-1: 4px;

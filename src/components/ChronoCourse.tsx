@@ -81,7 +81,7 @@ export function ChronoCourse({ km, chronoSaisi, formeActuelle, disabled, onValid
           border: `1px solid ${saisie && !valide ? 'var(--c-erreur)' : 'var(--border-2)'}`,
           borderRadius: 'var(--pill)',
           padding: '14px 20px',
-          fontSize: 24,
+          fontSize: 'var(--fs-c-m)',
           fontFamily: 'var(--font-display)',
           color: 'var(--ink)',
           fontVariantNumeric: 'tabular-nums',
@@ -89,16 +89,16 @@ export function ChronoCourse({ km, chronoSaisi, formeActuelle, disabled, onValid
       />
 
       {!saisie || !valide ? (
-        <p style={{ color: saisie ? 'var(--c-erreur)' : 'var(--ink-3)', fontSize: 12.5, fontWeight: 600, margin: '8px 2px 0' }}>
+        <p style={{ color: saisie ? 'var(--c-erreur)' : 'var(--ink-3)', fontSize: 'var(--fs-detail)', fontWeight: 600, margin: '8px 2px 0' }}>
           {saisie ? 'Chrono hors plage plausible pour cette distance' : `Ton temps officiel sur ${formatDistance(km)}, en ${km >= 20 ? 'h:mm:ss' : 'mm:ss'}`}
         </p>
       ) : (
         <>
-          <p style={{ fontSize: 14.5, lineHeight: 1.5, margin: '12px 2px 4px' }}>
+          <p style={{ fontSize: 'var(--fs-texte)', lineHeight: 1.5, margin: '12px 2px 4px' }}>
             Soit {formatPace(secondes! / km)}/km. Forme projetée à <b>{formatPace(allure!)}/km</b>, soit{' '}
             <b>{formatDuration(Math.round((allure! * MARATHON_KM) / 60))}</b> au marathon.
           </p>
-          <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5, margin: '0 2px 14px' }}>
+          <p style={{ fontSize: 'var(--fs-detail)', color: 'var(--ink-2)', lineHeight: 1.5, margin: '0 2px 14px' }}>
             {ecart === 0
               ? 'Exactement ta forme projetée actuelle : la course confirme le test.'
               : `${Math.abs(ecart!)} s/km ${ecart! < 0 ? 'plus vite' : 'plus lent'} que ta forme projetée actuelle (${formatPace(formeActuelle)}/km). Les allures d'entraînement ne bougent pas : elles restent ancrées sur l'objectif.`}

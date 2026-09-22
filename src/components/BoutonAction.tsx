@@ -36,7 +36,7 @@ export function BoutonAction({
       disabled={disabled}
       className="bouton-pale"
       style={{
-        ...(compact ? { width: 'auto', padding: '5px 5px 5px 16px', fontSize: 14.5, gap: 10 } : null),
+        ...(compact ? { width: 'auto', padding: '5px 5px 5px 16px', fontSize: 'var(--fs-texte)', gap: 10 } : null),
         ...(disabled ? { background: 'var(--surface-3)', color: 'var(--ink-3)', cursor: 'default' } : null),
         ...style,
       }}

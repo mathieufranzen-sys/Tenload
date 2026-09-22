@@ -65,7 +65,7 @@ export function SessionHero({
           {quand === "Aujourd'hui" ? 'Séance du jour' : `Séance · ${quand}`}
         </p>
         {rang && rang.total > 1 && (
-          <span style={{ fontSize: 13, color: 'var(--accent)' }}>
+          <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--accent)' }}>
             {rang.n} sur {rang.total}
           </span>
         )}
@@ -73,7 +73,7 @@ export function SessionHero({
 
       <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginTop: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h2 className="display" style={{ fontSize: 30, lineHeight: 1.08, margin: 0 }}>
+          <h2 className="display" style={{ fontSize: 'var(--fs-t-page)', lineHeight: 1.08, margin: 0 }}>
             {s.title}
           </h2>
           <div
@@ -83,7 +83,7 @@ export function SessionHero({
               gap: 8,
               marginTop: 6,
               color: 'var(--accent)',
-              fontSize: 14,
+              fontSize: 'var(--fs-meta)',
             }}
           >
             <span>{s.cat}</span>
@@ -169,9 +169,9 @@ function Pas({ titre, detail, couleur }: { titre: string; detail?: ReactNode; co
     <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
       <span aria-hidden style={{ width: 3, borderRadius: 2, background: couleur, flex: 'none' }} />
       <div>
-        <div style={{ fontSize: 14.5, fontWeight: 500, lineHeight: 1.3 }}>{titre}</div>
+        <div style={{ fontSize: 'var(--fs-texte)', fontWeight: 500, lineHeight: 1.3 }}>{titre}</div>
         {detail && (
-          <div style={{ fontSize: 12.5, color: 'var(--sur-ink-3)', marginTop: 3, lineHeight: 1.4 }}>
+          <div style={{ fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)', marginTop: 3, lineHeight: 1.4 }}>
             {detail}
           </div>
         )}

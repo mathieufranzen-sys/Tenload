@@ -479,16 +479,16 @@ function Kpi({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-        <span className="chiffre" style={{ fontSize: valeur.length > 6 ? 28 : 38, lineHeight: 1, color: couleur }}>
+        <span className="chiffre" style={{ fontSize: valeur.length > 6 ? 'var(--fs-c-l)' : 'var(--fs-c-xl)', lineHeight: 1, color: couleur }}>
           {valeur}
         </span>
-        {suffix && <span style={{ fontSize: 15, color: 'var(--accent)' }}>{suffix.trim()}</span>}
+        {suffix && <span style={{ fontSize: 'var(--fs-texte)', color: 'var(--accent)' }}>{suffix.trim()}</span>}
       </div>
-      <div style={{ fontSize: 13.5, marginTop: 8, color: tag ? 'var(--warning)' : 'var(--accent)', lineHeight: 1.3 }}>
+      <div style={{ fontSize: 'var(--fs-meta)', marginTop: 8, color: tag ? 'var(--warning)' : 'var(--accent)', lineHeight: 1.3 }}>
         {label}
         {tag && ` · ${tag}`}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, marginTop: 3, color: 'var(--sur-ink-3)', lineHeight: 1.35 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--fs-detail)', marginTop: 3, color: 'var(--sur-ink-3)', lineHeight: 1.35 }}>
         <span style={{ flex: 1, minWidth: 0 }}>{detail}</span>
         {onClick && <Icon name="chevronRight" size={13} style={{ flex: 'none', strokeWidth: 2 }} />}
       </div>
@@ -511,7 +511,7 @@ function Viz({
 }) {
   return (
     <section className="carte" style={{ padding: '18px 18px', marginBottom: 12 }}>
-      <h2 className="display" style={{ margin: '0 0 6px', fontSize: 22, lineHeight: 1.2, }}>
+      <h2 className="display" style={{ margin: '0 0 6px', fontSize: 'var(--fs-t-carte)', lineHeight: 1.2, }}>
         {titre}
       </h2>
       {controle && <div style={{ marginBottom: 14 }}>{controle}</div>}
@@ -537,7 +537,7 @@ function Viz({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 5,
-                fontSize: 13,
+                fontSize: 'var(--fs-detail)',
                 fontWeight: 500,
                 color: 'var(--sur-ink-2)',
               }}
@@ -547,7 +547,7 @@ function Viz({
             </span>
           ))}
           {note && (
-            <span style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--sur-ink-3)', marginLeft: 'auto' }}>
+            <span style={{ fontSize: 'var(--fs-detail)', fontWeight: 500, color: 'var(--sur-ink-3)', marginLeft: 'auto' }}>
               {note}
             </span>
           )}

@@ -81,10 +81,10 @@ export function StatsSeance({
             borderLeft: i === 0 ? 'none' : '1px solid var(--border-2)',
           }}
         >
-          <div style={{ fontSize: 19, fontWeight: 600, lineHeight: 1.2, minHeight: 24, display: 'flex', alignItems: 'flex-end' }}>
+          <div style={{ fontSize: 'var(--fs-t-liste)', fontWeight: 600, lineHeight: 1.2, minHeight: 24, display: 'flex', alignItems: 'flex-end' }}>
             {c.valeur}
           </div>
-          <div style={{ fontSize: 14, color: 'var(--ink-2)', marginTop: 5 }}>{c.label}</div>
+          <div style={{ fontSize: 'var(--fs-meta)', color: 'var(--ink-2)', marginTop: 5 }}>{c.label}</div>
         </div>
       ))}
     </div>

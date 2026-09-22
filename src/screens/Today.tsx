@@ -503,7 +503,7 @@ export function Today({
                 <Icon name={faites.length ? 'check' : 'rest'} />
               </span>
               <div>
-                <b className="display" style={{ fontSize: 21, fontWeight: 400 }}>
+                <b className="display" style={{ fontSize: 'var(--fs-t-carte)', fontWeight: 400 }}>
                   {avantPlan
                     ? 'Le plan commence le 10 août'
                     : faites.length
@@ -514,7 +514,7 @@ export function Today({
                         ? "Rien au programme aujourd'hui"
                         : 'Rien au programme ce jour-là'}
                 </b>
-                <div style={{ color: 'var(--sur-ink-2)', fontSize: 14, marginTop: 2 }}>
+                <div style={{ color: 'var(--sur-ink-2)', fontSize: 'var(--fs-meta)', marginTop: 2 }}>
                   {avantPlan
                     ? 'Semaine 1 : amorce, sans sortie longue.'
                     : faites.length
@@ -567,9 +567,9 @@ export function Today({
             >
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p className="etiquette">Bilan de la semaine {bilan.n}</p>
-                <div className="display" style={{ fontSize: 22, marginTop: 4 }}>
+                <div className="display" style={{ fontSize: 'var(--fs-t-carte)', marginTop: 4 }}>
                   {formatNumber(bilan.kmRealises)} km{' '}
-                  <span style={{ fontSize: 15, color: 'var(--sur-ink-2)', fontFamily: 'var(--font)' }}>
+                  <span style={{ fontSize: 'var(--fs-texte)', color: 'var(--sur-ink-2)', fontFamily: 'var(--font)' }}>
                     sur {formatNumber(bilan.kmPrevus)} prévus
                   </span>
                 </div>
@@ -696,7 +696,7 @@ function EnteteJour({
   return (
     <header style={{ padding: 'calc(18px + env(safe-area-inset-top)) 0 18px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-        <p className="display" style={{ margin: 0, fontSize: 20, color: 'var(--ink-2)', minWidth: 0 }}>
+        <p className="display" style={{ margin: 0, fontSize: 'var(--fs-t-liste)', color: 'var(--ink-2)', minWidth: 0 }}>
           {surtitre}
         </p>
         <ProfileButton onClick={onOuvrirProfil} />
@@ -704,9 +704,9 @@ function EnteteJour({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, marginTop: 6 }}>
         <div style={{ minWidth: 0 }}>
           {relatif && (
-            <p style={{ margin: '0 0 2px', fontSize: 15, color: 'var(--sur-ink-2)' }}>{relatif}</p>
+            <p style={{ margin: '0 0 2px', fontSize: 'var(--fs-texte)', color: 'var(--sur-ink-2)' }}>{relatif}</p>
           )}
-          <h1 className="display" style={{ margin: 0, fontSize: 38, lineHeight: 1.04 }}>
+          <h1 className="display" style={{ margin: 0, fontSize: 'var(--fs-t-ecran)', lineHeight: 1.04 }}>
             {titre}
           </h1>
         </div>
@@ -777,12 +777,12 @@ function BlocANoter({
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: 'var(--serious)' }}>
         <Icon name="alert" size={19} />
-        <span style={{ fontSize: 16, fontWeight: 600 }}>
+        <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
           {total === 0 ? 'La charge n’est pas attestée' : `${total} chose${total > 1 ? 's' : ''} à noter`}
         </span>
       </div>
       {chargeInconnue && (
-        <p style={{ margin: '8px 0 0', fontSize: 14, lineHeight: 1.5, color: 'var(--ink-2)' }}>
+        <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-meta)', lineHeight: 1.5, color: 'var(--ink-2)' }}>
           Moins de cinq des sept derniers jours portent une charge mesurée : l'indice lit ces trous comme
           des jours légers, il penche du côté qui rassure.
         </p>
@@ -804,12 +804,12 @@ function BlocANoter({
                 borderRadius: 16,
                 background: 'var(--surface-2)',
                 textAlign: 'left',
-                fontSize: 14.5,
+                fontSize: 'var(--fs-texte)',
                 color: 'var(--ink)',
               }}
             >
               <span style={{ minWidth: 0 }}>{l.titre}</span>
-              <span style={{ color: 'var(--serious)', flex: 'none', fontSize: 13.5 }}>{l.quand}</span>
+              <span style={{ color: 'var(--serious)', flex: 'none', fontSize: 'var(--fs-meta)' }}>{l.quand}</span>
             </button>
           ))}
         </div>
@@ -829,7 +829,7 @@ function Note({ children }: { children: ReactNode }) {
     <p
       style={{
         color: 'var(--warning)',
-        fontSize: 13.5,
+        fontSize: 'var(--fs-meta)',
         margin: '0 4px',
       }}
     >

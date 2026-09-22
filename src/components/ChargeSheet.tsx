@@ -175,8 +175,8 @@ export function ChargeSheet({
             <Icon name="chevronLeft" size={20} />
           </button>
           <div style={{ minWidth: 0 }}>
-            <p style={{ margin: '0 0 3px', fontSize: 13.5, color: 'var(--accent)' }}>{jourLibelle}</p>
-            <h2 className="display" style={{ margin: 0, fontSize: 28, lineHeight: 1.1 }}>
+            <p style={{ margin: '0 0 3px', fontSize: 'var(--fs-meta)', color: 'var(--accent)' }}>{jourLibelle}</p>
+            <h2 className="display" style={{ margin: 0, fontSize: 'var(--fs-t-page)', lineHeight: 1.1 }}>
               {b.painInconnue ? 'Ce que l’indice sait encore' : `D'où viennent ces ${b.idx} points`}
             </h2>
           </div>
@@ -187,10 +187,10 @@ export function ChargeSheet({
             avec le seuil de l'orange repéré. */}
         <section className="carte" style={{ padding: '20px 20px 18px', borderRadius: 'var(--radius-lg)' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
-            <span className="chiffre" style={{ fontSize: 76, lineHeight: 0.9, color: TEINTE_BANDE[band.key] }}>
+            <span className="chiffre" style={{ fontSize: 'var(--fs-c-3xl)', lineHeight: 0.9, color: TEINTE_BANDE[band.key] }}>
               {b.idx}
             </span>
-            <span style={{ fontSize: 15, color: 'var(--accent)', lineHeight: 1.4, flex: 1, minWidth: 150 }}>
+            <span style={{ fontSize: 'var(--fs-texte)', color: 'var(--accent)', lineHeight: 1.4, flex: 1, minWidth: 150 }}>
               = {ajoutes} point{ajoutes > 1 ? 's' : ''} ajouté{ajoutes > 1 ? 's' : ''}
               {soin > 0 ? ` − ${soin} point${soin > 1 ? 's' : ''} de soin` : ''}
               {ecart !== 0 ? ` ${ecart > 0 ? '+' : '−'} ${Math.abs(ecart)} (${causeEcart.toLowerCase()})` : ''}
@@ -241,7 +241,7 @@ export function ChargeSheet({
               display: 'flex',
               justifyContent: 'space-between',
               marginTop: 8,
-              fontSize: 13,
+              fontSize: 'var(--fs-detail)',
               color: 'var(--accent)',
             }}
           >
@@ -266,19 +266,19 @@ export function ChargeSheet({
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
-                  <span style={{ fontSize: 17 }}>{t.label}</span>
+                  <span style={{ fontSize: 'var(--fs-lead)' }}>{t.label}</span>
                   <span style={{ whiteSpace: 'nowrap' }}>
                     <span
                       className="chiffre"
                       style={{
-                        fontSize: 22,
+                        fontSize: 'var(--fs-c-m)',
                         color: t.valeur === 0 ? 'var(--ink-3)' : soinLigne ? 'var(--pale)' : TEINTE_TERME[i],
                       }}
                     >
                       {t.valeur > 0 ? '+' : t.valeur < 0 ? '−' : ''}
                       {Math.abs(t.valeur)}
                     </span>
-                    <span style={{ fontSize: 13, color: 'var(--sur-ink-3)' }}> / {t.plafond}</span>
+                    <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)' }}> / {t.plafond}</span>
                   </span>
                 </div>
                 <div
@@ -303,7 +303,7 @@ export function ChargeSheet({
                     }}
                   />
                 </div>
-                <p style={{ margin: '10px 0 0', fontSize: 14, lineHeight: 1.5, color: 'var(--sur-ink-2)' }}>
+                <p style={{ margin: '10px 0 0', fontSize: 'var(--fs-meta)', lineHeight: 1.5, color: 'var(--sur-ink-2)' }}>
                   {t.detail}
                 </p>
               </section>
@@ -320,7 +320,7 @@ export function ChargeSheet({
               <span style={{ width: 12, height: 30, borderRadius: 6, background: 'var(--accent-doux)', opacity: 0.6 }} />
               <span style={{ width: 12, height: 30, borderRadius: 6, background: TEINTE_BANDE[band.key] }} />
             </span>
-            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5 }}>{mouvement}</p>
+            <p style={{ margin: 0, fontSize: 'var(--fs-texte)', lineHeight: 1.5 }}>{mouvement}</p>
           </section>
         )}
 
@@ -365,7 +365,7 @@ export function ChargeSheet({
                 padding: '13px 22px',
                 borderRadius: 'var(--pill)',
                 border: '1px solid var(--border-2)',
-                fontSize: 15,
+                fontSize: 'var(--fs-texte)',
                 color: 'var(--ink)',
               }}
             >
@@ -382,7 +382,7 @@ export function ChargeSheet({
               padding: '13px 22px',
               borderRadius: 'var(--pill)',
               border: '1px solid var(--border-2)',
-              fontSize: 15,
+              fontSize: 'var(--fs-texte)',
               color: 'var(--ink)',
             }}
           >
@@ -401,7 +401,7 @@ function Avertissement({ children, sourd = false }: { children: ReactNode; sourd
   return (
     <p
       style={{
-        fontSize: 14,
+        fontSize: 'var(--fs-meta)',
         color: sourd ? 'var(--sur-ink-2)' : 'var(--warning)',
         lineHeight: 1.5,
         margin: '14px 4px 0',

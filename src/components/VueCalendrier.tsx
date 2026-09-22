@@ -246,7 +246,7 @@ export function VueCalendrier({
           marginBottom: 14,
         }}
       >
-        <p style={{ margin: 0, fontSize: 13, color: 'var(--sur-ink-2)', lineHeight: 1.4 }}>
+        <p style={{ margin: 0, fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-2)', lineHeight: 1.4 }}>
           {initial
             ? 'Le plan de référence, sans aucun de tes écarts.'
             : onDeplacer
@@ -263,7 +263,7 @@ export function VueCalendrier({
             gap: 6,
             padding: '8px 13px',
             borderRadius: 'var(--pill)',
-            fontSize: 12.5,
+            fontSize: 'var(--fs-detail)',
             fontWeight: 700,
             color: initial ? 'var(--pale-ink)' : 'var(--ink)',
             background: initial ? 'var(--pale)' : 'transparent',
@@ -330,7 +330,7 @@ export function VueCalendrier({
                 <div style={{ width: 42, flex: 'none', paddingTop: 2 }}>
                   <div
                     style={{
-                      fontSize: 13,
+                      fontSize: 'var(--fs-detail)',
                       color: jour === now ? 'var(--bleu-700)' : 'var(--ink-2)',
                     }}
                   >
@@ -339,7 +339,7 @@ export function VueCalendrier({
                   <div
                     className="chiffre"
                     style={{
-                      fontSize: 24,
+                      fontSize: 'var(--fs-c-m)',
                       lineHeight: 1.1,
                       color: jour === now ? 'var(--bleu-700)' : 'var(--ink)',
                     }}
@@ -392,7 +392,7 @@ export function VueCalendrier({
                     />
                   ))}
                   {cible && cible.conflits.length > 0 && survol === jour && (
-                    <div style={{ fontSize: 12.5, color: 'var(--critical)', fontWeight: 600, lineHeight: 1.35 }}>
+                    <div style={{ fontSize: 'var(--fs-detail)', color: 'var(--critical)', fontWeight: 600, lineHeight: 1.35 }}>
                       {cible.conflits.join(' · ')}
                     </div>
                   )}
@@ -421,7 +421,7 @@ export function VueCalendrier({
             background: 'var(--neon)',
             color: 'var(--ink)',
             boxShadow: '0 12px 32px rgba(0,0,0,.45)',
-            fontSize: 14,
+            fontSize: 'var(--fs-meta)',
             fontWeight: 600,
           }}
         >
@@ -436,7 +436,7 @@ export function VueCalendrier({
               borderRadius: 'var(--pill)',
               background: 'var(--pale-ink)',
               color: 'var(--pale)',
-              fontSize: 13,
+              fontSize: 'var(--fs-detail)',
               fontWeight: 600,
             }}
           >
@@ -458,7 +458,7 @@ export function VueCalendrier({
             borderRadius: 'var(--pill)',
             background: 'linear-gradient(135deg, #4f63f2, #2b3aa6)',
             color: '#ffffff',
-            fontSize: 14,
+            fontSize: 'var(--fs-meta)',
             fontWeight: 600,
             transform: 'rotate(-2deg)',
             boxShadow: '0 12px 32px rgba(0,0,0,.45)',
@@ -520,12 +520,12 @@ function EnteteSemaine({
         borderBottom: '1px solid var(--border)',
       }}
     >
-      <span className="display" style={{ fontSize: 20, whiteSpace: 'nowrap' }}>
+      <span className="display" style={{ fontSize: 'var(--fs-t-liste)', whiteSpace: 'nowrap' }}>
         Semaine {semaine.n}
       </span>
       <span
         style={{
-          fontSize: 12.5,
+          fontSize: 'var(--fs-detail)',
           fontWeight: 500,
           color: 'var(--sur-ink-3)',
           minWidth: 0,
@@ -544,7 +544,7 @@ function EnteteSemaine({
             marginLeft: 'auto',
             flex: 'none',
             whiteSpace: 'nowrap',
-            fontSize: 12,
+            fontSize: 'var(--fs-micro)',
             fontWeight: 600,
             padding: '3px 10px',
             borderRadius: 'var(--pill)',
@@ -598,7 +598,7 @@ function CarteJour({
         <div
           className="display"
           style={{
-            fontSize: 17,
+            fontSize: 'var(--fs-t-ligne)',
             lineHeight: 1.25,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -609,7 +609,7 @@ function CarteJour({
           {seance.s.title}
         </div>
         {seance.ecart && (
-          <div style={{ fontSize: 11, color: 'var(--sur-ink-3)', fontWeight: 500, marginTop: 1 }}>
+          <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--sur-ink-3)', fontWeight: 500, marginTop: 1 }}>
             {seance.s.ecart}
           </div>
         )}

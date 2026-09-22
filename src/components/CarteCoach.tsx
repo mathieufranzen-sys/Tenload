@@ -41,7 +41,7 @@ export function CarteCoach({
         style={{
           margin: compact ? '8px 0 0' : '12px 0 0',
           color: 'var(--ink)',
-          fontSize: compact ? 18 : 23,
+          fontSize: compact ? 'var(--fs-coach-s)' : 'var(--fs-coach)',
           lineHeight: 1.32,
         }}
       >
@@ -58,7 +58,7 @@ export function CarteCoach({
           <p className="etiquette" style={{ marginBottom: 6 }}>
             À quoi ça sert
           </p>
-          <p style={{ margin: 0, color: 'var(--sur-ink-2)', fontSize: 14.5, lineHeight: 1.5 }}>
+          <p style={{ margin: 0, color: 'var(--sur-ink-2)', fontSize: 'var(--fs-texte)', lineHeight: 1.5 }}>
             {butNet}
           </p>
         </div>

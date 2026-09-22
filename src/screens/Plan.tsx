@@ -198,7 +198,7 @@ export function Plan({
                   border: '1px solid var(--border-2)',
                   background: 'var(--surface-2)',
                   color: 'var(--ink)',
-                  fontSize: 15,
+                  fontSize: 'var(--fs-texte)',
                   fontWeight: 500,
                   cursor: 'pointer',
                 }}
@@ -276,11 +276,11 @@ export function Plan({
             <Icon name="chevronLeft" size={19} />
           </button>
           <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
-            <div className="display" style={{ fontSize: 28, lineHeight: 1.1 }}>
+            <div className="display" style={{ fontSize: 'var(--fs-t-page)', lineHeight: 1.1 }}>
               Semaine {semaine.n}
               <span style={{ color: 'var(--sur-ink-3)' }}> / {plan.weeks.length}</span>
             </div>
-            <div style={{ fontSize: 13.5, color: 'var(--accent)', marginTop: 3 }}>
+            <div style={{ fontSize: 'var(--fs-meta)', color: 'var(--accent)', marginTop: 3 }}>
               {formatDay(semaine.monday)} → {formatDay(addDays(semaine.monday, 6))} ·{' '}
               {(() => {
                 const n = libelleNature(semaine, { charge: true })
@@ -305,7 +305,7 @@ export function Plan({
             trois puces qui tiennent sur une ligne : la nature de la semaine
             est montée sous les dates, où elle qualifie la semaine. */}
         <div className="carte" style={{ padding: '16px 18px', marginBottom: 16 }}>
-          <h2 className="display" style={{ fontSize: 21, lineHeight: 1.2, margin: 0 }}>
+          <h2 className="display" style={{ fontSize: 'var(--fs-t-carte)', lineHeight: 1.2, margin: 0 }}>
             Bloc {bloc.id} · {bloc.name} · semaine {rangDansBloc} sur {dureeBloc}
           </h2>
           <div style={{ display: 'flex', gap: 3, margin: '14px 0 0' }}>
@@ -329,14 +329,14 @@ export function Plan({
             })}
           </div>
           <div style={{ display: 'flex', gap: 6, marginTop: 14 }}>
-            <span className="puce" style={{ background: 'var(--surface-2)' }}>
+            <span className="puce" style={PUCE_BLOC}>
               {formatNumber(kmCourse)} km prévus
             </span>
-            <span className="puce" style={{ background: 'var(--surface-2)' }}>
+            <span className="puce" style={PUCE_BLOC}>
               {nbCourses} course{nbCourses > 1 ? 's' : ''}
             </span>
             {semaine.sl ? (
-              <span className="puce" style={{ background: 'var(--surface-2)' }}>
+              <span className="puce" style={PUCE_BLOC}>
                 Longue {semaine.sl} km
               </span>
             ) : null}
@@ -382,7 +382,7 @@ export function Plan({
                         borderRadius: 22,
                         border: '1.5px dashed var(--border)',
                         color: 'var(--sur-ink-3)',
-                        fontSize: 15,
+                        fontSize: 'var(--fs-texte)',
                       }}
                     >
                       Rien ce jour-là
@@ -405,6 +405,15 @@ export function Plan({
     </div>
   )
 }
+
+/** Les trois puces du bloc se partagent la ligne : à 14 px, leur retrait
+ *  d'origine faisait déborder la troisième sur un écran de 390. */
+const PUCE_BLOC = {
+  background: 'var(--surface-2)',
+  flex: '1 1 auto',
+  justifyContent: 'center',
+  padding: '6px 10px',
+} as const
 
 const JOUR_COURT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 
@@ -444,8 +453,8 @@ function PastilleJour({
         opacity: passe ? 0.7 : 1,
       }}
     >
-      <span style={{ fontSize: 13, color: aujourdhui ? 'inherit' : 'var(--ink-2)' }}>{JOUR_COURT[jour]}</span>
-      <span className="chiffre" style={{ fontSize: 24, lineHeight: 1.1 }}>
+      <span style={{ fontSize: 'var(--fs-detail)', color: aujourdhui ? 'inherit' : 'var(--ink-2)' }}>{JOUR_COURT[jour]}</span>
+      <span className="chiffre" style={{ fontSize: 'var(--fs-c-m)', lineHeight: 1.1 }}>
         {Number(date.slice(8))}
       </span>
     </div>

@@ -49,7 +49,7 @@ export function InsightTiles({ insights }: { insights: Insights }) {
       <Tuile>
         <Valeur nombre={`${seancesTotal.realise}`} unite={`/${seancesTotal.prevu}`} />
         <Libelle>Séances de la semaine</Libelle>
-        <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginTop: 3, lineHeight: 1.35 }}>
+        <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', marginTop: 3, lineHeight: 1.35 }}>
           {seances.course.realise}/{seances.course.prevu} course · {seances.velo.realise}/{seances.velo.prevu} vélo ·{' '}
           {seances.renfo.realise}/{seances.renfo.prevu} renfo
         </div>
@@ -87,14 +87,14 @@ function Tuile({ children, premiere }: { children: ReactNode; premiere?: boolean
 function Valeur({ nombre, unite }: { nombre: string; unite?: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
-      <span className="chiffre" style={{ fontSize: 26, lineHeight: 1 }}>
+      <span className="chiffre" style={{ fontSize: 'var(--fs-c-m)', lineHeight: 1 }}>
         {nombre}
       </span>
-      {unite && <span style={{ fontSize: 13, color: 'var(--accent)' }}>{unite}</span>}
+      {unite && <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--accent)' }}>{unite}</span>}
     </div>
   )
 }
 
 function Libelle({ children }: { children: ReactNode }) {
-  return <div style={{ fontSize: 12.5, color: 'var(--accent)', marginTop: 7, lineHeight: 1.3 }}>{children}</div>
+  return <div style={{ fontSize: 'var(--fs-detail)', color: 'var(--accent)', marginTop: 7, lineHeight: 1.3 }}>{children}</div>
 }

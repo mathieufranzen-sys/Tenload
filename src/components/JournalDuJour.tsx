@@ -94,7 +94,7 @@ export function CarteCarnet({
     <section className="carte" style={{ padding: '18px 18px 18px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
         <p className="etiquette">Carnet du jour</p>
-        <span style={{ fontSize: 13, color: enAttente > 0 ? 'var(--warning)' : 'var(--ink-2)' }}>
+        <span style={{ fontSize: 'var(--fs-detail)', color: enAttente > 0 ? 'var(--warning)' : 'var(--ink-2)' }}>
           {enAttente > 0
             ? `${enAttente} saisie${enAttente > 1 ? 's' : ''} en attente`
             : `${faites} mesure${faites > 1 ? 's' : ''} sur ${mesures.length}`}
@@ -149,13 +149,13 @@ function Resume({
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, marginBottom: 7 }}>
-        <span style={{ fontSize: 15 }}>{label}</span>
+        <span style={{ fontSize: 'var(--fs-texte)' }}>{label}</span>
         {valeur != null ? (
-          <span className="chiffre" style={{ fontSize: 20 }}>
+          <span className="chiffre" style={{ fontSize: 'var(--fs-c-s)' }}>
             {formatNumber(valeur)}
           </span>
         ) : (
-          <span style={{ fontSize: 13.5, color: 'var(--ink-3)' }}>{attente}</span>
+          <span style={{ fontSize: 'var(--fs-meta)', color: 'var(--ink-3)' }}>{attente}</span>
         )}
       </div>
       <div style={{ height: 6, borderRadius: 3, background: valeur == null ? 'transparent' : 'var(--surface-3)', border: valeur == null ? '1px dashed var(--border-2)' : 'none', overflow: 'hidden' }}>
@@ -192,7 +192,7 @@ export function PageCarnet({
   return (
     <div style={{ paddingBottom: 30 }}>
       {enAttente > 0 && (
-        <p style={{ margin: '0 0 14px', fontSize: 13.5, color: 'var(--warning)' }}>
+        <p style={{ margin: '0 0 14px', fontSize: 'var(--fs-meta)', color: 'var(--warning)' }}>
           {enAttente} saisie{enAttente > 1 ? 's' : ''} en attente de réseau
         </p>
       )}
@@ -269,10 +269,10 @@ export function PageCarnet({
                   {on && <Icon name="check" size={20} />}
                 </span>
                 <span>
-                  <span style={{ display: 'block', fontSize: 17, fontWeight: 600 }}>
-                    {g.label} <span style={{ fontSize: 13, fontWeight: 500, opacity: 0.7 }}>{g.effet}</span>
+                  <span style={{ display: 'block', fontSize: 'var(--fs-lead)', fontWeight: 600 }}>
+                    {g.label} <span style={{ fontSize: 'var(--fs-detail)', fontWeight: 500, opacity: 0.7 }}>{g.effet}</span>
                   </span>
-                  <span style={{ display: 'block', fontSize: 13, marginTop: 3, opacity: 0.75 }}>{g.detail}</span>
+                  <span style={{ display: 'block', fontSize: 'var(--fs-detail)', marginTop: 3, opacity: 0.75 }}>{g.detail}</span>
                 </span>
               </button>
             )
@@ -280,7 +280,7 @@ export function PageCarnet({
         </div>
       </Section>
 
-      <p style={{ fontSize: 13.5, color: 'var(--sur-ink-3)', lineHeight: 1.5, margin: '18px 2px 0' }}>
+      <p style={{ fontSize: 'var(--fs-meta)', color: 'var(--sur-ink-3)', lineHeight: 1.5, margin: '18px 2px 0' }}>
         L'effet se voit sur l'indice de demain : c'est ce que tu fais aujourd'hui qui protège le
         tendon du lendemain. Tout s'enregistre au fil de la saisie.
       </p>
@@ -292,10 +292,10 @@ function Section({ titre, aDroite, children }: { titre: string; aDroite?: string
   return (
     <section style={{ marginBottom: 22 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, margin: '0 2px 10px' }}>
-        <h3 className="display" style={{ margin: 0, fontSize: 21, fontWeight: 400 }}>
+        <h3 className="display" style={{ margin: 0, fontSize: 'var(--fs-t-carte)', fontWeight: 400 }}>
           {titre}
         </h3>
-        {aDroite && <span style={{ fontSize: 13, color: 'var(--sur-ink-2)' }}>{aDroite}</span>}
+        {aDroite && <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-2)' }}>{aDroite}</span>}
       </div>
       {children}
     </section>
@@ -336,14 +336,14 @@ function LigneSeance({
           border: fb ? 'none' : '1.5px dashed var(--border-2)',
           background: fb ? 'rgba(111,224,176,.14)' : 'transparent',
           color: fb ? 'var(--good)' : 'var(--sur-ink-2)',
-          fontSize: 18,
+          fontSize: 'var(--fs-lead)',
         }}
       >
         {fb ? <Icon name="check" size={18} /> : '?'}
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 16 }}>{titre}</div>
-        <div style={{ fontSize: 13.5, color: 'var(--sur-ink-2)', marginTop: 2 }}>
+        <div style={{ fontSize: 'var(--fs-body)' }}>{titre}</div>
+        <div style={{ fontSize: 'var(--fs-meta)', color: 'var(--sur-ink-2)', marginTop: 2 }}>
           {fb
             ? `Douleur ${formatNumber(fb.pain)} · effort ${fb.rpe}`
             : "Douleur pendant l'effort et effort perçu, pas encore notés"}
@@ -359,7 +359,7 @@ function LigneSeance({
             borderRadius: 'var(--pill)',
             background: fb ? 'transparent' : 'var(--pale)',
             color: fb ? 'var(--ink)' : 'var(--pale-ink)',
-            fontSize: 14,
+            fontSize: 'var(--fs-meta)',
             fontWeight: 600,
           }}
         >
