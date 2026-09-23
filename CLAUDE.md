@@ -1061,7 +1061,9 @@ parce qu'ils nommaient l'onglet Allures.
 - Une séance **sautée** descend avec les séances notées sur Aujourd'hui,
   barrée : elle n'est plus « à faire ». Une séance **notée** prend un fond
   vert très clair (23 septembre) : elle est derrière toi et ne doit plus
-  peser autant qu'une carte qui attend quelque chose.
+  peser autant qu'une carte qui attend quelque chose. Le bloc d'état ne
+  s'affiche plus que pour une journée SANS séance ou en repos : dès qu'une
+  séance existe, sa carte le dit déjà.
 - Profil à deux niveaux (23 septembre) : ton suivi en cartes (bilans, séances
   à noter, patterns, dossards passés, rappels), puis deux portes,
   « Informations du programme » et « Paramètres », et la déconnexion.

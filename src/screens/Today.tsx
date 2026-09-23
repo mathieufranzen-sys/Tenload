@@ -192,8 +192,12 @@ export function Today({
   // notées, barrée et estompée (retour du 22 septembre).
   const restantes = duJour.filter((x) => !feedbackDe(x) && !x.s.saute)
   const faites = duJour.filter((x) => feedbackDe(x) || x.s.saute)
-  const notees = faites.filter((x) => feedbackDe(x))
-  const sautees = faites.filter((x) => x.s.saute)
+  /**
+   * Une journée sans rien à montrer : aucune séance, ou seulement du repos.
+   * C'est le seul cas où l'écran a besoin d'un bloc pour dire ce qu'il en
+   * est ; dès qu'une séance existe, sa carte parle pour elle.
+   */
+  const journeeSansSeance = duJour.every((x) => x.s.type === 'repos')
 
   /** La semaine en cours, pour les compteurs et le coach : eux parlent du
    *  présent, pas du jour qu'on est en train de relire. */
@@ -493,52 +497,43 @@ export function Today({
                 onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
               />
             ))
-          ) : (
+          ) : journeeSansSeance ? (
+            // Le bloc ne sert plus qu'aux journées sans séance : quand des
+            // séances sont notées ou sautées, leurs cartes le disent déjà
+            // juste en dessous (retour du 23 septembre).
             <div className="carte" style={{ padding: '18px 18px', display: 'flex', gap: 14, alignItems: 'center' }}>
               <span
                 style={{
                   width: 46,
                   height: 46,
                   borderRadius: '50%',
-                  background: notees.length ? 'color-mix(in srgb, var(--neon) 22%, transparent)' : 'var(--surface-3)',
-                  color: notees.length ? 'var(--good)' : 'var(--accent)',
+                  background: 'var(--surface-3)',
+                  color: 'var(--accent)',
                   display: 'grid',
                   placeItems: 'center',
                   flex: 'none',
                 }}
               >
-                <Icon name={notees.length ? 'check' : faites.length ? 'clip' : 'rest'} />
+                <Icon name="rest" />
               </span>
               <div>
                 <b className="display" style={{ fontSize: 'var(--fs-t-carte)', fontWeight: 400 }}>
                   {avantPlan
                     ? 'Le plan commence le 10 août'
-                    : faites.length
-                      ? notees.length === 0
-                        ? sautees.length > 1
-                          ? `${sautees.length} séances sautées`
-                          : 'Séance sautée'
-                        : faites.length > 1
-                          ? `${faites.length} séances derrière toi`
-                          : 'Séance notée'
-                      : estAujourdhui
-                        ? "Rien au programme aujourd'hui"
-                        : 'Rien au programme ce jour-là'}
+                    : estAujourdhui
+                      ? "Rien au programme aujourd'hui"
+                      : 'Rien au programme ce jour-là'}
                 </b>
                 <div style={{ color: 'var(--sur-ink-2)', fontSize: 'var(--fs-meta)', marginTop: 2 }}>
                   {avantPlan
                     ? 'Semaine 1 : amorce, sans sortie longue.'
-                    : faites.length
-                      ? estAujourdhui
-                        ? "C'est fait pour aujourd'hui. Le détail est plus bas."
-                        : 'La journée est complète. Le détail est plus bas.'
-                      : estAujourdhui
-                        ? "Profites-en pour t'étirer."
-                        : 'Journée de repos jambes.'}
+                    : estAujourdhui
+                      ? "Profites-en pour t'étirer."
+                      : 'Journée de repos jambes.'}
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
 
           {faites.map((x, i) => (
             <SessionCard
