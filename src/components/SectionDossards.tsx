@@ -358,6 +358,7 @@ function CarteDossard({
           (retour du 23 septembre). */}
       {!passe && d.objectifS != null && (
         <CarteForme
+          style={{ marginTop: 16 }}
           titre="Ta forme aujourd'hui"
           minutes={chronoEquivalent(d.km, formeMarathon) / 60}
           objectif={d.objectifS / 60}

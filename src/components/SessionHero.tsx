@@ -136,27 +136,10 @@ export function SessionHero({
             .filter(Boolean)
             .join(' · ')}
         </span>
+        {/* Sur la même ligne que la durée, centrée dessus : c'est un repère
+            de plus, pas une information d'un autre rang. */}
+        {st.intensite > 0 && <EchelleIntensite niveau={st.intensite} hauteur={11} />}
       </div>
-
-      {st.intensite > 0 && (
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            marginTop: 10,
-            padding: '4px 10px',
-            borderRadius: 'var(--pill)',
-            background: 'var(--surface-3)',
-            fontSize: 'var(--fs-micro)',
-            fontWeight: 500,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          Intensité
-          <EchelleIntensite niveau={st.intensite} hauteur={11} />
-        </span>
-      )}
 
       {/* Pas de mot du coach ici : il vit dans le détail de séance, à un clic,
           et l'écran Aujourd'hui en porte déjà un en bas. Trois fois la même

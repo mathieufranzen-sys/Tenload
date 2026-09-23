@@ -17,6 +17,7 @@
  */
 import { useEffect, type ReactNode } from 'react'
 import { TEINTE_BANDE } from '../lib/teintes'
+import { formatNumber } from '../lib/dates'
 import type { Band, IndexBreakdown } from '../lib/tendonIndex'
 import { Icon } from './Icon'
 
@@ -46,7 +47,14 @@ export function ChargeSheet({
    * compté, et « pourquoi je n'ai pas mes −5 de repos » n'avait pas de
    * réponse dans l'app (question de Mathieu, 23 septembre 2026).
    */
-  soins?: { excentrique: boolean; repos: boolean; sauts: boolean; hydratation: boolean }
+  soins?: {
+    excentrique: boolean
+    repos: boolean
+    sauts: boolean
+    hydratation: boolean
+    /** La charge d'hier : sous 2, la journée compte comme un vrai repos. */
+    chargeVeille: number
+  }
   /** « lundi 21 septembre » : le jour dont on lit le calcul. */
   jourLibelle: string
   /** Recule d'un jour, la page restant ouverte. Absent au bout de la fenêtre. */
@@ -106,7 +114,7 @@ export function ChargeSheet({
             `Journée de repos ${soins.repos ? '−5' : '0'}`,
             `Sauts ${soins.sauts ? '−2' : '0'}`,
             `Hydratation ${soins.hydratation ? '−2' : '0'}`,
-          ].join(' · ') + ' · hier'
+          ].join(' · ') + ` · hier, charge ${formatNumber(Math.round(soins.chargeVeille * 10) / 10)}`
         : 'Excentrique −6, repos −5, sauts −2, hydratation −2',
     },
   ]
@@ -235,8 +243,9 @@ export function ChargeSheet({
                 style={{
                   width: `${soin}%`,
                   marginLeft: `-${soin}%`,
-                  background:
-                    'repeating-linear-gradient(135deg, color-mix(in srgb, var(--bg) 75%, transparent) 0 3px, transparent 3px 6px)',
+                  // Le soin en vert plein, à la fin de la barre : hachuré, il
+                  // se lisait comme une zone incertaine.
+                  background: 'var(--good)',
                 }}
               />
             )}
@@ -312,10 +321,13 @@ export function ChargeSheet({
                       position: 'absolute',
                       top: 0,
                       bottom: 0,
-                      [soinLigne ? 'right' : 'left']: 0,
+                      // Toutes les barres partent de la gauche (retour du
+                      // 23 septembre) : une seule qui se remplissait à
+                      // l'envers se lisait comme une soustraction de plus.
+                      left: 0,
                       width: `${part * 100}%`,
                       borderRadius: 3,
-                      background: soinLigne ? 'var(--neon-2)' : TEINTE_TERME[i],
+                      background: TEINTE_TERME[i],
                     }}
                   />
                 </div>

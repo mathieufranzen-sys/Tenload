@@ -610,6 +610,7 @@ export function Today({
             sauts: Boolean(pain[addDays(jour, -1)]?.jumps),
             hydratation: Boolean(pain[addDays(jour, -1)]?.hydrated),
             repos: (load[addDays(jour, -1)] ?? 0) < 2,
+            chargeVeille: load[addDays(jour, -1)] ?? 0,
           }}
           jourLibelle={sousTitreLong(jour)}
           onVoirVeille={jour > plusAncien ? () => decaler(-1) : undefined}

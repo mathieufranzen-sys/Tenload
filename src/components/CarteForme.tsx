@@ -9,6 +9,7 @@
  * compte plus et la forme revient au test : la carte passe alors en gris,
  * parce qu'elle n'affiche plus une lecture de la semaine.
  */
+import type { CSSProperties } from 'react'
 import { formatDuration } from '../lib/paces'
 
 export interface PointTendance {
@@ -36,6 +37,7 @@ export function CarteForme({
   lue,
   seances,
   titre = 'Forme projetée',
+  style,
   format = court,
   /** Largeur de la règle autour de l'objectif, en minutes : lente puis rapide. */
   plage,
@@ -51,6 +53,7 @@ export function CarteForme({
   /** Séances notées que la projection lit sur 28 jours. */
   seances: number
   titre?: string
+  style?: CSSProperties
   format?: (minutes: number) => string
   plage?: [number, number]
 }) {
@@ -60,7 +63,9 @@ export function CarteForme({
   const gauche = objectif + large
   const droite = objectif - serre
   const pos = (m: number) => Math.max(0, Math.min(1, (gauche - m) / (gauche - droite))) * 100
-  const aReprendre = minutes - objectif
+  // Des minutes rondes : un chrono équivalent tombe sur des décimales, et
+  // « 0,133333 min sous l'objectif » n'est pas une information.
+  const aReprendre = Math.round(minutes - objectif)
   const ecartTendance =
     tendance.length > 1 ? tendance[tendance.length - 1].secondes - tendance[0].secondes : 0
   const teinte = lue ? 'var(--ink)' : 'var(--ink-3)'
@@ -78,7 +83,7 @@ export function CarteForme({
   return (
     // Même titre et même corps de chiffre que les autres cartes de Suivi
     // (retour du 22 septembre) : elle était la seule à parler plus fort.
-    <section className="carte" style={{ padding: '18px 18px 20px', marginBottom: 12, opacity: lue ? 1 : 0.85 }}>
+    <section className="carte" style={{ padding: '18px 18px 20px', marginBottom: 12, opacity: lue ? 1 : 0.85, ...style }}>
       <h2 className="display" style={{ margin: 0, fontSize: 'var(--fs-t-carte)', lineHeight: 1.2 }}>
         {titre}
       </h2>

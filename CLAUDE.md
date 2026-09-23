@@ -1071,10 +1071,11 @@ parce qu'ils nommaient l'onglet Allures.
 - Objectif n'a plus de bascule course/vélo : chaque zone porte sa fourchette
   de FC en course et celle du vélo entre parenthèses.
 
-- **L'indice de Suivi est lissé sur 7 jours** comme la douleur, avec les
-  valeurs brutes en points derrière : l'indice bouge de dix points d'un jour
-  à l'autre, et la dent de scie cachait la saison. Les pics restent visibles,
-  c'est le pic qui blesse un tendon, pas la moyenne.
+- **L'indice de Suivi se dessine en colonnes**, une par journée, à la couleur
+  de sa bande (dessin choisi par Mathieu parmi quatre, le 23 septembre 2026).
+  Au-delà de deux mois la colonne s'efface progressivement, sans jamais
+  disparaître tout à fait ; l'avenir projeté reste en creux, et un pointillé
+  marque aujourd'hui.
 - **La forme projetée a quitté Suivi** : elle vit sur la page de chaque
   dossard à venir, avec l'objectif de CETTE course et la règle à l'échelle de
   sa distance (`CarteForme` accepte un titre, un format et une plage).
@@ -1082,7 +1083,15 @@ parce qu'ils nommaient l'onglet Allures.
   (`ChargeSheet`, prop `soins`) : « pourquoi je n'ai pas mes −5 de repos »
   n'avait pas de réponse dans l'app.
 - Toutes les séances du jour encore à faire sont des blocs bleus à bouton
-  vert, le vélo comme la course. L'intensité garde sa pilule.
+  vert, le vélo comme la course. **L'intensité s'écrit en texte, sur la ligne
+  des repères**, jamais en pilule : la pilule a été essayée puis retirée le
+  23 septembre, tout le reste de l'app écrit ses chiffres en texte.
+- **Logo et icônes** : le logo de Mathieu (rond bleu sur fond vert, mot-clé
+  « tenload ») remplit favicon, apple-touch et les trois icônes PWA. Le
+  `theme_color` suit le fond blanc de l'app.
+- Dans le détail du calcul, toutes les barres se remplissent depuis la
+  gauche, le soin compris, et la ligne des gestes donne la charge de la
+  veille : c'est elle qui décide du −5 de journée de repos.
 
 ### Les dossards
 
