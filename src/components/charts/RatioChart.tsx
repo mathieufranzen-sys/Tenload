@@ -10,6 +10,7 @@
  * un seuil qu'il faut aller lire ailleurs n'est pas un seuil.
  */
 import { formatDay } from '../../lib/dates'
+import { POINTILLE } from './etiquettes'
 
 export interface PointRatio {
   day: string
@@ -52,7 +53,7 @@ export function RatioChart({ points, now }: { points: PointRatio[]; now: string 
               y2={y(v)}
               stroke="var(--chart-grille)"
               strokeWidth={1}
-              strokeDasharray={v === 1 ? undefined : '3 3'}
+              strokeDasharray={v === 1 ? undefined : POINTILLE}
             />
             <text x={P.l - 5} y={y(v) + 3.5} textAnchor="end" fontSize={10} fill="var(--chart-texte)">
               {v.toFixed(1).replace('.', ',')}

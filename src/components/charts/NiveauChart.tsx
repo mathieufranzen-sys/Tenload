@@ -8,7 +8,7 @@
  * Les deux lisent exactement ce que lit `ajusterForme`, rien d'autre.
  */
 import { formatDuration } from '../../lib/paces'
-import { indicesEtiquettes } from './etiquettes'
+import { indicesEtiquettes, POINTILLE } from './etiquettes'
 
 const W = 320
 const H = 170
@@ -56,7 +56,7 @@ export function FormeChart({ points, objectif }: { points: PointForme[]; objecti
         y2={y(objectif)}
         stroke="var(--chart-3)"
         strokeWidth={1.2}
-        strokeDasharray="4 4"
+        strokeDasharray={POINTILLE}
       />
       <text x={W - P.r} y={y(objectif) - 5} textAnchor="end" fontSize={10} fill="var(--chart-3)">
         Objectif {formatDuration(objectif).replace(' min', '')}

@@ -11,7 +11,7 @@
  * du graphique, un axe qui le laisse sortir ne veut plus rien dire.
  */
 import { formatDay } from '../../lib/dates'
-import { indicesEtiquettes } from './etiquettes'
+import { indicesEtiquettes, POINTILLE } from './etiquettes'
 
 const W = 320
 const H = 182
@@ -199,7 +199,7 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
         // à une des trois couches, un seuil de la même teinte s'y serait fondu.
         stroke={cumulee ? 'color-mix(in srgb, var(--ink) 55%, transparent)' : 'var(--chart-3)'}
         strokeWidth={1}
-        strokeDasharray="3 4"
+        strokeDasharray={POINTILLE}
         opacity={cumulee ? 1 : 0.5}
       />
       <text

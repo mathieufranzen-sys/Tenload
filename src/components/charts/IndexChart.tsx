@@ -10,7 +10,7 @@
  */
 import { bandOf } from '../../lib/tendonIndex'
 import { TEINTE_BANDE } from '../../lib/teintes'
-import { indicesEtiquettes } from './etiquettes'
+import { indicesEtiquettes, POINTILLE } from './etiquettes'
 import { daysBetween, formatDay } from '../../lib/dates'
 
 const W = 320
@@ -76,7 +76,7 @@ export function IndexChart({ series, now }: { series: Array<{ day: string; idx: 
           y2={y(0)}
           stroke="var(--chart-ligne)"
           strokeWidth={1}
-          strokeDasharray="2 3"
+          strokeDasharray={POINTILLE}
           opacity={0.5}
         />
       )}
