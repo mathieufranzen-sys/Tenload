@@ -26,7 +26,6 @@ import { LoadChart, type StackRow } from '../components/charts/LoadChart'
 import { MeshBackground } from '../components/MeshBackground'
 import { EffortChart, FormeChart } from '../components/charts/NiveauChart'
 import { MIN_SEANCES, ecartEffortSemaine, serieForme, type AjustementForme } from '../lib/forme'
-import { CarteForme } from '../components/CarteForme'
 import { RepartitionChart } from '../components/charts/RepartitionChart'
 import { RatioChart, type PointRatio } from '../components/charts/RatioChart'
 import { chronoEquivalent, formatChrono } from '../lib/dossards'
@@ -400,16 +399,6 @@ export function Track({
           <PainChart rows={painRows} vue={vuePain} />
         </Viz>
 
-        {/* La forme projetée a quitté Objectif le 22 septembre 2026 : c'est
-            une lecture de l'entraînement, elle vit avec les autres. */}
-        <CarteForme
-          minutes={Math.round((forme.allure * MARATHON_KM) / 60)}
-          objectif={Math.round((marathonPace * MARATHON_KM) / 60)}
-          tendance={niveau.forme.slice(-4).map((p) => ({ minutes: p.minutes, secondes: p.secondes }))}
-          lue={forme.seances >= MIN_SEANCES}
-          seances={forme.seances}
-        />
-
         <Viz
           titre="Niveau en course"
           legendeCouleurs={[
@@ -587,12 +576,12 @@ function Viz({
       <h2 className="display" style={{ margin: '0 0 6px', fontSize: 'var(--fs-t-carte)', lineHeight: 1.2, }}>
         {titre}
       </h2>
-      {controle && <div style={{ marginBottom: 14 }}>{controle}</div>}
+      {controle && <div style={{ marginTop: 14 }}>{controle}</div>}
       {/* Toile sombre sous le tracé : sur le verre seul, les bandes de fond de
           l'indice et la palette saturée se délavent contre le dégradé. */}
       {/* Plus de toile blanche sous le tracé : une couche de plus dans une
           carte déjà grise (retour du 22 septembre). */}
-      <div style={{ marginTop: 12 }}>{children}</div>
+      <div style={{ marginTop: 18 }}>{children}</div>
       {(legendeCouleurs || note) && (
         <div
           style={{

@@ -1071,6 +1071,19 @@ parce qu'ils nommaient l'onglet Allures.
 - Objectif n'a plus de bascule course/vélo : chaque zone porte sa fourchette
   de FC en course et celle du vélo entre parenthèses.
 
+- **L'indice de Suivi est lissé sur 7 jours** comme la douleur, avec les
+  valeurs brutes en points derrière : l'indice bouge de dix points d'un jour
+  à l'autre, et la dent de scie cachait la saison. Les pics restent visibles,
+  c'est le pic qui blesse un tendon, pas la moyenne.
+- **La forme projetée a quitté Suivi** : elle vit sur la page de chaque
+  dossard à venir, avec l'objectif de CETTE course et la règle à l'échelle de
+  sa distance (`CarteForme` accepte un titre, un format et une plage).
+- Le détail du calcul nomme les gestes de la veille un par un
+  (`ChargeSheet`, prop `soins`) : « pourquoi je n'ai pas mes −5 de repos »
+  n'avait pas de réponse dans l'app.
+- Toutes les séances du jour encore à faire sont des blocs bleus à bouton
+  vert, le vélo comme la course. L'intensité garde sa pilule.
+
 ### Les dossards
 
 `src/lib/dossards.ts` (+ 11 tests), `SectionDossards`, table

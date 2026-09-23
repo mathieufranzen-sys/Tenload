@@ -192,6 +192,8 @@ export function Today({
   // notées, barrée et estompée (retour du 22 septembre).
   const restantes = duJour.filter((x) => !feedbackDe(x) && !x.s.saute)
   const faites = duJour.filter((x) => feedbackDe(x) || x.s.saute)
+  const notees = faites.filter((x) => feedbackDe(x))
+  const sautees = faites.filter((x) => x.s.saute)
 
   /** La semaine en cours, pour les compteurs et le coach : eux parlent du
    *  présent, pas du jour qu'on est en train de relire. */
@@ -478,13 +480,19 @@ export function Today({
           )}
 
           {restantes.length ? (
-            <SessionHero
-              session={restantes[0].s}
-              marathonPace={marathonPace}
-              quand={estAujourdhui ? "Aujourd'hui" : formatDay(jour)}
-              rang={{ n: duJour.indexOf(restantes[0]) + 1, total: duJour.length }}
-              onClick={onOuvrirSeance && (() => onOuvrirSeance(restantes[0]))}
-            />
+            // Chaque séance du jour encore à faire est un bloc bleu : le vélo
+            // du mercredi en est une autant que la course (retour du
+            // 23 septembre).
+            restantes.map((x) => (
+              <SessionHero
+                key={`${x.jourOrigine}-${x.slot}`}
+                session={x.s}
+                marathonPace={marathonPace}
+                quand={estAujourdhui ? "Aujourd'hui" : formatDay(jour)}
+                rang={{ n: duJour.indexOf(x) + 1, total: duJour.length }}
+                onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
+              />
+            ))
           ) : (
             <div className="carte" style={{ padding: '18px 18px', display: 'flex', gap: 14, alignItems: 'center' }}>
               <span
@@ -492,23 +500,27 @@ export function Today({
                   width: 46,
                   height: 46,
                   borderRadius: '50%',
-                  background: faites.length ? 'color-mix(in srgb, var(--neon) 22%, transparent)' : 'var(--surface-3)',
-                  color: faites.length ? 'var(--good)' : 'var(--accent)',
+                  background: notees.length ? 'color-mix(in srgb, var(--neon) 22%, transparent)' : 'var(--surface-3)',
+                  color: notees.length ? 'var(--good)' : 'var(--accent)',
                   display: 'grid',
                   placeItems: 'center',
                   flex: 'none',
                 }}
               >
-                <Icon name={faites.length ? 'check' : 'rest'} />
+                <Icon name={notees.length ? 'check' : faites.length ? 'clip' : 'rest'} />
               </span>
               <div>
                 <b className="display" style={{ fontSize: 'var(--fs-t-carte)', fontWeight: 400 }}>
                   {avantPlan
                     ? 'Le plan commence le 10 août'
                     : faites.length
-                      ? faites.length > 1
-                        ? `${faites.length} séances notées`
-                        : 'Séance notée'
+                      ? notees.length === 0
+                        ? sautees.length > 1
+                          ? `${sautees.length} séances sautées`
+                          : 'Séance sautée'
+                        : faites.length > 1
+                          ? `${faites.length} séances derrière toi`
+                          : 'Séance notée'
                       : estAujourdhui
                         ? "Rien au programme aujourd'hui"
                         : 'Rien au programme ce jour-là'}
@@ -527,15 +539,6 @@ export function Today({
               </div>
             </div>
           )}
-
-          {restantes.slice(1).map((x, i) => (
-            <SessionCard
-              key={i}
-              session={x.s}
-              marathonPace={marathonPace}
-              onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
-            />
-          ))}
 
           {faites.map((x, i) => (
             <SessionCard
@@ -600,6 +603,14 @@ export function Today({
           breakdown={detail}
           band={bande}
           veille={veille}
+          soins={{
+            // Les crédits lisent la VEILLE du jour affiché : l'excentrique
+            // d'hier protège aujourd'hui, et une journée sans charge aussi.
+            excentrique: Boolean(pain[addDays(jour, -1)]?.eccentric),
+            sauts: Boolean(pain[addDays(jour, -1)]?.jumps),
+            hydratation: Boolean(pain[addDays(jour, -1)]?.hydrated),
+            repos: (load[addDays(jour, -1)] ?? 0) < 2,
+          }}
           jourLibelle={sousTitreLong(jour)}
           onVoirVeille={jour > plusAncien ? () => decaler(-1) : undefined}
           onVoirSuivi={onVoirSuivi}

@@ -31,6 +31,7 @@ export function ChargeSheet({
   breakdown: b,
   band,
   veille,
+  soins,
   jourLibelle,
   onVoirVeille,
   onVoirSuivi,
@@ -40,6 +41,12 @@ export function ChargeSheet({
   band: Band
   /** Le calcul de la veille, pour dire ce qui a bougé. */
   veille?: IndexBreakdown
+  /**
+   * Les gestes de la veille, un par un. Le total ne disait pas lequel avait
+   * compté, et « pourquoi je n'ai pas mes −5 de repos » n'avait pas de
+   * réponse dans l'app (question de Mathieu, 23 septembre 2026).
+   */
+  soins?: { excentrique: boolean; repos: boolean; sauts: boolean; hydratation: boolean }
   /** « lundi 21 septembre » : le jour dont on lit le calcul. */
   jourLibelle: string
   /** Recule d'un jour, la page restant ouverte. Absent au bout de la fenêtre. */
@@ -93,7 +100,14 @@ export function ChargeSheet({
       label: 'Gestes protecteurs',
       valeur: -b.credits,
       plafond: -15,
-      detail: 'Excentrique −6, repos −5, sauts −2, hydratation −2',
+      detail: soins
+        ? [
+            `Excentrique ${soins.excentrique ? '−6' : '0'}`,
+            `Journée de repos ${soins.repos ? '−5' : '0'}`,
+            `Sauts ${soins.sauts ? '−2' : '0'}`,
+            `Hydratation ${soins.hydratation ? '−2' : '0'}`,
+          ].join(' · ') + ' · hier'
+        : 'Excentrique −6, repos −5, sauts −2, hydratation −2',
     },
   ]
 

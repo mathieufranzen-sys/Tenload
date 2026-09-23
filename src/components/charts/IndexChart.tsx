@@ -1,10 +1,16 @@
 /**
- * Indice de charge du tendon avec bandes de fond et projection en pointillés.
- * Porté depuis reference/tendo-v3.html (`idxChart`).
+ * Indice de charge du tendon : la tendance lissée sur 7 jours, les valeurs
+ * brutes en points derrière, et la projection en pointillés.
+ *
+ * Lissée comme la douleur juste en dessous (arbitré le 23 septembre 2026) :
+ * l'indice est un état du jour, il monte et descend de dix points d'une
+ * journée à l'autre, et la dent de scie cachait la saison. Les pics restent
+ * en points : chez un tendon, c'est le pic qui blesse, pas la moyenne.
  */
 import { bandOf } from '../../lib/tendonIndex'
 import { TEINTE_BANDE } from '../../lib/teintes'
 import { indicesEtiquettes } from './etiquettes'
+import { lisser } from './PainChart'
 import { formatDay } from '../../lib/dates'
 
 const W = 320
@@ -23,10 +29,14 @@ export function IndexChart({ series, now }: { series: Array<{ day: string; idx: 
   const iFut = series.findIndex((r) => r.day > now)
   const cut = iFut < 0 ? n - 1 : iFut - 1
 
+  // La courbe suit la moyenne glissante ; les points, eux, restent bruts.
+  const lisse = new Map(lisser(series.map((r) => r.idx), 7))
+  const val = (i: number) => lisse.get(i) ?? series[i].idx
+
   const chemin = (from: number, to: number) => {
     if (to < from) return ''
     let d = ''
-    for (let i = from; i <= to; i++) d += `${i === from ? 'M' : 'L'}${x(i)} ${y(series[i].idx)} `
+    for (let i = from; i <= to; i++) d += `${i === from ? 'M' : 'L'}${x(i)} ${y(val(i))} `
     return d
   }
 
@@ -59,10 +69,10 @@ export function IndexChart({ series, now }: { series: Array<{ day: string; idx: 
         opacity={0.6}
       />
 
+      {/* Les valeurs brutes, sans contour : elles se lisent comme un nuage
+          derrière la tendance, et chaque point garde la couleur de sa bande. */}
       {series.map((r, i) =>
-        i > cut ? null : (
-          <circle key={i} cx={x(i)} cy={y(r.idx)} r={2.6} fill={TEINTE_BANDE[bandOf(r.idx).key]} stroke="var(--surface)" strokeWidth={1.6} />
-        ),
+        i > cut ? null : <circle key={i} cx={x(i)} cy={y(r.idx)} r={2.2} fill={TEINTE_BANDE[bandOf(r.idx).key]} opacity={0.85} />,
       )}
       {cut >= 0 && (
         <circle cx={x(cut)} cy={y(series[cut].idx)} r={5} fill={TEINTE_BANDE[bandOf(series[cut].idx).key]} stroke="var(--surface)" strokeWidth={2.5} />

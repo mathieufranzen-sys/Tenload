@@ -23,13 +23,13 @@ import { SectionDossards } from '../components/SectionDossards'
 const plan = planJson as unknown as Plan
 
 const ZONE_DESC: Record<ZoneKey, string> = {
-  recup: 'Lendemain de sortie longue, footing de décrassage',
-  ef: 'Le socle du plan, allure conversationnelle stricte',
-  am: "L'allure du 4 avril, à ancrer dans le corps",
+  recup: 'Lendemain de sortie longue',
+  ef: 'Le socle du plan, allure conversationnelle',
+  am: "L'allure du 4 avril",
   semi: 'Allure du semi, fin de sortie longue avant un dossard',
   seuil: 'Effort soutenu tenable 40 à 60 minutes',
-  vo2: 'Fractionné 800 m à 1 200 m, effort 9/10',
-  rep: '400 m à 600 m, vivacité et économie de course',
+  vo2: 'Fractionné 800 m à 1 200 m',
+  rep: '400 m à 600 m',
 }
 
 /**

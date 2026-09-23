@@ -189,8 +189,13 @@ export function roleDe(
  * les segments d'effort passent au vert : c'est là que l'œil doit voir le
  * changement de rythme. Une séance d'une seule allure reste tout en bleu.
  */
-/** La récupération entre deux tours : le vert clair de la marque. */
-const COULEUR_RECUP = '#8ef79d'
+/**
+ * La récupération entre deux tours prend exactement la couleur de l'allure
+ * de récupération (`COULEUR_ZONE.recup`) : deux verts différents pour la
+ * même chose, le plus foncé pour la plus lente, se lisaient à l'envers
+ * (retour du 23 septembre 2026).
+ */
+const COULEUR_RECUP = COULEUR_ZONE.recup
 
 export const COULEUR_ROLE: Record<RoleSegment, string> = {
   facile: '#8e9af6',

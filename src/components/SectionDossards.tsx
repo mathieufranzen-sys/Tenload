@@ -14,6 +14,7 @@ import { cleEcart } from '../lib/overrides'
 import { daysBetween, formatDayLong, formatNumber } from '../lib/dates'
 import { chronoPlausible, formatPace } from '../lib/paces'
 import {
+  chronoEquivalent,
   formatChrono,
   listerDossards,
   motDuDossard,
@@ -21,6 +22,7 @@ import {
   type Dossard,
   type DossardRow,
 } from '../lib/dossards'
+import { CarteForme } from './CarteForme'
 import { ChronoCourse, formaterChronoLong, lireChrono } from './ChronoCourse'
 import { SubPage } from './SubPage'
 import { BoutonAction } from './BoutonAction'
@@ -349,6 +351,21 @@ function CarteDossard({
             {formatPace(d.objectifS / d.km)}/km
           </span>
         </div>
+      )}
+
+      {/* La forme du jour contre l'objectif de CETTE course : la même règle
+          que la forme projetée du marathon, à l'échelle de la distance
+          (retour du 23 septembre). */}
+      {!passe && d.objectifS != null && (
+        <CarteForme
+          titre="Ta forme aujourd'hui"
+          minutes={chronoEquivalent(d.km, formeMarathon) / 60}
+          objectif={d.objectifS / 60}
+          plage={[(d.objectifS / 60) * 0.08, (d.objectifS / 60) * 0.04]}
+          format={(min) => formatChrono(min * 60)}
+          lue
+          seances={0}
+        />
       )}
 
       {(passe || jours === 0) && onChronoRecale && (

@@ -32,23 +32,33 @@ const formatEcartCourt = (s: number): string => {
 export function CarteForme({
   minutes,
   objectif,
-  tendance,
+  tendance = [],
   lue,
   seances,
+  titre = 'Forme projetée',
+  format = court,
+  /** Largeur de la règle autour de l'objectif, en minutes : lente puis rapide. */
+  plage,
 }: {
-  /** Marathon projeté aujourd'hui, en minutes. */
+  /** Chrono projeté aujourd'hui, en minutes, sur la distance regardée. */
   minutes: number
-  /** Marathon visé, en minutes. */
+  /** Chrono visé, en minutes. */
   objectif: number
-  /** Les quatre derniers points, du plus ancien à aujourd'hui. */
-  tendance: PointTendance[]
+  /** Les quatre derniers points, du plus ancien à aujourd'hui. Absents sur un dossard. */
+  tendance?: PointTendance[]
   /** Assez de séances notées pour que le ressenti compte. */
   lue: boolean
   /** Séances notées que la projection lit sur 28 jours. */
   seances: number
+  titre?: string
+  format?: (minutes: number) => string
+  plage?: [number, number]
 }) {
-  const gauche = objectif + 10
-  const droite = objectif - 5
+  // Sur un dossard, la règle se cale sur la distance : ±10 min autour d'un
+  // 10 km n'aurait aucun sens.
+  const [large, serre] = plage ?? [10, 5]
+  const gauche = objectif + large
+  const droite = objectif - serre
   const pos = (m: number) => Math.max(0, Math.min(1, (gauche - m) / (gauche - droite))) * 100
   const aReprendre = minutes - objectif
   const ecartTendance =
@@ -70,12 +80,12 @@ export function CarteForme({
     // (retour du 22 septembre) : elle était la seule à parler plus fort.
     <section className="carte" style={{ padding: '18px 18px 20px', marginBottom: 12, opacity: lue ? 1 : 0.85 }}>
       <h2 className="display" style={{ margin: 0, fontSize: 'var(--fs-t-carte)', lineHeight: 1.2 }}>
-        Forme projetée
+        {titre}
       </h2>
 
       <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: '4px 12px', marginTop: 12 }}>
         <span className="chiffre" style={{ fontSize: 'var(--fs-c-xl)', lineHeight: 1, color: teinte }}>
-          {court(minutes)}
+          {format(minutes)}
         </span>
         <span style={{ fontSize: 'var(--fs-texte)', color: 'var(--ink-2)' }}>
           {aReprendre > 0 ? `soit ${aReprendre} min à reprendre` : aReprendre === 0 ? "pile sur l'objectif" : `${-aReprendre} min sous l'objectif`}
@@ -84,8 +94,8 @@ export function CarteForme({
 
       <div style={{ position: 'relative', margin: '28px 4px 0', height: 44 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-detail)', color: 'var(--ink-3)' }}>
-          <span>{court(gauche)}</span>
-          <span>{court(droite)}</span>
+          <span>{format(gauche)}</span>
+          <span>{format(droite)}</span>
         </div>
         <div style={{ position: 'absolute', left: 0, right: 0, top: 24, height: 8, borderRadius: 4, background: 'var(--surface-3)' }} />
         <div
@@ -127,7 +137,7 @@ export function CarteForme({
       </div>
       <div style={{ position: 'relative', height: 20, margin: '4px 4px 0', fontSize: 'var(--fs-detail)' }}>
         <span style={{ position: 'absolute', left: `${pos(minutes)}%`, transform: 'translateX(-50%)', color: teinte, whiteSpace: 'nowrap' }}>
-          {court(minutes)}
+          {format(minutes)}
         </span>
         <span
           style={{
@@ -143,7 +153,7 @@ export function CarteForme({
             top: Math.abs(pos(minutes) - pos(objectif)) < 22 ? 18 : 0,
           }}
         >
-          Objectif {court(objectif)}
+          Objectif {format(objectif)}
         </span>
       </div>
 

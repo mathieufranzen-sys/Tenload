@@ -22,9 +22,9 @@ const H = 168
 const P = { t: 10, r: 10, b: 22, l: 30 }
 /** Les trois plages : sous-charge, zone sûre, emballement. */
 const PLAGES: Array<{ de: number; a: number; fond: string; libelle: string }> = [
-  { de: 0, a: 0.8, fond: 'color-mix(in srgb, var(--ink) 6%, transparent)', libelle: 'Tu lèves le pied' },
+  { de: 0, a: 0.8, fond: 'color-mix(in srgb, var(--ink) 6%, transparent)', libelle: 'Sous 0,8' },
   { de: 0.8, a: 1.3, fond: 'color-mix(in srgb, var(--neon) 26%, transparent)', libelle: 'Zone sûre' },
-  { de: 1.3, a: 2, fond: 'color-mix(in srgb, var(--orange-300) 30%, transparent)', libelle: 'Tu montes trop vite' },
+  { de: 1.3, a: 2, fond: 'color-mix(in srgb, var(--orange-300) 30%, transparent)', libelle: 'Au-dessus de 1,3' },
 ]
 
 export function RatioChart({ points, now }: { points: PointRatio[]; now: string }) {
@@ -34,7 +34,6 @@ export function RatioChart({ points, now }: { points: PointRatio[]; now: string 
   const y = (v: number) => P.t + (1 - Math.min(haut, Math.max(0, v)) / haut) * (H - P.t - P.b)
 
   const trace = points.map((p, i) => `${i ? 'L' : 'M'}${x(i)} ${y(p.acr)}`).join(' ')
-  const dernier = points[points.length - 1]
   const iAuj = points.findIndex((p) => p.day === now)
   const etiquettes = [0, Math.floor(points.length / 2), points.length - 1]
 
@@ -69,28 +68,26 @@ export function RatioChart({ points, now }: { points: PointRatio[]; now: string 
         ))}
       </svg>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', marginTop: 8 }}>
+      {/* La légende tient sur une ligne : trois plages, trois bornes. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8, flexWrap: 'nowrap', overflow: 'hidden' }}>
         {PLAGES.map((z) => (
           <span
             key={z.de}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-2)' }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              fontSize: 'var(--fs-detail)',
+              color: 'var(--sur-ink-2)',
+              whiteSpace: 'nowrap',
+              minWidth: 0,
+            }}
           >
-            <span style={{ width: 14, height: 10, borderRadius: 3, background: z.fond, flex: 'none' }} />
+            <span style={{ width: 12, height: 10, borderRadius: 3, background: z.fond, flex: 'none' }} />
             {z.libelle}
-            <span style={{ color: 'var(--ink-3)' }}>
-              {z.de === 0 ? '< 0,8' : z.a === 2 ? '> 1,3' : '0,8 à 1,3'}
-            </span>
           </span>
         ))}
       </div>
-      <p style={{ margin: '10px 2px 0', fontSize: 'var(--fs-meta)', color: 'var(--ink-2)', lineHeight: 1.5 }}>
-        Aujourd'hui {dernier.acr.toFixed(2).replace('.', ',')} :{' '}
-        {dernier.acr < 0.8
-          ? 'tu fais moins que d’habitude, c’est une décharge ou une coupure.'
-          : dernier.acr <= 1.3
-            ? 'ta semaine ressemble aux précédentes, le tendon sait encaisser ça.'
-            : 'tu viens d’ajouter beaucoup d’un coup, c’est là que le tendon se réveille.'}
-      </p>
     </div>
   )
 }

@@ -17,12 +17,14 @@ import {
   type CategorieRepartition,
 } from '../../lib/repartition'
 import { formatDuration } from '../../lib/paces'
+import { COULEUR_ZONE } from '../../lib/seanceStyle'
 
+/** Exactement les couleurs d'allure : une zone a la même teinte partout. */
 export const COULEUR_REPARTITION: Partial<Record<CategorieRepartition, string>> = {
-  endurance: 'var(--bleu-200)',
-  marathon: 'var(--bleu-400)',
-  seuil: 'var(--bleu-600)',
-  vitesse: 'var(--bleu-800)',
+  endurance: COULEUR_ZONE.ef,
+  marathon: COULEUR_ZONE.am,
+  seuil: COULEUR_ZONE.seuil,
+  vitesse: COULEUR_ZONE.vo2,
 }
 
 const R = 70

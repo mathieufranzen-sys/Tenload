@@ -68,11 +68,9 @@ export function FormeChart({ points, objectif }: { points: PointForme[]; objecti
           cx={x(i)}
           cy={y(p.minutes)}
           r={i === n - 1 ? 4.5 : 3}
-          // Un point creux quand le ressenti ne compte pas encore : la forme
-          // est alors celle du test, pas une mesure de la semaine.
-          fill={p.lu ? 'var(--chart-1)' : 'var(--bg)'}
-          stroke="var(--chart-1)"
-          strokeWidth={1.8}
+          // Un seul remplissage : des points blancs puis verts sur la même
+          // courbe se lisaient comme deux séries (retour du 23 septembre).
+          fill="var(--chart-1)"
         />
       ))}
       {points.map((p, i) =>

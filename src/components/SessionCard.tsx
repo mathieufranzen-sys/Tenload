@@ -110,26 +110,33 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
             un contexte qui la porte déjà — le jour consulté sur Aujourd'hui,
             l'en-tête du jour sur Programme — et elle occupait la place des
             deux seuls chiffres qui décident de la séance. */}
-        {/* Une seule ligne de repères, en texte : la durée, la distance et
-            l'intensité au même niveau. L'intensité vivait dans une pilule et
-            la durée non, sur la même carte (retour du 22 septembre). */}
         {s.type !== 'repos' && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 7,
-              color: 'var(--sur-ink-2)',
-              fontSize: 'var(--fs-detail)',
-              fontWeight: 500,
-            }}
-          >
-            <span>{[volume, duration].filter(Boolean).join(' · ')}</span>
-            {st.intensite > 0 && <EchelleIntensite niveau={st.intensite} hauteur={11} />}
+          <div style={{ color: 'var(--sur-ink-2)', fontSize: 'var(--fs-detail)', fontWeight: 500 }}>
+            {[volume, duration].filter(Boolean).join(' · ')}
           </div>
         )}
 
+        {/* L'intensité garde sa pilule (retour du 23 septembre) : elle
+            qualifie la séance, les chiffres la décrivent. */}
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 7, marginTop: 10 }}>
+          {st.intensite > 0 && (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '4px 10px',
+                borderRadius: 'var(--pill)',
+                background: 'var(--surface-3)',
+                fontSize: 'var(--fs-micro)',
+                fontWeight: 500,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Intensité
+              <EchelleIntensite niveau={st.intensite} hauteur={11} />
+            </span>
+          )}
           {s.ecart && <span className="tag-ecart">{s.ecart}</span>}
           {s.adapted && <span className="tag-adapte">{s.adapted}</span>}
         </div>
