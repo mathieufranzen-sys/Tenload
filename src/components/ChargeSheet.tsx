@@ -247,7 +247,7 @@ export function ChargeSheet({
                   // de ce qui précède, il ne s'y ajoute pas. Le vert dit d'où
                   // il vient, la hachure qu'il se soustrait.
                   background:
-                    'repeating-linear-gradient(135deg, var(--good) 0 4px, color-mix(in srgb, var(--good) 35%, transparent) 4px 8px)',
+                    'repeating-linear-gradient(45deg, var(--good) 0 2px, color-mix(in srgb, var(--good) 30%, transparent) 2px 4px)',
                 }}
               />
             )}
@@ -329,7 +329,12 @@ export function ChargeSheet({
                       left: 0,
                       width: `${part * 100}%`,
                       borderRadius: 3,
-                      background: TEINTE_TERME[i],
+                      // Hachuré pour les gestes, comme la projection du
+                      // graphique de charge : la même texture dit partout
+                      // « ceci se retranche » (retour du 23 septembre).
+                      background: soinLigne
+                        ? `repeating-linear-gradient(45deg, ${TEINTE_TERME[i]} 0 2px, color-mix(in srgb, ${TEINTE_TERME[i]} 30%, transparent) 2px 4px)`
+                        : TEINTE_TERME[i],
                     }}
                   />
                 </div>

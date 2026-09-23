@@ -432,7 +432,7 @@ export function Track({
         </Viz>
 
         <Viz
-          titre="Effort perçu contre effort attendu, 30 jours"
+          titre="Effort perçu contre effort attendu"
           legendeCouleurs={[
             { label: 'Plus facile que prévu', couleur: 'var(--chart-1)' },
             { label: 'Plus dur', couleur: 'var(--chart-2)' },

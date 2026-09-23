@@ -18,14 +18,16 @@ export interface PointRatio {
   acr: number
 }
 
-const W = 340
-const H = 168
-const P = { t: 10, r: 10, b: 22, l: 30 }
+// Mêmes dimensions et mêmes marges que les autres graphiques de Suivi :
+// deux tracés qui ne commencent pas à la même abscisse ne se comparent pas.
+const W = 320
+const H = 190
+const P = { t: 8, r: 6, b: 22, l: 26 }
 /** Les trois plages : sous-charge, zone sûre, emballement. */
 const PLAGES: Array<{ de: number; a: number; fond: string; libelle: string }> = [
-  { de: 0, a: 0.8, fond: 'color-mix(in srgb, var(--ink) 6%, transparent)', libelle: 'Sous 0,8' },
-  { de: 0.8, a: 1.3, fond: 'color-mix(in srgb, var(--neon) 26%, transparent)', libelle: 'Zone sûre' },
-  { de: 1.3, a: 2, fond: 'color-mix(in srgb, var(--orange-300) 30%, transparent)', libelle: 'Au-dessus de 1,3' },
+  { de: 0, a: 0.8, fond: 'color-mix(in srgb, var(--ink) 5%, transparent)', libelle: 'Sous 0,8' },
+  { de: 0.8, a: 1.3, fond: 'color-mix(in srgb, var(--good) 14%, transparent)', libelle: 'Zone sûre' },
+  { de: 1.3, a: 2, fond: 'color-mix(in srgb, var(--orange-500) 18%, transparent)', libelle: 'Au-dessus de 1,3' },
 ]
 
 export function RatioChart({ points, now }: { points: PointRatio[]; now: string }) {
@@ -56,7 +58,7 @@ export function RatioChart({ points, now }: { points: PointRatio[]; now: string 
               strokeDasharray={v === 1 ? undefined : POINTILLE}
               opacity={v === 1 ? 1 : 0.5}
             />
-            <text x={P.l - 5} y={y(v) + 3.5} textAnchor="end" fontSize={10} fill="var(--chart-texte)">
+            <text x={P.l - 7} y={y(v) + 3.5} textAnchor="end" fontSize={10} fill="var(--chart-texte)">
               {v.toFixed(1).replace('.', ',')}
             </text>
           </g>
