@@ -1118,6 +1118,21 @@ parce qu'ils nommaient l'onglet Allures.
   mois lissait ce qu'on vient y chercher.
 - `--good` est le m3 de la famille verte des bandes (#1f8a3b) : le vert
   profond appartient au coach.
+- **Aujourd'hui a enfin son en-tête collant** (24 septembre 2026), comme les
+  quatre autres écrans : sans lui, le contenu remontait sous l'horloge et la
+  Dynamic Island, la zone sûre n'étant occupée par rien en PWA plein écran.
+  La barre porte les flèches de jour et le profil, et **échange son titre**
+  quand la grande date passe dessous : « Bonjour Mathieu » ne dit rien
+  pendant un défilement, la date si, puisque c'est elle que les flèches
+  changent. La bascule se décide sur un repère posé sous le titre, jamais sur
+  un nombre de pixels : la hauteur de la barre dépend de l'appareil. Attention,
+  **un élément collant ne dépasse pas la boîte de son parent** : la barre et
+  la date ne doivent partager aucun englobant.
+- **Une piste qui défile s'estompe à ses bords, elle ne se coupe pas net.**
+  La barre d'actions d'une séance tranchait « Corriger » en deux, ce qui se
+  lit comme un bouton mal posé et non comme une suite à faire venir. Le fondu
+  ne sort que du côté où il reste quelque chose, et le retrait de la page est
+  porté par la piste elle-même pour que les boutons défilent jusqu'au bord.
 
 ### Les dossards
 

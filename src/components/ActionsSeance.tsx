@@ -16,7 +16,7 @@
  * pousserait à ne rien saisir, et on perdrait l'information au lieu de la
  * garder.
  */
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Session, SessionType } from '../data/types'
 import { formatNumber } from '../lib/dates'
 import { familleDe } from '../lib/insights'
@@ -31,6 +31,9 @@ import {
 } from '../lib/overrides'
 import { Icon } from './Icon'
 import { BoutonAction } from './BoutonAction'
+
+/** Largeur du fondu aux deux bords de la barre d'actions, en pixels. */
+const FONDU_ACTIONS = 44
 
 type Panneau = 'reel' | 'remplacer' | null
 
@@ -92,6 +95,39 @@ export function ActionsSeance({
     onSave(p, raison.trim() || null)
   }
 
+  /**
+   * La barre déborde quand la séance porte ses cinq actions. Elle se coupait
+   * alors NET sur « Corriger », ce qui ressemble à un bouton mal posé plutôt
+   * qu'à une piste qui défile. Un fondu au bord dit qu'il y a une suite, et
+   * ne sort que du côté où elle existe : sur une barre qui tient en entier,
+   * aucun bouton n'est estompé.
+   */
+  const piste = useRef<HTMLDivElement>(null)
+  const [bords, setBords] = useState({ gauche: false, droite: false })
+  const mesurerBords = useCallback(() => {
+    const el = piste.current
+    if (!el) return
+    const gauche = el.scrollLeft > 2
+    const droite = el.scrollWidth - el.clientWidth - el.scrollLeft > 2
+    // On ne repose l'état que s'il change : la mesure tourne à chaque rendu.
+    setBords((b) => (b.gauche === gauche && b.droite === droite ? b : { gauche, droite }))
+  }, [])
+  // Sans dépendances : le nombre d'actions change avec la séance (un repos en
+  // a deux), et la mesure doit suivre le rendu qui vient d'avoir lieu.
+  useEffect(mesurerBords)
+  useEffect(() => {
+    const el = piste.current
+    if (!el) return
+    el.addEventListener('scroll', mesurerBords, { passive: true })
+    const obs = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(mesurerBords)
+    obs?.observe(el)
+    return () => {
+      el.removeEventListener('scroll', mesurerBords)
+      obs?.disconnect()
+    }
+  }, [mesurerBords])
+  const masqueActions = `linear-gradient(90deg, transparent 0, #000 ${bords.gauche ? FONDU_ACTIONS : 0}px, #000 calc(100% - ${bords.droite ? FONDU_ACTIONS : 0}px), transparent 100%)`
+
   return (
     <div ref={ancre} style={{ scrollMarginTop: 20 }}>
       {/* La barre d'actions collée en bas de la feuille, comme les boutons
@@ -106,11 +142,25 @@ export function ActionsSeance({
           zIndex: 65,
           maxWidth: 'var(--shell-max)',
           margin: '0 auto',
-          padding: '18px var(--page-x) calc(14px + env(safe-area-inset-bottom, 0px))',
+          padding: '18px 0 calc(14px + env(safe-area-inset-bottom, 0px))',
           background: 'linear-gradient(180deg, transparent, var(--bg) 38%)',
         }}
       >
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none' }}>
+        {/* Le retrait horizontal est porté par la piste elle-même : les boutons
+            peuvent alors défiler jusqu'au bord de l'écran, où le fondu les
+            reprend, au lieu de s'arrêter sur le retrait de la page. */}
+        <div
+          ref={piste}
+          style={{
+            display: 'flex',
+            gap: 8,
+            overflowX: 'auto',
+            scrollbarWidth: 'none',
+            padding: '0 var(--page-x)',
+            maskImage: masqueActions,
+            WebkitMaskImage: masqueActions,
+          }}
+        >
           {onNoter && <Action icone="pencil" label="Noter" principal onClick={onNoter} />}
           {!estRepos && (
             <Action

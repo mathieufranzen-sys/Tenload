@@ -680,11 +680,27 @@ const MOIS = [
   'décembre',
 ]
 
+/** Hauteur du fondu sous la barre, en pixels, et son retrait bas : les deux
+ *  sont la même valeur, pour que le flou ne s'arrête pas sur une arête. */
+const FONDU_JOUR = 16
+const MASQUE_JOUR = `linear-gradient(180deg, #000 0, #000 calc(100% - ${FONDU_JOUR}px), transparent 100%)`
+
 /**
  * L'en-tête de l'écran Aujourd'hui, propre à lui : la semaine et le bloc en
  * surtitre, la date en grand, et les deux flèches de jour à droite, comme la
  * maquette. Le bouton profil reste au-dessus des flèches : c'est la seule
  * porte vers les réglages, il ne peut pas disparaître.
+ *
+ * Sa première ligne est COLLANTE, comme l'en-tête des quatre autres écrans.
+ * Sans elle, le contenu qui défile remontait jusque sous l'horloge et la
+ * Dynamic Island : en PWA plein écran, rien n'occupe la zone sûre, et une
+ * carte qui passe sous l'heure se lit par-dessus elle. La barre prend donc
+ * elle-même cette zone et sert de fond au défilement.
+ *
+ * Elle échange son titre quand la grande date passe dessous : une barre qui
+ * dirait « Bonjour Mathieu » pendant tout le défilement n'apprendrait rien,
+ * alors que la date est justement ce qu'on perd de vue, et qu'on change avec
+ * les flèches restées à côté.
  */
 function EnteteJour({
   surtitre,
@@ -710,34 +726,103 @@ function EnteteJour({
   onAujourdhui: () => void
   onOuvrirProfil: () => void
 }) {
+  // La bascule du titre se décide sur un repère posé sous la grande date,
+  // pas sur un nombre de pixels : la hauteur de la barre change avec la zone
+  // sûre de l'appareil.
+  const [compact, setCompact] = useState(false)
+  const barre = useRef<HTMLElement>(null)
+  const repere = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const cible = repere.current
+    if (!cible || typeof IntersectionObserver === 'undefined') return
+    const haut = Math.round(barre.current?.offsetHeight ?? 64)
+    const obs = new IntersectionObserver(([e]) => setCompact(!e.isIntersecting), {
+      rootMargin: `-${haut}px 0px 0px 0px`,
+    })
+    obs.observe(cible)
+    return () => obs.disconnect()
+  }, [])
+
+  const dateCourte = titresCourts[titresCourts.length - 1] ?? titre
+
   return (
-    // Plus d'air au-dessus et en dessous de la date (retour du 22 septembre).
-    <header style={{ padding: 'calc(24px + env(safe-area-inset-top)) 0 28px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-        <p className="display" style={{ margin: 0, fontSize: 'var(--fs-t-liste)', color: 'var(--ink-2)', minWidth: 0 }}>
-          {surtitre}
-        </p>
-        {/* Les flèches montent à côté du profil : la date prend toute la
+    // Aucun englobant autour des deux blocs : un élément collant ne dépasse
+    // jamais la boîte de son parent, et un <header> qui les réunissait
+    // emportait la barre avec lui dès qu'il sortait de l'écran.
+    <>
+      {/* La barre collante : le titre à gauche, les flèches et le profil à
+          droite. Le retrait négatif annule le padding de la page pour que le
+          voile couvre toute la largeur. */}
+      <header
+        ref={barre}
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 20,
+          margin: '0 calc(-1 * var(--page-x))',
+          padding: `calc(14px + env(safe-area-inset-top)) var(--page-x) ${FONDU_JOUR}px`,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 10,
+          background: 'color-mix(in srgb, var(--bg) 88%, transparent)',
+          backdropFilter: 'blur(18px) saturate(1.4)',
+          WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
+          maskImage: MASQUE_JOUR,
+          WebkitMaskImage: MASQUE_JOUR,
+        }}
+      >
+        {/* Les deux titres occupent la même case : la bascule est un fondu et
+            non un saut de mise en page. */}
+        <div style={{ display: 'grid', minWidth: 0 }}>
+          {[
+            { texte: surtitre, couleur: 'var(--ink-2)', visible: !compact },
+            { texte: dateCourte, couleur: 'var(--ink)', visible: compact },
+          ].map((t) => (
+            <p
+              key={t.texte}
+              className="display"
+              aria-hidden={!t.visible}
+              style={{
+                gridArea: '1 / 1',
+                margin: 0,
+                fontSize: 'var(--fs-t-liste)',
+                color: t.couleur,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                opacity: t.visible ? 1 : 0,
+                transition: 'opacity .18s ease',
+                pointerEvents: 'none',
+              }}
+            >
+              {t.texte}
+            </p>
+          ))}
+        </div>
+        {/* Les flèches restent à côté du profil : la date prend toute la
             largeur, et « Mercredi 30 sept. » tient sur une ligne. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>
           <NavigationJour jour={jour} now={now} plusAncien={plusAncien} onDecaler={onDecaler} />
           <ProfileButton onClick={onOuvrirProfil} />
         </div>
+      </header>
+
+      {/* Plus d'air au-dessus et en dessous de la date (retour du 22 septembre). */}
+      <div style={{ padding: '12px 0 28px' }}>
+        {relatif && (
+          <p style={{ margin: '0 0 2px', fontSize: 'var(--fs-texte)', color: 'var(--sur-ink-2)' }}>{relatif}</p>
+        )}
+        <TitreUneLigne variantes={[titre, ...titresCourts]} />
+        <div ref={repere} aria-hidden="true" style={{ height: 1 }} />
+        {jour !== now && (
+          <BoutonAction icone="arrowRight" onClick={onAujourdhui} style={{ marginTop: 14 }}>
+            Revenir à aujourd&apos;hui
+          </BoutonAction>
+        )}
       </div>
-      <div style={{ marginTop: 12 }}>
-        <div style={{ minWidth: 0 }}>
-          {relatif && (
-            <p style={{ margin: '0 0 2px', fontSize: 'var(--fs-texte)', color: 'var(--sur-ink-2)' }}>{relatif}</p>
-          )}
-          <TitreUneLigne variantes={[titre, ...titresCourts]} />
-        </div>
-      </div>
-      {jour !== now && (
-        <BoutonAction icone="arrowRight" onClick={onAujourdhui} style={{ marginTop: 14 }}>
-          Revenir à aujourd&apos;hui
-        </BoutonAction>
-      )}
-    </header>
+    </>
   )
 }
 
