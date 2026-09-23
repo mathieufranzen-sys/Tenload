@@ -25,9 +25,13 @@ const H = 190
 const P = { t: 8, r: 6, b: 22, l: 26 }
 /** Les trois plages : sous-charge, zone sûre, emballement. */
 const PLAGES: Array<{ de: number; a: number; fond: string; libelle: string }> = [
-  { de: 0, a: 0.8, fond: 'color-mix(in srgb, var(--ink) 5%, transparent)', libelle: 'Sous 0,8' },
-  { de: 0.8, a: 1.3, fond: 'color-mix(in srgb, var(--good) 14%, transparent)', libelle: 'Zone sûre' },
-  { de: 1.3, a: 2, fond: 'color-mix(in srgb, var(--orange-500) 18%, transparent)', libelle: 'Au-dessus de 1,3' },
+  // Palette choisie par Mathieu le 23 septembre 2026 : la zone sûre est
+  // BLANCHE. Tant que rien ne cloche, rien ne s'allume ; l'ambre du haut ne
+  // sort que quand on en sort, et le gris du bas dit la décharge. C'est la
+  // règle de l'app, la couleur seulement quand elle dit quelque chose.
+  { de: 0, a: 0.8, fond: 'var(--surface-3)', libelle: 'Sous 0,8' },
+  { de: 0.8, a: 1.3, fond: 'var(--surface-2)', libelle: 'Zone sûre' },
+  { de: 1.3, a: 2, fond: 'var(--orange-300)', libelle: 'Au-dessus de 1,3' },
 ]
 
 export function RatioChart({ points, now }: { points: PointRatio[]; now: string }) {
@@ -63,8 +67,10 @@ export function RatioChart({ points, now }: { points: PointRatio[]; now: string 
             </text>
           </g>
         ))}
-        <path d={trace} fill="none" stroke="var(--chart-ligne)" strokeWidth={2} strokeLinejoin="round" />
-        {iAuj >= 0 && <circle cx={x(iAuj)} cy={y(points[iAuj].acr)} r={4} fill="var(--chart-ligne)" />}
+        {/* La courbe prend l'encre de l'app : sur des plages franches, un
+            bleu nuit se confondait avec les traits de seuil. */}
+        <path d={trace} fill="none" stroke="var(--ink)" strokeWidth={2} strokeLinejoin="round" />
+        {iAuj >= 0 && <circle cx={x(iAuj)} cy={y(points[iAuj].acr)} r={4} fill="var(--ink)" />}
         {etiquettes.map((i) => (
           <text key={i} x={x(i)} y={H - 6} textAnchor={i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'} fontSize={10} fill="var(--chart-texte)">
             {formatDay(points[i].day)}
@@ -87,7 +93,16 @@ export function RatioChart({ points, now }: { points: PointRatio[]; now: string 
               minWidth: 0,
             }}
           >
-            <span style={{ width: 12, height: 10, borderRadius: 3, background: z.fond, flex: 'none' }} />
+            <span
+              style={{
+                width: 12,
+                height: 10,
+                borderRadius: 3,
+                background: z.fond,
+                boxShadow: 'inset 0 0 0 1px var(--border)',
+                flex: 'none',
+              }}
+            />
             {z.libelle}
           </span>
         ))}

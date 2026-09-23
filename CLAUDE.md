@@ -1099,6 +1099,13 @@ parce qu'ils nommaient l'onglet Allures.
   cherche, puis trois chiffres (sortie longue, courses, kilomètres).
 - Tous les graphiques de Suivi partagent le même pointillé (`POINTILLE`) et
   la même couleur de trait de repère (`TRAIT_REPERE`).
+- **Le rapport aigu sur chronique** (`RatioChart`) a la zone sûre en BLANC :
+  tant que rien ne cloche, rien ne s'allume. L'ambre du haut ne sort qu'au
+  delà de 1,3, le gris du bas dit la décharge (palette choisie par Mathieu le
+  23 septembre 2026). Au-dessus de 1,3, c'est une **vigilance, pas une
+  alerte** : le terme vaut 17 points sur 100 à 1,3 et plafonne à 30 vers 1,6,
+  il ne peut donc jamais retirer une séance à lui seul — seules les bandes et
+  les planchers de douleur le peuvent.
 - Suivi porte quatre chiffres, le quatrième étant le **seuil cumulé de la
   semaine** contre la cible de 20 à 30 min (contrainte 9). L'effort perçu se
   lit **séance par séance sur 30 jours** : une moyenne hebdomadaire sur trois
