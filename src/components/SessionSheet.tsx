@@ -2,9 +2,10 @@
  * Feuille modale de détail de séance, portée depuis reference/tendo-v3.html
  * (`openSheet`, `segs`, `step`, `fbForm`).
  */
+import { BoutonAction } from './BoutonAction'
 import { useEffect, useMemo, useState } from 'react'
 import planJson from '../data/plan.json'
-import type { Plan, Session, Week, ZoneKey } from '../data/types'
+import type { Plan, Week, ZoneKey } from '../data/types'
 import type { SeancePlanifiee } from '../lib/adapt'
 import {
   cleEcart,
@@ -28,7 +29,6 @@ import {
 import { formatPace, zonePace } from '../lib/paces'
 import type { FeedbackRow } from '../lib/buildPain'
 import { Icon } from './Icon'
-import { EchelleIntensite } from './MarqueSeance'
 import { encreZone, styleSeance } from '../lib/seanceStyle'
 import { deroulerSeance } from '../lib/deroule'
 import { DecoupageSeance, ProfilSeance } from './ProfilSeance'
@@ -37,10 +37,6 @@ import { JaugeRessenti } from './JaugeRessenti'
 import { StatsSeance } from './StatsSeance'
 
 const plan = planJson as unknown as Plan
-
-const TYPES_COURSE_SANS_MUR: Session['type'][] = [
-  'long', 'ef', 'inter', 'tempo', 'test', 'course', 'race',
-]
 
 interface Props {
   week: Week
@@ -115,8 +111,6 @@ export function SessionSheet({
     }
   }, [onClose])
 
-  const estCourse = TYPES_COURSE_SANS_MUR.includes(s.type)
-  const afficherDetails = estCourse || Boolean(s.ex)
 
   /**
    * Un repos jambes complet n'a pas de ressenti à saisir : douleur à l'effort 0
@@ -159,124 +153,92 @@ export function SessionSheet({
         zIndex: 60,
         background: 'var(--bg)',
         overflowY: 'auto',
-        // Le pictogramme filigrane déborde volontairement à droite (`right: -26`) :
-        // sans ce clip, ce débord ouvrait un scroll horizontal sur toute la feuille.
+        // Rien ne doit ouvrir de défilement horizontal sur la feuille : c'est
+        // arrivé avec un pictogramme qui débordait, ce clip reste en garde.
         overflowX: 'hidden',
         maxWidth: 'var(--shell-max)',
         margin: '0 auto',
       }}
     >
-      {/* Le haut de l'écran garde sa masse claire, mais en encre neutre : la
-          discipline s'annonce par le grand pictogramme filigrané plutôt que
-          par une teinte, qui ne dit plus que la charge du tendon. */}
+      {/* La lueur de la braise en haut de feuille, comme sur tous les écrans.
+          Le grand pictogramme en filigrane est parti : la maquette annonce la
+          séance par son titre en serif, et une icône de 200 px lui disputait
+          la place. */}
+      <div aria-hidden className="braise" style={{ position: 'absolute', height: 460, bottom: 'auto' }} />
+
       <div
-        aria-hidden
         style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 460,
-          background: 'linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,0))',
-          pointerEvents: 'none',
-        }}
-      />
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          top: 46,
-          right: -26,
-          color: 'var(--ink)',
-          opacity: 0.075,
-          pointerEvents: 'none',
+          position: 'relative',
+          // Place pour la barre d'actions collée en bas.
+          padding: `calc(14px + env(safe-area-inset-top)) var(--page-x) ${onSaveEcart ? 120 : 40}px`,
         }}
       >
-        <Icon name={styleSeance(s.type).icone} size={200} style={{ strokeWidth: 1.1 }} />
-      </div>
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 460,
-          background:
-            'linear-gradient(180deg, rgba(8,9,11,.34) 0px, rgba(8,9,11,.12) 150px, rgba(8,9,11,.62) 350px, var(--bg) 460px)',
-          pointerEvents: 'none',
-        }}
-      />
-
-      <div style={{ position: 'relative', padding: 'calc(14px + env(safe-area-inset-top)) var(--page-x) 40px' }}>
         <div style={{ position: 'relative' }}>
-          <button
-            onClick={onClose}
-            aria-label="Fermer"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              display: 'grid',
-              placeItems: 'center',
-              background: 'rgba(255,255,255,.14)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              marginBottom: 20,
-            }}
-          >
-            <Icon name="x" size={18} />
+          {/* La tête d'une fiche AllTrails : retour à gauche, le titre en
+              grand, une ligne de repères dessous, puis la rangée de chiffres. */}
+          <button onClick={onClose} aria-label="Fermer" className="rond">
+            <Icon name="chevronLeft" size={20} />
           </button>
 
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 7,
-              fontSize: 11.5,
-              fontWeight: 700,
-              padding: '5px 11px 5px 9px',
-              borderRadius: 'var(--pill)',
-              background: 'rgba(8,9,11,.34)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              color: '#fff',
-              marginBottom: 12,
-            }}
-          >
-            {styleSeance(s.type).intensite > 0 && (
-              <EchelleIntensite niveau={styleSeance(s.type).intensite} hauteur={11} />
-            )}
-            {s.cat} · {formatDayLong(day)}
-          </div>
-
-          <h2 style={{ margin: '0 0 7px', fontSize: 32, fontWeight: 700, letterSpacing: '-1px', lineHeight: 1.1 }}>
+          <h2 className="display" style={{ margin: '18px 0 0', fontSize: 'var(--fs-t-ecran)', lineHeight: 1.05 }}>
             {s.title}
           </h2>
 
+          <p
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: '4px 8px',
+              margin: '12px 0 0',
+              fontSize: 'var(--fs-texte)',
+              color: 'var(--ink)',
+            }}
+          >
+            <span
+              aria-hidden
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: '50%',
+                background: NIVEAU_COULEUR[styleSeance(s.type).intensite],
+                flex: 'none',
+              }}
+            />
+            <span style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>{s.cat}</span>
+            <span style={{ color: 'var(--ink-3)' }}>·</span>
+            <span>{formatDayLong(day)}</span>
+            <span style={{ color: 'var(--ink-3)' }}>·</span>
+            <span>Semaine {week.n}</span>
+          </p>
+
           {(s.adapted || s.ecart) && (
-            <div style={{ margin: '10px 0 0', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {/* Deux origines distinctes, deux couleurs : l'ambre vient du
-                  moteur d'adaptation, le bleu d'une décision de Mathieu. */}
-              {s.ecart && <Badge fond="rgba(78,140,255,.18)" encre="#9DC1FF">{s.ecart}</Badge>}
-              {s.adapted && <Badge fond="rgba(250,178,25,.16)" encre="#FFD166">{s.adapted}</Badge>}
+            <div style={{ margin: '14px 0 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {/* Deux origines distinctes, deux couleurs : le jaune vient du
+                  moteur d'adaptation, la pêche d'une décision de Mathieu. */}
+              {s.adapted && (
+                <NoteSeance teinte="var(--warning)" fond="color-mix(in srgb, var(--adapte-fond) 45%, transparent)">
+                  {s.adapted}
+                </NoteSeance>
+              )}
+              {s.ecart && (
+                <NoteSeance teinte="var(--pale)" fond="color-mix(in srgb, var(--ink) 5%, transparent)">
+                  {s.ecart}
+                </NoteSeance>
+              )}
             </div>
           )}
 
-          {/* Distance, durée et allure sur une seule ligne, chacune à sa
-              propre échelle : le chiffre qui définit la séance reste le plus
-              gros, les deux autres l'accompagnent sans le concurrencer. */}
           <StatsSeance
             session={s}
             marathonPace={marathonPace}
             allureReelle={allureReelle}
           />
 
-          {/* La ligne d'actions vient AVANT le détail : ce qu'on fait de la
-              séance se décide en la regardant de haut, pas après avoir lu ses
-              allures. */}
+          {/* Les actions vivent dans la barre collée en bas ; leurs panneaux
+              (donnée réelle, remplacer) s'ouvrent ici, sous les chiffres. */}
           {onSaveEcart && (
-            <div style={{ marginTop: 24 }}>
+            <div style={{ marginTop: 14 }}>
               <ActionsSeance
                 origine={origine}
                 actuel={seance.ecart?.patch ?? null}
@@ -293,101 +255,78 @@ export function SessionSheet({
                 }
                 onSave={(patch, reason) => onSaveEcart(week.n, jourOrigine, slot, patch, reason)}
                 onDeplacer={onDeplacer && (() => onDeplacer(seance))}
+                onNoter={
+                  !ressentiImplicite && onSave && (!feedback || modifie)
+                    ? () => document.getElementById('ressenti-seance')?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+                    : undefined
+                }
               />
-            </div>
-          )}
-
-          {!onSaveEcart && (
-            <div style={{ height: 1, background: 'var(--border)', margin: '24px 0 20px' }} />
-          )}
-
-          {afficherDetails && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14 }}>
-              <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-.6px' }}>Détails</div>
             </div>
           )}
 
           {/* Le profil d'abord, le détail ensuite : la forme de la séance se
               lit en un coup d'œil, les allures se lisent quand on s'y met. */}
-          {deroule.length > 0 && (
-            <>
-              <SectionTitre icone="run">
-                {['race', 'course'].includes(s.type) ? 'Course' : 'Déroulé'}
-              </SectionTitre>
-              <ProfilSeance blocs={deroule} />
-              <DecoupageSeance session={s} blocs={deroule} marathonPace={marathonPace} />
-            </>
-          )}
+          {(deroule.length > 0 || s.ex || s.type === 'escalade' || s.type === 'repos') && (
+            // Sans carte autour : le déroulé est le contenu de la page, pas un
+            // encart dans la page.
+            <section style={{ marginTop: 8 }}>
+              {deroule.length > 0 && (
+                <>
+                  <TitreSection>{['race', 'course'].includes(s.type) ? 'Course' : 'Déroulé'}</TitreSection>
+                  <ProfilSeance blocs={deroule} />
+                  <DecoupageSeance session={s} blocs={deroule} marathonPace={marathonPace} />
+                </>
+              )}
 
-          {s.ex && (
-            <>
-              <SectionTitre icone="dumb">Exercices</SectionTitre>
-              <div style={{ marginTop: -4 }}>
-                {s.ex.map(([nom, serie, precision], i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      gap: 14,
-                      padding: '12px 0',
-                      borderBottom: i < s.ex!.length - 1 ? '1px solid var(--border)' : undefined,
-                    }}
-                  >
-                    <div style={{ fontSize: 15.5, fontWeight: 600, letterSpacing: '-.15px' }}>
-                      {nom}
-                      {precision && (
-                        <em style={{ display: 'block', fontStyle: 'normal', color: 'var(--ink-3)', fontSize: 13, fontWeight: 500, marginTop: 2 }}>
-                          {precision}
-                        </em>
-                      )}
+              {s.ex && (
+                <>
+                  <TitreSection>{deroule.length > 0 ? 'Renforcement enchaîné' : 'Exercices'}</TitreSection>
+                  {s.ex.map(([nom, serie, precision], i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: 14,
+                        padding: '11px 0',
+                        borderBottom: i < s.ex!.length - 1 ? '1px solid var(--border)' : undefined,
+                      }}
+                    >
+                      <div style={{ fontSize: 'var(--fs-texte)' }}>
+                        {nom}
+                        {precision && (
+                          <em style={{ display: 'block', fontStyle: 'normal', color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', marginTop: 2 }}>
+                            {precision}
+                          </em>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 'var(--fs-texte)', color: 'var(--sur-ink-2)', whiteSpace: 'nowrap' }}>{serie}</div>
                     </div>
-                    <div style={{ fontSize: 15.5, fontWeight: 800, whiteSpace: 'nowrap' }}>{serie}</div>
-                  </div>
-                ))}
-              </div>
-            </>
+                  ))}
+                </>
+              )}
+
+              {(s.type === 'escalade' || s.type === 'repos') && (
+                <>
+                  <TitreSection>{s.type === 'repos' ? 'Consignes' : 'Séance'}</TitreSection>
+                  <StepView
+                    main={s.type === 'repos' ? 'Aucune charge sur les jambes' : 'Escalade en salle'}
+                    zone={null}
+                    sub={
+                      s.type === 'repos'
+                        ? 'Mobilité cheville, étirements doux, glaçage si sensible'
+                        : 'Voies en tête et en moulinette, effort libre'
+                    }
+                    marathonPace={marathonPace}
+                  />
+                </>
+              )}
+            </section>
           )}
 
-          {(s.type === 'escalade' || s.type === 'repos') && (
-            <>
-              <SectionTitre icone={s.type === 'repos' ? 'rest' : 'climb'}>
-                {s.type === 'repos' ? 'Consignes' : 'Séance'}
-              </SectionTitre>
-              <StepView
-                main={s.type === 'repos' ? 'Aucune charge sur les jambes' : 'Escalade en salle'}
-                zone={null}
-                sub={
-                  s.type === 'repos'
-                    ? 'Mobilité cheville, étirements doux, glaçage si sensible'
-                    : 'Voies en tête et en moulinette, effort libre'
-                }
-                marathonPace={marathonPace}
-              />
-            </>
-          )}
-
-          <div
-            style={{
-              height: 1,
-              margin: '18px 0',
-              background:
-                'repeating-linear-gradient(90deg, var(--border-2) 0 4px, transparent 4px 9px)',
-            }}
-          />
-          <CarteCoach texte={s.note} but={butDeLaSeance(s.type)} style={{ margin: '22px 0 4px' }} />
-
-          <div
-            style={{
-              height: 1,
-              margin: '18px 0',
-              background:
-                'repeating-linear-gradient(90deg, var(--border-2) 0 4px, transparent 4px 9px)',
-            }}
-          />
           {recalageSurCourse(s) && day <= today() && formeActuelle != null && (
             <>
-              <SectionTitre icone="up">Ton chrono</SectionTitre>
+              <TitreSection>Chrono</TitreSection>
               <ChronoCourse
                 km={s.dist!}
                 chronoSaisi={
@@ -405,17 +344,11 @@ export function SessionSheet({
                   onRecalibrerForme?.(allure)
                 }}
               />
-              <div
-                style={{
-                  height: 1,
-                  margin: '18px 0',
-                  background:
-                    'repeating-linear-gradient(90deg, var(--border-2) 0 4px, transparent 4px 9px)',
-                }}
-              />
             </>
           )}
-          <SectionTitre icone="heart">Ton ressenti</SectionTitre>
+          <div id="ressenti-seance" style={{ scrollMarginTop: 16 }}>
+            <TitreSection>Ressenti</TitreSection>
+          </div>
           {ressentiImplicite ? (
             <div
               className="glass"
@@ -424,9 +357,9 @@ export function SessionSheet({
               <h4
                 style={{
                   margin: '0 0 8px',
-                  fontSize: 15.5,
+                  fontSize: 'var(--fs-texte)',
                   fontWeight: 800,
-                  color: '#5BE05B',
+                  color: 'var(--good)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 8,
@@ -435,11 +368,11 @@ export function SessionSheet({
                 <Icon name="check" size={18} />
                 Douleur à l&apos;effort 0, effort perçu 0
               </h4>
-              <p style={{ margin: 0, color: 'var(--sur-ink-2)', fontSize: 14, lineHeight: 1.5 }}>
+              <p style={{ margin: 0, color: 'var(--sur-ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5 }}>
                 Ce ne sont pas des estimations : il n&apos;y a pas eu d&apos;effort. Rien à saisir,
                 sauf si tu enregistres un écart et que la journée devient autre chose.
               </p>
-              <p style={{ margin: '10px 0 0', color: 'var(--sur-ink-3)', fontSize: 12.5, lineHeight: 1.5 }}>
+              <p style={{ margin: '10px 0 0', color: 'var(--sur-ink-3)', fontSize: 'var(--fs-detail)', lineHeight: 1.5 }}>
                 La raideur au réveil et la douleur du soir, elles, restent à noter dans le carnet de
                 l&apos;écran Aujourd&apos;hui : un jour sans course n&apos;est pas un jour sans tendon.
               </p>
@@ -471,43 +404,56 @@ export function SessionSheet({
             />
           )}
 
+          {butDeLaSeance(s.type) && (
+            <section className="carte" style={{ padding: '18px 20px', marginTop: 16 }}>
+              {/* Même étiquette que « Le mot du coach » juste en dessous :
+                  deux cartes de même nature, deux titres de même taille. */}
+              <p className="etiquette">Ce que la séance travaille</p>
+              <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-body)', lineHeight: 1.55 }}>
+                {butDeLaSeance(s.type)!.replace(/^À quoi ça sert\s*:\s*/i, '')}
+              </p>
+            </section>
+          )}
+          <CarteCoach texte={s.note} style={{ marginTop: 12 }} />
+
         </div>
       </div>
     </div>
   )
 }
 
-function Badge({ fond, encre, children }: { fond: string; encre: string; children: string }) {
+/**
+ * La pastille d'intensité de la ligne de repères, comme le « Facile »
+ * d'AllTrails. En bleus qui foncent, jamais en teintes de bande : l'orange et
+ * le rouge disent la charge du tendon, pas la dureté d'une séance.
+ */
+const NIVEAU_COULEUR = ['#a7a99f', '#b3bbf9', '#6e7ff4', '#3b4dd6', '#1f2a78']
+
+/** Un titre de section : un vrai titre, en serif, pas une étiquette. */
+function TitreSection({ children }: { children: string }) {
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 5,
-        fontSize: 11.5,
-        fontWeight: 700,
-        padding: '3.5px 9px',
-        borderRadius: 'var(--pill)',
-        background: fond,
-        color: encre,
-      }}
-    >
+    <h3 className="display" style={{ margin: '28px 0 12px', fontSize: 'var(--fs-t-carte)', fontWeight: 400, lineHeight: 1.2 }}>
       {children}
-    </span>
+    </h3>
   )
 }
 
-function SectionTitre({
-  icone,
-  children,
-}: {
-  icone: 'up' | 'run' | 'down' | 'dumb' | 'heart' | 'climb' | 'rest'
-  children: string
-}) {
+/** Une note sous le titre : ce que le moteur ou Mathieu a changé à la séance. */
+function NoteSeance({ teinte, fond, children }: { teinte: string; fond: string; children: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 17.5, fontWeight: 800, letterSpacing: '-.35px', margin: '20px 0 12px' }}>
-      <Icon name={icone} size={21} />
-      {children}
+    <div
+      style={{
+        display: 'flex',
+        gap: 12,
+        padding: '13px 16px',
+        borderRadius: 20,
+        border: `1px solid ${teinte}`,
+        borderColor: `color-mix(in srgb, ${teinte} 45%, transparent)`,
+        background: fond,
+      }}
+    >
+      <span aria-hidden style={{ width: 4, borderRadius: 2, background: teinte, flex: 'none' }} />
+      <span style={{ fontSize: 'var(--fs-texte)', lineHeight: 1.45, color: 'var(--ink)' }}>{children}</span>
     </div>
   )
 }
@@ -541,8 +487,8 @@ function StepView({
         aria-hidden
         style={{ position: 'absolute', left: 0, top: 2, bottom: 2, width: 4.5, borderRadius: 3, background: couleur }}
       />
-      <b style={{ display: 'block', fontSize: 16, fontWeight: 700, letterSpacing: '-.2px' }}>{label}</b>
-      {texte && <span style={{ display: 'block', color: 'var(--ink-2)', fontSize: 14.5, fontWeight: 500, marginTop: 1 }}>{texte}</span>}
+      <b style={{ display: 'block', fontSize: 'var(--fs-body)', fontWeight: 700, letterSpacing: '-.2px' }}>{label}</b>
+      {texte && <span style={{ display: 'block', color: 'var(--ink-2)', fontSize: 'var(--fs-texte)', fontWeight: 500, marginTop: 1 }}>{texte}</span>}
     </div>
   )
 }
@@ -572,14 +518,16 @@ function FormulaireRessenti({
    */
   const [pain, setPain] = useState<number | null>(feedback?.pain ?? null)
   const [rpe, setRpe] = useState<number | null>(feedback?.rpe ?? null)
+  // Le bouton attend un geste (retour du 22 septembre) : enregistrer sans
+  // rien toucher écrivait deux zéros qu'on n'avait pas voulu dire, ou
+  // réécrivait tel quel un ressenti déjà noté.
+  const touche = pain !== (feedback?.pain ?? null) || rpe !== (feedback?.rpe ?? null)
 
   return (
     <div>
-      <p style={{ color: 'var(--sur-ink-2)', fontSize: 14, lineHeight: 1.5, margin: '0 0 18px' }}>
-        Deux curseurs après chaque séance. C'est ce qui pilote l'adaptation du plan.
-      </p>
-
-      <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '18px 16px 14px', marginBottom: 12 }}>
+      {/* Les curseurs d'origine, les mêmes que le carnet : une seule façon
+          de noter une douleur dans toute l'app (retour du 22 septembre). */}
+      <div className="carte" style={{ padding: '18px 16px 14px', marginBottom: 12 }}>
         <JaugeRessenti
           label="Douleur au tendon"
           valeur={pain}
@@ -591,7 +539,7 @@ function FormulaireRessenti({
         />
       </div>
 
-      <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '18px 16px 14px', marginBottom: 12 }}>
+      <div className="carte" style={{ padding: '18px 16px 14px', marginBottom: 12 }}>
         <JaugeRessenti
           label="Effort perçu"
           valeur={rpe}
@@ -603,30 +551,20 @@ function FormulaireRessenti({
         />
       </div>
 
-      <button
+      <BoutonAction
+        icone="check"
+        disabled={disabled || !touche}
+        style={{ marginTop: 12 }}
         onClick={() => {
           // Valider sans avoir touché un curseur vaut zéro : c'est une
           // affirmation volontaire, contrairement à l'affichage d'avant.
           onSave(pain ?? 0, rpe ?? 0, '')
         }}
-        disabled={disabled}
-        style={{
-          display: 'block',
-          width: '100%',
-          marginTop: 12,
-          padding: 15,
-          borderRadius: 'var(--pill)',
-          fontWeight: 700,
-          fontSize: 16,
-          background: disabled ? 'var(--surface-2)' : '#F2F2F4',
-          color: disabled ? 'var(--ink-3)' : '#0B0C0E',
-          opacity: disabled ? 0.6 : 1,
-        }}
       >
-        Enregistrer mon ressenti
-      </button>
+        Enregistrer le ressenti
+      </BoutonAction>
       {disabled && (
-        <p style={{ color: 'var(--ink-3)', fontSize: 12.5, marginTop: 8 }}>
+        <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', marginTop: 8 }}>
           Connecte-toi pour enregistrer un ressenti.
         </p>
       )}

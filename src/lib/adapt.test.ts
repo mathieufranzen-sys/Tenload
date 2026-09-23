@@ -245,7 +245,7 @@ describe('weekSessions', () => {
     expect(x.ecart).not.toBeNull()
   })
 
-  it('une séance sautée ne reçoit aucune adaptation', () => {
+  it("une séance sautée garde à l'écran la séance réellement sautée", () => {
     const week: Week = {
       n: 2,
       bloc: 'A',
@@ -263,7 +263,12 @@ describe('weekSessions', () => {
       indexerEcarts([{ week: 2, day_index: 0, slot: 0, patch: { skipped: true }, reason: null }]),
     )
     expect(x.s.saute).toBe(true)
-    expect(x.s.dist).toBe(25) // pas réduite de 20 % : elle n'aura pas lieu
+    // Ce qui est sauté, c'est ce que l'écran montrait : la version adaptée.
+    // Sauter une course devenue vélo doit dire « vélo sauté », pas
+    // « course sautée » (retour du 22 septembre).
+    expect(x.s.dist).toBe(20)
+    // Plus d'étiquette d'adaptation : il n'y a plus rien à protéger.
+    expect(x.s.adapted).toBeUndefined()
   })
 })
 

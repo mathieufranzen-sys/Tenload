@@ -3,6 +3,7 @@
  * Vivait dans Allures, déménagé ici pour laisser cet écran aux zones et
  * aux comparaisons — les réglages sont une action ponctuelle, pas une lecture.
  */
+import { BoutonAction } from '../../components/BoutonAction'
 import { useState } from 'react'
 import { MARATHON_KM, formatDuration, formatPace } from '../../lib/paces'
 import { today } from '../../lib/dates'
@@ -80,9 +81,25 @@ export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
 
   return (
     <>
+      {/* L'allure visée vit ici seule depuis le 22 septembre 2026 : c'est un
+          réglage, elle n'a pas à occuper la tête de l'écran Objectif. */}
+      <div className="carte-bleu-pale" style={{ padding: '18px 18px 20px', marginBottom: 14 }}>
+        <p className="etiquette">Allure marathon visée</p>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 4 }}>
+          <span className="chiffre" style={{ fontSize: 'var(--fs-c-2xl)', lineHeight: 1 }}>
+            {formatPace(marathonPace)}
+          </span>
+          <span style={{ fontSize: 'var(--fs-body)', color: 'var(--ink-2)' }}>/ km</span>
+        </div>
+        <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-texte)', color: 'var(--ink-2)' }}>
+          {formatDuration(Math.round((marathonPace * MARATHON_KM) / 60))} au marathon. Toutes les zones
+          d'allure et de fréquence cardiaque en découlent.
+        </p>
+      </div>
+
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
-        <b style={{ fontSize: 16 }}>Recalibrer</b>
-        <p style={{ color: 'var(--ink-2)', fontSize: 14.5, lineHeight: 1.5, margin: '6px 0 14px' }}>
+        <b style={{ fontSize: 'var(--fs-body)' }}>Recalibrage</b>
+        <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-texte)', lineHeight: 1.5, margin: '6px 0 14px' }}>
           Après un test sur 3 km, entre ton temps. Ça met à jour ta forme projetée et l'écart, sans
           toucher aux allures d'entraînement. Une course de 10 km ou plus se recale depuis sa
           propre feuille de séance, avec son chrono.
@@ -102,47 +119,33 @@ export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
             border: `1px solid ${erreur ? 'var(--c-erreur)' : 'var(--border-2)'}`,
             borderRadius: 14,
             padding: 14,
-            fontSize: 19,
+            fontSize: 'var(--fs-t-liste)',
             fontWeight: 700,
             color: 'var(--ink)',
             fontVariantNumeric: 'tabular-nums',
           }}
         />
         {erreur ? (
-          <div style={{ color: 'var(--c-erreur)', fontSize: 12.5, margin: '8px 2px 14px', fontWeight: 600 }}>{erreur}</div>
+          <div style={{ color: 'var(--c-erreur)', fontSize: 'var(--fs-detail)', margin: '8px 2px 14px', fontWeight: 600 }}>{erreur}</div>
         ) : (
-          <div style={{ color: 'var(--ink-3)', fontSize: 12.5, margin: '8px 2px 14px', fontWeight: 600 }}>
+          <div style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', margin: '8px 2px 14px', fontWeight: 600 }}>
             Format mm:ss — temps total sur 3 km
           </div>
         )}
-        <button
-          onClick={recalibrer}
-          disabled={!onSave}
-          style={{
-            display: 'block',
-            width: '100%',
-            padding: 15,
-            borderRadius: 'var(--pill)',
-            fontWeight: 700,
-            fontSize: 16,
-            background: 'var(--surface-2)',
-            color: onSave ? 'var(--ink)' : 'var(--ink-3)',
-            border: '1px solid var(--border-2)',
-          }}
-        >
-          Mettre à jour ma forme
-        </button>
+        <BoutonAction onClick={recalibrer} disabled={!onSave} icone="check">
+          Mettre à jour la forme
+        </BoutonAction>
         {!onSave && (
-          <p style={{ color: 'var(--ink-3)', fontSize: 12.5, marginTop: 10 }}>Connecte-toi pour changer ces réglages.</p>
+          <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', marginTop: 10 }}>Connecte-toi pour changer ces réglages.</p>
         )}
         {confirmation && (
-          <p style={{ color: 'var(--good)', fontSize: 13, fontWeight: 600, marginTop: 10 }}>{confirmation}</p>
+          <p style={{ color: 'var(--good)', fontSize: 'var(--fs-detail)', fontWeight: 600, marginTop: 10 }}>{confirmation}</p>
         )}
       </div>
 
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px' }}>
-        <b style={{ fontSize: 16 }}>Changer l'objectif</b>
-        <p style={{ color: 'var(--ink-2)', fontSize: 14.5, lineHeight: 1.5, margin: '6px 0 12px' }}>
+        <b style={{ fontSize: 'var(--fs-body)' }}>Objectif marathon</b>
+        <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-texte)', lineHeight: 1.5, margin: '6px 0 12px' }}>
           Toutes les allures du plan se recalculent. Le point de décision est prévu après le semi
           test du 30 janvier.
         </p>
@@ -160,10 +163,10 @@ export function PaceSettings({ marathonPace, test3k, onSave }: Props) {
                   flex: 1,
                   padding: '8px 4px',
                   borderRadius: 'var(--pill)',
-                  fontSize: 14,
+                  fontSize: 'var(--fs-meta)',
                   fontWeight: 700,
-                  background: actif ? '#0C0D10' : 'transparent',
-                  color: actif ? 'var(--ink)' : 'var(--ink-2)',
+                  background: actif ? 'var(--pale)' : 'transparent',
+                  color: actif ? 'var(--pale-ink)' : 'var(--ink-2)',
                 }}
               >
                 {o.label}

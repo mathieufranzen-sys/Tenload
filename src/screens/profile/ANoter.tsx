@@ -37,11 +37,11 @@ export function ANoter({
   if (seances.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '48px 8px' }}>
-        <Icon name="check" size={30} style={{ color: '#6ee7b7', strokeWidth: 2.2 }} />
-        <p style={{ fontSize: 15.5, fontWeight: 650, margin: '14px 0 6px', letterSpacing: '-.3px' }}>
+        <Icon name="check" size={30} style={{ color: 'var(--good)', strokeWidth: 2.2 }} />
+        <p style={{ fontSize: 'var(--fs-texte)', fontWeight: 650, margin: '14px 0 6px', letterSpacing: '-.3px' }}>
           Tout est noté
         </p>
-        <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5, margin: 0 }}>
+        <p style={{ fontSize: 'var(--fs-detail)', color: 'var(--ink-2)', lineHeight: 1.5, margin: 0 }}>
           Chaque journée du plan porte son ressenti. L'indice mesure au lieu de supposer.
         </p>
       </div>
@@ -54,7 +54,7 @@ export function ANoter({
 
   return (
     <div>
-      <p style={{ fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.55, margin: '0 0 20px' }}>
+      <p style={{ fontSize: 'var(--fs-meta)', color: 'var(--ink-2)', lineHeight: 1.55, margin: '0 0 20px' }}>
         {enRetard > 0
           ? `${enRetard} séance${enRetard > 1 ? 's' : ''} des jours passés ${enRetard > 1 ? 'attendent leurs' : 'attend ses'} deux curseurs.`
           : 'Rien en retard : il ne reste que la journée en cours.'}{' '}
@@ -69,11 +69,9 @@ export function ANoter({
               display: 'flex',
               alignItems: 'baseline',
               gap: 8,
-              fontSize: 11,
-              fontWeight: 750,
-              letterSpacing: '1.1px',
-              textTransform: 'uppercase',
-              color: 'var(--ink-3)',
+              fontSize: 'var(--fs-meta)',
+              fontWeight: 500,
+              color: 'var(--accent)',
               margin: '0 0 9px 2px',
             }}
           >
@@ -81,14 +79,14 @@ export function ANoter({
             {!seances.find((x) => x.day === jour)?.enRetard && (
               <span
                 style={{
-                  fontSize: 9.5,
+                  fontSize: 'var(--fs-micro)',
                   fontWeight: 800,
                   letterSpacing: '.9px',
                   padding: '3px 8px',
                   borderRadius: 'var(--pill)',
-                  background: 'rgba(52,211,153,.18)',
-                  border: '1px solid rgba(52,211,153,.3)',
-                  color: '#6ee7b7',
+                  background: 'color-mix(in srgb, var(--neon) 22%, transparent)',
+                  border: '1px solid color-mix(in srgb, var(--neon-2) 45%, transparent)',
+                  color: 'var(--good)',
                 }}
               >
                 aujourd'hui
@@ -117,7 +115,7 @@ export function ANoter({
                 }}
               >
                 <MarqueSeance type={x.type} />
-                <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 620, letterSpacing: '-.25px' }}>
+                <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--fs-texte)', fontWeight: 620, letterSpacing: '-.25px' }}>
                   {x.titre}
                 </span>
                 {onOuvrir && (

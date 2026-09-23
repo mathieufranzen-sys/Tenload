@@ -11,7 +11,7 @@
  * du graphique, un axe qui le laisse sortir ne veut plus rien dire.
  */
 import { formatDay } from '../../lib/dates'
-import { indicesEtiquettes } from './etiquettes'
+import { indicesEtiquettes, POINTILLE } from './etiquettes'
 
 const W = 320
 const H = 182
@@ -31,9 +31,10 @@ export interface PainRow {
 const SERIES: Array<{ cle: keyof Omit<PainRow, 'day'>; couleur: string; epaisseur: number }> = [
   { cle: 'wake', couleur: 'var(--chart-1)', epaisseur: 2 },
   { cle: 'effort', couleur: 'var(--chart-2)', epaisseur: 2 },
-  // La fin de journée est le signal le plus fiable : on l'épaissit pour
-  // qu'elle se lise en premier quand les trois courbes se croisent.
-  { cle: 'evening', couleur: 'var(--chart-3)', epaisseur: 2.8 },
+  // Même épaisseur pour les trois depuis le 22 septembre : la fin de journée
+  // se distingue déjà par sa couleur, et un trait plus gros la faisait lire
+  // comme un total.
+  { cle: 'evening', couleur: 'var(--chart-3)', epaisseur: 2 },
 ]
 
 /**
@@ -54,6 +55,32 @@ export function continuer(valeurs: Array<number | null>): Array<readonly [number
     if (v != null) dernier = v
     if (dernier != null) out.push([i, dernier] as const)
   })
+  return out
+}
+
+/**
+ * Moyenne glissante centrée sur `fenetre` jours, sur les seules valeurs
+ * mesurées. Demandé le 22 septembre 2026 : les points au jour le jour
+ * sautaient d'un demi-point à l'autre et cachaient la tendance, qui est ce
+ * qu'on vient lire ici. C'est un lissage d'affichage : l'indice, lui, lit
+ * toujours les valeurs brutes.
+ *
+ * Un jour sans mesure dans toute sa fenêtre tient la valeur lissée de la
+ * veille, pour la même raison que `continuer`. Rien avant la première mesure.
+ */
+export function lisser(valeurs: Array<number | null>, fenetre = 5): Array<readonly [number, number]> {
+  const demi = Math.floor(fenetre / 2)
+  const out: Array<readonly [number, number]> = []
+  let dernier: number | null = null
+  const premier = valeurs.findIndex((v) => v != null)
+  if (premier < 0) return out
+  for (let i = premier; i < valeurs.length; i++) {
+    const autour = valeurs
+      .slice(Math.max(0, i - demi), i + demi + 1)
+      .filter((v): v is number => v != null)
+    if (autour.length) dernier = autour.reduce((a, b) => a + b, 0) / autour.length
+    if (dernier != null) out.push([i, dernier] as const)
+  }
   return out
 }
 
@@ -116,12 +143,26 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
   const y = (v: number) => P.t + IH - (Math.max(0, Math.min(max, v)) / max) * IH
   const etiquettes = indicesEtiquettes(n, x)
 
+  /**
+   * Une courbe et non une ligne brisée : Catmull-Rom converti en Bézier
+   * cubiques. Les angles d'une ligne brisée se lisaient comme des événements
+   * alors que la série est déjà lissée.
+   */
   const trace = (points: Array<readonly [number, number]>) => {
-    let d = ''
-    let prec: number | null = null
-    for (const [i, v] of points) {
-      d += `${prec !== null && i === prec + 1 ? 'L' : d ? ' M' : 'M'}${x(i)} ${y(v)} `
-      prec = i
+    const p = points.map(([i, v]) => [x(i), y(v)] as const)
+    if (!p.length) return ''
+    let d = `M${p[0][0]} ${p[0][1]}`
+    for (let k = 0; k < p.length - 1; k++) {
+      const [x0, y0] = p[k - 1] ?? p[k]
+      const [x1, y1] = p[k]
+      const [x2, y2] = p[k + 1]
+      const [x3, y3] = p[k + 2] ?? p[k + 1]
+      const c1 = [x1 + (x2 - x0) / 6, y1 + (y2 - y0) / 6]
+      const c2 = [x2 - (x3 - x1) / 6, y2 - (y3 - y1) / 6]
+      // Les points de contrôle restent dans le cadre : une courbe qui
+      // plonge sous zéro dirait une douleur négative.
+      const borne = (v: number) => Math.min(P.t + IH, Math.max(P.t, v))
+      d += ` C${c1[0]} ${borne(c1[1])} ${c2[0]} ${borne(c2[1])} ${x2} ${y2}`
     }
     return d
   }
@@ -139,7 +180,7 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
   }
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Douleur au fil des jours">
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Douleur par jour">
       {graduations.map((v) => (
         <g key={v}>
           <line x1={P.l} x2={W - P.r} y1={y(v)} y2={y(v)} stroke="var(--chart-grille)" strokeWidth={1} />
@@ -156,9 +197,9 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
         y2={y(seuil)}
         // Un trait neutre : en cumulé, chart-3 sert déjà de couleur de remplissage
         // à une des trois couches, un seuil de la même teinte s'y serait fondu.
-        stroke={cumulee ? 'rgba(255,255,255,.55)' : 'var(--chart-3)'}
+        stroke={cumulee ? 'color-mix(in srgb, var(--ink) 55%, transparent)' : 'var(--chart-3)'}
         strokeWidth={1}
-        strokeDasharray="3 4"
+        strokeDasharray={POINTILLE}
         opacity={cumulee ? 1 : 0.5}
       />
       <text
@@ -200,13 +241,11 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
           if (!pts.length) return null
           return (
             <g key={cle}>
-              {/* Le trait tient le niveau de la veille à travers les jours sans
-                  mesure : une journée sans séance n'est pas une douleur nulle,
-                  et la ligne qui se coupait donnait l'impression d'un trou dans
-                  le suivi. Les points, eux, ne se posent que sur du mesuré —
-                  c'est ce qui garde la distinction visible. */}
+              {/* La courbe porte la tendance lissée ; les points, discrets, ne
+                  se posent que sur du mesuré, pour qu'on voie encore ce qui a
+                  été relevé sous ce qui est moyenné. */}
               <path
-                d={trace(continuer(rows.map((r) => r[cle])))}
+                d={trace(lisser(rows.map((r) => r[cle]), 7))}
                 fill="none"
                 stroke={couleur}
                 strokeWidth={epaisseur}
@@ -214,7 +253,7 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
                 strokeLinejoin="round"
               />
               {pts.map(([i, v]) => (
-                <circle key={i} cx={x(i)} cy={y(v)} r={2.8} fill={couleur} stroke="var(--bg)" strokeWidth={1.8} />
+                <circle key={i} cx={x(i)} cy={y(v)} r={1.8} fill={couleur} opacity={0.35} />
               ))}
             </g>
           )

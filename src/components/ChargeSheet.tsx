@@ -1,23 +1,23 @@
 /**
- * Le détail du calcul de l'indice du jour, en feuille modale.
+ * Le détail du calcul de l'indice du jour, en page plein écran.
  *
- * Ouverte depuis le badge « Calcul de la charge » de l'écran Aujourd'hui.
+ * Ouverte depuis l'écran Aujourd'hui (la pastille « charge tendon » ou la
+ * tuile « d'où viennent ces points »). Refonte du 21 septembre 2026 : une
+ * carte par terme, avec sa jauge sur son propre plafond, et l'addition posée
+ * en tête avec la barre empilée de 0 à 100.
+ *
  * Elle montre les six termes avec leur valeur réelle, pas une explication
  * générique : c'est ce qui évite l'effet boîte noire un jour où l'indice
  * interdit une séance. L'explication du modèle, elle, vit dans Profil.
  *
- * Présentée comme un ticket de caisse, parce que c'est une addition : les
- * six termes, leur sous-total, l'ajustement éventuel, puis l'indice. Avant,
- * le total tombait du ciel sous une liste de valeurs qu'on ne pouvait pas
- * vérifier. Ici l'arithmétique est posée à l'écran et elle tombe juste, y
- * compris quand un plancher ou un arrondi la déplace.
- *
- * Plus de pastille de couleur en tête de ligne : les teintes n'étaient
- * choisies que pour distinguer les lignes entre elles, sans rien dire de la
- * gravité du terme. Seul l'indice final garde la couleur de sa bande, qui,
- * elle, veut dire quelque chose.
+ * L'arithmétique reste posée à l'écran et elle tombe juste : les points
+ * ajoutés, moins le soin, plus l'écart nommé par sa cause quand un plancher
+ * ou un arrondi déplace le total. Un calcul qu'on ne peut pas refaire de
+ * tête est une boîte noire, surtout un jour où il interdit une séance.
  */
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
+import { TEINTE_BANDE } from '../lib/teintes'
+import { formatNumber } from '../lib/dates'
 import type { Band, IndexBreakdown } from '../lib/tendonIndex'
 import { Icon } from './Icon'
 
@@ -31,11 +31,34 @@ interface Terme {
 export function ChargeSheet({
   breakdown: b,
   band,
+  veille,
+  soins,
+  jourLibelle,
+  onVoirVeille,
   onVoirSuivi,
   onClose,
 }: {
   breakdown: IndexBreakdown
   band: Band
+  /** Le calcul de la veille, pour dire ce qui a bougé. */
+  veille?: IndexBreakdown
+  /**
+   * Les gestes de la veille, un par un. Le total ne disait pas lequel avait
+   * compté, et « pourquoi je n'ai pas mes −5 de repos » n'avait pas de
+   * réponse dans l'app (question de Mathieu, 23 septembre 2026).
+   */
+  soins?: {
+    excentrique: boolean
+    repos: boolean
+    sauts: boolean
+    hydratation: boolean
+    /** La charge d'hier : sous 2, la journée compte comme un vrai repos. */
+    chargeVeille: number
+  }
+  /** « lundi 21 septembre » : le jour dont on lit le calcul. */
+  jourLibelle: string
+  /** Recule d'un jour, la page restant ouverte. Absent au bout de la fenêtre. */
+  onVoirVeille?: () => void
   onVoirSuivi: () => void
   onClose: () => void
 }) {
@@ -61,7 +84,7 @@ export function ChargeSheet({
       label: 'Emballement de la charge',
       valeur: b.ratio,
       plafond: 30,
-      detail: `Rapport aigu sur chronique : ${b.acr.toFixed(2)}`,
+      detail: `Rapport aigu sur chronique : ${b.acr.toFixed(2).replace('.', ',')}`,
     },
     {
       label: 'Fraîcheur immédiate',
@@ -85,7 +108,14 @@ export function ChargeSheet({
       label: 'Gestes protecteurs',
       valeur: -b.credits,
       plafond: -15,
-      detail: 'Excentrique −6, repos −5, sauts −2, hydratation −2',
+      detail: soins
+        ? [
+            `Excentrique ${soins.excentrique ? '−6' : '0'}`,
+            `Journée de repos ${soins.repos ? '−5' : '0'}`,
+            `Sauts ${soins.sauts ? '−2' : '0'}`,
+            `Hydratation ${soins.hydratation ? '−2' : '0'}`,
+          ].join(' · ') + ` · hier, charge ${formatNumber(Math.round(soins.chargeVeille * 10) / 10)}`
+        : 'Excentrique −6, repos −5, sauts −2, hydratation −2',
     },
   ]
 
@@ -111,197 +141,290 @@ export function ChargeSheet({
         ? 'Ramené au plafond de l’échelle'
         : 'Arrondi'
 
+  const ajoutes = termes.slice(0, 5).reduce((t, x) => t + x.valeur, 0)
+  const soin = b.credits
+
+  /**
+   * Ce qui a bougé depuis la veille, terme par terme. Seulement les deux plus
+   * gros mouvements, et seulement s'ils pèsent : c'est la phrase qui répond
+   * à « pourquoi c'est monté », la question qu'on se pose en ouvrant la page.
+   */
+  const mouvement = (() => {
+    if (!veille || veille.painInconnue || b.painInconnue) return null
+    const d = b.idx - veille.idx
+    if (d === 0) return `L'indice n'a pas bougé depuis la veille, à ${b.idx}.`
+    const hier: Record<string, number> = {
+      'Douleur déclarée': veille.pain,
+      'Emballement de la charge': veille.ratio,
+      'Fraîcheur immédiate': veille.freshness,
+      Tendance: veille.trend,
+      Monotonie: veille.monotony,
+      'Gestes protecteurs': -veille.credits,
+    }
+    const causes = termes
+      .map((t) => ({ label: t.label.toLowerCase(), delta: t.valeur - (hier[t.label] ?? 0) }))
+      .filter((t) => Math.sign(t.delta) === Math.sign(d) && Math.abs(t.delta) >= 1)
+      .sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta))
+      .slice(0, 2)
+    const noms = causes.map((c) => c.label)
+    return `L'indice est passé de ${veille.idx} à ${b.idx}${
+      noms.length ? ` : ${d > 0 ? 'la hausse' : 'la baisse'} vient surtout de ${noms.join(' et de ')}.` : '.'
+    }`
+  })()
+
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Calcul de la charge du tendon"
-      style={{ position: 'fixed', inset: 0, zIndex: 70, display: 'flex', flexDirection: 'column' }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 70,
+        overflowY: 'auto',
+        background: 'var(--bg)',
+      }}
     >
-      <button
-        aria-label="Fermer"
-        onClick={onClose}
-        style={{
-          flex: 1,
-          background: 'rgba(0,0,0,.55)',
-          backdropFilter: 'blur(3px)',
-          WebkitBackdropFilter: 'blur(3px)',
-          border: 0,
-          cursor: 'pointer',
-        }}
-      />
       <div
         style={{
-          background: 'var(--surface)',
-          borderTop: '1px solid var(--border-2)',
-          borderRadius: '26px 26px 0 0',
           maxWidth: 'var(--shell-max)',
-          width: '100%',
           margin: '0 auto',
-          maxHeight: '88dvh',
-          overflowY: 'auto',
-          padding: '10px var(--page-x) calc(24px + env(safe-area-inset-bottom, 0px))',
+          padding: 'calc(14px + env(safe-area-inset-top)) var(--page-x) calc(30px + env(safe-area-inset-bottom, 0px))',
         }}
       >
-        <div
-          aria-hidden
-          style={{ width: 36, height: 4, borderRadius: 3, background: 'var(--surface-3)', margin: '0 auto 16px' }}
-        />
-
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-          <div>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-.4px' }}>Calcul de la charge</h2>
-            <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--ink-2)', fontWeight: 500 }}>
-              Aujourd'hui ·{' '}
-              <b style={{ color: band.color, fontWeight: 700 }}>
-                {b.idx} sur 100, {band.name.toLowerCase()}
-              </b>
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Fermer"
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: '50%',
-              display: 'grid',
-              placeItems: 'center',
-              background: 'var(--surface-2)',
-              flex: 'none',
-            }}
-          >
-            <Icon name="x" size={16} />
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 20 }}>
+          <button onClick={onClose} aria-label="Revenir à aujourd'hui" className="rond">
+            <Icon name="chevronLeft" size={20} />
           </button>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ margin: '0 0 3px', fontSize: 'var(--fs-meta)', color: 'var(--accent)' }}>{jourLibelle}</p>
+            <h2 className="display" style={{ margin: 0, fontSize: 'var(--fs-t-page)', lineHeight: 1.1 }}>
+              {b.painInconnue ? 'Ce que l’indice sait encore' : `D'où viennent ces ${b.idx} points`}
+            </h2>
+          </div>
         </div>
 
-        <div style={{ marginTop: 20 }}>
-          {termes.map((t) => (
-            <div key={t.label} style={{ padding: '11px 0' }}>
-              <LigneTicket
-                libelle={t.label}
-                valeur={t.valeur}
-                plafond={t.plafond}
-              />
-              <div style={{ fontSize: 12.5, color: 'var(--ink-2)', marginTop: 3, lineHeight: 1.4 }}>
-                {t.detail}
-              </div>
-            </div>
-          ))}
-
-          {/* Le trait pointillé du ticket : il annonce que ce qui suit est une
-              addition et non une ligne de plus. */}
-          <div
-            aria-hidden
-            style={{ borderTop: '1px dashed var(--border-2)', margin: '6px 0 0' }}
-          />
-
-          <div style={{ padding: '13px 0 0' }}>
-            <LigneTicket libelle="Sous-total" valeur={sousTotal} sourd />
+        {/* La carte de tête pose l'addition en une ligne, puis la dessine :
+            une barre empilée de 0 à 100 où chaque terme prend sa largeur,
+            avec le seuil de l'orange repéré. */}
+        <section className="carte" style={{ padding: '20px 20px 18px', borderRadius: 'var(--radius-lg)' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+            {/* L'encre de l'app, pas la teinte de la bande : en m4 elle est
+                claire, et un 29 vert d'eau sur une carte grise ne se lit pas. */}
+            <span className="chiffre" style={{ fontSize: 'var(--fs-c-3xl)', lineHeight: 0.9 }}>
+              {b.idx}
+            </span>
+            <span style={{ fontSize: 'var(--fs-texte)', color: 'var(--accent)', lineHeight: 1.4, flex: 1, minWidth: 150 }}>
+              = {ajoutes} point{ajoutes > 1 ? 's' : ''} ajouté{ajoutes > 1 ? 's' : ''}
+              {soin > 0 ? ` − ${soin} point${soin > 1 ? 's' : ''} de soin` : ''}
+              {ecart !== 0 ? ` ${ecart > 0 ? '+' : '−'} ${Math.abs(ecart)} (${causeEcart.toLowerCase()})` : ''}
+            </span>
           </div>
 
-          {ecart !== 0 && (
-            <div style={{ padding: '9px 0 0' }}>
-              <LigneTicket libelle={causeEcart} valeur={ecart} sourd />
-            </div>
-          )}
-
           <div
             aria-hidden
-            style={{ borderTop: '1px solid var(--border-2)', margin: '13px 0 0' }}
-          />
-
+            style={{
+              position: 'relative',
+              display: 'flex',
+              height: 34,
+              marginTop: 18,
+              borderRadius: 'var(--pill)',
+              background: 'color-mix(in srgb, var(--ink) 7%, transparent)',
+              overflow: 'hidden',
+            }}
+          >
+            {termes.slice(0, 5).map((t, i) =>
+              t.valeur > 0 ? (
+                <span key={t.label} style={{ width: `${t.valeur}%`, background: TEINTE_TERME[i] }} />
+              ) : null,
+            )}
+            {soin > 0 && (
+              <span
+                style={{
+                  width: `${soin}%`,
+                  marginLeft: `-${soin}%`,
+                  // Hachuré (retour du 23 septembre) : le soin se retranche
+                  // de ce qui précède, il ne s'y ajoute pas. Le vert dit d'où
+                  // il vient, la hachure qu'il se soustrait.
+                  background:
+                    // Les creux prennent la couleur de la carte et non du
+                    // terme qui passe dessous : sans ça la même hachure
+                    // paraissait différente selon ce qu'elle recouvrait.
+                    'repeating-linear-gradient(45deg, var(--good) 0 2px, var(--surface) 2px 4px)',
+                }}
+              />
+            )}
+            <span
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: 0,
+                bottom: 0,
+                width: 2,
+                background: TEINTE_BANDE.orange,
+                opacity: 0.8,
+              }}
+            />
+          </div>
           <div
             style={{
               display: 'flex',
-              alignItems: 'baseline',
               justifyContent: 'space-between',
-              padding: '13px 0 0',
-              gap: 12,
+              marginTop: 8,
+              fontSize: 'var(--fs-detail)',
+              color: 'var(--accent)',
             }}
           >
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 800,
-                letterSpacing: '1.4px',
-                textTransform: 'uppercase',
-              }}
-            >
-              Indice
-            </span>
-            <span
-              style={{
-                fontSize: 26,
-                fontWeight: 650,
-                letterSpacing: '-.6px',
-                color: band.color,
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              {b.idx}
-              <small style={{ color: 'var(--ink-3)', fontWeight: 600, fontSize: 13 }}> / 100</small>
-            </span>
+            <span>0</span>
+            <span>Seuil orange à 50</span>
+            <span>100</span>
           </div>
+        </section>
 
-          {plancherApplique && (
-            <p style={{ fontSize: 12.5, color: 'var(--warning)', lineHeight: 1.45, margin: '10px 0 0', fontWeight: 500 }}>
-              Un plancher de {b.floor} s'applique : douleur déclarée élevée, ou épisode récent au-dessus de 60. Il ne
-              peut pas être contourné par un total plus bas.
-            </p>
-          )}
-          {b.stale && !b.painInconnue && (
-            <p style={{ fontSize: 12.5, color: 'var(--warning)', lineHeight: 1.45, margin: '10px 0 0', fontWeight: 500 }}>
-              Aucune douleur saisie depuis 24 h : la part douleur tourne sur un report.
-            </p>
-          )}
-          {/* Le total affiché plus haut n'est pas faux, il est incomplet : le
-              dire ici, à côté du détail terme par terme, est le seul endroit
-              où la nuance se comprend vraiment. */}
-          {b.painInconnue && (
-            <p style={{ fontSize: 12.5, color: 'var(--warning)', lineHeight: 1.45, margin: '10px 0 0', fontWeight: 500 }}>
-              Aucune douleur saisie depuis {b.joursSansDouleur ?? 'plus de 60'} jours. La part douleur, qui pèse 85 des
-              100 points, est absente du total : ce qui reste ci-dessus ne mesure que la charge mécanique.
-            </p>
-          )}
-          {b.chargeInconnue && (
-            <p style={{ fontSize: 12.5, color: 'var(--warning)', lineHeight: 1.45, margin: '10px 0 0', fontWeight: 500 }}>
-              Moins de cinq des sept derniers jours portent une charge attestée. L'emballement et la fraîcheur comparent
-              donc une semaine trouée à un historique plus ancien, et concluent au calme : note tes séances pour que ces
-              deux lignes redeviennent des mesures.
-            </p>
-          )}
-          {b.confidence < 1 && !b.chargeInconnue && (
-            <p style={{ fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.45, margin: '10px 0 0', fontWeight: 500 }}>
-              Historique de charge encore court : la contribution mécanique est plafonnée tant que moins de dix des
-              quatorze derniers jours portent une charge attestée.
-            </p>
-          )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+          {termes.map((t, i) => {
+            const soinLigne = t.plafond < 0
+            const part = Math.min(1, Math.abs(t.valeur) / Math.abs(t.plafond))
+            return (
+              <section
+                key={t.label}
+                className="carte"
+                style={{
+                  padding: '16px 18px 18px',
+                  borderColor: soinLigne ? 'var(--border-2)' : undefined,
+                  background: soinLigne ? 'var(--surface-2)' : undefined,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
+                  <span style={{ fontSize: 'var(--fs-lead)' }}>{t.label}</span>
+                  <span style={{ whiteSpace: 'nowrap' }}>
+                    <span
+                      className="chiffre"
+                      style={{
+                        fontSize: 'var(--fs-c-m)',
+                        color: t.valeur === 0 ? 'var(--ink-3)' : TEINTE_TERME[i],
+                      }}
+                    >
+                      {t.valeur > 0 ? '+' : t.valeur < 0 ? '−' : ''}
+                      {Math.abs(t.valeur)}
+                    </span>
+                    <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)' }}> / {t.plafond}</span>
+                  </span>
+                </div>
+                <div
+                  style={{
+                    position: 'relative',
+                    height: 6,
+                    borderRadius: 3,
+                    background: 'var(--surface-3)',
+                    marginTop: 10,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      bottom: 0,
+                      // Toutes les barres partent de la gauche (retour du
+                      // 23 septembre) : une seule qui se remplissait à
+                      // l'envers se lisait comme une soustraction de plus.
+                      left: 0,
+                      width: `${part * 100}%`,
+                      borderRadius: 3,
+                      // Hachuré pour les gestes, comme la projection du
+                      // graphique de charge : la même texture dit partout
+                      // « ceci se retranche » (retour du 23 septembre).
+                      background: soinLigne
+                        ? `repeating-linear-gradient(45deg, ${TEINTE_TERME[i]} 0 2px, var(--surface-3) 2px 4px)`
+                        : TEINTE_TERME[i],
+                    }}
+                  />
+                </div>
+                <p style={{ margin: '10px 0 0', fontSize: 'var(--fs-meta)', lineHeight: 1.5, color: 'var(--sur-ink-2)' }}>
+                  {t.detail}
+                </p>
+              </section>
+            )
+          })}
+        </div>
 
+        {mouvement && (
+          <section
+            className="carte"
+            style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '16px 18px', marginTop: 12 }}
+          >
+            <span aria-hidden style={{ display: 'flex', gap: 4, flex: 'none' }}>
+              <span style={{ width: 12, height: 30, borderRadius: 6, background: 'var(--accent-doux)', opacity: 0.6 }} />
+              <span style={{ width: 12, height: 30, borderRadius: 6, background: TEINTE_BANDE[band.key] }} />
+            </span>
+            <p style={{ margin: 0, fontSize: 'var(--fs-texte)', lineHeight: 1.5 }}>{mouvement}</p>
+          </section>
+        )}
+
+        {plancherApplique && (
+          <Avertissement>
+            Un plancher de {b.floor} s'applique : douleur déclarée élevée, ou épisode récent au-dessus de 60. Il ne
+            peut pas être contourné par un total plus bas.
+          </Avertissement>
+        )}
+        {b.stale && !b.painInconnue && (
+          <Avertissement>Aucune douleur saisie depuis 24 h : la part douleur tourne sur un report.</Avertissement>
+        )}
+        {/* Le total affiché plus haut n'est pas faux, il est incomplet : le
+            dire ici, à côté du détail terme par terme, est le seul endroit
+            où la nuance se comprend vraiment. */}
+        {b.painInconnue && (
+          <Avertissement>
+            Aucune douleur saisie depuis {b.joursSansDouleur ?? 'plus de 60'} jours. La part douleur, qui pèse 85 des
+            100 points, est absente du total : ce qui reste ci-dessus ne mesure que la charge mécanique.
+          </Avertissement>
+        )}
+        {b.chargeInconnue && (
+          <Avertissement>
+            Moins de cinq des sept derniers jours portent une charge attestée. L'emballement et la fraîcheur comparent
+            donc une semaine trouée à un historique plus ancien, et concluent au calme : note tes séances pour que ces
+            deux lignes redeviennent des mesures.
+          </Avertissement>
+        )}
+        {b.confidence < 1 && !b.chargeInconnue && (
+          <Avertissement sourd>
+            Historique de charge encore court : la contribution mécanique est plafonnée tant que moins de dix des
+            quatorze derniers jours portent une charge attestée.
+          </Avertissement>
+        )}
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 18 }}>
+          {onVoirVeille && (
+            <button
+              type="button"
+              onClick={onVoirVeille}
+              style={{
+                padding: '13px 22px',
+                borderRadius: 'var(--pill)',
+                border: '1px solid var(--border-2)',
+                fontSize: 'var(--fs-texte)',
+                color: 'var(--ink)',
+              }}
+            >
+              Voir le calcul de la veille
+            </button>
+          )}
           <button
+            type="button"
             onClick={() => {
               onClose()
               onVoirSuivi()
             }}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 7,
-              width: '100%',
-              marginTop: 20,
-              padding: 14,
+              padding: '13px 22px',
               borderRadius: 'var(--pill)',
-              background: 'var(--surface-2)',
               border: '1px solid var(--border-2)',
+              fontSize: 'var(--fs-texte)',
               color: 'var(--ink)',
-              fontSize: 15,
-              fontWeight: 600,
-              cursor: 'pointer',
             }}
           >
             Voir l'historique
-            <Icon name="chevronRight" size={15} style={{ opacity: 0.7 }} />
           </button>
         </div>
       </div>
@@ -310,52 +433,34 @@ export function ChargeSheet({
 }
 
 /**
- * Une ligne d'addition : libellé à gauche, montant à droite, et entre les deux
- * la ligne de conduite pointillée qui rattache l'un à l'autre. C'est elle qui
- * fait lire la colonne de droite comme des montants alignés plutôt que comme
- * des valeurs éparpillées.
+ * Une teinte par terme, dans l'ordre des six lignes. Elles servent à deux
+ * endroits, le chiffre et la barre, donc chacune doit se lire comme texte
+ * sur une carte claire : le néon et le vert clair n'y tenaient pas, et le
+ * bleu 300 non plus (retour du 22 septembre).
  */
-function LigneTicket({
-  libelle,
-  valeur,
-  plafond,
-  sourd = false,
-}: {
-  libelle: string
-  valeur: number
-  plafond?: number
-  /** Les lignes d'addition sont moins fortes que les termes qu'elles totalisent. */
-  sourd?: boolean
-}) {
+const TEINTE_TERME = [
+  // Le m3 de la famille rouge des bandes : la douleur est le terme qui pèse
+  // le plus, elle prend la couleur de ce que l'indice surveille.
+  '#b91c1c',
+  'var(--bleu-500)',
+  'var(--bleu-700)',
+  'var(--bleu-400)',
+  'var(--ink-2)',
+  'var(--good)',
+]
+
+function Avertissement({ children, sourd = false }: { children: ReactNode; sourd?: boolean }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-      <span style={{ fontSize: 14.5, fontWeight: sourd ? 500 : 600, color: sourd ? 'var(--ink-2)' : 'var(--ink)' }}>
-        {libelle}
-      </span>
-      <span
-        aria-hidden
-        style={{
-          flex: 1,
-          minWidth: 12,
-          borderBottom: '1px dotted var(--border-2)',
-          transform: 'translateY(-4px)',
-        }}
-      />
-      <span
-        style={{
-          fontSize: 15,
-          fontWeight: 650,
-          fontVariantNumeric: 'tabular-nums',
-          color: valeur === 0 ? 'var(--ink-3)' : 'var(--ink)',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {valeur > 0 ? '+' : ''}
-        {valeur}
-        {plafond != null && (
-          <small style={{ color: 'var(--ink-3)', fontWeight: 600, fontSize: 12 }}> / {plafond}</small>
-        )}
-      </span>
-    </div>
+    <p
+      style={{
+        fontSize: 'var(--fs-meta)',
+        color: sourd ? 'var(--sur-ink-2)' : 'var(--warning)',
+        lineHeight: 1.5,
+        margin: '14px 4px 0',
+      }}
+    >
+      {children}
+    </p>
   )
 }
+

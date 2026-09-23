@@ -3,7 +3,7 @@
  * d'aller au maximum théorique, sans jamais laisser sortir le seuil du cadre.
  */
 import { describe, expect, it } from 'vitest'
-import { continuer, echelle } from './PainChart'
+import { continuer, echelle, lisser } from './PainChart'
 
 describe('echelle', () => {
   it('se resserre quand la douleur reste basse', () => {
@@ -77,5 +77,19 @@ describe('continuer', () => {
       [1, 0],
       [2, 2],
     ])
+  })
+})
+
+describe('lisser', () => {
+  it('moyenne les mesures de la fenêtre et ne commence qu’à la première', () => {
+    const l = lisser([null, 2, 4, null, 6], 3)
+    expect(l[0]).toEqual([1, 3])
+    expect(l[1]).toEqual([2, 3])
+    expect(l[2]).toEqual([3, 5])
+  })
+
+  it('tient la veille quand toute la fenêtre est vide', () => {
+    const l = lisser([2, null, null, null], 1)
+    expect(l.map(([, v]) => v)).toEqual([2, 2, 2, 2])
   })
 })

@@ -48,6 +48,10 @@ export function JaugeRessenti({
           disabled={disabled}
           aria-label={label}
           onChange={(e) => onChange(Number(e.target.value))}
+          // Un appui tout à gauche ne change pas la valeur affichée (0) et
+          // ne déclenche donc aucun `onChange` : sans ça, « aucune douleur »
+          // ne pouvait pas se saisir d'un seul geste.
+          onPointerUp={(e) => valeur == null && onChange(Number(e.currentTarget.value))}
           style={{
             position: 'absolute',
             inset: 0,
@@ -67,7 +71,7 @@ export function JaugeRessenti({
         // tout ce qui suit sous le pouce.
         <p
           style={{
-            fontSize: 12.5,
+            fontSize: 'var(--fs-detail)',
             fontWeight: 500,
             lineHeight: 1.4,
             color: 'var(--sur-ink-2)',

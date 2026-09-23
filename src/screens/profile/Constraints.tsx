@@ -8,7 +8,7 @@ const plan = planJson as unknown as Plan
 export function Constraints() {
   return (
     <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px' }}>
-      <p style={{ color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, margin: '0 0 4px' }}>
+      <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5, margin: '0 0 4px' }}>
         Inscrites dans le plan pour protéger le tendon. Aucune adaptation ne peut les casser.
       </p>
       {plan.meta.constraints.map((c, i) => (
@@ -19,7 +19,7 @@ export function Constraints() {
             gap: 10,
             padding: '13px 0',
             borderBottom: i < plan.meta.constraints.length - 1 ? '1px solid var(--border)' : undefined,
-            fontSize: 14.5,
+            fontSize: 'var(--fs-texte)',
             lineHeight: 1.45,
           }}
         >

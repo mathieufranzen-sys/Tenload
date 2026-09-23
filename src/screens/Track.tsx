@@ -7,13 +7,14 @@
  * Mathieu — les gestes protecteurs se saisissent dans Aujourd'hui et pèsent
  * dans l'indice, un décompte de plus n'apportait rien.
  */
-import { useMemo, useState, type ReactNode } from 'react'
+import { Fragment, useMemo, useState, type ReactNode } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan } from '../data/types'
 import type { SessionType } from '../data/types'
 import { addDays, formatDay, formatNumber, mondayOf, today as todayISO } from '../lib/dates'
-import { adapt } from '../lib/adapt'
+import { adapt, construireContexte, seancesDeLaSemaine } from '../lib/adapt'
 import { familleDe, familleDuSport } from '../lib/insights'
+import type { EcartRow } from '../lib/overrides'
 import { Icon } from '../components/Icon'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { ActivityRow, LoadParDiscipline } from '../lib/load'
@@ -23,10 +24,40 @@ import { PainChart, type PainRow, type VuePain } from '../components/charts/Pain
 import { VolumeChart, type BarRow, type VueVolume } from '../components/charts/VolumeChart'
 import { LoadChart, type StackRow } from '../components/charts/LoadChart'
 import { MeshBackground } from '../components/MeshBackground'
+import { EffortChart, FormeChart } from '../components/charts/NiveauChart'
+import { MIN_SEANCES, RPE_ATTENDU, serieForme, type AjustementForme } from '../lib/forme'
+import { RepartitionChart } from '../components/charts/RepartitionChart'
+import { RatioChart, type PointRatio } from '../components/charts/RatioChart'
+import { chronoEquivalent, formatChrono } from '../lib/dossards'
+import { HALF_KM } from '../lib/paces'
+import { repartitionSemaine } from '../lib/repartition'
+import { MARATHON_KM } from '../lib/paces'
 import { Segmented } from '../components/Segmented'
 import { EnteteEcran } from '../components/EnteteEcran'
 
 const plan = planJson as unknown as Plan
+
+/** Les quatre distances qui se courent, de la plus courte à la plus longue. */
+const DISTANCES_EQUIVALENTES: Array<[string, number]> = [
+  ['5 km', 5],
+  ['10 km', 10],
+  ['Semi-marathon', HALF_KM],
+  ['Marathon', MARATHON_KM],
+]
+
+/** Les lignes du tableau des chronos : même filet, même hauteur, alignées. */
+const LIGNE_EQ = {
+  padding: '10px 0',
+  borderTop: '1px solid var(--border)',
+  fontSize: 'var(--fs-texte)',
+  color: 'var(--ink-2)',
+} as const
+const VALEUR_EQ = {
+  fontSize: 'var(--fs-c-s)',
+  textAlign: 'right',
+  color: 'var(--ink)',
+  fontVariantNumeric: 'tabular-nums',
+} as const
 
 interface Props {
   load: LoadMap
@@ -43,6 +74,15 @@ interface Props {
   notesEnRetard: number
   /** Ouvre la liste de ces séances. Absent en mode instantanés. */
   onVoirANoter?: () => void
+  /** Forme du dernier test, l'ancre des graphiques de niveau. */
+  formeTest: number
+  /** Allure marathon visée, pour la ligne d'objectif. */
+  marathonPace: number
+  /** La forme projetée du jour, ressenti compris. */
+  forme: AjustementForme
+  /** Pour les compteurs de la semaine, calculés comme sur Aujourd'hui. */
+  ecarts?: Map<string, EcartRow>
+  attestes?: Set<string>
   onOuvrirProfil: () => void
 }
 
@@ -73,10 +113,36 @@ export function Track({
   feedback,
   notesEnRetard,
   onVoirANoter,
+  formeTest,
+  marathonPace,
+  forme,
+  ecarts,
+  attestes,
   onOuvrirProfil,
 }: Props) {
   const now = todayISO()
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
+
+  // Les compteurs de la semaine ont quitté la jauge d'Aujourd'hui le
+  // 22 septembre. Ils se calculent ici exactement comme là-bas (charge
+  // attestée comprise), pour que l'indice d'hier cité soit le même chiffre.
+  // La semaine en cours, pour la répartition de la course : mêmes séances
+  // que l'écran Aujourd'hui, écarts et adaptations compris.
+  const { semaineN, seancesSemaine } = useMemo(() => {
+    const aJour = adapt(load, pain, feedback, now, attestes)
+    const contexte = construireContexte(plan.weeks, feedback, pain, now, ecarts)
+    const semaine =
+      plan.weeks.find((w) => now >= w.monday && now <= addDays(w.monday, 6)) ??
+      plan.weeks[now < plan.weeks[0].monday ? 0 : plan.weeks.length - 1]
+    return {
+      semaineN: semaine.n,
+      seancesSemaine: seancesDeLaSemaine(plan.weeks, semaine, now, aJour.byDate, ecarts, contexte),
+    }
+  }, [load, pain, feedback, now, attestes, ecarts])
+  const repartition = useMemo(
+    () => repartitionSemaine(seancesSemaine.map((x) => x.s), marathonPace),
+    [seancesSemaine, marathonPace],
+  )
 
   const [vuePain, setVuePain] = useState<VuePain>('separee')
   const [vueVolume, setVueVolume] = useState<VueVolume>('course')
@@ -141,25 +207,15 @@ export function Track({
     [A.byDate],
   )
 
-  /**
-   * Écart de l'indice moyen entre les 7 derniers jours et les 7 précédents,
-   * EN POINTS et non en pourcentage.
-   *
-   * Un indice borné à 100 ne se compare pas en ratio : passer de 8 à 26 est un
-   * mouvement banal de début de plan, et l'afficher « +224 % » donnait un
-   * chiffre spectaculaire qui ne voulait rien dire. Dix-huit points de plus,
-   * si — c'est la moitié d'une bande.
-   *
-   * La projection est exclue : un plan calme à venir ferait baisser l'écart
-   * sans rien dire de ce qui s'est passé.
-   */
-  const idxEcart = useMemo(() => {
-    const passe = idxRows.filter((r) => r.day <= now)
-    const moy = (l: typeof passe) => (l.length ? l.reduce((a, r) => a + r.idx, 0) / l.length : null)
-    const der = moy(passe.slice(-7))
-    const prec = moy(passe.slice(-14, -7))
-    return der != null && prec != null ? Math.round(der - prec) : null
-  }, [idxRows, now])
+  /** Le rapport aigu sur chronique jour par jour, jusqu'à aujourd'hui. */
+  const ratioRows: PointRatio[] = useMemo(
+    () =>
+      Object.values(A.byDate)
+        .filter((r) => r.day <= now && r.acr > 0)
+        .sort((x, y) => (x.day < y.day ? -1 : 1))
+        .map((r) => ({ day: r.day, acr: r.acr })),
+    [A.byDate, now],
+  )
 
   const painRows: PainRow[] = useMemo(
     () =>
@@ -251,6 +307,32 @@ export function Track({
       }))
   }, [loadParDiscipline, now])
 
+  // Le niveau en course sur les douze dernières semaines, un point par lundi
+  // plus aujourd'hui : la forme telle que l'app l'aurait affichée ce jour-là.
+  const niveau = useMemo(() => {
+    const lundiCourant = mondayOf(now)
+    const lundis = Array.from({ length: 12 }, (_, k) => addDays(lundiCourant, -7 * (11 - k)))
+    const dates = [...lundis.slice(1), now]
+    const forme = serieForme(formeTest, feedback, dates).map((f, i) => ({
+      label: i === dates.length - 1 ? "auj." : formatDay(dates[i]),
+      minutes: Math.round((f.allure * MARATHON_KM) / 60),
+      secondes: Math.round(f.allure * MARATHON_KM),
+      lu: f.seances >= MIN_SEANCES,
+    }))
+    // Séance par séance sur un mois (retour du 23 septembre) : une moyenne
+    // par semaine sur trois mois lissait tout ce qu'on vient y voir, et
+    // quinze jours ne montraient pas assez de séances pour juger.
+    const depuis = addDays(now, -29)
+    const effort = feedback
+      .filter((f) => f.day >= depuis && f.day <= now && RPE_ATTENDU[f.session_type as SessionType] != null)
+      .sort((a, b) => (a.day < b.day ? -1 : 1))
+      .map((f) => ({
+        label: formatDay(f.day),
+        ecart: f.rpe - (RPE_ATTENDU[f.session_type as SessionType] as number),
+      }))
+    return { forme, effort }
+  }, [formeTest, feedback, now])
+
   const volumeAffiche =
     vueVolume === 'cumul'
       ? volumeRows.reduce((s, r) => s + r.course + r.velo, 0)
@@ -267,23 +349,15 @@ export function Track({
       }}>
         <EnteteEcran
           titre="Suivi"
-          contexte={<>Carnet tendon d'Achille · {jours.length} jour{jours.length > 1 ? 's' : ''} enregistré
-              {jours.length > 1 ? 's' : ''}</>}
           onOuvrirProfil={onOuvrirProfil}
         />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 14 }}>
+        {/* Trois chiffres, chacun dans une carte grise comme les graphiques
+            qui suivent. Ceux de la semaine en cours sont partis le
+            23 septembre : ils répétaient ce que dit l'écran Aujourd'hui. */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
           <Kpi
-            label="Charge vs semaine dernière"
-            valeur={idxEcart == null ? '—' : `${idxEcart > 0 ? '+' : idxEcart < 0 ? '−' : ''}${Math.abs(idxEcart)}`}
-            suffix={idxEcart == null ? '' : ' pts'}
-            couleur={
-              idxEcart == null ? undefined : idxEcart > 5 ? 'var(--warning)' : idxEcart < -5 ? 'var(--good)' : undefined
-            }
-            detail="moyenne de l'indice sur 7 jours"
-          />
-          <Kpi
-            label="Volume course · 7 j"
+            label="Course sur 7 jours"
             valeur={formatNumber(km7)}
             suffix=" km"
             detail={`${formatNumber(km28)} km sur 28 j`}
@@ -293,13 +367,20 @@ export function Track({
             valeur={sante.label}
             suffix=""
             couleur={sante.couleur}
-            detail="douleur des 30 derniers jours"
+            detail="Douleur des 30 derniers jours"
+          />
+          <Kpi
+            label="Seuil cette semaine"
+            valeur={`${repartition.seuil}`}
+            suffix=" min"
+            couleur={repartition.seuil >= 20 ? 'var(--good)' : undefined}
+            detail="Cible 20 à 30 min"
           />
           <Kpi
             label="Séances notées"
             valeur={`${feedback.length}`}
             suffix={` / ${totalAttendu}`}
-            detail={notesEnRetard > 0 ? 'Aller les noter' : 'depuis le 10 août'}
+            detail={notesEnRetard > 0 ? 'Aller les noter' : 'Depuis le 10 août'}
             tag={notesEnRetard > 0 ? `${notesEnRetard} en retard` : undefined}
             onClick={notesEnRetard > 0 ? onVoirANoter : undefined}
           />
@@ -307,18 +388,12 @@ export function Track({
 
         <Viz
           titre="Indice de charge du tendon"
-          legende="Zéro, tendon frais. Cent, repos obligatoire. Après aujourd'hui, c'est une projection."
         >
           <IndexChart series={idxRows} now={now} />
         </Viz>
 
         <Viz
-          titre="Douleur au fil des jours"
-          legende={
-            vuePain === 'separee'
-              ? "Trois moments de mesure. Celle de fin de journée compte le plus : la réaction du tendon est retardée de plusieurs heures."
-              : "Les trois mesures empilées : la charge douloureuse totale d'une journée, même quand aucune ne semble alarmante seule."
-          }
+          titre="Douleur par jour"
           controle={
             <Segmented
               label="Lecture de la douleur"
@@ -342,12 +417,69 @@ export function Track({
         </Viz>
 
         <Viz
+          titre="Niveau en course"
+          legendeCouleurs={[
+            { label: 'Marathon projeté', couleur: 'var(--chart-1)' },
+            { label: 'Objectif', couleur: 'var(--chart-3)' },
+          ]}
+          note={(() => {
+            const f = niveau.forme
+            const d = f.length > 1 ? f[f.length - 1].minutes - f[0].minutes : 0
+            return d === 0 ? 'Stable sur 12 semaines' : `${d < 0 ? '−' : '+'}${Math.abs(d)} min sur 12 semaines`
+          })()}
+        >
+          <FormeChart points={niveau.forme} objectif={Math.round((marathonPace * MARATHON_KM) / 60)} />
+        </Viz>
+
+        <Viz
+          titre="Effort perçu contre effort attendu"
+          legendeCouleurs={[
+            { label: 'Plus facile que prévu', couleur: 'var(--chart-1)' },
+            { label: 'Plus dur', couleur: 'var(--chart-2)' },
+          ]}
+        >
+          <EffortChart points={niveau.effort} />
+        </Viz>
+
+        {/* Le temps de la semaine par intensité, en anneau (demandé le
+            22 septembre) : le plan de la semaine en cours, écarts et
+            adaptations compris, séances sautées exclues. */}
+        {/* Ce que ta forme du jour vaut sur les autres distances, et ce que
+            l'objectif du 4 avril y vaudrait. Même équivalence que le recalage
+            d'un chrono de course, prise à l'envers (`chronoEquivalent`). */}
+        <Viz titre="Chronos équivalents">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', columnGap: 18 }}>
+            <span />
+            <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--accent)', textAlign: 'right', paddingBottom: 6 }}>
+              Aujourd'hui
+            </span>
+            <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--bleu-700)', textAlign: 'right', paddingBottom: 6 }}>
+              Visé le 4 avril
+            </span>
+            {DISTANCES_EQUIVALENTES.map(([libelle, km]) => (
+              <Fragment key={libelle}>
+                <span style={LIGNE_EQ}>{libelle}</span>
+                <span className="chiffre" style={{ ...LIGNE_EQ, ...VALEUR_EQ }}>
+                  {formatChrono(chronoEquivalent(km, forme.allure))}
+                </span>
+                <span className="chiffre" style={{ ...LIGNE_EQ, ...VALEUR_EQ, color: 'var(--bleu-700)' }}>
+                  {formatChrono(chronoEquivalent(km, marathonPace))}
+                </span>
+              </Fragment>
+            ))}
+          </div>
+        </Viz>
+
+        <Viz titre="Rapport aigu sur chronique">
+          <RatioChart points={ratioRows} now={now} />
+        </Viz>
+
+        <Viz titre={`Répartition de la course, semaine ${semaineN}`}>
+          <RepartitionChart minutes={repartition} />
+        </Viz>
+
+        <Viz
           titre="Volume par semaine"
-          legende={
-            vueVolume === 'course'
-              ? "Tes kilomètres de course. Le vélo n'y figure pas : seul l'impact au sol charge le tendon."
-              : 'Course et vélo cumulés : ce que le moteur encaisse, pas ce que le tendon subit.'
-          }
           controle={
             <Segmented
               label="Lecture du volume"
@@ -374,13 +506,11 @@ export function Track({
 
         <Viz
           titre="Charge d'entraînement par semaine"
-          legende="Le même coût que l'indice de charge, séparé par discipline. Le vélo porte le volume aérobie pendant que le tendon récupère. Les barres hachurées sont ce que le plan prévoit, pas ce que tu as fait."
           legendeCouleurs={[
             { label: 'Course', couleur: 'var(--chart-1)' },
             { label: 'Vélo', couleur: 'var(--chart-2)' },
             { label: 'Muscu, escalade, autres', couleur: 'var(--chart-3)' },
           ]}
-          note={loadRows.some((r) => (r.projete?.course ?? 0) + (r.projete?.velo ?? 0) + (r.projete?.autre ?? 0) > 0) ? 'hachuré = à venir' : undefined}
         >
           <LoadChart rows={loadRows} />
         </Viz>
@@ -401,10 +531,10 @@ function Kpi({
   label: string
   valeur: string
   suffix: string
-  detail: string
+  detail?: string
   couleur?: string
   /**
-   * Étiquette d'alerte, sur la MÊME ligne que le chiffre : elle le qualifie,
+   * Étiquette d'alerte, sur la MÊME ligne que le libellé : elle le qualifie,
    * l'empiler dessous en faisait une information de plus alors que c'en est
    * la nuance. « 12 / 310 » et « 3 en retard » se lisent ensemble ou pas.
    */
@@ -415,84 +545,31 @@ function Kpi({
   const Balise = onClick ? 'button' : 'div'
   return (
     <Balise
-      className="glass"
+      className="carte"
       onClick={onClick}
       style={{
-        borderRadius: 17,
-        padding: '11px 12px 10px',
+        padding: '14px 14px 13px',
         width: '100%',
         textAlign: 'left',
         color: 'inherit',
         cursor: onClick ? 'pointer' : 'default',
-        // Le chevron s'aligne sur le libellé, en haut : les tuiles n'ont pas
-        // toutes la même hauteur.
         display: 'block',
+        borderRadius: 22,
       }}
     >
-      <div
-        style={{
-          fontSize: 8.5,
-          fontWeight: 700,
-          letterSpacing: '.7px',
-          textTransform: 'uppercase',
-          color: 'var(--sur-ink-2)',
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          flexWrap: 'wrap',
-          gap: '4px 7px',
-          marginTop: 5,
-        }}
-      >
-        <span
-          style={{
-            fontSize: 19,
-            fontWeight: 650,
-            letterSpacing: '-.5px',
-            lineHeight: 1,
-            color: couleur,
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+        <span className="chiffre" style={{ fontSize: valeur.length > 6 ? 'var(--fs-c-m)' : 'var(--fs-c-l)', lineHeight: 1, color: couleur }}>
           {valeur}
-          <small style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--sur-ink-2)' }}>{suffix}</small>
         </span>
-        {tag && (
-          <span
-            style={{
-              padding: '2.5px 7px',
-              borderRadius: 'var(--pill)',
-              background: 'rgba(250,178,25,.18)',
-              border: '1px solid rgba(250,178,25,.28)',
-              color: '#FFD166',
-              fontSize: 9,
-              fontWeight: 700,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {tag}
-          </span>
-        )}
+        {suffix && <span style={{ fontSize: 'var(--fs-texte)', color: 'var(--accent)' }}>{suffix.trim()}</span>}
       </div>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 4,
-          fontSize: 9,
-          fontWeight: 500,
-          marginTop: 5,
-          color: 'var(--sur-ink-3)',
-          lineHeight: 1.35,
-        }}
-      >
+      <div style={{ fontSize: 'var(--fs-meta)', marginTop: 8, color: tag ? 'var(--warning)' : 'var(--accent)', lineHeight: 1.3 }}>
+        {label}
+        {tag && ` · ${tag}`}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--fs-detail)', marginTop: 3, color: 'var(--sur-ink-3)', lineHeight: 1.35 }}>
         <span style={{ flex: 1, minWidth: 0 }}>{detail}</span>
-        {onClick && <Icon name="chevronRight" size={12} style={{ flex: 'none', strokeWidth: 2 }} />}
+        {onClick && <Icon name="chevronRight" size={13} style={{ flex: 'none', strokeWidth: 2 }} />}
       </div>
     </Balise>
   )
@@ -500,27 +577,28 @@ function Kpi({
 
 function Viz({
   titre,
-  legende,
   controle,
   legendeCouleurs,
   note,
   children,
 }: {
   titre: string
-  legende: string
   controle?: ReactNode
   legendeCouleurs?: Array<{ label: string; couleur: string }>
   note?: string
   children: ReactNode
 }) {
   return (
-    <section className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
-      <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600, letterSpacing: '-.25px' }}>{titre}</h2>
-      <p style={{ margin: '0 0 12px', color: 'var(--sur-ink-2)', fontSize: 12.5, lineHeight: 1.5 }}>{legende}</p>
-      {controle && <div style={{ marginBottom: 14 }}>{controle}</div>}
+    <section className="carte" style={{ padding: '18px 18px', marginBottom: 12 }}>
+      <h2 className="display" style={{ margin: '0 0 6px', fontSize: 'var(--fs-t-carte)', lineHeight: 1.2, }}>
+        {titre}
+      </h2>
+      {controle && <div style={{ marginTop: 14 }}>{controle}</div>}
       {/* Toile sombre sous le tracé : sur le verre seul, les bandes de fond de
           l'indice et la palette saturée se délavent contre le dégradé. */}
-      <div style={{ background: 'rgba(6,7,10,.5)', borderRadius: 13, padding: '10px 8px 4px' }}>{children}</div>
+      {/* Plus de toile blanche sous le tracé : une couche de plus dans une
+          carte déjà grise (retour du 22 septembre). */}
+      <div style={{ marginTop: 18 }}>{children}</div>
       {(legendeCouleurs || note) && (
         <div
           style={{
@@ -538,17 +616,17 @@ function Viz({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 5,
-                fontSize: 11,
+                fontSize: 'var(--fs-detail)',
                 fontWeight: 500,
                 color: 'var(--sur-ink-2)',
               }}
             >
-              <b style={{ width: 8, height: 8, borderRadius: 2, background: l.couleur, flex: 'none' }} />
+              <b style={{ width: 14, height: 3, borderRadius: 2, background: l.couleur, flex: 'none' }} />
               {l.label}
             </span>
           ))}
           {note && (
-            <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--sur-ink-3)', marginLeft: 'auto' }}>
+            <span style={{ fontSize: 'var(--fs-detail)', fontWeight: 500, color: 'var(--sur-ink-3)', marginLeft: 'auto' }}>
               {note}
             </span>
           )}

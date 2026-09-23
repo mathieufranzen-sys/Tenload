@@ -32,3 +32,14 @@ export function indicesEtiquettes(
 
   return new Set(indices)
 }
+
+/**
+ * Le pointillé de tous les graphiques de Suivi : celui de « Niveau en
+ * course », choisi par Mathieu le 23 septembre 2026. Chaque graphique avait
+ * le sien, et quatre trames différentes sur une même page se lisaient comme
+ * quatre significations.
+ */
+export const POINTILLE = '4 4'
+
+/** La couleur de ces pointillés : un repère se lit pareil partout. */
+export const TRAIT_REPERE = 'var(--chart-3)'

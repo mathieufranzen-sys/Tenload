@@ -18,7 +18,7 @@ import { COULEUR_DOULEUR, rangRessenti } from '../lib/ressenti'
  */
 export const H_BARRE = 36
 /** Même rayon partout, remplissage compris. */
-const RAYON = 11
+const RAYON = 18
 /** Retrait horizontal du chiffre et du mot. */
 const RETRAIT = 13
 /** Largeur plancher du remplissage : le chiffre doit tenir dedans à zéro. */
@@ -40,7 +40,12 @@ export function largeurRemplissage(valeur: number): string {
 }
 
 /** Teinte neutre de l'effort perçu : un 9 sur une séance de qualité est une réussite. */
-const NEUTRE = '#d4d4d8'
+/**
+ * L'effort perçu suit la même échelle de couleur que la douleur depuis le
+ * 22 septembre 2026 : ce sont deux notes de 0 à 10 sur la même séance, et
+ * un bleu fixe d'un côté, une échelle de l'autre, les faisait lire comme
+ * deux mesures sans rapport.
+ */
 
 export type TeinteRessenti = 'douleur' | 'neutre'
 
@@ -76,11 +81,11 @@ export function BarreRessenti({
     ? null
     : teinte === 'douleur'
       ? COULEUR_DOULEUR[rangRessenti(affiche)]
-      : NEUTRE
+      : COULEUR_DOULEUR[rangRessenti(affiche)]
   // Le chiffre repose toujours sur le remplissage : son encre suit donc la
   // luminance de la teinte. Un chiffre blanc sur l'ambre du milieu d'échelle
   // ne se lit pas, et c'est justement la zone où le plan commence à s'adapter.
-  const encre = hex && clair(hex) ? '#0b0c0e' : '#fff'
+  const encre = hex && clair(hex) ? '#142800' : '#fff'
 
   return (
     <div
@@ -88,7 +93,7 @@ export function BarreRessenti({
         position: 'relative',
         height: hauteur,
         borderRadius: RAYON,
-        background: 'var(--surface-2)',
+        background: 'var(--surface-3)',
         overflow: 'hidden',
         opacity: attenuee ? 0.6 : 1,
       }}
@@ -101,7 +106,7 @@ export function BarreRessenti({
           top: 0,
           bottom: 0,
           width: largeurRemplissage(affiche),
-          background: hex ?? 'rgba(255,255,255,.16)',
+          background: hex ?? 'color-mix(in srgb, var(--ink) 12%, transparent)',
           borderRadius: RAYON,
           transition: 'background var(--dur-fast), width var(--dur-fast)',
         }}
@@ -120,7 +125,7 @@ export function BarreRessenti({
       >
         <span
           style={{
-            fontSize: 16.5,
+            fontSize: 'var(--fs-body)',
             fontWeight: 700,
             color: encre,
             fontVariantNumeric: 'tabular-nums',
@@ -132,17 +137,17 @@ export function BarreRessenti({
         </span>
         <span
           style={{
-            fontSize: 12.5,
+            fontSize: 'var(--fs-detail)',
             fontWeight: 600,
             // Le mot n'est rejoint par le remplissage qu'en toute fin de
             // course : ailleurs il reste sur le fond sombre. Aux valeurs
             // hautes il se retrouve à cheval sur la frontière, d'où le halo —
             // c'est le seul endroit de la barre où le texte n'a pas un fond
             // unique sous lui.
-            color: pct > 88 ? encre : '#fff',
+            color: pct > 88 ? encre : 'var(--ink)',
             textShadow:
               pct > 78 && pct < 100
-                ? `0 0 4px ${encre === '#fff' ? 'rgba(0,0,0,.55)' : 'rgba(255,255,255,.55)'}`
+                ? `0 0 4px ${encre === '#fff' ? 'rgba(0,0,0,.55)' : 'color-mix(in srgb, var(--ink) 55%, transparent)'}`
                 : undefined,
             textAlign: 'right',
             opacity: saisi ? 1 : 0.55,
@@ -155,17 +160,15 @@ export function BarreRessenti({
   )
 }
 
-/** Le micro-label en capitales qui coiffe une barre. */
+/** Le libellé qui coiffe une barre, en encre pleine. */
 export function LabelRessenti({ children }: { children: string }) {
   return (
     <div
       style={{
-        fontSize: 10,
-        fontWeight: 700,
-        letterSpacing: '1.3px',
-        textTransform: 'uppercase',
-        color: 'var(--sur-ink-2)',
-        marginBottom: 7,
+        fontSize: 'var(--fs-texte)',
+        fontWeight: 500,
+        color: 'var(--ink)',
+        marginBottom: 9,
       }}
     >
       {children}

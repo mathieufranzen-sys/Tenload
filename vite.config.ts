@@ -15,8 +15,8 @@ export default defineConfig({
           "Plan marathon adaptatif piloté par un indice de charge du tendon d'Achille",
         lang: 'fr',
         dir: 'ltr',
-        theme_color: '#08090B',
-        background_color: '#08090B',
+        theme_color: '#ffffff',
+        background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
@@ -41,6 +41,10 @@ export default defineConfig({
         // L'app doit s'ouvrir hors ligne : le plan des 35 semaines est statique,
         // seules les saisies ont besoin du réseau (et sont mises en file d'attente).
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // Les polices embarquent un sous-ensemble vietnamien que le français
+        // n'appelle jamais. Le latin étendu, lui, reste : c'est lui qui porte
+        // le « œ » de « cœur » et d'« œil ».
+        globIgnores: ['**/*vietnamese*'],
         navigateFallback: '/index.html',
         runtimeCaching: [
           {

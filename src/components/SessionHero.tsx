@@ -1,202 +1,149 @@
 /**
- * La séance du jour, dépliée, en verre dépoli sur le dégradé.
+ * La séance du jour, en tête de l'écran Aujourd'hui.
  *
- * Toutes les sections partagent le même retrait horizontal : c'est ce qui
- * manquait à la maquette, chaque bloc avait son propre padding et les colonnes
- * ne s'alignaient pas.
+ * Refonte du 21 septembre 2026 : titre en serif, les chiffres de la séance en
+ * puces, et la pastille pâle qui ouvre le détail. Le premier pas de la séance
+ * reste sous un filet : c'est la seule consigne à avoir en tête au départ.
  */
-import type { CSSProperties, ReactNode } from 'react'
-import planJson from '../data/plan.json'
-import type { Plan, Session, ZoneKey } from '../data/types'
+import type { Session } from '../data/types'
 import { formatNumber } from '../lib/dates'
-import { allureUnique, estimateDuration, formatPace, zonePace } from '../lib/paces'
-import { encreZone, styleSeance } from '../lib/seanceStyle'
-import { EchelleIntensite, MarqueSeance } from './MarqueSeance'
-
-const plan = planJson as unknown as Plan
-
-/** Retrait commun à toutes les sections de la carte, symétrique depuis que
- *  le rail de gauche a disparu. */
-const RETRAIT = '15px 16px'
+import { allureUnique, estimateDuration, formatDuration, formatPace } from '../lib/paces'
+import { styleSeance } from '../lib/seanceStyle'
+import { EchelleIntensite } from './MarqueSeance'
+import { Icon } from './Icon'
 
 export function SessionHero({
   session: s,
   marathonPace,
   /** Le jour affiché, quand ce n'est pas aujourd'hui. Sert l'étiquette du haut. */
   quand = "Aujourd'hui",
+  /** « 1 sur 2 » : le rang de la séance dans la journée, quand il y en a plusieurs. */
+  rang,
   onClick,
 }: {
   session: Session
   marathonPace: number
   quand?: string
+  rang?: { n: number; total: number }
   onClick?: () => void
 }) {
   const Balise = onClick ? 'button' : 'div'
-  const premierSegment = s.struct?.[0]
-  const premierPas = s.main?.[0] ?? s.wu?.[0]
   // Le plan ne fixe une durée que pour le vélo et la muscu : pour une course,
   // elle se déduit de la structure et des allures courantes.
   const [dureeMin, dureeMax] = s.type === 'repos' ? [0, 0] : estimateDuration(s, marathonPace)
   // Rien si la séance change d'allure en route : voir `allureUnique`.
   const allure = allureUnique(s, marathonPace)
+  const st = styleSeance(s.type)
 
   return (
     <Balise
       onClick={onClick}
-      className="glass"
+      className="carte-bleue"
       style={{
         position: 'relative',
         display: 'block',
         width: '100%',
         textAlign: 'left',
-        borderRadius: 22,
+        borderRadius: 'var(--radius)',
         overflow: 'hidden',
-        color: 'inherit',
-        padding: 0,
+        color: 'var(--ink)',
+        padding: '18px 18px 18px 20px',
         cursor: onClick ? 'pointer' : 'default',
+        // La séance à faire est un bloc bleu, la couleur secondaire des blocs
+        // de page (arbitré le 22 septembre) : elle se détache des cartes
+        // grises sans prendre le vert du coach.
       }}
     >
-      {/* Plus de rail : une fois vidé de sa couleur il ne portait plus rien,
-          et il décalait toutes les colonnes de la carte pour se dégager. */}
-      <div style={{ padding: RETRAIT, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-        <MarqueSeance type={s.type} taille={38} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ ...etiquette, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span>{quand} · {s.cat}</span>
-          {styleSeance(s.type).intensite > 0 && (
-            <EchelleIntensite niveau={styleSeance(s.type).intensite} hauteur={10} />
-          )}
-        </div>
-        <h2
+      {/* Le bouton rond dans le coin, à 12 px du haut comme du bord droit
+          (retour du 22 septembre) : le titre passe dessous en entier. */}
+      {onClick && (
+        <span
+          aria-hidden
           style={{
-            fontSize: 17,
-            fontWeight: 600,
-            letterSpacing: '-.3px',
-            margin: '3px 0 0',
-            lineHeight: 1.25,
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            width: 52,
+            height: 52,
+            borderRadius: '50%',
+            // Encre fixe : dans le bloc bleu, `--ink` vaut blanc, et une
+            // flèche blanche sur néon ne se lit pas.
+            background: 'var(--neon)',
+            color: '#142800',
+            display: 'grid',
+            placeItems: 'center',
           }}
         >
-          {s.title}
-        </h2>
-        {s.adapted && (
-          <span
-            style={{
-              display: 'inline-block',
-              marginTop: 8,
-              fontSize: 9.5,
-              fontWeight: 600,
-              padding: '3px 9px',
-              borderRadius: 'var(--pill)',
-              background: 'rgba(255,199,120,.2)',
-              color: '#ffd08a',
-              border: '1px solid rgba(255,199,120,.28)',
-            }}
-          >
-            {s.adapted}
-          </span>
-        )}
-        </div>
+          <Icon name="arrowUpRight" size={20} />
+        </span>
+      )}
+
+      <p className="etiquette" style={{ color: 'var(--sur-ink-2)', paddingRight: onClick ? 64 : 0 }}>
+        {quand === "Aujourd'hui" ? 'Séance du jour' : `Séance · ${quand}`}
+        {rang && rang.total > 1 && ` · ${rang.n} sur ${rang.total}`}
+      </p>
+
+      <h2 className="display" style={{ fontSize: 'var(--fs-t-page)', lineHeight: 1.08, margin: '8px 0 0', paddingRight: onClick ? 64 : 0 }}>
+        {s.title}
+      </h2>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          marginTop: 6,
+          color: 'var(--accent)',
+          fontSize: 'var(--fs-meta)',
+        }}
+      >
+        {/* La catégorie seule : l'intensité rejoint la ligne de repères,
+            comme sur les cartes de séance. */}
+        <span>{s.cat}</span>
       </div>
 
-      <div style={{ display: 'flex', borderTop: SEPARATEUR }}>
-        {s.dist ? <Kv label="Distance" value={`${formatNumber(s.dist)} km`} /> : null}
-        {dureeMin > 0 ? (
-          <Kv label="Durée" value={dureeMin === dureeMax ? `${dureeMin} min` : `${dureeMin}-${dureeMax} min`} />
-        ) : null}
-        {allure != null ? (
-          <Kv label="Allure" value={formatPace(allure)} />
-        ) : s.type === 'repos' ? (
-          <Kv label="Charge" value="Aucune" />
-        ) : null}
-      </div>
-
-      {(premierSegment || premierPas || s.ex?.length) && (
-        <div style={{ padding: RETRAIT, borderTop: SEPARATEUR }}>
-          {premierSegment && (
-            <Pas
-              titre={`${formatNumber(premierSegment.km)} km : ${formatPace(zonePace(marathonPace, premierSegment.zone))}/km`}
-              detail={detailZone(premierSegment.zone, marathonPace)}
-              couleur={encreZone(premierSegment.zone)}
-            />
-          )}
-          {!premierSegment && premierPas && (
-            <Pas
-              titre={typeof premierPas[0] === 'number' ? `${formatNumber(premierPas[0])} km` : String(premierPas[0])}
-              detail={typeof premierPas[1] === 'string' && !(premierPas[1] in plan.zones) ? premierPas[1] : undefined}
-              couleur="rgba(255,255,255,.34)"
-            />
-          )}
-          {!premierSegment && !premierPas && s.ex?.[0] && (
-            <Pas titre={s.ex[0][0]} detail={s.ex[0][1]} couleur="rgba(255,255,255,.34)" />
-          )}
+      {s.adapted && (
+        <div style={{ marginTop: 12 }}>
+          <span className="tag-adapte">{s.adapted}</span>
         </div>
       )}
+
+      {/* Les mêmes repères que les cartes en dessous, dans le même ordre et
+          au même niveau : distance, durée, allure (retour du 22 septembre).
+          Le premier pas de la séance a quitté cet écran, le détail est à un
+          geste. */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 7,
+          marginTop: 12,
+          color: 'var(--sur-ink-2)',
+          fontSize: 'var(--fs-detail)',
+          fontWeight: 500,
+        }}
+      >
+        <span>
+          {[
+            s.dist ? `${formatNumber(s.dist)} km` : null,
+            dureeMin > 0
+              ? dureeMin === dureeMax
+                ? formatDuration(dureeMin)
+                : `${formatDuration(dureeMin)} à ${formatDuration(dureeMax)}`
+              : null,
+            allure != null ? `${formatPace(allure)}/km` : s.type === 'repos' ? 'Aucune charge' : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </span>
+        {/* Sur la même ligne que la durée, centrée dessus : c'est un repère
+            de plus, pas une information d'un autre rang. */}
+        {st.intensite > 0 && <EchelleIntensite niveau={st.intensite} hauteur={11} />}
+      </div>
 
       {/* Pas de mot du coach ici : il vit dans le détail de séance, à un clic,
           et l'écran Aujourd'hui en porte déjà un en bas. Trois fois la même
           voix sur un même écran, c'est deux fois de trop. */}
     </Balise>
   )
-}
-
-const SEPARATEUR = '1px solid rgba(255,255,255,.12)'
-
-const etiquette: CSSProperties = {
-  fontSize: 9.5,
-  fontWeight: 700,
-  letterSpacing: '.8px',
-  textTransform: 'uppercase',
-  color: 'var(--sur-ink-2)',
-}
-
-function Kv({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ flex: 1, padding: '11px 12px 11px 16px', borderRight: SEPARATEUR }}>
-      <div
-        style={{
-          fontSize: 8.5,
-          fontWeight: 700,
-          letterSpacing: '.6px',
-          textTransform: 'uppercase',
-          color: 'var(--sur-ink-3)',
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          fontSize: 15,
-          fontWeight: 650,
-          letterSpacing: '-.3px',
-          marginTop: 3,
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
-        {value}
-      </div>
-    </div>
-  )
-}
-
-function Pas({ titre, detail, couleur }: { titre: string; detail?: ReactNode; couleur: string }) {
-  return (
-    <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
-      <span aria-hidden style={{ width: 3, borderRadius: 2, background: couleur, flex: 'none' }} />
-      <div>
-        <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '-.1px', lineHeight: 1.3 }}>{titre}</div>
-        {detail && (
-          <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--sur-ink-3)', marginTop: 2, lineHeight: 1.35 }}>
-            {detail}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function detailZone(zone: ZoneKey, marathonPace: number): string {
-  if (zone === 'am') return 'Ton allure cible marathon'
-  if (zone === 'ef' || zone === 'recup')
-    return `Pas plus vite que ${formatPace(zonePace(marathonPace, zone))}/km. C'est une limite, pas un objectif.`
-  return plan.zones[zone].label
 }

@@ -35,7 +35,7 @@ export function EchelleIntensite({
             // de longueur totale et « 2 sur 4 » se lirait comme « 2 ».
             height: `${(0.34 + (n - 1) * 0.22) * hauteur}px`,
             background: n <= niveau ? 'var(--ink)' : 'var(--sur-ink-3)',
-            opacity: n <= niveau ? 0.92 : 0.3,
+            opacity: n <= niveau ? 1 : 0.3,
           }}
         />
       ))}
@@ -68,10 +68,10 @@ export function MarqueSeance({
         flex: 'none',
         width: taille,
         height: taille,
-        borderRadius: taille * 0.32,
-        background: plein ? 'rgba(255,255,255,.09)' : 'transparent',
-        border: plein ? '1px solid rgba(255,255,255,.13)' : '1px solid transparent',
-        color: 'var(--ink)',
+        borderRadius: '50%',
+        background: plein ? 'var(--surface-3)' : 'transparent',
+        border: '1px solid transparent',
+        color: 'var(--accent)',
       }}
     >
       <Icon name={st.icone} size={Math.round(taille * 0.48)} />

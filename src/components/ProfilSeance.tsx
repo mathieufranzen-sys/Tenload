@@ -15,7 +15,7 @@
 import type { Session } from '../data/types'
 import { formatPace, zonePace } from '../lib/paces'
 import {
-  COULEUR_ROLE,
+  couleurSegment,
   hauteurSegment,
   roleDe,
   type BlocDeroule,
@@ -40,7 +40,7 @@ function barres(blocs: BlocDeroule[]): Barre[] {
       out.push({
         part: b.effort.secondes ?? 60,
         hauteur: hauteurSegment(b.effort, false, b.phase),
-        couleur: COULEUR_ROLE[roleDe(b.effort, false, b.phase)],
+        couleur: couleurSegment(b.effort, roleDe(b.effort, false, b.phase)),
       })
       // La dernière récupération d'un bloc n'est pas dessinée : on ne récupère
       // pas d'un tour qui n'aura pas de suivant, la séance enchaîne.
@@ -48,7 +48,9 @@ function barres(blocs: BlocDeroule[]): Barre[] {
         out.push({
           part: b.recup.secondes ?? 30,
           hauteur: hauteurSegment(b.recup, true),
-          couleur: COULEUR_ROLE.recup,
+          // La même couleur que la ligne du dessous : la récupération est
+          // verte dans les deux (retour du 22 septembre).
+          couleur: couleurSegment(b.recup, 'recup'),
         })
       }
     }
@@ -147,15 +149,13 @@ export function DecoupageSeance({
                   marginLeft: 14,
                   position: 'relative',
                   zIndex: 2,
-                  padding: '4px 11px',
+                  padding: '3px 11px',
                   borderRadius: 'var(--pill)',
-                  background: 'var(--bg)',
+                  background: 'var(--surface)',
                   border: '1px solid var(--border)',
-                  fontSize: 10.5,
-                  fontWeight: 800,
-                  letterSpacing: '.9px',
-                  textTransform: 'uppercase',
-                  color: 'var(--ink-2)',
+                  fontSize: 'var(--fs-detail)',
+                  fontWeight: 500,
+                  color: 'var(--accent)',
                 }}
               >
                 {titre}
@@ -185,15 +185,14 @@ export function DecoupageSeance({
                     width: 52,
                     display: 'grid',
                     placeItems: 'center',
-                    background: 'rgba(255,255,255,.05)',
+                    background: 'color-mix(in srgb, var(--ink) 5%, transparent)',
                     borderLeft: '1px solid var(--border)',
                   }}
                 >
                   <span
                     style={{
-                      fontSize: 19,
-                      fontWeight: 750,
-                      letterSpacing: '-.4px',
+                      fontSize: 'var(--fs-c-m)',
+                      fontFamily: 'var(--font-display)',
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >
@@ -201,7 +200,7 @@ export function DecoupageSeance({
                       aria-hidden
                       style={{
                         fontStyle: 'normal',
-                        fontSize: 14,
+                        fontSize: 'var(--fs-meta)',
                         fontWeight: 600,
                         color: 'var(--ink-2)',
                       }}
@@ -240,14 +239,14 @@ function Ligne({
           width: 4,
           borderRadius: 2,
           flex: 'none',
-          background: COULEUR_ROLE[roleDe(seg, recuperation, phase)],
+          background: couleurSegment(seg, roleDe(seg, recuperation, phase)),
         }}
       />
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--ink-2)', lineHeight: 1.25 }}>
+        <div style={{ fontSize: 'var(--fs-meta)', fontWeight: 500, color: 'var(--ink-2)', lineHeight: 1.25 }}>
           {seg.libelle}
         </div>
-        <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-.3px', marginTop: 2 }}>
+        <div style={{ fontSize: 'var(--fs-lead)', fontWeight: 600, marginTop: 2 }}>
           {seg.quantite}
           {allure && (
             <>

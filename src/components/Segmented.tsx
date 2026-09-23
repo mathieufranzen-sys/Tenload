@@ -21,8 +21,8 @@ export function Segmented<T extends string>({
       aria-label={label}
       style={{
         display: 'flex',
-        background: 'rgba(255,255,255,.07)',
-        border: '1px solid rgba(255,255,255,.1)',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
         borderRadius: 'var(--pill)',
         padding: 3,
         gap: 2,
@@ -38,13 +38,14 @@ export function Segmented<T extends string>({
             onClick={() => onChange(o.cle)}
             style={{
               flex: 1,
-              padding: '6px 10px',
+              padding: '8px 12px',
               borderRadius: 'var(--pill)',
-              fontSize: 12,
+              fontSize: 'var(--fs-detail)',
               fontWeight: 600,
               whiteSpace: 'nowrap',
-              background: actif ? 'rgba(255,255,255,.92)' : 'transparent',
-              color: actif ? '#0b0c0e' : 'var(--sur-ink-2)',
+              // Button/Accent : le néon, texte Green-400 (retour du 22 septembre).
+              background: actif ? 'var(--neon)' : 'transparent',
+              color: actif ? 'var(--ink)' : 'var(--sur-ink-2)',
               cursor: 'pointer',
               transition: 'background var(--dur-fast) var(--ease-out), color var(--dur-fast)',
             }}

@@ -45,10 +45,10 @@ export function RessentiJauges({
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            fontSize: 14.5,
+            fontSize: 'var(--fs-texte)',
             fontWeight: 700,
             letterSpacing: '-.2px',
-            color: '#6ee7b7',
+            color: 'var(--good)',
           }}
         >
           <Icon name="check" size={17} />
@@ -61,7 +61,7 @@ export function RessentiJauges({
               background: 'transparent',
               border: 'none',
               padding: '4px 2px',
-              fontSize: 13,
+              fontSize: 'var(--fs-detail)',
               fontWeight: 600,
               color: 'var(--sur-ink-2)',
               textDecoration: 'underline',

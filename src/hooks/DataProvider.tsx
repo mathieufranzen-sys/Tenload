@@ -23,6 +23,7 @@ import {
 import { supabase } from '../lib/supabase'
 import type { DailyLogRow, FeedbackRow } from '../lib/buildPain'
 import type { EcartPatch, EcartRow } from '../lib/overrides'
+import type { DossardRow } from '../lib/dossards'
 import { cleJour, cleSeance, empiler, vider, type Ecriture, type TableEcrivable } from '../lib/offlineQueue'
 
 export interface ProfilRow {
@@ -55,9 +56,21 @@ interface DonneesDistantes {
   feedback: FeedbackRow[]
   activites: ActiviteRow[]
   ecarts: EcartRow[]
+  /**
+   * Facultatif : les caches écrits avant l'arrivée des dossards n'ont pas ce
+   * champ, et un jeu de démo peut s'en passer. Lu partout avec `?? []`.
+   */
+  dossards?: DossardRow[]
 }
 
 interface EtatProvider extends DonneesDistantes {
+  /**
+   * La table `dossards` n'existe pas encore en base : `supabase/dossards.sql`
+   * n'a pas été exécuté. L'écran le dit au lieu d'accepter des saisies qui
+   * resteraient bloquées dans la file d'attente.
+   */
+  dossardsIndisponibles: boolean
+  enregistrerDossard: (ligne: DossardRow) => void
   /** Premier chargement en cours, sans aucune donnée — même pas de cache. */
   chargement: boolean
   erreur: string | null
@@ -107,6 +120,7 @@ const CONFLIT: Record<TableEcrivable, string> = {
   session_feedback: 'user_id,week,day_index,slot',
   profiles: 'id',
   plan_overrides: 'user_id,week,day_index,slot',
+  dossards: 'user_id,id',
 }
 
 function lireCache(): DonneesDistantes | null {
@@ -146,6 +160,7 @@ export function DataProvider({
   const [donnees, setDonnees] = useState<DonneesDistantes>(() => demo ?? lireCache() ?? VIDE)
   const [chargement, setChargement] = useState(() => !demo && lireCache() === null)
   const [erreur, setErreur] = useState<string | null>(null)
+  const [dossardsIndisponibles, setDossardsIndisponibles] = useState(false)
   const [version, setVersion] = useState(0)
 
   const actualiser = useCallback(() => setVersion((v) => v + 1), [])
@@ -179,10 +194,11 @@ export function DataProvider({
         supabase!.from('session_feedback').select('*').eq('user_id', userId).order('day'),
         supabase!.from('activities').select('*').eq('user_id', userId).order('day'),
         supabase!.from('plan_overrides').select('*').eq('user_id', userId).order('week'),
+        supabase!.from('dossards').select('*').eq('user_id', userId).order('day'),
       ])
 
     async function charger() {
-      let [profil, logs, feedback, activites, ecarts] = await requetes()
+      let [profil, logs, feedback, activites, ecarts, dossards] = await requetes()
 
       // Au démarrage à froid, le jeton d'accès peut encore être en cours de
       // rafraîchissement quand ces requêtes partent : elles reviennent alors
@@ -190,7 +206,7 @@ export function DataProvider({
       // supprimer la bannière qui obligeait à relancer l'app.
       if (vivant && [profil, logs, feedback, activites, ecarts].some((r) => r.error)) {
         await new Promise((r) => setTimeout(r, 700))
-        if (vivant) [profil, logs, feedback, activites, ecarts] = await requetes()
+        if (vivant) [profil, logs, feedback, activites, ecarts, dossards] = await requetes()
       }
 
       if (!vivant) return
@@ -201,12 +217,23 @@ export function DataProvider({
       if (premierEchec?.error) setErreur(premierEchec.error.message)
       else setErreur(null)
 
+      // La table des dossards est la seule qui peut manquer sans que rien ne
+      // soit cassé : elle arrive avec un script à part. Son absence ne doit
+      // pas allumer la bannière de synchronisation en échec.
+      const tableAbsente =
+        dossards.error != null && /does not exist|schema cache|42P01|PGRST205/i.test(
+          `${dossards.error.code ?? ''} ${dossards.error.message}`,
+        )
+      setDossardsIndisponibles(tableAbsente)
+      if (dossards.error && !tableAbsente && !premierEchec) setErreur(dossards.error.message)
+
       const suivant: DonneesDistantes = {
         profil: (profil.data as ProfilRow | null) ?? donnees.profil,
         logs: (logs.data as DailyLogRow[] | null) ?? donnees.logs,
         feedback: (feedback.data as FeedbackRow[] | null) ?? donnees.feedback,
         activites: (activites.data as ActiviteRow[] | null) ?? donnees.activites,
         ecarts: (ecarts.data as EcartRow[] | null) ?? donnees.ecarts,
+        dossards: (dossards.data as DossardRow[] | null) ?? donnees.dossards ?? [],
       }
       setDonnees(suivant)
       ecrireCache(suivant)
@@ -351,11 +378,38 @@ export function DataProvider({
     [userId, viderFile],
   )
 
+  /**
+   * Écriture optimiste d'un dossard. La ligne part toujours complète, et une
+   * suppression est un drapeau `supprime` : un upsert se rejoue, un DELETE non.
+   */
+  const enregistrerDossard = useCallback(
+    (ligne: DossardRow) => {
+      setDonnees((d) => {
+        const liste = d.dossards ?? []
+        const i = liste.findIndex((x) => x.id === ligne.id)
+        const dossards = i === -1 ? [...liste, ligne] : liste.map((x, idx) => (idx === i ? ligne : x))
+        const suivant = { ...d, dossards }
+        if (!demo) ecrireCache(suivant)
+        return suivant
+      })
+      if (!demo) empiler({
+        table: 'dossards',
+        cle: ligne.id,
+        valeurs: { user_id: userId, ...ligne, updated_at: new Date().toISOString() },
+        maj: Date.now(),
+      })
+      if (!demo) viderFile()
+    },
+    [userId, viderFile],
+  )
+
   const valeur = useMemo<EtatProvider>(
     () => ({
       ...donnees,
       chargement,
       erreur,
+      dossardsIndisponibles,
+      enregistrerDossard,
       actualiser,
       enregistrerLog,
       enregistrerFeedback,
@@ -366,6 +420,8 @@ export function DataProvider({
       donnees,
       chargement,
       erreur,
+      dossardsIndisponibles,
+      enregistrerDossard,
       actualiser,
       enregistrerLog,
       enregistrerFeedback,
@@ -381,6 +437,12 @@ function useDonnees(): EtatProvider {
   const ctx = useContext(Contexte)
   if (!ctx) throw new Error('useDonnees doit être appelé sous <DataProvider>.')
   return ctx
+}
+
+/** Les dossards ajoutés, et l'objectif de ceux du plan. */
+export function useDossards() {
+  const { dossards, dossardsIndisponibles, enregistrerDossard } = useDonnees()
+  return { dossards: dossards ?? [], indisponibles: dossardsIndisponibles, enregistrerDossard }
 }
 
 export function useProfile() {

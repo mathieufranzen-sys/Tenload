@@ -29,7 +29,7 @@ export function EnteteEcran({
   onOuvrirProfil,
 }: {
   titre: string
-  contexte: ReactNode
+  contexte?: ReactNode
   /** Absent sur l'écran Profil lui-même, qui n'a pas à s'ouvrir depuis lui-même. */
   onOuvrirProfil?: () => void
 }) {
@@ -52,6 +52,10 @@ export function EnteteEcran({
         // Un voile sombre le détachait du reste de l'écran alors qu'il doit y
         // appartenir ; c'est le flou seul qui rend le titre lisible quand du
         // contenu défile derrière.
+        // En mode clair, le flou seul ne suffit plus : une carte vert profond
+        // qui passe sous le titre le rendait illisible. Un voile du fond,
+        // presque opaque, le garde lisible sans dessiner de bande.
+        background: 'color-mix(in srgb, var(--bg) 88%, transparent)',
         backdropFilter: 'blur(18px) saturate(1.4)',
         WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
         maskImage: MASQUE,
@@ -59,10 +63,14 @@ export function EnteteEcran({
       }}
     >
       <div style={{ minWidth: 0 }}>
-        <h1 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-.5px' }}>{titre}</h1>
-        <p style={{ color: 'var(--sur-ink-2)', fontSize: 13, fontWeight: 500, margin: '3px 0 0' }}>
-          {contexte}
-        </p>
+        <h1 className="display" style={{ margin: 0, fontSize: 'var(--fs-t-ecran)', lineHeight: 1.05 }}>
+          {titre}
+        </h1>
+        {contexte && (
+          <p style={{ color: 'var(--accent)', fontSize: 'var(--fs-meta)', fontWeight: 500, margin: '6px 0 0' }}>
+            {contexte}
+          </p>
+        )}
       </div>
       {onOuvrirProfil && <ProfileButton onClick={onOuvrirProfil} />}
     </header>

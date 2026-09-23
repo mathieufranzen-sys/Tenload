@@ -1,3 +1,4 @@
+import { TEINTE_BANDE } from '../../lib/teintes'
 import { BANDS, type Band } from '../../lib/tendonIndex'
 
 const TERMES: Array<{ nom: string; poids: string; texte: string }> = [
@@ -41,30 +42,30 @@ export function TendonIndexInfo({ idx, band }: { idx: number; band: Band }) {
   return (
     <>
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
-        <p style={{ color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, margin: '0 0 14px' }}>
+        <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5, margin: '0 0 14px' }}>
           Une note de 0 à 100 recalculée à chaque saisie. Elle pilote le programme toute seule : les
           séances se transforment sans que tu aies à demander. Aujourd'hui :{' '}
-          <b style={{ color: band.color }}>
+          <b>
             {idx} sur 100, {band.name.toLowerCase()}
           </b>
           .
         </p>
         {BANDS.map((b, i) => (
           <div key={b.key} style={{ display: 'flex', gap: 12, padding: '11px 0', borderBottom: i < BANDS.length - 1 ? '1px solid var(--border)' : undefined }}>
-            <div style={{ width: 5, borderRadius: 3, background: b.color, flex: 'none' }} />
+            <div style={{ width: 5, borderRadius: 3, background: TEINTE_BANDE[b.key], flex: 'none' }} />
             <div>
-              <div style={{ fontSize: 14.5, fontWeight: 700 }}>
+              <div style={{ fontSize: 'var(--fs-texte)', fontWeight: 700 }}>
                 {i === 0 ? 0 : BANDS[i - 1].max + 1} à {b.max} · {b.name} — {b.headline}
               </div>
-              <div style={{ color: 'var(--ink-2)', fontSize: 13.5, lineHeight: 1.45, marginTop: 2 }}>{b.detail}</div>
+              <div style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.45, marginTop: 2 }}>{b.detail}</div>
             </div>
           </div>
         ))}
       </div>
 
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px' }}>
-        <b style={{ fontSize: 16, display: 'block', marginBottom: 4 }}>Comment il est calculé</b>
-        <p style={{ color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, margin: '6px 0 12px' }}>
+        <b style={{ fontSize: 'var(--fs-body)', display: 'block', marginBottom: 4 }}>Comment il est calculé</b>
+        <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5, margin: '6px 0 12px' }}>
           Cinq termes qui s'additionnent, moins ce qui protège. Le modèle est calibré sur 45 jours
           réels : il donne une médiane de 23 et il est monté à 59 le 3 août, la veille d'une
           entorse de cheville.
@@ -72,13 +73,13 @@ export function TendonIndexInfo({ idx, band }: { idx: number; band: Band }) {
         {TERMES.map((t) => (
           <div key={t.nom} style={{ padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline' }}>
-              <b style={{ fontSize: 14.5 }}>{t.nom}</b>
-              <span style={{ color: 'var(--ink-2)', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap' }}>{t.poids}</span>
+              <b style={{ fontSize: 'var(--fs-texte)' }}>{t.nom}</b>
+              <span style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-detail)', fontWeight: 700, whiteSpace: 'nowrap' }}>{t.poids}</span>
             </div>
-            <div style={{ color: 'var(--ink-2)', fontSize: 13.5, lineHeight: 1.45, marginTop: 3 }}>{t.texte}</div>
+            <div style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.45, marginTop: 3 }}>{t.texte}</div>
           </div>
         ))}
-        <p style={{ color: 'var(--ink-2)', fontSize: 13.5, lineHeight: 1.5, margin: '14px 0 0' }}>
+        <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5, margin: '14px 0 0' }}>
           Deux garde-fous s'ajoutent. Une douleur déclarée à 4 impose un plancher orange, à 6 un
           plancher rouge, à 8 un plancher noir : ces seuils ne peuvent pas être contournés par un
           indice bas ailleurs. Et après un pic au-dessus de 60, un plancher décroissant tient

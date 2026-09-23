@@ -9,6 +9,7 @@
  * Deux temps, parce que la forme projetée recalcule toute l'app : on voit
  * d'abord ce que le chrono donnerait, on l'applique ensuite.
  */
+import { BoutonAction } from './BoutonAction'
 import { useState } from 'react'
 import type { Session } from '../data/types'
 import { MARATHON_KM, chronoPlausible, formatDuration, formatPace, projeterMarathon } from '../lib/paces'
@@ -62,7 +63,7 @@ export function ChronoCourse({ km, chronoSaisi, formeActuelle, disabled, onValid
   const ecart = allure != null ? allure - formeActuelle : null
 
   return (
-    <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '15px 16px' }}>
+    <div className="carte" style={{ padding: '16px 16px' }}>
       <input
         type="text"
         inputMode="numeric"
@@ -78,50 +79,40 @@ export function ChronoCourse({ km, chronoSaisi, formeActuelle, disabled, onValid
           boxSizing: 'border-box',
           background: 'var(--surface-2)',
           border: `1px solid ${saisie && !valide ? 'var(--c-erreur)' : 'var(--border-2)'}`,
-          borderRadius: 14,
-          padding: 14,
-          fontSize: 19,
-          fontWeight: 700,
+          borderRadius: 'var(--pill)',
+          padding: '14px 20px',
+          fontSize: 'var(--fs-c-m)',
+          fontFamily: 'var(--font-display)',
           color: 'var(--ink)',
           fontVariantNumeric: 'tabular-nums',
         }}
       />
 
       {!saisie || !valide ? (
-        <p style={{ color: saisie ? 'var(--c-erreur)' : 'var(--ink-3)', fontSize: 12.5, fontWeight: 600, margin: '8px 2px 0' }}>
+        <p style={{ color: saisie ? 'var(--c-erreur)' : 'var(--ink-3)', fontSize: 'var(--fs-detail)', fontWeight: 600, margin: '8px 2px 0' }}>
           {saisie ? 'Chrono hors plage plausible pour cette distance' : `Ton temps officiel sur ${formatDistance(km)}, en ${km >= 20 ? 'h:mm:ss' : 'mm:ss'}`}
         </p>
       ) : (
         <>
-          <p style={{ fontSize: 14.5, lineHeight: 1.5, margin: '12px 2px 4px' }}>
+          <p style={{ fontSize: 'var(--fs-texte)', lineHeight: 1.5, margin: '12px 2px 4px' }}>
             Soit {formatPace(secondes! / km)}/km. Forme projetée à <b>{formatPace(allure!)}/km</b>, soit{' '}
             <b>{formatDuration(Math.round((allure! * MARATHON_KM) / 60))}</b> au marathon.
           </p>
-          <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5, margin: '0 2px 14px' }}>
+          <p style={{ fontSize: 'var(--fs-detail)', color: 'var(--ink-2)', lineHeight: 1.5, margin: '0 2px 14px' }}>
             {ecart === 0
               ? 'Exactement ta forme projetée actuelle : la course confirme le test.'
               : `${Math.abs(ecart!)} s/km ${ecart! < 0 ? 'plus vite' : 'plus lent'} que ta forme projetée actuelle (${formatPace(formeActuelle)}/km). Les allures d'entraînement ne bougent pas : elles restent ancrées sur l'objectif.`}
           </p>
-          <button
+          <BoutonAction
+            icone="check"
+            disabled={disabled || applique}
             onClick={() => {
               onValider(secondes!, allure!)
               setApplique(true)
             }}
-            disabled={disabled || applique}
-            style={{
-              display: 'block',
-              width: '100%',
-              padding: 14,
-              borderRadius: 'var(--pill)',
-              fontWeight: 700,
-              fontSize: 15.5,
-              background: 'var(--surface-2)',
-              color: disabled ? 'var(--ink-3)' : 'var(--ink)',
-              border: '1px solid var(--border-2)',
-            }}
           >
             {applique ? 'Forme recalée sur ce chrono' : 'Recaler ma forme sur ce chrono'}
-          </button>
+          </BoutonAction>
         </>
       )}
     </div>

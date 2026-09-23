@@ -83,7 +83,44 @@ export const RANG_ZONE: Record<ZoneKey, number> = {
   rep: 6,
 }
 
+/**
+ * Une couleur par allure, la même dans toute l'app : les barres de zones
+ * d'Objectif, le déroulé d'une séance, la pastille d'intensité.
+ *
+ * Du VERT au BLEU, et non sept crans d'un même bleu : les deux allures
+ * lentes, celles qui font le volume, prennent le vert de la marque, les
+ * cinq autres foncent dans la gamme bleue à mesure que l'effort monte. Sept
+ * bleus voisins ne se distinguaient pas dans le déroulé d'une séance
+ * (retour du 22 septembre 2026).
+ */
+export const COULEUR_ZONE: Record<ZoneKey, string> = {
+  recup: '#c9fdd2',
+  ef: '#65f67b',
+  am: '#b3bbf9',
+  semi: '#6e7ff4',
+  seuil: '#4f63f2',
+  vo2: '#2b3aa6',
+  rep: '#1f2a78',
+}
+
+/** L'encre lisible sur `COULEUR_ZONE` : sombre sur les deux plus pâles. */
+export const ENCRE_ZONE: Record<ZoneKey, string> = {
+  recup: '#142800',
+  ef: '#142800',
+  am: '#1f2a78',
+  semi: '#ffffff',
+  seuil: '#ffffff',
+  vo2: '#ffffff',
+  rep: '#ffffff',
+}
+
 export function encreZone(zone: ZoneKey): string {
-  const t = RANG_ZONE[zone] / 5
-  return `rgba(255,255,255,${(0.22 + t * 0.78).toFixed(2)})`
+  // Du bleu pâle de la récupération au bleu nuit des répétitions :
+  // l'échelle fonce, ce qui se lit comme une intensité même sans
+  // distinguer les teintes entre elles.
+  const t = Math.min(1, RANG_ZONE[zone] / 6)
+  const de = [179, 187, 249]
+  const a = [31, 42, 120]
+  const c = de.map((v, i) => Math.round(v + (a[i] - v) * t))
+  return `rgb(${c.join(',')})`
 }

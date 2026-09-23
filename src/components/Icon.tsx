@@ -2,6 +2,13 @@ import type { CSSProperties } from 'react'
 
 /** Traits SVG minimalistes, portés depuis reference/tendo-v3.html (fonction `I`). */
 const PATHS: Record<string, string> = {
+  // La gélule de la jauge : l'onglet Aujourd'hui, c'est la charge du tendon.
+  capsule: '<rect x="8" y="2.8" width="8" height="18.4" rx="4"/><path d="M8 13.5h8"/>',
+  target: '<circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="4.6"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>',
+  arrowUpRight: '<path d="M7 17 17 7M8 7h9v9"/>',
+  arrowRight: '<path d="M5 12h13M13 6l6 6-6 6"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  pencil: '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/>',
   sun: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/>',
   clip: '<rect x="5" y="4" width="14" height="17" rx="2.4"/><path d="M9 4V2.8h6V4M8.5 9.5h7M8.5 13h7M8.5 16.5h4"/>',
   chart: '<path d="M4 20V11M10 20V5M16 20v-6M22 20H2"/>',

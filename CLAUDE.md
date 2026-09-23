@@ -468,7 +468,11 @@ discipline, la déplacer d'un jour, corriger sa distance ou sa durée.
   `check_plan.py` un fichier qui n'est plus la référence de personne.
 - **Ordre d'application : plan → écart volontaire → `applyFx`.** La décision de
   Mathieu passe d'abord, la protection du tendon s'applique par-dessus. Une
-  séance sautée ne reçoit aucune adaptation : il n'y a plus rien à protéger.
+  séance sautée garde l'adaptation À L'ÉCRAN mais perd son étiquette
+  (22 septembre 2026) : sauter la course devenue vélo doit afficher « vélo
+  sauté », sinon la carte parle d'une séance que Mathieu n'a jamais vue.
+  Rien ne change au calcul, une séance sautée vaut zéro dans la charge. Le
+  palier, lui, ne vise que ce qui reste à courir : il ignore les sautées.
 - **Une séance sautée vaut zéro dans la charge**, comme une journée sans
   activité importée.
 - **Le contrôle des contraintes avertit, il ne bloque pas.** `verifierContraintes`
@@ -885,6 +889,269 @@ perçu, la douleur à l'effort et la douleur de fin de journée**.
   `workbox.importScripts`. Ce fichier est mis en cache pour un temps qu'on ne
   maîtrise pas : **il ne doit porter aucune règle métier**, tout le texte vient
   du message envoyé.
+
+## La refonte « braise » (branche `design-test`)
+
+Demandée le 21 septembre 2026, d'après une maquette Claude Design de Mathieu
+passée du violet à l'orange. **Aucun calcul ni aucune séance ne change** :
+c'est une consigne, pas un effet de bord. Seuls deux textes de règle ont bougé,
+parce qu'ils nommaient l'onglet Allures.
+
+- **Palette** (`tokens.css`) : **Trailblazer, le design system d'AllTrails,
+  en mode clair**, sur ses rôles sémantiques fournis par Mathieu. Fond
+  Container/Primary (Neutral-0), cartes Container/Secondary (Neutral-100),
+  et ce qui vit dans une carte remonte en Neutral-0. Texte Dark (Green-400)
+  et Subtle (Neutral-600, qui écrit aussi les étiquettes). Filets Neutral-200
+  et 300. **Bouton d'action : Button/Accent** (NeonGreen-100, survol 200,
+  texte Green-400, `.bouton-pale` et `--neon`). **Sélection : Button/Focus**
+  (Green-300, texte blanc, `--pale`). Cartes sombres (`.carte-braise`) en
+  Tertiary vers Brand ; **elles redéfinissent les jetons pour leurs
+  enfants** (`--ink` blanc, `--accent` NeonGreen-100), si bien qu'un
+  composant posé dedans s'inverse sans rien savoir. Blue (AllTrails+) pour
+  la courbe d'effort, valeur `#4f63f2` relevée à l'œil, à confirmer. Les
+  noms `pale` et `braise` sont restés des versions précédentes.
+- **Trois familles de couleur, trois rôles** (arbitré le 22 septembre 2026) :
+  le **vert foncé** n'appartient qu'au coach ; le **vert clair** (néon) à ce
+  qui se touche, boutons, sélection, bascules (`--pale` vaut désormais le
+  néon) ; le **bleu** (gamme `--bleu-50` à `--bleu-900`, autour des deux
+  bleus d'origine 100 et 500) et le gris aux blocs de page, au déroulé et aux
+  allures. La jauge est un bloc bleu pâle (`.carte-bleu-pale`), la séance du
+  jour un bloc bleu (`.carte-bleue`, qui inverse les jetons comme la carte du
+  coach). Le déroulé est en bleu, ses segments d'effort passent au néon quand
+  la séance change d'allure (`couleurRole`). Suivi garde le bleu et le vert.
+- L'allure marathon visée ne vit plus que dans Profil → Réglages d'allure ;
+  la forme projetée (`CarteForme`) est dans Suivi, avec le gain sur quatre
+  semaines en secondes.
+- **Les teintes de bande vivent dans `src/lib/teintes.ts`**, pas dans `BANDS`
+  (tendonIndex.ts), qui est un fichier du modèle. La bande jaune y est enfin
+  jaune. `COULEUR_DOULEUR` (ressenti.ts) suit les mêmes teintes, le noir
+  devenant un grenat lisible sur fond sombre.
+- **Typographie** : Fraunces (serif, axes SOFT et opsz) pour les titres, les
+  grands chiffres (`.chiffre`) et le mot du coach en italique (`.display-it`) ;
+  Instrument Sans pour le texte courant. **Toutes les tailles passent par
+  l'échelle de `tokens.css`** (`--fs-micro` à `--fs-lead` pour la linéale,
+  `--fs-t-*` pour les titres, `--fs-c-*` pour les chiffres, `--fs-coach*`),
+  resserrée le 22 septembre 2026 : onze tailles de linéale au demi-pixel
+  près ramenées à six. Aucune valeur en dur dans un composant ; seuls les
+  axes des graphiques SVG gardent la leur, en unités du dessin. Les deux sont embarquées par
+  `@fontsource` et préchargées par la PWA, sous-ensemble vietnamien exclu.
+- **Allures devient Objectif.** La clé d'onglet reste `paces` pour ne toucher
+  aucun appelant. L'écran porte l'allure visée, les zones en barres, la forme
+  projetée et les **dossards**.
+- Aujourd'hui : jauge en gélule (`CarteCharge`), « ce que ça change »
+  (`CeQueCaChange`, qui remplace AlertBox), carnet résumé et sa page
+  (`PageCarnet`), bilan de semaine en page. Le détail du calcul est une page.
+- Programme : pastilles de jour pleine hauteur dans la vue semaine, le bloc en
+  tête avec les chiffres de la semaine, les jours passés grisés. Le calendrier
+  a deux lectures au choix : **vue semaine** (par défaut, sur la semaine en
+  cours, là où les séances se déplacent) et **vue globale**, la grille du plan
+  entier (`GrilleCalendrier`), le passé coloré par bande, l'avenir par type de
+  séance, la sortie longue en néon.
+- Le ressenti n'a plus de phrase d'introduction : les deux curseurs se
+  suffisent. Le ressenti de séance garde les curseurs d'origine (`JaugeRessenti`) et les
+  mots du test de la parole : les pastilles de la maquette ont été essayées puis
+  retirées le 22 septembre, une seule façon de noter dans toute l'app.
+- **Le vert profond est réservé au mot du coach** (`.carte-braise`), et à ce
+  qui en est une variante : mot mental du bilan, mot du coach d'un dossard.
+  Arbitré par Mathieu le 22 septembre 2026 : les autres blocs n'y ont pas
+  droit. L'action est en néon, la séance à faire en blanc sous un filet fort.
+- **Majuscule au premier mot de chaque ligne**, étiquettes comprises.
+- **Un seul bouton d'action** (`BoutonAction`) : pilule néon, libellé à
+  gauche, pastille blanche ronde à droite avec l'icône du geste. « Ouvrir le
+  carnet » est la référence (arbitré le 22 septembre 2026). Seuls les gestes
+  secondaires (annuler, désactiver, retirer) restent en contour.
+- **Détail de séance façon fiche AllTrails** : retour à gauche, titre en
+  grand, ligne de repères (pastille d'intensité en verts, catégorie, date,
+  semaine), rangée de chiffres à filets verticaux (distance, temps estimé,
+  allure, intensité), et **barre d'actions collée en bas** (Noter en néon,
+  Sauter, Déplacer, Donnée réelle, Remplacer), qui défile à l'horizontale.
+- Aujourd'hui n'a plus de bloc « ce que ça change » : l'adaptation se lit
+  sur la séance. Le carnet du jour n'y est qu'un résumé à jauges fines, la
+  saisie vit dans sa page.
+- **Les bandes reprennent les camaïeux de la branche main** (`CAMAIEU_BANDE`
+  dans teintes.ts), en m4 — la teinte claire — et avec le vert de la marque
+  à la place du vert d'eau : vert #65f67b, jaune #93c5fd, orange #fcd34d,
+  rouge #fb7185, noir #d946ef. Le nom d'une bande ne décrit plus sa couleur
+  (le « jaune » est bleu, le « noir » violet) : c'est l'ordre qui se lit.
+  L'encre posée dessus est le m6 de la même famille.
+- **La douleur ET l'effort perçu** suivent ces familles : m4 puis m2 par
+  palier. Deux notes de 0 à 10 sur la même séance ne peuvent pas avoir l'une
+  une échelle et l'autre un bleu fixe.
+- **Une couleur par allure** (`COULEUR_ZONE`, seanceStyle.ts), la même dans
+  les barres d'Objectif et dans le déroulé d'une séance. Elle va **du vert
+  au bleu** : les deux allures lentes, qui font le volume, prennent le vert
+  de la marque, les cinq autres foncent dans le bleu — sept bleus voisins ne
+  se distinguaient pas. **Les récupérations entre deux tours sont en vert
+  clair**, ce qui fait lire le
+  graphique du déroulé comme une alternance effort / souffle. L'ancienne règle du
+  néon quand la séance change d'allure est retirée : on ne voyait pas OÙ
+  l'allure changeait, ce qui est justement ce que le déroulé montre.
+- **Un seul orange** (`--orange-100` à `--orange-900`), aligné sur la
+  famille ambre des bandes depuis que les camaïeux sont revenus : l'aplat des
+  étiquettes, la bande, le cran 5 de la douleur, l'encre d'alerte et l'encre
+  sur l'aplat. `--warning` et `--serious` valent tous deux le 700 : deux
+  oranges pour deux degrés du même message ne se lisaient pas comme une
+  échelle.
+- Le bloc de charge est une **carte grise** (Neutral-100) avec un tube blanc
+  à filet gris et un **bouton secondaire** blanc à flèche bleue : le néon
+  reste à l'action principale d'un écran.
+- L'anneau de Suivi ne montre que **la course** : le vélo et le renfo
+  écrasaient la lecture du dosage d'intensité (`ORDRE_COURSE`).
+- Suivi : les courbes de douleur sont **lissées à l'affichage** (moyenne
+  glissante de 7 jours, `lisser`), l'indice lit toujours les valeurs brutes.
+  Les trois courbes de douleur ont la même épaisseur : la fin de journée se
+  distingue par sa couleur, pas par un trait plus gros.
+  Deux graphiques de niveau en course (`NiveauChart`) : le marathon projeté
+  semaine par semaine (`serieForme`, l'ancre est le test actuel) et l'effort
+  perçu contre l'effort attendu (`ecartEffortSemaine`), soit exactement ce
+  que lit `ajusterForme`.
+
+- Retours du 22 septembre, fin de journée : les trois indicateurs de la
+  semaine vivent DANS la jauge, sous l'échelle des bandes ; les étiquettes
+  de séance sont en aplat plein (`.tag-adapte`, `.tag-ecart`) pour se lire
+  sur le bloc bleu ; le bouton du ressenti reste grisé tant qu'aucun curseur
+  n'a bougé. Programme : le jour courant en bleu clair, les semaines passées
+  du bloc en vert foncé (exception voulue par Mathieu à la règle du vert
+  réservé au coach), la nature de la semaine sous les dates et trois puces
+  seulement dans la carte du bloc. Calendrier : filets droits, sans icônes,
+  mêmes corps que la vue semaine ; vue globale en pastilles aplaties.
+- **Aucune couleur hors famille** (rattachement du 22 septembre) : toute
+  teinte dérive d'une des sept principales (Neutral-0, Neutral-100,
+  Green-400, néon, Bleu 500, Green-300, les bandes) ; les fonds légers se
+  font par `color-mix` sur un jeton, jamais par un `rgba` d'une ancienne
+  palette. La jauge de charge a une gélule blanche et le bouton rond dans
+  le coin, comme la séance du jour (12 px du haut et du bord) ; ses
+  compteurs de la semaine sont partis dans les chiffres de Suivi.
+- **Règle de rédaction** (audit du 22 septembre) :
+  - **titres** d'écran, de section et de carte : un groupe nominal, sans
+    article ni possessif (« Déroulé », « Ressenti », « Contraintes »,
+    « Zones cardiaques »), jamais de point final ;
+  - **boutons** : un verbe à l'infinitif et un article, jamais « mon, ma,
+    mes » (« Enregistrer le ressenti », « Recalibrer les zones ») ; une
+    action de la barre de séance est un verbe seul (Noter, Sauter,
+    Déplacer, Corriger, Remplacer) ;
+  - **descriptions** (rubriques du Profil) : un groupe nominal avec article,
+    sans verbe conjugué ni point final ;
+  - **texte courant** au tutoiement, phrases complètes avec point ; la
+    première personne n'appartient qu'au coach ;
+  - aucun mot anglais (« vs ») ; un point médian n'ouvre jamais une ligne.
+- La date d'Aujourd'hui tient sur une ligne : si « Mardi 22 septembre » ne
+  tient pas, le mois s'abrège (`TitreUneLigne`), jamais le jour. Les flèches
+  de jour sont à côté du bouton profil.
+- Suivi : six chiffres en cartes grises, et la **répartition de la semaine**
+  en anneau (`repartition.ts`, 4 tests), en temps par intensité (endurance,
+  allure marathon, seuil, vitesse, vélo, renfo) sur le plan de la semaine,
+  écarts compris et séances sautées exclues.
+- **Profil → Bilans de la semaine** relit chaque semaine terminée
+  (`BilansPasses`). Le calcul est sorti d'Aujourd'hui dans
+  `construireBilan` (`bilanDeSemaine.ts`), lu à la date `ref` : aujourd'hui
+  pour le bilan courant, le lundi suivant pour une semaine passée, sans la
+  forme projetée, qui ne vaut que pour aujourd'hui.
+
+- Le détail du calcul prend six teintes lisibles comme TEXTE (`TEINTE_TERME`,
+  ChargeSheet) : le néon et le vert clair disparaissaient sur la carte, et le
+  total reprend l'encre de l'app, la teinte m4 d'une bande étant trop claire
+  pour un chiffre de 72 px.
+
+- **Une seule ligne de repères** sur toute carte de séance : distance, durée,
+  allure, puis l'échelle d'intensité, en texte (23 septembre). L'intensité
+  vivait dans une pilule et la durée en texte brut sur la même carte, et
+  l'inverse sur la carte d'à côté. Les cartes n'ont plus d'icône de
+  discipline, seule la séance notée garde sa coche.
+- Une séance **sautée** descend avec les séances notées sur Aujourd'hui,
+  barrée : elle n'est plus « à faire ». Une séance **notée** prend un fond
+  vert très clair (23 septembre) : elle est derrière toi et ne doit plus
+  peser autant qu'une carte qui attend quelque chose. Le bloc d'état ne
+  s'affiche plus que pour une journée SANS séance ou en repos : dès qu'une
+  séance existe, sa carte le dit déjà.
+- Profil à deux niveaux (23 septembre) : ton suivi en cartes (bilans, séances
+  à noter, patterns, dossards passés, rappels), puis deux portes,
+  « Informations du programme » et « Paramètres », et la déconnexion.
+- Suivi ne garde que trois chiffres (course sur 7 jours, santé du tendon,
+  séances notées) : ceux de la semaine en cours répétaient Aujourd'hui. Il
+  porte les **chronos équivalents** (colonnes « Aujourd'hui » et « Visé le
+  4 avril ») et le **rapport aigu sur chronique** (`RatioChart`), dessiné sur
+  ses trois plages de lecture.
+- Objectif n'a plus de bascule course/vélo : sous chaque barre, « FC 126–154
+  · à vélo FC 106–134 », et rien d'autre. La description de la zone faisait
+  sauter la ligne.
+
+- **L'indice de Suivi se dessine en colonnes**, une par journée, à la couleur
+  de sa bande (dessin choisi par Mathieu parmi quatre, le 23 septembre 2026).
+  Au-delà de deux mois la colonne s'efface progressivement, sans jamais
+  disparaître tout à fait ; l'avenir projeté reste en creux, et un pointillé
+  marque aujourd'hui.
+- **La forme projetée a quitté Suivi** : elle vit sur la page de chaque
+  dossard à venir, avec l'objectif de CETTE course et la règle à l'échelle de
+  sa distance (`CarteForme` accepte un titre, un format et une plage).
+- Le détail du calcul nomme les gestes de la veille un par un
+  (`ChargeSheet`, prop `soins`) : « pourquoi je n'ai pas mes −5 de repos »
+  n'avait pas de réponse dans l'app.
+- Toutes les séances du jour encore à faire sont des blocs bleus à bouton
+  vert, le vélo comme la course. **L'intensité s'écrit en texte, sur la ligne
+  des repères**, jamais en pilule : la pilule a été essayée puis retirée le
+  23 septembre, tout le reste de l'app écrit ses chiffres en texte.
+- **Logo et icônes** : le logo de Mathieu, un demi-disque bleu sur fond vert,
+  sans texte depuis le 23 septembre 2026 (le mot « tenload » devenait
+  illisible à 48 px). Il remplit favicon, apple-touch et les trois icônes
+  PWA ; le `theme_color` suit le fond blanc de l'app.
+- Dans le détail du calcul, toutes les barres se remplissent depuis la
+  gauche, le soin compris, et la ligne des gestes donne la charge de la
+  veille : c'est elle qui décide du −5 de journée de repos.
+
+- **L'en-tête du Programme** suit la structure donnée par Mathieu le
+  23 septembre : pastille du bloc et nature de la semaine, la semaine entre
+  ses deux flèches avec ses dates, la progression du bloc, ce que le bloc
+  cherche, puis trois chiffres (sortie longue, courses, kilomètres).
+- Tous les graphiques de Suivi partagent le même pointillé (`POINTILLE`) et
+  la même couleur de trait de repère (`TRAIT_REPERE`).
+- **Le rapport aigu sur chronique** (`RatioChart`) a la zone sûre en BLANC :
+  tant que rien ne cloche, rien ne s'allume. L'ambre du haut ne sort qu'au
+  delà de 1,3, le gris du bas dit la décharge (palette choisie par Mathieu le
+  23 septembre 2026). Au-dessus de 1,3, c'est une **vigilance, pas une
+  alerte** : le terme vaut 17 points sur 100 à 1,3 et plafonne à 30 vers 1,6,
+  il ne peut donc jamais retirer une séance à lui seul — seules les bandes et
+  les planchers de douleur le peuvent.
+- Suivi porte quatre chiffres, le quatrième étant le **seuil cumulé de la
+  semaine** contre la cible de 20 à 30 min (contrainte 9). L'effort perçu se
+  lit **séance par séance sur 30 jours** : une moyenne hebdomadaire sur trois
+  mois lissait ce qu'on vient y chercher.
+- `--good` est le m3 de la famille verte des bandes (#1f8a3b) : le vert
+  profond appartient au coach.
+
+### Les dossards
+
+`src/lib/dossards.ts` (+ 11 tests), `SectionDossards`, table
+`supabase/dossards.sql` **à exécuter une fois**. Tant qu'elle manque, l'écran
+le dit et n'enregistre rien, sans allumer la bannière de synchronisation.
+
+- Les quatre dossards du plan y sont d'office et ne se suppriment pas. Leur
+  ligne ne porte que l'objectif ; le chrono d'une course qui recale la forme
+  (10 à 39 km) reste la durée réelle de l'écart, saisie par le même chemin que
+  la feuille de séance. Une valeur, une source.
+- **Un dossard ajouté ne touche ni au programme ni à l'indice.** Son chrono ne
+  recale rien.
+- Une suppression est un drapeau `supprime`, jamais un DELETE : toutes les
+  écritures restent des upserts rejouables.
+- **Objectifs par défaut** (`objectifParDefaut`), tant qu'aucun n'est saisi :
+  10 km 40:12 (le record), semi test 1 h 30, marathon l'allure visée du
+  profil. Le 20 km de Paris n'en a pas, aucun chrono n'a été fixé.
+- La page d'un dossard porte toujours l'objectif ET le chrono réel ; avant
+  la course, le chrono attend « le jour J ». Le bouton d'ajout est à côté
+  du titre.
+- Une carte de dossard à venir est bleu clair et non grise, avec sa pastille
+  de compte à rebours en blanc : un dossard est un rendez-vous, pas une ligne
+  de liste. Sur sa page, l'allure visée a son propre bloc.
+- **Chronos équivalents** dans Objectif : 5 km, 10 km, semi et marathon, en
+  deux colonnes, la forme du jour et l'objectif. Même équivalence que le
+  recalage sur un chrono de course, prise à l'envers (`chronoEquivalent`).
+- Objectif ne liste que les dossards à venir ; **les passés vivent dans
+  Profil → Dossards passés**. Une carte ouvre la page du dossard (par un
+  portail, pour s'ouvrir aussi depuis une sous-page), où se saisissent
+  l'objectif et le chrono réel.
+- Le mot du coach d'un dossard (`motDuDossard`) compare l'objectif à
+  `chronoEquivalent`, l'inverse exact de `projeterMarathon` sur la forme
+  projetée, puis, la course passée, le chrono à l'objectif et à la forme.
 
 ## Pistes connues
 

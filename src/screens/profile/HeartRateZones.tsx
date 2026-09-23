@@ -5,6 +5,7 @@
  * de l'écran Allures. Changer la valeur ici recalcule les zones là-bas, et la
  * prévisualisation évite d'avoir à changer d'écran pour vérifier l'effet.
  */
+import { BoutonAction } from '../../components/BoutonAction'
 import { useState } from 'react'
 import { HR_ZONES, hrRange } from '../../lib/paces'
 
@@ -44,14 +45,14 @@ export function HeartRateZones({ hrMax, onSave }: Props) {
     }
     onSave?.({ hr_max: propose })
     setErreur(null)
-    setConfirmation(`Zones recalculées sur ${propose} bpm. L'écran Allures suit.`)
+    setConfirmation(`Zones recalculées sur ${propose} bpm. L'écran Objectif suit.`)
   }
 
   return (
     <>
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
-        <b style={{ fontSize: 16 }}>Ta fréquence cardiaque maximale</b>
-        <p style={{ color: 'var(--ink-2)', fontSize: 14.5, lineHeight: 1.5, margin: '6px 0 14px' }}>
+        <b style={{ fontSize: 'var(--fs-body)' }}>FC maximale</b>
+        <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-texte)', lineHeight: 1.5, margin: '6px 0 14px' }}>
           Une FC max trop haute te fait croire que tu cours en endurance alors que tu es un cran
           au-dessus. Ton 3 km maximal du 8 août plafonnait à 179-180 ; tu as relevé 183 la semaine
           du 10 août. C'est cette mesure qui fait foi.
@@ -74,45 +75,31 @@ export function HeartRateZones({ hrMax, onSave }: Props) {
             border: `1px solid ${erreur ? 'var(--c-erreur)' : 'var(--border-2)'}`,
             borderRadius: 14,
             padding: 14,
-            fontSize: 19,
+            fontSize: 'var(--fs-t-liste)',
             fontWeight: 700,
             color: 'var(--ink)',
             fontVariantNumeric: 'tabular-nums',
           }}
         />
         {erreur ? (
-          <div style={{ color: 'var(--c-erreur)', fontSize: 12.5, margin: '8px 2px 14px', fontWeight: 600 }}>
+          <div style={{ color: 'var(--c-erreur)', fontSize: 'var(--fs-detail)', margin: '8px 2px 14px', fontWeight: 600 }}>
             {erreur}
           </div>
         ) : (
-          <div style={{ color: 'var(--ink-3)', fontSize: 12.5, margin: '8px 2px 14px', fontWeight: 600 }}>
+          <div style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', margin: '8px 2px 14px', fontWeight: 600 }}>
             En battements par minute, mesurée sur un effort maximal
           </div>
         )}
-        <button
-          onClick={enregistrer}
-          disabled={!onSave}
-          style={{
-            display: 'block',
-            width: '100%',
-            padding: 15,
-            borderRadius: 'var(--pill)',
-            fontWeight: 700,
-            fontSize: 16,
-            background: 'var(--surface-2)',
-            color: onSave ? 'var(--ink)' : 'var(--ink-3)',
-            border: '1px solid var(--border-2)',
-          }}
-        >
-          Recalibrer mes zones
-        </button>
+        <BoutonAction onClick={enregistrer} disabled={!onSave} icone="check">
+          Recalibrer les zones
+        </BoutonAction>
         {!onSave && (
-          <p style={{ color: 'var(--ink-3)', fontSize: 12.5, marginTop: 10 }}>
+          <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', marginTop: 10 }}>
             Connecte-toi pour changer ce réglage.
           </p>
         )}
         {confirmation && (
-          <p style={{ color: 'var(--good)', fontSize: 13, fontWeight: 600, marginTop: 10 }}>
+          <p style={{ color: 'var(--good)', fontSize: 'var(--fs-detail)', fontWeight: 600, marginTop: 10 }}>
             {confirmation}
           </p>
         )}
@@ -120,10 +107,10 @@ export function HeartRateZones({ hrMax, onSave }: Props) {
 
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
-          <b style={{ fontSize: 16 }}>Tes cinq zones</b>
-          <span style={{ color: 'var(--ink-3)', fontSize: 12.5, fontWeight: 600 }}>
+          <b style={{ fontSize: 'var(--fs-body)' }}>Zones cardiaques</b>
+          <span style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', fontWeight: 600 }}>
             sur {apercu} bpm
-            {apercu !== hrMax && <span style={{ color: '#FFD166' }}> · aperçu</span>}
+            {apercu !== hrMax && <span style={{ color: 'var(--warning)' }}> · aperçu</span>}
           </span>
         </div>
         <div style={{ marginTop: 10 }}>
@@ -146,7 +133,7 @@ export function HeartRateZones({ hrMax, onSave }: Props) {
                   gap: 12,
                   padding: '10px 0',
                   borderBottom: '1px solid var(--border)',
-                  fontSize: 14.5,
+                  fontSize: 'var(--fs-texte)',
                 }}
               >
                 <span>
@@ -154,13 +141,13 @@ export function HeartRateZones({ hrMax, onSave }: Props) {
                 </span>
                 <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
                   {bpm}{' '}
-                  <span style={{ color: 'var(--ink-3)', fontWeight: 500, fontSize: 12.5 }}>{pct}</span>
+                  <span style={{ color: 'var(--ink-3)', fontWeight: 500, fontSize: 'var(--fs-detail)' }}>{pct}</span>
                 </span>
               </div>
             )
           })}
         </div>
-        <p style={{ color: 'var(--ink-2)', fontSize: 13.5, lineHeight: 1.5, margin: '14px 0 0' }}>
+        <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5, margin: '14px 0 0' }}>
           Ton 25 km du 9 août à 140 de moyenne est du haut de Z2, pas du milieu : tu cours ton
           endurance un peu trop vite. Ton test de 3 km à 174 de moyenne était bien en Z5, donc
           maximal, et le 12:02 est une vraie valeur.

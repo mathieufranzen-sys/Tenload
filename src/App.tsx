@@ -15,6 +15,7 @@ import { buildPain, type DailyLogRow, type FeedbackRow } from './lib/buildPain'
 import { NOTE_DEMO, construireDemo } from './data/demo'
 import { cleEcart, indexerEcarts, type EcartPatch, type EcartRow } from './lib/overrides'
 import { adapt, construireContexte, weekSessions } from './lib/adapt'
+import type { DossardRow } from './lib/dossards'
 import type { PainMap } from './lib/tendonIndex'
 import { addDays, today } from './lib/dates'
 import { isConfigured } from './lib/supabase'
@@ -27,11 +28,14 @@ import { Paces } from './screens/Paces'
 import { Profile, type SectionKey } from './screens/Profile'
 import { BottomNav, type Onglet } from './components/BottomNav'
 import { SessionSheet } from './components/SessionSheet'
+import { BilansPasses } from './components/BilansPasses'
+import { SectionDossards } from './components/SectionDossards'
 import {
   DataProvider,
   useActivities,
   useFeedback,
   useLogs,
+  useDossards,
   useEcarts,
   useProfile,
   useSeanceFeedback,
@@ -109,6 +113,7 @@ function CoquilleDemoInterne({
   const { enregistrerFeedback } = useSeanceFeedback()
   const { ecarts, enregistrerEcart } = useEcarts()
   const { profil, enregistrerProfil } = useProfile()
+  const { dossards, enregistrerDossard } = useDossards()
 
   // `bascule` au plus tôt : sans compte, tout le carnet de la démo est
   // considéré comme saisi dans l'app, jamais importé.
@@ -131,6 +136,8 @@ function CoquilleDemoInterne({
       onSaveFeedback={enregistrerFeedback}
       onSaveProfil={enregistrerProfil}
       onSaveEcart={enregistrerEcart}
+      dossards={dossards}
+      onSaveDossard={enregistrerDossard}
     />
   )
 }
@@ -148,6 +155,7 @@ function CoquilleConnectee({
   const { profil, enregistrerProfil } = useProfile()
   const { enregistrerFeedback } = useSeanceFeedback()
   const { ecarts, enregistrerEcart } = useEcarts()
+  const { dossards, indisponibles: dossardsIndisponibles, enregistrerDossard } = useDossards()
 
   const activities: ActivityRow[] = useMemo(
     () =>
@@ -177,6 +185,9 @@ function CoquilleConnectee({
       ecarts={ecarts}
       journalActif
       erreurSync={erreur}
+      dossards={dossards}
+      dossardsIndisponibles={dossardsIndisponibles}
+      onSaveDossard={enregistrerDossard}
       onSaveFeedback={enregistrerFeedback}
       onSaveProfil={enregistrerProfil}
       onSaveEcart={enregistrerEcart}
@@ -264,7 +275,16 @@ function Coquille({
   onSaveProfil,
   onSaveEcart,
   onDeconnexion,
+  dossards = [],
+  dossardsIndisponibles = false,
+  onSaveDossard,
 }: {
+  /** Les dossards ajoutés et les objectifs de ceux du plan. */
+  dossards?: DossardRow[]
+  /** La table `dossards` n'existe pas encore : le script SQL reste à passer. */
+  dossardsIndisponibles?: boolean
+  /** Absent en mode instantanés : la section Dossards reste alors en lecture seule. */
+  onSaveDossard?: (ligne: DossardRow) => void
   /** Absent en démo et en mode instantanés : rien à abonner aux rappels alors. */
   userId?: string
   /** Vrai en démonstration : bannière dédiée, et rien n'est enregistré. */
@@ -422,6 +442,11 @@ function Coquille({
             setSeance({ semaineN: x.semaineOrigine, jourOrigine: x.jourOrigine, slot: x.slot })
           }
           onOuvrirProfil={() => setOnglet('profile')}
+          aNoter={aNoter}
+          onVoirANoter={() => {
+            setSectionProfil('anoter')
+            setOnglet('profile')
+          }}
         />
       )}
       {onglet === 'plan' && (
@@ -432,7 +457,7 @@ function Coquille({
           ecarts={ecarts}
           marathonPace={marathonPace}
           numeroSemaine={numeroSemaine}
-          onChangerSemaine={(n) => setNumeroSemaine(Math.max(1, Math.min(35, n)))}
+          onChangerSemaine={(n) => setNumeroSemaine(Math.max(1, Math.min(plan.weeks.length, n)))}
           onOuvrirSeance={(x) =>
             setSeance({ semaineN: x.semaineOrigine, jourOrigine: x.jourOrigine, slot: x.slot })
           }
@@ -450,6 +475,11 @@ function Coquille({
           activities={data.activities}
           feedback={feedback}
           notesEnRetard={notesEnRetard}
+          formeTest={fitnessPaceTest}
+          marathonPace={marathonPace}
+          forme={forme}
+          ecarts={ecarts}
+          attestes={attestes}
           onVoirANoter={() => {
             setSectionProfil('anoter')
             setOnglet('profile')
@@ -468,6 +498,17 @@ function Coquille({
           goalLabel={goalLabel}
           hrMax={hrMax}
           onOuvrirProfil={() => setOnglet('profile')}
+          onModifierAllure={() => {
+            setSectionProfil('allure')
+            setOnglet('profile')
+          }}
+          ecarts={ecarts}
+          dossards={dossards}
+          dossardsIndisponibles={dossardsIndisponibles}
+          onSaveDossard={onSaveDossard}
+          formeTest={fitnessPaceTest}
+          onSaveEcart={onSaveEcart}
+          onRecalibrerForme={onSaveProfil && ((allure) => onSaveProfil({ fitness_pace_s: allure }))}
         />
       )}
       {onglet === 'profile' && (
@@ -486,6 +527,34 @@ function Coquille({
           activities={data.activities}
           section={sectionProfil}
           onSection={setSectionProfil}
+          bilans={
+            <BilansPasses
+              plan={plan}
+              now={now}
+              load={load}
+              pain={data.pain}
+              feedback={feedback}
+              ecarts={ecarts}
+              attestes={attestes}
+            />
+          }
+          dossardsPasses={
+            <SectionDossards
+              periode="passe"
+              titre={false}
+              allureMarathon={marathonPace}
+              plan={plan}
+              now={now}
+              lignes={dossards}
+              ecarts={ecarts}
+              formeMarathon={fitnessPace}
+              formeTest={fitnessPaceTest}
+              indisponibles={dossardsIndisponibles}
+              onSave={onSaveDossard}
+              onSaveEcart={onSaveEcart}
+              onRecalibrerForme={onSaveProfil && ((allure) => onSaveProfil({ fitness_pace_s: allure }))}
+            />
+          }
           onOuvrirSeance={
             onSaveFeedback &&
             ((x) => setSeance({ semaineN: x.semaineOrigine, jourOrigine: x.jourOrigine, slot: x.slot }))
@@ -531,11 +600,11 @@ function BandeauDemo({ onQuitter }: { onQuitter?: () => void }) {
         gap: 12,
         maxWidth: 'var(--shell-max)',
         margin: '0 auto',
-        background: 'rgba(78,140,255,.12)',
-        border: '1px solid rgba(78,140,255,.3)',
+        background: 'var(--surface-2)',
+        border: '1px solid var(--border-2)',
         borderRadius: 'var(--radius-sm)',
         padding: '11px 12px',
-        fontSize: 13,
+        fontSize: 'var(--fs-detail)',
         lineHeight: 1.45,
         color: 'var(--ink-2)',
       }}
@@ -548,10 +617,10 @@ function BandeauDemo({ onQuitter }: { onQuitter?: () => void }) {
             flex: 'none',
             padding: '6px 12px',
             borderRadius: 'var(--pill)',
-            border: '1px solid rgba(78,140,255,.4)',
-            background: 'transparent',
-            color: '#9DC1FF',
-            fontSize: 12.5,
+            border: 'none',
+            background: 'var(--neon)',
+            color: 'var(--ink)',
+            fontSize: 'var(--fs-detail)',
             fontWeight: 650,
             cursor: 'pointer',
           }}
@@ -573,7 +642,7 @@ function BandeauSeed() {
         border: '1px solid var(--border-2)',
         borderRadius: 'var(--radius-sm)',
         padding: '13px 14px',
-        fontSize: 13.5,
+        fontSize: 'var(--fs-meta)',
         lineHeight: 1.5,
         color: 'var(--ink-2)',
       }}
@@ -594,7 +663,7 @@ function BandeauErreur() {
         border: '1px solid var(--c-erreur)',
         borderRadius: 'var(--radius-sm)',
         padding: '13px 14px',
-        fontSize: 13.5,
+        fontSize: 'var(--fs-meta)',
         lineHeight: 1.5,
         color: 'var(--ink-2)',
       }}

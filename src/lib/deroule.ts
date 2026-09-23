@@ -15,6 +15,7 @@
 import planJson from '../data/plan.json'
 import type { Plan, Session, Step, ZoneKey } from '../data/types'
 import { zonePace } from './paces'
+import { COULEUR_ZONE } from './seanceStyle'
 
 const plan = planJson as unknown as Plan
 
@@ -182,11 +183,40 @@ export function roleDe(
   return 'effort'
 }
 
+/**
+ * Le déroulé se dessine en bleu, la couleur secondaire de l'app (arbitré par
+ * Mathieu le 22 septembre 2026). Quand la séance change d'allure en route,
+ * les segments d'effort passent au vert : c'est là que l'œil doit voir le
+ * changement de rythme. Une séance d'une seule allure reste tout en bleu.
+ */
+/**
+ * La récupération entre deux tours prend exactement la couleur de l'allure
+ * de récupération (`COULEUR_ZONE.recup`) : deux verts différents pour la
+ * même chose, le plus foncé pour la plus lente, se lisaient à l'envers
+ * (retour du 23 septembre 2026).
+ */
+const COULEUR_RECUP = COULEUR_ZONE.recup
+
 export const COULEUR_ROLE: Record<RoleSegment, string> = {
-  facile: 'var(--chart-3)',
-  effort: 'var(--chart-1)',
-  recup: 'var(--chart-2)',
+  facile: '#8e9af6',
+  effort: '#4f63f2',
+  recup: '#d6dafc',
 }
+
+
+
+/**
+ * La couleur d'un segment : celle de son ALLURE quand il en a une, sinon
+ * celle de son rôle. Avant, tous les efforts d'une séance partageaient un
+ * seul bleu et la séance changeait de couleur en bloc dès qu'elle mêlait
+ * deux allures ; on ne voyait donc pas où l'allure changeait, ce qui est
+ * précisément ce que le déroulé doit montrer (retour du 22 septembre 2026).
+ */
+export const couleurSegment = (seg: SegmentDeroule, role: RoleSegment): string =>
+  // Le vert des récupérations contre le bleu des allures : le graphique se
+  // lit d'un coup d'œil comme une alternance effort / souffle, même sans
+  // distinguer deux crans de bleu (retour du 22 septembre).
+  role === 'recup' ? COULEUR_RECUP : seg.zone ? COULEUR_ZONE[seg.zone] : COULEUR_ROLE[role]
 
 /**
  * Hauteur relative d'une barre, de 0 à 1. L'échelle suit le rang de la zone :

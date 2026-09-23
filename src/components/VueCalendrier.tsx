@@ -14,6 +14,7 @@
  * signalent pendant le geste, mais rien n'est interdit. C'est le tendon de
  * Mathieu qui tranche, pas l'app.
  */
+import { libelleNature } from '../lib/natureSemaine'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Plan, Session, Week } from '../data/types'
 import type { SeancePlanifiee } from '../lib/adapt'
@@ -24,8 +25,6 @@ import {
   dispositionSemaine,
   type EcartRow,
 } from '../lib/overrides'
-import { styleSeance } from '../lib/seanceStyle'
-import { Icon } from './Icon'
 
 /** Le geste s'ouvre après ce délai, pour ne pas voler le défilement. */
 const DELAI_PRISE_MS = 220
@@ -53,11 +52,18 @@ interface Props {
   now: string
   /** Semaine à amener à l'écran à l'ouverture. */
   semaineVisee: number
+  /**
+   * Jour à amener à l'écran : aujourd'hui par défaut, ou celui choisi dans
+   * la vue globale. Null quand c'est une séance mise en avant qui décide.
+   */
+  jourVise?: string | null
   /** Clé `semaine-jour-slot` de la séance à mettre en avant, après « Déplacer ». */
   focus?: string | null
   onOuvrirSeance?: (seance: SeancePlanifiee) => void
   /** Absent en lecture seule : le calendrier reste alors consultable. */
   onDeplacer?: (seance: SeancePlanifiee, jour: number, semaines: number) => void
+  /** Vrai quand la séance a son ressenti : elle n'est plus « à faire ». */
+  estNotee?: (seance: SeancePlanifiee) => boolean
 }
 
 export function VueCalendrier({
@@ -67,9 +73,11 @@ export function VueCalendrier({
   ecarts,
   now,
   semaineVisee,
+  jourVise,
   focus,
   onOuvrirSeance,
   onDeplacer,
+  estNotee,
 }: Props) {
   const [initial, setInitial] = useState(false)
   const [prise, setPrise] = useState<SeancePlanifiee | null>(null)
@@ -127,14 +135,25 @@ export function VueCalendrier({
   // par date, ne trouvait rien et retombait sur le lundi de la semaine
   // d'origine. Une séance déjà déplacée renvoyait donc à l'endroit d'où elle
   // était partie.
+  //
+  // Sans séance à mettre en avant, on descend sur `jourVise` : aujourd'hui à
+  // l'ouverture, ou le jour choisi dans la vue globale. L'en-tête de sa
+  // semaine vient en haut de l'écran, pour lire la semaine entière.
   useEffect(() => {
-    const cible = focus
-      ? seances.find((x) => cleEcart(x.semaineOrigine, x.jourOrigine, x.slot) === focus)
-      : null
-    const semaine = plan.weeks.find((w) => w.n === semaineVisee)
-    const jour = cible?.day ?? semaine?.monday
-    lignes.current.get(`jour-${jour}`)?.scrollIntoView({ block: 'center' })
-  }, [semaineVisee, focus, seances, plan.weeks])
+    if (focus) {
+      const cible = seances.find((x) => cleEcart(x.semaineOrigine, x.jourOrigine, x.slot) === focus)
+      const semaine = plan.weeks.find((w) => w.n === semaineVisee)
+      const jour = cible?.day ?? semaine?.monday
+      lignes.current.get(`jour-${jour}`)?.scrollIntoView({ block: 'center' })
+      return
+    }
+    if (!jourVise) return
+    const w = plan.weeks.find((x) => jourVise >= x.monday && jourVise <= addDays(x.monday, 6))
+    const cle = jourVise === now && w ? `semaine-${w.n}` : `jour-${jourVise}`
+    lignes.current.get(cle)?.scrollIntoView({ block: jourVise === now ? 'start' : 'center' })
+    // Seulement à l'arrivée : défiler ensuite ne doit pas ramener l'écran.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus, jourVise])
 
   const jourSousLePointeur = (x: number, y: number): string | null => {
     for (const [cle, el] of lignes.current) {
@@ -230,7 +249,7 @@ export function VueCalendrier({
           marginBottom: 14,
         }}
       >
-        <p style={{ margin: 0, fontSize: 13, color: 'var(--sur-ink-2)', lineHeight: 1.4 }}>
+        <p style={{ margin: 0, fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-2)', lineHeight: 1.4 }}>
           {initial
             ? 'Le plan de référence, sans aucun de tes écarts.'
             : onDeplacer
@@ -247,20 +266,26 @@ export function VueCalendrier({
             gap: 6,
             padding: '8px 13px',
             borderRadius: 'var(--pill)',
-            fontSize: 12.5,
+            fontSize: 'var(--fs-detail)',
             fontWeight: 700,
-            color: initial ? '#08090b' : 'var(--ink)',
-            background: initial ? '#fff' : 'transparent',
-            border: initial ? '1px solid #fff' : '1px solid var(--glass-border)',
+            color: initial ? 'var(--pale-ink)' : 'var(--ink)',
+            background: initial ? 'var(--pale)' : 'transparent',
+            border: initial ? '1px solid var(--pale)' : '1px solid var(--border-2)',
           }}
         >
-          <Icon name="clip" size={14} />
-          Voir initial
+          Voir le plan initial
         </button>
       </div>
 
       {plan.weeks.map((w, i) => (
-        <section key={w.n} style={{ marginBottom: 8, paddingTop: 6 }}>
+        <section
+          key={w.n}
+          ref={(el) => {
+            if (el) lignes.current.set(`semaine-${w.n}`, el as unknown as HTMLDivElement)
+            else lignes.current.delete(`semaine-${w.n}`)
+          }}
+          style={{ marginBottom: 8, paddingTop: 6, scrollMarginTop: 170 }}
+        >
           <EnteteSemaine
             semaine={w}
             courante={now >= w.monday && now <= addDays(w.monday, 6)}
@@ -272,6 +297,7 @@ export function VueCalendrier({
             return (
               <div
                 key={jour}
+                id={`cal-jour-${jour}`}
                 ref={(el) => {
                   if (el) lignes.current.set(`jour-${jour}`, el)
                   else lignes.current.delete(`jour-${jour}`)
@@ -292,7 +318,9 @@ export function VueCalendrier({
                   display: 'flex',
                   gap: 12,
                   padding: '9px 10px',
-                  borderRadius: 14,
+                  // Des filets droits : arrondis, ils se lisaient comme des
+                  // cartes et non comme la coupure entre deux jours.
+                  borderRadius: 0,
                   minHeight: 54,
                   alignItems: 'flex-start',
                   borderBottom: '1px solid var(--glass-border)',
@@ -300,36 +328,37 @@ export function VueCalendrier({
                   transition: 'background var(--dur-fast)',
                 }}
               >
-                <div style={{ width: 42, flex: 'none', paddingTop: 4 }}>
+                {/* Mêmes corps que la pastille de jour de la vue semaine, et
+                    même bleu pour aujourd'hui : les deux vues se lisent pareil. */}
+                <div style={{ width: 42, flex: 'none', paddingTop: 2 }}>
                   <div
                     style={{
-                      fontSize: 10,
-                      fontWeight: 700,
-                      letterSpacing: '.7px',
-                      textTransform: 'uppercase',
-                      color: jour === now ? 'var(--ink)' : 'var(--sur-ink-3)',
+                      fontSize: 'var(--fs-detail)',
+                      color: jour === now ? 'var(--bleu-700)' : 'var(--ink-2)',
                     }}
                   >
                     {DAYS_LONG[weekdayIndex(jour)].slice(0, 3)}
                   </div>
                   <div
+                    className="chiffre"
                     style={{
-                      fontSize: 18,
-                      fontWeight: 700,
-                      letterSpacing: '-.5px',
-                      color: jour === now ? 'var(--ink)' : 'var(--sur-ink-2)',
+                      fontSize: 'var(--fs-c-m)',
+                      lineHeight: 1.1,
+                      color: jour === now ? 'var(--bleu-700)' : 'var(--ink)',
                     }}
                   >
                     {formatDay(jour).split(' ')[0]}
                   </div>
                 </div>
 
-                <div style={{ flex: 1, minWidth: 0, display: 'grid', gap: 6 }}>
+                <div style={{ flex: 1, minWidth: 0, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 6 }}>
                   {(parJour.get(jour) ?? []).map((x) => (
                     <CarteJour
                       key={`${x.semaineOrigine}-${x.jourOrigine}-${x.slot}`}
                       seance={x}
                       priseEnCours={prise?.day === x.day && prise?.slot === x.slot}
+                      passe={jour < now}
+                      aFaire={jour === now && x.s.type !== 'repos' && !x.s.saute && !estNotee?.(x)}
                       misEnAvant={focus === cleEcart(x.semaineOrigine, x.jourOrigine, x.slot)}
                       onOuvrir={
                         onOuvrirSeance && !prise
@@ -367,7 +396,7 @@ export function VueCalendrier({
                     />
                   ))}
                   {cible && cible.conflits.length > 0 && survol === jour && (
-                    <div style={{ fontSize: 11.5, color: '#FF9A9D', fontWeight: 600, lineHeight: 1.35 }}>
+                    <div style={{ fontSize: 'var(--fs-detail)', color: 'var(--critical)', fontWeight: 600, lineHeight: 1.35 }}>
                       {cible.conflits.join(' · ')}
                     </div>
                   )}
@@ -392,12 +421,12 @@ export function VueCalendrier({
             maxWidth: 'var(--shell-max)',
             margin: '0 auto',
             padding: '12px 14px',
-            borderRadius: 14,
-            background: 'rgba(255,255,255,.94)',
-            color: '#08090b',
+            borderRadius: 'var(--pill)',
+            background: 'var(--neon)',
+            color: 'var(--ink)',
             boxShadow: '0 12px 32px rgba(0,0,0,.45)',
-            fontSize: 13.5,
-            fontWeight: 650,
+            fontSize: 'var(--fs-meta)',
+            fontWeight: 600,
           }}
         >
           <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -409,10 +438,10 @@ export function VueCalendrier({
               flex: 'none',
               padding: '7px 12px',
               borderRadius: 'var(--pill)',
-              background: '#08090b',
-              color: '#fff',
-              fontSize: 12.5,
-              fontWeight: 700,
+              background: 'var(--pale-ink)',
+              color: 'var(--pale)',
+              fontSize: 'var(--fs-detail)',
+              fontWeight: 600,
             }}
           >
             Annuler
@@ -430,11 +459,12 @@ export function VueCalendrier({
             zIndex: 80,
             width: 180,
             padding: '9px 12px',
-            borderRadius: 12,
-            background: 'rgba(255,255,255,.94)',
-            color: '#08090b',
-            fontSize: 13,
-            fontWeight: 700,
+            borderRadius: 'var(--pill)',
+            background: 'linear-gradient(135deg, #4f63f2, #2b3aa6)',
+            color: '#ffffff',
+            fontSize: 'var(--fs-meta)',
+            fontWeight: 600,
+            transform: 'rotate(-2deg)',
             boxShadow: '0 12px 32px rgba(0,0,0,.45)',
             pointerEvents: 'none',
             overflow: 'hidden',
@@ -453,8 +483,8 @@ export function VueCalendrier({
 function fondCible(enCours: boolean, cible: CibleDrop | undefined, survole: boolean): string {
   if (!enCours) return 'transparent'
   if (!cible) return 'transparent'
-  if (cible.conflits.length) return survole ? 'rgba(229,72,77,.26)' : 'rgba(229,72,77,.10)'
-  return survole ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.05)'
+  if (cible.conflits.length) return survole ? 'color-mix(in srgb, var(--critical) 24%, transparent)' : 'color-mix(in srgb, var(--critical) 9%, transparent)'
+  return survole ? 'color-mix(in srgb, var(--ink) 16%, transparent)' : 'color-mix(in srgb, var(--ink) 5%, transparent)'
 }
 
 /**
@@ -467,23 +497,6 @@ function fondCible(enCours: boolean, cible: CibleDrop | undefined, survole: bool
  * un vrai blanc au-dessus, et le bloc de périodisation rappelé à droite, qui
  * est la seule information d'orientation absente du reste de l'écran.
  */
-/**
- * Ce que l'en-tête annonce à droite du numéro de semaine. Une semaine à 18 km
- * de sortie longue n'est pas une erreur de plan quand elle est étiquetée
- * « pause de longue » ; sans étiquette, elle en a tout l'air.
- */
-const NATURE: Record<string, string> = {
-  decharge: 'décharge',
-  pause: 'pause de longue',
-  course: 'dossard',
-  reprise: 'reprise',
-  'longue qualitative': 'longue en blocs',
-  affutage: 'affûtage',
-}
-
-const libelleNature = (semaine: Week): string =>
-  NATURE[semaine.nature ?? ''] ?? (semaine.deload ? 'décharge' : semaine.blocName)
-
 function EnteteSemaine({
   semaine,
   courante,
@@ -505,18 +518,18 @@ function EnteteSemaine({
         // filet, parce que sur 238 jours de défilement un trait d'un pixel
         // passe sous l'œil sans l'arrêter.
         margin: premiere ? '0 calc(var(--page-x) * -1)' : '34px calc(var(--page-x) * -1) 0',
-        padding: '13px var(--page-x) 12px',
+        padding: '21px var(--page-x) 20px',
         background: 'var(--surface)',
-        borderTop: premiere ? 'none' : '2px solid var(--border-2)',
+        borderTop: premiere ? 'none' : '1px solid var(--border-2)',
         borderBottom: '1px solid var(--border)',
       }}
     >
-      <span style={{ fontSize: 17, fontWeight: 750, letterSpacing: '-.4px' }}>
+      <span className="display" style={{ fontSize: 'var(--fs-t-liste)', whiteSpace: 'nowrap' }}>
         Semaine {semaine.n}
       </span>
       <span
         style={{
-          fontSize: 12.5,
+          fontSize: 'var(--fs-detail)',
           fontWeight: 500,
           color: 'var(--sur-ink-3)',
           minWidth: 0,
@@ -525,7 +538,7 @@ function EnteteSemaine({
           whiteSpace: 'nowrap',
         }}
       >
-        {formatDay(semaine.monday)} — {formatDay(addDays(semaine.monday, 6))}
+        {formatDay(semaine.monday)} → {formatDay(addDays(semaine.monday, 6))}
         {' · '}
         {libelleNature(semaine)}
       </span>
@@ -533,20 +546,18 @@ function EnteteSemaine({
         <span
           style={{
             marginLeft: 'auto',
-            fontSize: 9.5,
-            fontWeight: 800,
-            letterSpacing: '.9px',
-            textTransform: 'uppercase',
-            padding: '3px 8px',
+            flex: 'none',
+            whiteSpace: 'nowrap',
+            fontSize: 'var(--fs-micro)',
+            fontWeight: 600,
+            padding: '3px 10px',
             borderRadius: 'var(--pill)',
-            // Même teinte que le tag « aujourd'hui » de la vue semaine : les
-            // deux disent la même chose, le présent.
-            background: 'rgba(52,211,153,.18)',
-            border: '1px solid rgba(52,211,153,.3)',
-            color: '#6ee7b7',
+            // Le présent a la teinte de la pastille du jour de la vue semaine.
+            background: 'var(--bleu-100)',
+            color: 'var(--bleu-800)',
           }}
         >
-          en cours
+          En cours
         </span>
       )}
     </div>
@@ -556,42 +567,50 @@ function EnteteSemaine({
 function CarteJour({
   seance,
   priseEnCours,
+  passe,
+  aFaire,
   misEnAvant,
   onOuvrir,
   onPrise,
 }: {
   seance: SeancePlanifiee
   priseEnCours: boolean
+  /** La séance du jour pas encore notée : le même bloc bleu que dans la vue semaine. */
+  aFaire?: boolean
+  /** Jour révolu : grisé, comme dans la vue semaine. */
+  passe: boolean
   misEnAvant: boolean
   onOuvrir?: () => void
   onPrise?: (e: React.PointerEvent) => void
 }) {
-  const st = styleSeance(seance.s.type)
   return (
     <div
       onPointerDown={onPrise}
       onClick={onOuvrir}
+      // La classe inverse les encres (texte blanc, filets clairs) pour tout ce
+      // que la carte contient, comme la séance du jour d'Aujourd'hui.
+      className={aFaire ? 'carte-bleue' : undefined}
       style={{
         display: 'flex',
         alignItems: 'center',
         gap: 9,
-        padding: '9px 11px',
-        borderRadius: 12,
-        background: 'rgba(255,255,255,.055)',
-        border: misEnAvant ? '1px solid rgba(255,255,255,.42)' : '1px solid var(--glass-border)',
-        opacity: priseEnCours ? 0.3 : seance.s.saute ? 0.4 : 1,
+        padding: '10px 13px',
+        borderRadius: 16,
+        background: aFaire ? 'var(--bleu-500)' : 'var(--surface)',
+        color: aFaire ? '#ffffff' : undefined,
+        border: misEnAvant ? '1.5px solid var(--accent)' : aFaire ? '1px solid transparent' : '1px solid var(--glass-border)',
+        opacity: priseEnCours ? 0.3 : seance.s.saute ? 0.4 : passe ? 0.55 : 1,
         cursor: onOuvrir ? 'pointer' : 'default',
         userSelect: 'none',
         WebkitUserSelect: 'none',
       }}
     >
-      <Icon name={st.icone} size={16} style={{ color: 'var(--sur-ink-2)' }} />
       <div style={{ minWidth: 0, flex: 1 }}>
         <div
+          className="display"
           style={{
-            fontSize: 13.5,
-            fontWeight: 650,
-            letterSpacing: '-.2px',
+            fontSize: 'var(--fs-t-ligne)',
+            lineHeight: 1.25,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -601,14 +620,11 @@ function CarteJour({
           {seance.s.title}
         </div>
         {seance.ecart && (
-          <div style={{ fontSize: 11, color: 'var(--sur-ink-3)', fontWeight: 500, marginTop: 1 }}>
+          <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--sur-ink-3)', fontWeight: 500, marginTop: 1 }}>
             {seance.s.ecart}
           </div>
         )}
       </div>
-      {onPrise && (
-        <Icon name="grip" size={15} style={{ color: 'var(--sur-ink-3)', flex: 'none' }} />
-      )}
     </div>
   )
 }

@@ -16,7 +16,7 @@
  * pousserait à ne rien saisir, et on perdrait l'information au lieu de la
  * garder.
  */
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Session, SessionType } from '../data/types'
 import { formatNumber } from '../lib/dates'
 import { familleDe } from '../lib/insights'
@@ -30,6 +30,7 @@ import {
   type ZoneQualite,
 } from '../lib/overrides'
 import { Icon } from './Icon'
+import { BoutonAction } from './BoutonAction'
 
 type Panneau = 'reel' | 'remplacer' | null
 
@@ -46,6 +47,11 @@ interface Props {
   onSave: (patch: EcartPatch, reason: string | null) => void
   /** Ouvre la vue calendrier sur cette séance. Absent en lecture seule. */
   onDeplacer?: () => void
+  /**
+   * Le bouton principal de la barre du bas : noter la séance. Absent quand
+   * il n'y a rien à noter (repos, ressenti déjà saisi).
+   */
+  onNoter?: () => void
 }
 
 export function ActionsSeance({
@@ -56,8 +62,15 @@ export function ActionsSeance({
   simuler,
   onSave,
   onDeplacer,
+  onNoter,
 }: Props) {
   const [panneau, setPanneau] = useState<Panneau>(null)
+  const ancre = useRef<HTMLDivElement>(null)
+  // Un panneau s'ouvre dans le contenu, loin de la barre du bas qui l'a
+  // demandé : on l'amène sous les yeux.
+  useEffect(() => {
+    if (panneau) ancre.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [panneau])
   const [patch, setPatch] = useState<EcartPatch>(actuel ?? {})
   const [raison, setRaison] = useState(actuelRaison ?? '')
 
@@ -80,44 +93,53 @@ export function ActionsSeance({
   }
 
   return (
-    <div style={{ marginBottom: 22 }}>
+    <div ref={ancre} style={{ scrollMarginTop: 20 }}>
+      {/* La barre d'actions collée en bas de la feuille, comme les boutons
+          d'une fiche AllTrails : noter en néon, le reste en contour, et la
+          barre défile à l'horizontale si elle déborde. */}
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${estRepos ? 2 : 4}, 1fr)`,
-          gap: 4,
-          padding: '14px 0',
-          borderTop: '1px solid var(--border)',
-          borderBottom: '1px solid var(--border)',
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 65,
+          maxWidth: 'var(--shell-max)',
+          margin: '0 auto',
+          padding: '18px var(--page-x) calc(14px + env(safe-area-inset-bottom, 0px))',
+          background: 'linear-gradient(180deg, transparent, var(--bg) 38%)',
         }}
       >
-        {!estRepos && (
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none' }}>
+          {onNoter && <Action icone="pencil" label="Noter" principal onClick={onNoter} />}
+          {!estRepos && (
+            <Action
+              icone="skip"
+              label={saute ? 'Rétablir' : 'Sauter'}
+              actif={saute}
+              onClick={() => enregistrer({ ...patch, skipped: saute ? undefined : true })}
+            />
+          )}
+          <Action icone="calendar" label="Déplacer" onClick={onDeplacer} />
+          {!estRepos && (
+            <Action
+              icone="clip"
+              label="Corriger"
+              actif={patch.dist != null || patch.durMin != null || panneau === 'reel'}
+              onClick={() => setPanneau((p) => (p === 'reel' ? null : 'reel'))}
+            />
+          )}
           <Action
-            icone="skip"
-            label={saute ? 'Rétablir' : 'Sauter'}
-            actif={saute}
-            onClick={() => enregistrer({ ...patch, skipped: saute ? undefined : true })}
+            icone="swap"
+            label="Remplacer"
+            actif={patch.type != null || panneau === 'remplacer'}
+            onClick={() => setPanneau((p) => (p === 'remplacer' ? null : 'remplacer'))}
           />
-        )}
-        <Action icone="calendar" label="Déplacer" onClick={onDeplacer} />
-        {!estRepos && (
-          <Action
-            icone="clip"
-            label="Donnée réelle"
-            actif={patch.dist != null || patch.durMin != null}
-            onClick={() => setPanneau((p) => (p === 'reel' ? null : 'reel'))}
-          />
-        )}
-        <Action
-          icone="swap"
-          label="Remplacer"
-          actif={patch.type != null}
-          onClick={() => setPanneau((p) => (p === 'remplacer' ? null : 'remplacer'))}
-        />
+        </div>
       </div>
 
       {panneau === 'reel' && (
-        <Panneau titre="Ce que tu as vraiment fait">
+        <Panneau titre="Données réelles">
           {/* Le plan fixe une distance à toute séance de course, mais un écart
               qui CONVERTIT une autre discipline en course n'en hérite d'aucune :
               `versType` efface `dist` avec le reste de l'ancienne séance. Sans
@@ -134,7 +156,7 @@ export function ActionsSeance({
                 inputMode="decimal"
                 step="0.5"
                 min="0"
-                placeholder={origine.dist != null ? `${origine.dist} km` : 'km parcourus'}
+                placeholder={origine.dist != null ? `${origine.dist} km` : 'Km parcourus'}
                 value={patch.dist ?? ''}
                 onChange={(e) =>
                   maj({ dist: e.target.value === '' ? undefined : Number(e.target.value) })
@@ -149,7 +171,7 @@ export function ActionsSeance({
               inputMode="numeric"
               step="5"
               min="0"
-              placeholder={origine.dur ? `${origine.dur[0]} min` : 'en minutes'}
+              placeholder={origine.dur ? `${origine.dur[0]} min` : 'En minutes'}
               value={patch.durMin ?? ''}
               onChange={(e) =>
                 maj({ durMin: e.target.value === '' ? undefined : Number(e.target.value) })
@@ -190,14 +212,14 @@ export function ActionsSeance({
                   padding: '12px 13px',
                   borderRadius: 'var(--radius-sm)',
                   textAlign: 'left',
-                  fontSize: 15,
+                  fontSize: 'var(--fs-texte)',
                   fontWeight: 600,
                   color: 'var(--ink)',
                   background:
-                    patch.type === r.type ? 'rgba(255,255,255,.11)' : 'rgba(255,255,255,.04)',
+                    patch.type === r.type ? 'color-mix(in srgb, var(--ink) 11%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
                   border:
                     patch.type === r.type
-                      ? '1px solid rgba(255,255,255,.26)'
+                      ? '1px solid color-mix(in srgb, var(--ink) 26%, transparent)'
                       : '1px solid var(--border)',
                 }}
               >
@@ -247,7 +269,7 @@ function MarqueType({ type }: { type: SessionType }) {
         display: 'grid',
         placeItems: 'center',
         flex: 'none',
-        background: 'rgba(255,255,255,.07)',
+        background: 'color-mix(in srgb, var(--ink) 7%, transparent)',
       }}
     >
       <Icon name={ICONE_TYPE[type] ?? 'run'} size={16} />
@@ -309,11 +331,11 @@ function ComposeurQualite({
           padding: '12px 13px',
           borderRadius: 'var(--radius-sm)',
           textAlign: 'left',
-          fontSize: 15,
+          fontSize: 'var(--fs-texte)',
           fontWeight: 600,
           color: 'var(--ink)',
-          background: actif ? 'rgba(255,255,255,.11)' : 'rgba(255,255,255,.04)',
-          border: actif ? '1px solid rgba(255,255,255,.26)' : '1px solid var(--border)',
+          background: actif ? 'color-mix(in srgb, var(--ink) 11%, transparent)' : 'color-mix(in srgb, var(--ink) 4%, transparent)',
+          border: actif ? '1px solid color-mix(in srgb, var(--ink) 26%, transparent)' : '1px solid var(--border)',
         }}
       >
         {/* L'icône suit la zone : en VO2 la séance devient un intervalle, et
@@ -345,7 +367,7 @@ function ComposeurQualite({
               </Choix>
             ))}
           </Reglage>
-          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--sur-ink-3)', lineHeight: 1.45 }}>
+          <p style={{ margin: 0, fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)', lineHeight: 1.45 }}>
             {formatNumber(Math.round((q.reps * q.km + 4.5) * 10) / 10)} km au total, échauffement de
             2,5 km et retour au calme de 2 km compris. Le contrôle des contraintes la traite comme
             une séance de vitesse.
@@ -361,11 +383,9 @@ function Reglage({ label, children }: { label: string; children: ReactNode }) {
     <div>
       <div
         style={{
-          fontSize: 10.5,
-          fontWeight: 700,
-          letterSpacing: '1px',
-          textTransform: 'uppercase',
-          color: 'var(--sur-ink-3)',
+          fontSize: 'var(--fs-detail)',
+          fontWeight: 500,
+          color: 'var(--accent)',
           marginBottom: 7,
         }}
       >
@@ -392,12 +412,12 @@ function Choix({
       style={{
         padding: '7px 12px',
         borderRadius: 'var(--pill)',
-        fontSize: 13,
+        fontSize: 'var(--fs-detail)',
         fontWeight: 650,
         fontVariantNumeric: 'tabular-nums',
-        color: actif ? '#08090b' : 'var(--ink)',
-        background: actif ? '#fff' : 'rgba(255,255,255,.05)',
-        border: actif ? '1px solid #fff' : '1px solid var(--border)',
+        color: actif ? 'var(--pale-ink)' : 'var(--ink)',
+        background: actif ? 'var(--pale)' : 'color-mix(in srgb, var(--ink) 5%, transparent)',
+        border: actif ? '1px solid var(--pale)' : '1px solid var(--border)',
         cursor: 'pointer',
       }}
     >
@@ -406,58 +426,44 @@ function Choix({
   )
 }
 
+/** Une pilule de la barre du bas : néon pour l'action principale, contour sinon. */
 function Action({
   icone,
   label,
   actif = false,
+  principal = false,
   onClick,
 }: {
-  icone: 'skip' | 'calendar' | 'clip' | 'swap'
+  icone: 'skip' | 'calendar' | 'clip' | 'swap' | 'pencil'
   label: string
   actif?: boolean
+  principal?: boolean
   onClick?: () => void
 }) {
   return (
     <button
       onClick={onClick}
       disabled={!onClick}
+      aria-pressed={principal ? undefined : actif}
       style={{
-        display: 'flex',
-        flexDirection: 'column',
+        flex: 'none',
+        display: 'inline-flex',
         alignItems: 'center',
-        gap: 7,
-        padding: '2px 0',
-        opacity: onClick ? 1 : 0.35,
+        gap: 9,
+        padding: '14px 22px',
+        borderRadius: 'var(--pill)',
+        fontSize: 'var(--fs-body)',
+        fontWeight: 600,
+        whiteSpace: 'nowrap',
+        color: actif ? 'var(--pale-ink)' : 'var(--ink)',
+        background: principal ? 'var(--neon)' : actif ? 'var(--pale)' : 'var(--surface-2)',
+        border: principal ? 'none' : `1.5px solid ${actif ? 'var(--pale)' : 'var(--border-2)'}`,
+        opacity: onClick ? 1 : 0.4,
         cursor: onClick ? 'pointer' : 'default',
       }}
     >
-      <span
-        style={{
-          width: 46,
-          height: 46,
-          borderRadius: '50%',
-          display: 'grid',
-          placeItems: 'center',
-          color: actif ? '#08090b' : 'var(--ink)',
-          background: actif ? '#fff' : 'transparent',
-          border: actif ? '1px solid #fff' : '1px solid var(--border-2)',
-        }}
-      >
-        <Icon name={icone} size={19} />
-      </span>
-      <span
-        style={{
-          fontSize: 10.5,
-          fontWeight: 700,
-          letterSpacing: '.5px',
-          textTransform: 'uppercase',
-          color: 'var(--ink-2)',
-          textAlign: 'center',
-          lineHeight: 1.2,
-        }}
-      >
-        {label}
-      </span>
+      <Icon name={icone} size={19} style={{ strokeWidth: 1.8 }} />
+      {label}
     </button>
   )
 }
@@ -468,7 +474,7 @@ function Panneau({ titre, children }: { titre: string; children: ReactNode }) {
       className="glass"
       style={{ borderRadius: 'var(--radius)', padding: '15px 16px', marginTop: 13 }}
     >
-      <h4 style={{ margin: '0 0 13px', fontSize: 15.5, fontWeight: 800 }}>{titre}</h4>
+      <h4 style={{ margin: '0 0 13px', fontSize: 'var(--fs-texte)', fontWeight: 800 }}>{titre}</h4>
       {children}
     </div>
   )
@@ -504,7 +510,7 @@ function Pied({
         <Champ label="Pourquoi">
           <input
             type="text"
-            placeholder="facultatif"
+            placeholder="Facultatif"
             value={raison}
             onChange={(e) => setRaison(e.target.value)}
             style={styleChamp}
@@ -537,20 +543,9 @@ function Boutons({
 }) {
   return (
     <div style={{ display: 'flex', gap: 9 }}>
-      <button
-        onClick={onValider}
-        style={{
-          flex: 1,
-          padding: 14,
-          borderRadius: 'var(--pill)',
-          fontWeight: 700,
-          fontSize: 15.5,
-          background: '#fff',
-          color: '#08090b',
-        }}
-      >
+      <BoutonAction icone="check" onClick={onValider} style={{ flex: 1 }}>
         Enregistrer
-      </button>
+      </BoutonAction>
       {effacerVisible && (
         <button
           onClick={onEffacer}
@@ -558,7 +553,7 @@ function Boutons({
             padding: '14px 18px',
             borderRadius: 'var(--pill)',
             fontWeight: 700,
-            fontSize: 15.5,
+            fontSize: 'var(--fs-texte)',
             color: 'var(--ink-2)',
             border: '1px solid var(--border-2)',
           }}
@@ -593,23 +588,23 @@ export function Alertes({ alertes }: { alertes: Alerte[] }) {
         borderRadius: 'var(--radius-sm)',
         padding: '12px 13px',
         margin: '4px 0 14px',
-        background: 'rgba(229,72,77,.12)',
-        border: '1px solid rgba(229,72,77,.32)',
+        background: 'color-mix(in srgb, var(--critical) 10%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--critical) 32%, transparent)',
       }}
     >
-      <div style={{ fontSize: 13, fontWeight: 800, color: '#FF9A9D', marginBottom: 6 }}>
+      <div style={{ fontSize: 'var(--fs-detail)', fontWeight: 800, color: 'var(--critical)', marginBottom: 6 }}>
         {alertes.length > 1
           ? `${alertes.length} contraintes ne tiennent plus`
           : 'Une contrainte ne tient plus'}
       </div>
-      <ul style={{ margin: 0, paddingLeft: 17, color: '#E4E7EB', fontSize: 13.5, lineHeight: 1.55 }}>
+      <ul style={{ margin: 0, paddingLeft: 17, color: 'var(--ink)', fontSize: 'var(--fs-meta)', lineHeight: 1.55 }}>
         {alertes.map((a, i) => (
           <li key={i}>
             {a.texte} <span style={{ color: 'var(--ink-3)' }}>(contrainte {a.contrainte})</span>
           </li>
         ))}
       </ul>
-      <p style={{ margin: '8px 0 0', fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.5 }}>
+      <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-detail)', color: 'var(--ink-2)', lineHeight: 1.5 }}>
         Tu peux enregistrer quand même. C'est ton tendon qui tranche, pas l'app.
       </p>
     </div>
@@ -619,16 +614,7 @@ export function Alertes({ alertes }: { alertes: Alerte[] }) {
 function Champ({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div style={{ marginBottom: 13 }}>
-      <div
-        style={{
-          fontSize: 10.5,
-          fontWeight: 700,
-          letterSpacing: '.9px',
-          textTransform: 'uppercase',
-          color: 'var(--ink-3)',
-          marginBottom: 6,
-        }}
-      >
+      <div style={{ fontSize: 'var(--fs-meta)', color: 'var(--accent)', marginBottom: 7, textTransform: 'none' }}>
         {label}
       </div>
       {children}
@@ -639,10 +625,10 @@ function Champ({ label, children }: { label: string; children: ReactNode }) {
 const styleChamp: React.CSSProperties = {
   width: '100%',
   padding: '12px 13px',
-  borderRadius: 'var(--radius-sm)',
+  borderRadius: 16,
   background: 'var(--surface-2)',
   border: '1px solid var(--border-2)',
   color: 'var(--ink)',
-  fontSize: 15,
+  fontSize: 'var(--fs-texte)',
   fontWeight: 600,
 }

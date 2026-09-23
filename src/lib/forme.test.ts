@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { FeedbackRow } from './buildPain'
-import { DOULEUR_MAX, ECART_MAX, MIN_SEANCES, ajusterForme } from './forme'
+import { DOULEUR_MAX, ECART_MAX, MIN_SEANCES, ajusterForme, ecartEffortSemaine, serieForme } from './forme'
 
 const NOW = '2026-09-15'
 const BASE = 289 // 4:49/km, la forme projetée par le test du 8 août
@@ -86,5 +86,27 @@ describe('ajusterForme', () => {
     const ef = ajusterForme(BASE, lot(4, { session_type: 'ef', rpe: 9 }), NOW)
     expect(inter.ecart).toBe(0)
     expect(ef.ecart).toBeGreaterThan(0)
+  })
+})
+
+describe('serieForme et ecartEffortSemaine', () => {
+  it('rejoue la forme à chaque date sur les seuls ressentis connus alors', () => {
+    const fb = [
+      { week: 1, day_index: 0, slot: 0, day: '2026-09-01', session_type: 'ef', pain: 0, rpe: 2 },
+      { week: 1, day_index: 1, slot: 0, day: '2026-09-02', session_type: 'ef', pain: 0, rpe: 2 },
+      { week: 1, day_index: 2, slot: 0, day: '2026-09-03', session_type: 'ef', pain: 0, rpe: 2 },
+    ]
+    const s = serieForme(289, fb, ['2026-08-31', '2026-09-04'])
+    expect(s[0].allure).toBe(289)
+    expect(s[1].allure).toBeLessThan(289)
+  })
+
+  it('moyenne l’écart d’effort de la semaine, séances douloureuses écartées', () => {
+    const fb = [
+      { week: 1, day_index: 0, slot: 0, day: '2026-09-07', session_type: 'ef', pain: 0, rpe: 6 },
+      { week: 1, day_index: 1, slot: 0, day: '2026-09-08', session_type: 'ef', pain: 5, rpe: 9 },
+    ]
+    expect(ecartEffortSemaine(fb, '2026-09-07')).toEqual({ ecart: 2, seances: 1 })
+    expect(ecartEffortSemaine(fb, '2026-09-14').ecart).toBeNull()
   })
 })

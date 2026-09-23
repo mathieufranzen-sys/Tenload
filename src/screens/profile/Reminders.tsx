@@ -7,6 +7,7 @@
  * rien n'arrive jamais. L'écran le dit avant de proposer le bouton, plutôt
  * que de laisser croire à une panne.
  */
+import { BoutonAction } from '../../components/BoutonAction'
 import { useEffect, useState } from 'react'
 import {
   activerRappels,
@@ -26,7 +27,7 @@ const HORAIRES = [
   { heure: '08:00', titre: 'Raideur au réveil', detail: 'Avant de poser le pied par terre' },
   {
     heure: '23:00',
-    titre: 'Le point du soir',
+    titre: 'Point du soir',
     detail: 'Effort perçu, douleur à l’effort, douleur de fin de journée',
   },
 ]
@@ -56,8 +57,8 @@ export function Reminders({ userId }: Props) {
   return (
     <>
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
-        <b style={{ fontSize: 16 }}>Deux rappels, pas trois</b>
-        <p style={{ color: 'var(--ink-2)', fontSize: 14.5, lineHeight: 1.5, margin: '6px 0 14px' }}>
+        <b style={{ fontSize: 'var(--fs-body)' }}>Deux rappels par jour</b>
+        <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-texte)', lineHeight: 1.5, margin: '6px 0 14px' }}>
           Le carnet ne vaut que s'il est tenu. La raideur au réveil pèse 45 % de la part douleur, et
           au bout de trois jours sans saisie l'indice cesse de mesurer quoi que ce soit et bloque
           toute hausse de volume.
@@ -77,7 +78,7 @@ export function Reminders({ userId }: Props) {
             >
               <span
                 style={{
-                  fontSize: 17,
+                  fontSize: 'var(--fs-lead)',
                   fontWeight: 700,
                   letterSpacing: '-.4px',
                   fontVariantNumeric: 'tabular-nums',
@@ -88,8 +89,8 @@ export function Reminders({ userId }: Props) {
                 {h.heure}
               </span>
               <span style={{ minWidth: 0 }}>
-                <b style={{ display: 'block', fontSize: 14.5, fontWeight: 600 }}>{h.titre}</b>
-                <span style={{ display: 'block', color: 'var(--ink-2)', fontSize: 13, lineHeight: 1.35, marginTop: 1 }}>
+                <b style={{ display: 'block', fontSize: 'var(--fs-texte)', fontWeight: 600 }}>{h.titre}</b>
+                <span style={{ display: 'block', color: 'var(--ink-2)', fontSize: 'var(--fs-detail)', lineHeight: 1.35, marginTop: 1 }}>
                   {h.detail}
                 </span>
               </span>
@@ -100,7 +101,7 @@ export function Reminders({ userId }: Props) {
         {/* Le silence est la moitié du dispositif : un rappel qui redemande ce
             qui est déjà saisi se fait couper en trois jours, et emporte avec
             lui celui qui servait. */}
-        <p style={{ color: 'var(--ink-3)', fontSize: 12.5, lineHeight: 1.45, margin: '12px 0 0' }}>
+        <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', lineHeight: 1.45, margin: '12px 0 0' }}>
           Rien n'est envoyé si la saisie est déjà faite. Le dimanche, seul le point du soir part :
           c'est ton repos jambes, il n'y a pas de séance à noter.
         </p>
@@ -108,14 +109,14 @@ export function Reminders({ userId }: Props) {
 
       <div className="glass" style={{ borderRadius: 'var(--radius)', padding: '16px 17px', marginBottom: 14 }}>
         {!installee && (
-          <p style={{ color: 'var(--warning)', fontSize: 13.5, lineHeight: 1.45, margin: '0 0 12px', fontWeight: 500 }}>
+          <p style={{ color: 'var(--warning)', fontSize: 'var(--fs-meta)', lineHeight: 1.45, margin: '0 0 12px', fontWeight: 500 }}>
             Tu ouvres Tenload dans un onglet. Sur iPhone, les notifications ne partent que vers
             l'app installée sur l'écran d'accueil : ouvre-la depuis son icône avant d'activer.
           </p>
         )}
 
         {etat === 'indisponible' ? (
-          <p style={{ color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, margin: 0 }}>
+          <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5, margin: 0 }}>
             {!cleConfiguree()
               ? "La clé d'envoi manque à cette version de l'app : ajoute VITE_VAPID_PUBLIC_KEY aux variables de Netlify, puis redéploie."
               : !installee
@@ -123,42 +124,45 @@ export function Reminders({ userId }: Props) {
                 : 'Ce navigateur ne sait pas recevoir de notifications.'}
           </p>
         ) : etat === 'refuse' ? (
-          <p style={{ color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, margin: 0 }}>
+          <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5, margin: 0 }}>
             Les notifications sont bloquées pour Tenload. Il faut les réautoriser dans les réglages
             de ton téléphone : une fois refusée, la permission ne peut plus être redemandée depuis
             l'app.
           </p>
         ) : (
           <>
-            <button
-              onClick={basculer}
-              disabled={occupe || !userId || etat === null}
-              style={{
-                width: '100%',
-                padding: 14,
-                borderRadius: 'var(--pill)',
-                background: etat === 'actif' ? 'var(--surface-2)' : 'var(--ink)',
-                color: etat === 'actif' ? 'var(--ink)' : 'var(--bg)',
-                border: etat === 'actif' ? '1px solid var(--border-2)' : 0,
-                fontSize: 15,
-                fontWeight: 650,
-                cursor: occupe ? 'default' : 'pointer',
-                opacity: occupe || !userId ? 0.6 : 1,
-              }}
-            >
-              {etat === null
-                ? '…'
-                : etat === 'actif'
-                  ? 'Désactiver les rappels'
-                  : 'Activer les rappels'}
-            </button>
+            {/* Activer est l'action principale, au dessin commun des boutons
+                d'action ; désactiver reste un bouton en contour. */}
+            {etat === 'actif' ? (
+              <button
+                onClick={basculer}
+                disabled={occupe}
+                style={{
+                  width: '100%',
+                  padding: 14,
+                  borderRadius: 'var(--pill)',
+                  background: 'var(--surface-2)',
+                  color: 'var(--ink)',
+                  border: '1px solid var(--border-2)',
+                  fontSize: 'var(--fs-texte)',
+                  fontWeight: 600,
+                  opacity: occupe ? 0.6 : 1,
+                }}
+              >
+                Désactiver les rappels
+              </button>
+            ) : (
+              <BoutonAction icone="check" onClick={basculer} disabled={occupe || !userId || etat === null}>
+                {etat === null ? '…' : 'Activer les rappels'}
+              </BoutonAction>
+            )}
             {etat === 'actif' && (
-              <p style={{ color: 'var(--ink-2)', fontSize: 13, lineHeight: 1.45, margin: '10px 0 0' }}>
+              <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-detail)', lineHeight: 1.45, margin: '10px 0 0' }}>
                 Cet appareil est abonné. Chaque appareil s'abonne séparément.
               </p>
             )}
             {!userId && (
-              <p style={{ color: 'var(--ink-3)', fontSize: 12.5, lineHeight: 1.45, margin: '10px 0 0' }}>
+              <p style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', lineHeight: 1.45, margin: '10px 0 0' }}>
                 Indisponible en démonstration : il n'y a pas de compte à qui envoyer.
               </p>
             )}

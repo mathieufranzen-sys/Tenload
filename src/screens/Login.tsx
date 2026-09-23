@@ -6,6 +6,7 @@
  * le seul qui ne peut pas piloter son dégradé sur la bande de charge : il est
  * figé sur le vert, la couleur du tendon qui va bien.
  */
+import { BoutonAction } from '../components/BoutonAction'
 import { useState, type FormEvent } from 'react'
 import { CODE_MAX, CODE_MIN, codeValide, type Auth } from '../hooks/useAuth'
 import { MeshBackground } from '../components/MeshBackground'
@@ -75,21 +76,13 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
         }}
       >
         <header style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <h1
-            style={{
-              margin: 0,
-              fontSize: 46,
-              fontWeight: 300,
-              letterSpacing: '-2px',
-              lineHeight: 1,
-            }}
-          >
+          <h1 className="display" style={{ margin: 0, fontSize: 'var(--fs-c-2xl)', lineHeight: 1 }}>
             Tenload
           </h1>
           <p
             style={{
               color: 'var(--sur-ink-2)',
-              fontSize: 15,
+              fontSize: 'var(--fs-texte)',
               fontWeight: 500,
               lineHeight: 1.5,
               margin: '12px 0 0',
@@ -101,7 +94,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
           <p
             style={{
               color: 'var(--sur-ink-3)',
-              fontSize: 13,
+              fontSize: 'var(--fs-detail)',
               fontWeight: 500,
               margin: '6px 0 0',
             }}
@@ -113,12 +106,12 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
         {statut === 'envoyé' ? (
           <div className="glass" style={{ borderRadius: 22, padding: '20px 19px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
-              <span style={{ color: '#6ee7b7', display: 'flex' }}>
+              <span style={{ color: 'var(--good)', display: 'flex' }}>
                 <Icon name="check" size={20} />
               </span>
-              <b style={{ fontSize: 16.5, fontWeight: 700 }}>Code envoyé</b>
+              <b style={{ fontSize: 'var(--fs-body)', fontWeight: 700 }}>Code envoyé</b>
             </div>
-            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.55, color: '#D6D9DE' }}>
+            <p style={{ margin: 0, fontSize: 'var(--fs-texte)', lineHeight: 1.55, color: 'var(--ink)' }}>
               Va chercher le mail envoyé à {email}, puis recopie ici le code qu'il contient.
             </p>
 
@@ -140,13 +133,13 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                 style={{
                   width: '100%',
                   boxSizing: 'border-box',
-                  background: 'rgba(8,9,11,.34)',
+                  background: 'color-mix(in srgb, var(--bg) 34%, transparent)',
                   border: `1px solid ${erreur ? 'var(--c-erreur)' : 'var(--glass-border)'}`,
                   borderRadius: 14,
                   padding: '14px 15px',
                   color: 'var(--ink)',
                   font: 'inherit',
-                  fontSize: 26,
+                  fontSize: 'var(--fs-c-m)',
                   fontWeight: 600,
                   // Dix chiffres à 10 px d'écart débordent d'un écran de 375 :
                   // l'espacement se resserre dès que le code s'allonge.
@@ -157,31 +150,16 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                 }}
               />
               {erreur && (
-                <p style={{ color: '#FF9A9D', fontSize: 12.5, fontWeight: 600, margin: '9px 2px 0' }}>
+                <p style={{ color: 'var(--critical)', fontSize: 'var(--fs-detail)', fontWeight: 600, margin: '9px 2px 0' }}>
                   {erreur}
                 </p>
               )}
-              <button
-                type="submit"
-                disabled={verif || !codeValide(code)}
-                style={{
-                  width: '100%',
-                  marginTop: 14,
-                  background: '#fff',
-                  color: '#08090b',
-                  borderRadius: 'var(--pill)',
-                  padding: 15,
-                  font: 'inherit',
-                  fontSize: 16,
-                  fontWeight: 700,
-                  opacity: verif || !codeValide(code) ? 0.55 : 1,
-                }}
-              >
+              <BoutonAction type="submit" icone="arrowRight" disabled={verif || !codeValide(code)} style={{ marginTop: 14 }}>
                 {verif ? 'Vérification…' : 'Me connecter'}
-              </button>
+              </BoutonAction>
             </form>
 
-            <p style={{ color: 'var(--sur-ink-3)', fontSize: 12, lineHeight: 1.5, margin: '13px 2px 0' }}>
+            <p style={{ color: 'var(--sur-ink-3)', fontSize: 'var(--fs-micro)', lineHeight: 1.5, margin: '13px 2px 0' }}>
               Le mail contient aussi un lien, mais si tu as installé Tenload sur ton écran
               d'accueil, c'est le code qu'il faut : le lien ouvrirait Safari, qui est un espace
               séparé de l'app.
@@ -199,7 +177,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
                 marginTop: 12,
                 padding: 14,
                 borderRadius: 'var(--pill)',
-                fontSize: 15.5,
+                fontSize: 'var(--fs-texte)',
                 fontWeight: 700,
                 color: 'var(--sur-ink-2)',
                 border: '1px solid var(--glass-border)',
@@ -214,11 +192,9 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
               htmlFor="email"
               style={{
                 display: 'block',
-                fontSize: 10.5,
-                fontWeight: 700,
-                letterSpacing: '1.3px',
-                textTransform: 'uppercase',
-                color: 'var(--sur-ink-2)',
+                fontSize: 'var(--fs-detail)',
+                fontWeight: 500,
+                color: 'var(--accent)',
                 marginBottom: 9,
               }}
             >
@@ -236,46 +212,29 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
               style={{
                 width: '100%',
                 boxSizing: 'border-box',
-                background: 'rgba(8,9,11,.34)',
+                background: 'color-mix(in srgb, var(--bg) 34%, transparent)',
                 border: `1px solid ${erreur ? 'var(--c-erreur)' : 'var(--glass-border)'}`,
                 borderRadius: 14,
                 padding: '14px 15px',
                 color: 'var(--ink)',
                 font: 'inherit',
-                fontSize: 16.5,
+                fontSize: 'var(--fs-body)',
                 fontWeight: 500,
                 outline: 'none',
               }}
             />
             {erreur && (
-              <p style={{ color: '#FF9A9D', fontSize: 12.5, fontWeight: 600, margin: '9px 2px 0' }}>
+              <p style={{ color: 'var(--critical)', fontSize: 'var(--fs-detail)', fontWeight: 600, margin: '9px 2px 0' }}>
                 {erreur}
               </p>
             )}
-            <button
-              type="submit"
-              disabled={statut === 'envoi'}
-              style={{
-                width: '100%',
-                marginTop: 14,
-                background: '#fff',
-                color: '#08090b',
-                borderRadius: 'var(--pill)',
-                padding: 15,
-                font: 'inherit',
-                fontSize: 16,
-                fontWeight: 700,
-                cursor: statut === 'envoi' ? 'default' : 'pointer',
-                opacity: statut === 'envoi' ? 0.55 : 1,
-                transition: `opacity var(--dur-fast) var(--ease-out)`,
-              }}
-            >
+            <BoutonAction type="submit" icone="arrowRight" disabled={statut === 'envoi'} style={{ marginTop: 14 }}>
               {statut === 'envoi' ? 'Envoi…' : 'Recevoir le lien'}
-            </button>
+            </BoutonAction>
             <p
               style={{
                 color: 'var(--sur-ink-3)',
-                fontSize: 12,
+                fontSize: 'var(--fs-micro)',
                 lineHeight: 1.5,
                 margin: '13px 2px 0',
                 textAlign: 'center',
@@ -298,7 +257,7 @@ export function Login({ auth, onDemo }: { auth: Auth; onDemo?: () => void }) {
               borderRadius: 'var(--pill)',
               padding: 14,
               font: 'inherit',
-              fontSize: 14.5,
+              fontSize: 'var(--fs-texte)',
               fontWeight: 600,
               color: 'var(--sur-ink-2)',
               cursor: 'pointer',

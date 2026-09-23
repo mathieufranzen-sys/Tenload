@@ -7,7 +7,7 @@
  * scroll. Le reste (règles d'adaptation, carnet, mot du coach) suit
  * en dessous, sur le fond sombre habituel.
  */
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan, Week } from '../data/types'
 import {
@@ -15,7 +15,7 @@ import {
   addDays,
   daysBetween,
   formatDay,
-  formatDayLong,
+  formatNumber,
   today as todayISO,
   weekdayIndex,
 } from '../lib/dates'
@@ -29,23 +29,22 @@ import { sessionLoad, type ActivityRow } from '../lib/load'
 import type { FeedbackRow } from '../lib/buildPain'
 import { slotsParJour, verifierContraintes, type EcartRow } from '../lib/overrides'
 import { SessionCard } from '../components/SessionCard'
-import { AlertBox } from '../components/AlertBox'
-import { JournalDuJour } from '../components/JournalDuJour'
+import { CarteCarnet, PageCarnet } from '../components/JournalDuJour'
+import { CarteCharge } from '../components/CarteCharge'
+import { SubPage } from '../components/SubPage'
+import { ProfileButton } from '../components/ProfileButton'
 import { MeshBackground } from '../components/MeshBackground'
-import { TendonArc } from '../components/TendonArc'
-import { InsightTiles } from '../components/InsightTiles'
 import { SessionHero } from '../components/SessionHero'
 import { ChargeSheet } from '../components/ChargeSheet'
 import { Icon } from '../components/Icon'
+import { BoutonAction } from '../components/BoutonAction'
 import { CarteCoach } from '../components/CarteCoach'
 import { CarteBilan } from '../components/CarteBilan'
-import { bilanSemaine, type FaitsBilan, type SeanceBilan } from '../lib/bilan'
-import { EnteteEcran } from '../components/EnteteEcran'
+import { construireBilan } from '../lib/bilanDeSemaine'
+import type { SeanceANoter } from '../lib/aNoter'
+import { libelleNature } from '../lib/natureSemaine'
 
 const plan = planJson as unknown as Plan
-
-/** Le 10 km Hoka, l'objectif de l'automne. */
-const DIX_KM = '2026-11-15'
 
 /**
  * Le SUJET affiché chaque jour, sur les trois derniers jours.
@@ -99,6 +98,10 @@ interface Props {
    */
   onOuvrirSeance?: (seance: SeancePlanifiee) => void
   onOuvrirProfil: () => void
+  /** Les séances sans ressenti, calculées une fois dans App (voir aNoter.ts). */
+  aNoter?: SeanceANoter[]
+  /** Mène à la page « Séances à noter ». */
+  onVoirANoter?: () => void
 }
 
 export function Today({
@@ -114,6 +117,8 @@ export function Today({
   onVoirSuivi,
   onOuvrirSeance,
   onOuvrirProfil,
+  aNoter = [],
+  onVoirANoter,
 }: Props) {
   const now = todayISO()
   const A = useMemo(
@@ -121,6 +126,8 @@ export function Today({
     [load, pain, feedback, now, attestes],
   )
   const [calculOuvert, setCalculOuvert] = useState(false)
+  const [carnetOuvert, setCarnetOuvert] = useState(false)
+  const [bilanOuvert, setBilanOuvert] = useState(false)
 
   // Le jour consulté. Il recule jusqu'à 28 jours, la fenêtre du modèle, et ne
   // dépasse jamais aujourd'hui : on ne saisit pas la raideur d'un réveil qui
@@ -181,8 +188,16 @@ export function Today({
    * dans les compteurs, et la laisser en tête d'écran continuait de la réclamer.
    * Elle redescend plus bas, où elle sert de trace plutôt que de consigne.
    */
-  const restantes = duJour.filter((x) => !feedbackDe(x))
-  const faites = duJour.filter((x) => feedbackDe(x))
+  // Une séance sautée n'est pas « à faire » : elle descend avec les séances
+  // notées, barrée et estompée (retour du 22 septembre).
+  const restantes = duJour.filter((x) => !feedbackDe(x) && !x.s.saute)
+  const faites = duJour.filter((x) => feedbackDe(x) || x.s.saute)
+  /**
+   * Une journée sans rien à montrer : aucune séance, ou seulement du repos.
+   * C'est le seul cas où l'écran a besoin d'un bloc pour dire ce qu'il en
+   * est ; dès qu'une séance existe, sa carte parle pour elle.
+   */
+  const journeeSansSeance = duJour.every((x) => x.s.type === 'repos')
 
   /** La semaine en cours, pour les compteurs et le coach : eux parlent du
    *  présent, pas du jour qu'on est en train de relire. */
@@ -346,112 +361,19 @@ export function Today({
     const suivante = jourSemaine === 0 ? semaineCourante : plan.weeks[i + 1]
     if (!bilanee || now < debutPlan) return null
 
-    const versBilan = (w: Week): SeanceBilan[] =>
-      seancesDeLaSemaine(plan.weeks, w, now, A.byDate, ecarts, contexte).map((x) => {
-        const ref = plan.weeks.find((y) => y.n === x.semaineOrigine)
-        const slots = ref ? slotsParJour(ref.sessions) : []
-        const f = feedbackDe(x)
-        return {
-          s: x.s,
-          typePlan: x.typePlan,
-          day: x.day,
-          faite: Boolean(f),
-          rpe: f?.rpe ?? null,
-          douleur: f?.pain ?? null,
-          reference: ref?.sessions.find((s, k) => s.day === x.jourOrigine && slots[k] === x.slot) ?? null,
-        }
-      })
-
-    // Les quatre semaines qui précèdent, pour le volume et le dosage : ce sont
-    // les deux chiffres que Maxime regarde avant ceux de la semaine.
-    const quatreSemaines = plan.weeks
-      .filter((w) => w.monday >= addDays(bilanee.monday, -21) && w.monday <= bilanee.monday)
-      .flatMap(versBilan)
-      .filter((x) => x.faite && !x.s.saute && x.day > addDays(now, -28) && x.day <= now)
-    const volume28 = quatreSemaines.reduce((acc, x) => acc + (x.s.dist ?? 0), 0)
-    const dosage = {
-      seuil: quatreSemaines.filter((x) => x.s.qualite === 'seuil').length,
-      vitesse: quatreSemaines.filter((x) => x.s.qualite === 'vitesse' || x.s.qualite === 'specifique').length,
-    }
-
-    // Jours sans douleur au-dessus de 2, et relevés dans la fenêtre : le
-    // compteur qui ouvre les paliers de volume. Il s'arrête au premier jour du
-    // carnet, sinon un carnet de vingt jours s'annoncerait comme soixante.
-    const douleurMax = (d: string) => {
-      const p = pain[d]
-      const vs = [p?.wake, p?.evening, p?.effort].filter((v): v is number => v != null)
-      return vs.length ? Math.max(...vs) : null
-    }
-    let derniereForte: number | null = null
-    let premierReleve = 0
-    for (let k = 0; k < 90; k++) {
-      const m = douleurMax(addDays(now, -k))
-      if (m == null) continue
-      premierReleve = k
-      if (m > 2) {
-        derniereForte = k
-        break
-      }
-    }
-    const joursSansDouleur = derniereForte ?? premierReleve + 1
-    let relevesSansDouleur = 0
-    for (let k = 0; k < joursSansDouleur; k++) if (douleurMax(addDays(now, -k)) != null) relevesSansDouleur++
-
-    let excentriqueSerie = 0
-    for (let k = pain[now]?.eccentric ? 0 : 1; k < 90; k++) {
-      if (!pain[addDays(now, -k)]?.eccentric) break
-      excentriqueSerie++
-    }
-
-    // Semaines d'affilée avec au moins une séance notée : « ce qui compte,
-    // c'est l'accumulation », et une interruption remet le compteur à zéro.
-    let semainesDAffilee = 0
-    for (let k = 0; k < plan.weeks.length; k++) {
-      const w = plan.weeks[i - k]
-      if (!w || w.monday > now) continue
-      const notees = feedback.some((f) => f.day >= w.monday && f.day <= addDays(w.monday, 6))
-      if (!notees) break
-      semainesDAffilee++
-    }
-
-    const jours: string[] = []
-    for (let k = 0; k < 7; k++) {
-      const d = addDays(bilanee.monday, k)
-      if (d <= now) jours.push(d)
-    }
-    const idx = jours.map((d) => A.byDate[d]?.idx).filter((v): v is number => v != null)
-    const faits: FaitsBilan = {
-      volume28: Math.round(volume28 * 10) / 10,
-      attestes: attestes ? jours.filter((d) => attestes.has(d)).length : jours.length,
-      sansDouleur: { jours: joursSansDouleur, releves: relevesSansDouleur },
-      excentriqueSerie,
-      semainesDAffilee,
-      indice: {
-        moyen: idx.length ? Math.round(idx.reduce((a, b) => a + b, 0) / idx.length) : null,
-        pic: idx.length ? Math.max(...idx) : null,
-        emballement: A.detail.ratio,
-        monotonie: A.detail.monotony,
-      },
-      forme: forme ? { allure: forme.allure, ecart: forme.ecart, seances: forme.seances } : null,
-      echeances: {
-        dixKm: daysBetween(now, DIX_KM) > 0 ? daysBetween(now, DIX_KM) : null,
-        marathon: daysBetween(now, plan.meta.raceDate),
-      },
-      dosage,
-    }
-
-    return bilanSemaine({
-      semaine: bilanee,
-      seances: versBilan(bilanee),
+    return construireBilan({
+      plan,
+      bilanee,
+      suivante,
+      ref: now,
+      seancesDe: (w) => seancesDeLaSemaine(plan.weeks, w, now, A.byDate, ecarts, contexte),
+      indices: A.byDate,
+      feedback,
       pain,
-      charge: Object.fromEntries(Object.entries(A.byDate).map(([d, r]) => [d, r.load])),
-      now,
-      faits,
-      suivante: suivante ? { semaine: suivante, seances: versBilan(suivante) } : undefined,
+      attestes,
+      forme,
     })
-    // `feedbackDe` se recrée à chaque rendu : c'est `feedback` qui décide.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [now, semaineCourante, debutPlan, A.byDate, A.detail, ecarts, contexte, feedback, pain, attestes, forme])
+  }, [now, semaineCourante, debutPlan, A.byDate, ecarts, contexte, feedback, pain, attestes, forme])
 
   const mot = useMemo(
     () =>
@@ -490,292 +412,494 @@ export function Today({
   const detail = A.byDate[jour] ?? A.detail
   const bande = bandOf(detail.idx)
 
-  const jRace = daysBetween(now, plan.meta.raceDate)
   const jDebut = daysBetween(now, debutPlan)
-  const sousTitre = formatDayLong(jour)
+
+  const veille = A.byDate[addDays(jour, -1)]
+  const ecartVeille =
+    detail.painInconnue || !veille || veille.painInconnue ? null : detail.idx - veille.idx
+  const carnet = duJour.map((x) => ({ x, fb: feedbackDe(x) ?? null }))
+
+  // Les saisies du carnet encore dues : le réveil du jour, le soir de la
+  // veille. Au-delà de 24 h, elles ne se rattrapent plus (règle du
+  // 21 septembre), donc elles ne s'affichent plus. Le soir du jour n'est pas
+  // encore dû à l'heure où l'on regarde l'écran.
+  const hierIso = addDays(now, -1)
+  const saisiesManquantes: SaisieManquante[] = [
+    ...(pain[now]?.wake == null ? [{ day: now, libelle: 'Raideur au réveil', quand: "Aujourd'hui" }] : []),
+    ...(!avantPlan && pain[hierIso]?.evening == null
+      ? [{ day: hierIso, libelle: 'Douleur en fin de journée', quand: 'Hier soir' }]
+      : []),
+  ]
+  const semaineBilanee = bilan ? plan.weeks.find((w) => w.n === bilan.n) : undefined
 
   return (
-    // Le dégradé court sur toute la page, pas seulement sur le premier écran :
-    // c'est ce qui donne au verre dépoli quelque chose à flouter jusqu'en bas.
-    <div style={{ position: 'relative', maxWidth: 'var(--shell-max)', margin: '0 auto', paddingBottom: 90 }}>
+    <div style={{ position: 'relative', maxWidth: 'var(--shell-max)', margin: '0 auto', paddingBottom: 110 }}>
       <MeshBackground band={bande.key} />
 
-      {/* ─── premier écran : insights, indice, séance ──────────────────── */}
-      <section
-        style={{
-          position: 'relative',
-          zIndex: 5,
-          minHeight: '100dvh',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: '0 var(--page-x)',
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <EnteteEcran
-            titre={avantPlan ? 'Bientôt' : estAujourdhui ? "Aujourd'hui" : titreJour(jour, now)}
-            contexte={
-              <>
-                {sousTitre[0].toUpperCase() + sousTitre.slice(1)} ·{' '}
-                {avantPlan ? `J-${jDebut} avant la semaine 1` : `J-${jRace} avant Paris`}
-              </>
-            }
-            onOuvrirProfil={onOuvrirProfil}
+      <div style={{ position: 'relative', zIndex: 5, padding: '0 var(--page-x)' }}>
+        <EnteteJour
+          surtitre="Bonjour Mathieu,"
+          titre={sousTitreLong(jour)}
+          titresCourts={[sousTitreCourt(jour)]}
+          relatif={avantPlan ? `J-${jDebut} avant la semaine 1` : estAujourdhui ? null : titreJour(jour, now)}
+          jour={jour}
+          now={now}
+          plusAncien={plusAncien}
+          onDecaler={decaler}
+          onAujourdhui={() => setJour(now)}
+          onOuvrirProfil={onOuvrirProfil}
+        />
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <CarteCharge
+            detail={detail}
+            bande={bande}
+            ecartVeille={ecartVeille}
+            onCalcul={() => setCalculOuvert(true)}
           />
 
-          <NavigationJour
-            jour={jour}
-            now={now}
-            plusAncien={plusAncien}
-            onDecaler={decaler}
-            onAujourdhui={() => setJour(now)}
-          />
-
-          {/* Les compteurs parlent de la semaine en cours : les afficher en
-              relisant un jour passé laisserait croire qu'ils le concernent. */}
-          {estAujourdhui && (
-            <div style={{ marginTop: 16 }}>
-              <InsightTiles insights={insights} />
-            </div>
+          {detail.stale && !detail.painInconnue && (
+            <Note>Aucune douleur saisie depuis 24 h : l'indice tourne sur une estimation.</Note>
           )}
 
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '26px 0',
-            }}
-          >
-            {/* Sans douleur saisie depuis plus de quatre jours, la composante
-                douleur vaut zéro. Comme elle pèse 85 des 100 points, l'indice
-                affiche un vert rassurant alors qu'on ne sait rien. On montre
-                l'arc à vide plutôt qu'un chiffre faux. */}
-            <TendonArc value={detail.painInconnue ? 0 : detail.idx} />
+          {/* « Ce que ça change aujourd'hui » est parti le 22 septembre : ce
+              que l'indice change à une séance se lit sur la séance même, par
+              son étiquette d'adaptation. */}
 
-            {/* Le chiffre remonte dans la courbe : c'est ce qui fait tenir
-                l'arc et la valeur comme un seul objet plutôt que deux. */}
-            <div style={{ marginTop: -66, textAlign: 'center' }}>
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: '1.5px',
-                  textTransform: 'uppercase',
-                  color: 'var(--sur-ink-2)',
-                }}
-              >
-                Charge du tendon
-              </div>
-              <div
-                style={{
-                  fontSize: 88,
-                  fontWeight: 300,
-                  letterSpacing: '-3px',
-                  lineHeight: 0.92,
-                  marginTop: 2,
-                  fontVariantNumeric: 'tabular-nums',
-                  // Un tiret à cette taille se lit comme une barre pleine, pas
-                  // comme une absence. Le point d'interrogation dit la même
-                  // chose et se reconnaît tout de suite.
-                  opacity: detail.painInconnue ? 0.5 : 1,
-                }}
-              >
-                {detail.painInconnue ? '?' : detail.idx}
-              </div>
-              <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-.3px', marginTop: 6 }}>
-                {detail.painInconnue ? 'Je ne sais pas' : bande.headline}
-              </div>
-              <p
-                style={{
-                  fontSize: 12.5,
-                  fontWeight: 500,
-                  color: 'var(--sur-ink-2)',
-                  lineHeight: 1.45,
-                  margin: '7px auto 0',
-                  maxWidth: '34ch',
-                }}
-              >
-                {detail.painInconnue
-                  ? `Aucune douleur saisie depuis ${detail.joursSansDouleur ?? 'plus de 60'} jours. La charge mécanique, elle, est connue : ${Math.round(detail.ratio + detail.freshness + detail.monotony)} points sur 58. Note ta raideur au réveil et l'indice redevient lisible.`
-                  : bande.detail}
-              </p>
-            </div>
-
-            {/* Le détail chiffré vit dans la feuille : sur l'écran, un seul
-                badge, pour ne pas concurrencer la lecture de l'indice. */}
-            <button
-              onClick={() => setCalculOuvert(true)}
-              className="glass"
-              style={{
-                marginTop: 20,
-                padding: '8px 14px',
-                borderRadius: 'var(--pill)',
-                fontSize: 12,
-                fontWeight: 600,
-                color: 'var(--ink)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 7,
-                cursor: 'pointer',
+          {estAujourdhui && (
+            <BlocANoter
+              seances={aNoter.filter((x) => x.enRetard)}
+              saisies={journalActif ? saisiesManquantes : []}
+              chargeInconnue={detail.chargeInconnue}
+              onOuvrirSeance={
+                onOuvrirSeance &&
+                ((x) => onOuvrirSeance({ semaineOrigine: x.semaineOrigine, jourOrigine: x.jourOrigine, slot: x.slot } as SeancePlanifiee))
+              }
+              onOuvrirCarnet={(d) => {
+                setJour(d)
+                setCarnetOuvert(true)
               }}
-            >
-              Calcul de la charge
-              <Icon name="chevronRight" size={13} style={{ opacity: 0.7 }} />
-            </button>
+              onVoirTout={onVoirANoter}
+            />
+          )}
 
-            {detail.stale && !detail.painInconnue && (
-              <Note>Aucune douleur saisie depuis 24 h : l'indice tourne sur une estimation.</Note>
-            )}
-          </div>
-
-          <div style={{ paddingBottom: 18 }}>
-            {restantes.length ? (
+          {restantes.length ? (
+            // Chaque séance du jour encore à faire est un bloc bleu : le vélo
+            // du mercredi en est une autant que la course (retour du
+            // 23 septembre).
+            restantes.map((x) => (
               <SessionHero
-                session={restantes[0].s}
-                marathonPace={marathonPace}
-                quand={estAujourdhui ? "Aujourd'hui" : formatDay(jour)}
-                onClick={onOuvrirSeance && (() => onOuvrirSeance(restantes[0]))}
-              />
-            ) : (
-              <div
-                className="glass"
-                style={{
-                  borderRadius: 22,
-                  padding: '16px 18px',
-                  display: 'flex',
-                  gap: 13,
-                  alignItems: 'center',
-                }}
-              >
-                <span
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 13,
-                    background: 'rgba(255,255,255,.12)',
-                    display: 'grid',
-                    placeItems: 'center',
-                    flex: 'none',
-                  }}
-                >
-                  <Icon name={faites.length ? 'check' : 'rest'} />
-                </span>
-                <div>
-                  <b style={{ fontSize: 16, fontWeight: 600 }}>
-                    {avantPlan
-                      ? 'Le plan commence le 10 août'
-                      : faites.length
-                        ? faites.length > 1
-                          ? `${faites.length} séances notées`
-                          : 'Séance notée'
-                        : estAujourdhui
-                          ? "Rien au programme aujourd'hui"
-                          : 'Rien au programme ce jour-là'}
-                  </b>
-                  <div style={{ color: 'var(--sur-ink-2)', fontSize: 13 }}>
-                    {avantPlan
-                      ? 'Semaine 1 : amorce, sans sortie longue.'
-                      : faites.length
-                        ? estAujourdhui
-                          ? "C'est fait pour aujourd'hui. Le détail est plus bas."
-                          : 'La journée est complète. Le détail est plus bas.'
-                        : estAujourdhui
-                          ? "Profites-en pour glacer et t'étirer."
-                          : 'Journée de repos jambes.'}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── au scroll : le reste de la journée et de la semaine ────────── */}
-      <div style={{ position: 'relative', zIndex: 5, padding: '24px var(--page-x) 0' }}>
-        {estAujourdhui && <AlertBox adapt={A} />}
-
-        {restantes.slice(1).map((x, i) => (
-          <SessionCard
-            key={i}
-            session={x.s}
-            marathonPace={marathonPace}
-            onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
-          />
-        ))}
-
-        {faites.length > 0 && (
-          <>
-            <Pretitle>Déjà noté</Pretitle>
-            {faites.map((x, i) => (
-              <SessionCard
-                key={i}
+                key={`${x.jourOrigine}-${x.slot}`}
                 session={x.s}
                 marathonPace={marathonPace}
-                feedback={feedbackDe(x)}
+                quand={estAujourdhui ? "Aujourd'hui" : formatDay(jour)}
+                rang={{ n: duJour.indexOf(x) + 1, total: duJour.length }}
                 onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
               />
-            ))}
-          </>
-        )}
+            ))
+          ) : journeeSansSeance ? (
+            // Le bloc ne sert plus qu'aux journées sans séance : quand des
+            // séances sont notées ou sautées, leurs cartes le disent déjà
+            // juste en dessous (retour du 23 septembre).
+            <div className="carte" style={{ padding: '18px 18px', display: 'flex', gap: 14, alignItems: 'center' }}>
+              <span
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: '50%',
+                  background: 'var(--surface-3)',
+                  color: 'var(--accent)',
+                  display: 'grid',
+                  placeItems: 'center',
+                  flex: 'none',
+                }}
+              >
+                <Icon name="rest" />
+              </span>
+              <div>
+                <b className="display" style={{ fontSize: 'var(--fs-t-carte)', fontWeight: 400 }}>
+                  {avantPlan
+                    ? 'Le plan commence le 10 août'
+                    : estAujourdhui
+                      ? "Rien au programme aujourd'hui"
+                      : 'Rien au programme ce jour-là'}
+                </b>
+                <div style={{ color: 'var(--sur-ink-2)', fontSize: 'var(--fs-meta)', marginTop: 2 }}>
+                  {avantPlan
+                    ? 'Semaine 1 : amorce, sans sortie longue.'
+                    : estAujourdhui
+                      ? "Profites-en pour t'étirer."
+                      : 'Journée de repos jambes.'}
+                </div>
+              </div>
+            </div>
+          ) : null}
 
-        {journalActif && <JournalDuJour day={jour} now={now} />}
+          {faites.map((x, i) => (
+            <SessionCard
+              key={`f${i}`}
+              session={x.s}
+              marathonPace={marathonPace}
+              feedback={feedbackDe(x)}
+              onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
+            />
+          ))}
 
-        {estAujourdhui && bilan && <CarteBilan bilan={bilan} style={{ marginBottom: 14 }} />}
+          {journalActif && (
+            <CarteCarnet day={jour} now={now} seances={carnet} onOuvrir={() => setCarnetOuvert(true)} />
+          )}
 
-        {estAujourdhui && <CarteCoach texte={mot.texte} style={{ marginBottom: 14 }} />}
+          {estAujourdhui && bilan && (
+            <button
+              type="button"
+              onClick={() => setBilanOuvert(true)}
+              className="carte"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 14,
+                padding: '16px 16px 16px 20px',
+                textAlign: 'left',
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p className="etiquette">Bilan de la semaine {bilan.n}</p>
+                <div className="display" style={{ fontSize: 'var(--fs-t-carte)', marginTop: 4 }}>
+                  {formatNumber(bilan.kmRealises)} km{' '}
+                  <span style={{ fontSize: 'var(--fs-texte)', color: 'var(--sur-ink-2)', fontFamily: 'var(--font)' }}>
+                    sur {formatNumber(bilan.kmPrevus)} prévus
+                  </span>
+                </div>
+              </div>
+              <span
+                aria-hidden
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: '50%',
+                  background: 'var(--neon)',
+                  color: 'var(--ink)',
+                  display: 'grid',
+                  placeItems: 'center',
+                  flex: 'none',
+                }}
+              >
+                <Icon name="arrowUpRight" size={18} />
+              </span>
+            </button>
+          )}
 
+          {estAujourdhui && <CarteCoach texte={mot.texte} />}
+        </div>
       </div>
 
       {calculOuvert && (
         <ChargeSheet
           breakdown={detail}
           band={bande}
+          veille={veille}
+          soins={{
+            // Les crédits lisent la VEILLE du jour affiché : l'excentrique
+            // d'hier protège aujourd'hui, et une journée sans charge aussi.
+            excentrique: Boolean(pain[addDays(jour, -1)]?.eccentric),
+            sauts: Boolean(pain[addDays(jour, -1)]?.jumps),
+            hydratation: Boolean(pain[addDays(jour, -1)]?.hydrated),
+            repos: (load[addDays(jour, -1)] ?? 0) < 2,
+            chargeVeille: load[addDays(jour, -1)] ?? 0,
+          }}
+          jourLibelle={sousTitreLong(jour)}
+          onVoirVeille={jour > plusAncien ? () => decaler(-1) : undefined}
           onVoirSuivi={onVoirSuivi}
           onClose={() => setCalculOuvert(false)}
         />
+      )}
+
+      {journalActif && (
+        <SubPage
+          ouvert={carnetOuvert}
+          surtitre="Carnet"
+          titre={sousTitreLong(jour)}
+          onBack={() => setCarnetOuvert(false)}
+        >
+          {carnetOuvert && (
+            <PageCarnet day={jour} now={now} seances={carnet} onOuvrirSeance={onOuvrirSeance} />
+          )}
+        </SubPage>
+      )}
+
+      {bilan && (
+        <SubPage
+          ouvert={bilanOuvert}
+          surtitre={`${formatDay(bilan.du)} → ${formatDay(bilan.au)}${semaineBilanee?.nature ? ` · ${libelleNature(semaineBilanee, { charge: true })}` : ''}`}
+          titre={`Bilan de la semaine ${bilan.n}`}
+          onBack={() => setBilanOuvert(false)}
+        >
+          {bilanOuvert && (
+            <CarteBilan
+              bilan={bilan}
+              jours={Array.from({ length: 7 }, (_, k) => {
+                const d = A.byDate[addDays(bilan.du, k)]
+                return d && !d.painInconnue && addDays(bilan.du, k) <= now
+                  ? { idx: d.idx, bande: bandOf(d.idx).key }
+                  : null
+              })}
+            />
+          )}
+        </SubPage>
       )}
     </div>
   )
 }
 
+/** « lundi 21 septembre » : le titre de l'écran, en toutes lettres. */
+const MOIS_COURT = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
+
+/** « Mardi 22 sept. » : seul le mois s'abrège, jamais le jour. */
+function sousTitreCourt(jour: string): string {
+  const [, m, d] = jour.split('-').map(Number)
+  return `${DAYS_LONG[weekdayIndex(jour)]} ${d} ${MOIS_COURT[m - 1]}`
+}
+
+function sousTitreLong(jour: string): string {
+  const [, m, d] = jour.split('-').map(Number)
+  return `${DAYS_LONG[weekdayIndex(jour)]} ${d} ${MOIS[m - 1]}`
+}
+
+const MOIS = [
+  'janvier',
+  'février',
+  'mars',
+  'avril',
+  'mai',
+  'juin',
+  'juillet',
+  'août',
+  'septembre',
+  'octobre',
+  'novembre',
+  'décembre',
+]
+
+/**
+ * L'en-tête de l'écran Aujourd'hui, propre à lui : la semaine et le bloc en
+ * surtitre, la date en grand, et les deux flèches de jour à droite, comme la
+ * maquette. Le bouton profil reste au-dessus des flèches : c'est la seule
+ * porte vers les réglages, il ne peut pas disparaître.
+ */
+function EnteteJour({
+  surtitre,
+  titre,
+  titresCourts,
+  relatif,
+  jour,
+  now,
+  plusAncien,
+  onDecaler,
+  onAujourdhui,
+  onOuvrirProfil,
+}: {
+  surtitre: string
+  titre: string
+  /** Les replis quand le titre ne tient pas sur une ligne, du plus long au plus court. */
+  titresCourts: string[]
+  relatif: string | null
+  jour: string
+  now: string
+  plusAncien: string
+  onDecaler: (n: number) => void
+  onAujourdhui: () => void
+  onOuvrirProfil: () => void
+}) {
+  return (
+    // Plus d'air au-dessus et en dessous de la date (retour du 22 septembre).
+    <header style={{ padding: 'calc(24px + env(safe-area-inset-top)) 0 28px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+        <p className="display" style={{ margin: 0, fontSize: 'var(--fs-t-liste)', color: 'var(--ink-2)', minWidth: 0 }}>
+          {surtitre}
+        </p>
+        {/* Les flèches montent à côté du profil : la date prend toute la
+            largeur, et « Mercredi 30 sept. » tient sur une ligne. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>
+          <NavigationJour jour={jour} now={now} plusAncien={plusAncien} onDecaler={onDecaler} />
+          <ProfileButton onClick={onOuvrirProfil} />
+        </div>
+      </div>
+      <div style={{ marginTop: 12 }}>
+        <div style={{ minWidth: 0 }}>
+          {relatif && (
+            <p style={{ margin: '0 0 2px', fontSize: 'var(--fs-texte)', color: 'var(--sur-ink-2)' }}>{relatif}</p>
+          )}
+          <TitreUneLigne variantes={[titre, ...titresCourts]} />
+        </div>
+      </div>
+      {jour !== now && (
+        <BoutonAction icone="arrowRight" onClick={onAujourdhui} style={{ marginTop: 14 }}>
+          Revenir à aujourd&apos;hui
+        </BoutonAction>
+      )}
+    </header>
+  )
+}
+
+/**
+ * La date sur une seule ligne, toujours (retour du 22 septembre) : sur deux
+ * lignes elle poussait tout l'écran vers le bas. On essaie le titre entier,
+ * puis le mois abrégé, et on garde le premier qui tient dans la largeur
+ * réellement disponible.
+ */
+function TitreUneLigne({ variantes }: { variantes: string[] }) {
+  const ref = useRef<HTMLHeadingElement>(null)
+  const [rang, setRang] = useState(0)
+  const cle = variantes.join('|')
+
+  // On repart du titre entier quand la date change ou quand la place grandit.
+  useLayoutEffect(() => setRang(0), [cle])
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (el.scrollWidth > el.clientWidth + 1 && rang < variantes.length - 1) setRang(rang + 1)
+  }, [rang, cle, variantes.length])
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    let largeur = el.clientWidth
+    const obs = new ResizeObserver(() => {
+      if (el.clientWidth !== largeur) {
+        largeur = el.clientWidth
+        setRang(0)
+      }
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  return (
+    <h1
+      ref={ref}
+      className="display"
+      style={{
+        margin: 0,
+        fontSize: 'var(--fs-t-ecran)',
+        lineHeight: 1.04,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+      }}
+    >
+      {variantes[rang]}
+    </h1>
+  )
+}
+
+/** Une saisie du carnet encore due, et le jour où elle se fait. */
+interface SaisieManquante {
+  day: string
+  libelle: string
+  quand: string
+}
+
+/**
+ * Ce qui reste à noter : séances en retard et saisies du carnet encore dues,
+ * dans un encart orange comme les étiquettes d'adaptation. Demandé le
+ * 22 septembre 2026 : la liste vivait dans Profil, loin de l'écran qu'on
+ * ouvre tous les jours. Quand la charge n'est plus attestée, l'encart le dit,
+ * parce que ce sont précisément ces trous qui la rendent inconnue.
+ */
+function BlocANoter({
+  seances,
+  saisies,
+  chargeInconnue,
+  onOuvrirSeance,
+  onOuvrirCarnet,
+  onVoirTout,
+}: {
+  seances: SeanceANoter[]
+  saisies: SaisieManquante[]
+  chargeInconnue: boolean
+  onOuvrirSeance?: (x: SeanceANoter) => void
+  onOuvrirCarnet: (day: string) => void
+  onVoirTout?: () => void
+}) {
+  const total = seances.length + saisies.length
+  if (total === 0 && !chargeInconnue) return null
+  const lignes = [
+    ...saisies.map((x) => ({ cle: `s-${x.day}-${x.libelle}`, titre: x.libelle, quand: x.quand, ouvrir: () => onOuvrirCarnet(x.day) })),
+    ...seances.slice(0, 4).map((x) => ({
+      cle: `${x.semaineOrigine}-${x.jourOrigine}-${x.slot}`,
+      titre: x.titre,
+      quand: formatDay(x.day),
+      ouvrir: onOuvrirSeance ? () => onOuvrirSeance(x) : undefined,
+    })),
+  ]
+  return (
+    <section
+      style={{
+        padding: '16px 16px',
+        borderRadius: 'var(--radius)',
+        background: 'color-mix(in srgb, var(--orange-300) 10%, transparent)',
+        border: '1.5px solid color-mix(in srgb, var(--orange-300) 65%, transparent)',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: 'var(--serious)' }}>
+        <Icon name="alert" size={19} />
+        <span style={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
+          {total === 0 ? 'La charge n’est pas attestée' : `${total} chose${total > 1 ? 's' : ''} à noter`}
+        </span>
+      </div>
+      {chargeInconnue && (
+        <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-meta)', lineHeight: 1.5, color: 'var(--ink-2)' }}>
+          Moins de cinq des sept derniers jours portent une charge mesurée : l'indice lit ces trous comme
+          des jours légers, il penche du côté qui rassure.
+        </p>
+      )}
+      {lignes.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12 }}>
+          {lignes.map((l) => (
+            <button
+              key={l.cle}
+              type="button"
+              onClick={l.ouvrir}
+              disabled={!l.ouvrir}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 10,
+                padding: '11px 14px',
+                borderRadius: 16,
+                background: 'var(--surface-2)',
+                textAlign: 'left',
+                fontSize: 'var(--fs-texte)',
+                color: 'var(--ink)',
+              }}
+            >
+              <span style={{ minWidth: 0 }}>{l.titre}</span>
+              <span style={{ color: 'var(--serious)', flex: 'none', fontSize: 'var(--fs-meta)' }}>{l.quand}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {seances.length > 4 && onVoirTout && (
+        <BoutonAction onClick={onVoirTout} style={{ marginTop: 12 }}>
+          Voir les {seances.length} séances à noter
+        </BoutonAction>
+      )}
+    </section>
+  )
+}
+
+
 function Note({ children }: { children: ReactNode }) {
   return (
     <p
       style={{
-        color: 'rgba(255,214,138,.92)',
-        fontSize: 11.5,
-        fontWeight: 500,
-        margin: '12px 0 0',
-        textAlign: 'center',
-        maxWidth: '36ch',
+        color: 'var(--warning)',
+        fontSize: 'var(--fs-meta)',
+        margin: '0 4px',
       }}
     >
       {children}
     </p>
-  )
-}
-
-/** Même grammaire que les tuiles d'insights : micro-label en capitales,
- *  valeur en chiffres tabulaires, précision en dessous. */
-
-/** Même grammaire que l'en-tête de jour de l'écran Programme. */
-function Pretitle({ children }: { children: ReactNode }) {
-  return (
-    <h2
-      style={{
-        fontSize: 12,
-        fontWeight: 700,
-        letterSpacing: '1.2px',
-        textTransform: 'uppercase',
-        color: 'var(--ink-3)',
-        margin: '26px 0 10px 2px',
-      }}
-    >
-      {children}
-    </h2>
   )
 }
 
@@ -803,17 +927,14 @@ function NavigationJour({
   now,
   plusAncien,
   onDecaler,
-  onAujourdhui,
 }: {
   jour: string
   now: string
   plusAncien: string
   onDecaler: (n: number) => void
-  onAujourdhui: () => void
 }) {
   const peutReculer = jour > plusAncien
   const peutAvancer = jour < now
-  const estAujourdhui = jour === now
 
   return (
     <div
@@ -821,7 +942,7 @@ function NavigationJour({
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        marginTop: 14,
+        flex: 'none',
       }}
     >
       <Fleche
@@ -836,22 +957,6 @@ function NavigationJour({
         label="Jour suivant"
         onClick={() => onDecaler(1)}
       />
-      {!estAujourdhui && (
-        <button
-          onClick={onAujourdhui}
-          className="glass"
-          style={{
-            marginLeft: 2,
-            padding: '7px 14px',
-            borderRadius: 'var(--pill)',
-            fontSize: 12.5,
-            fontWeight: 600,
-            color: 'var(--ink)',
-          }}
-        >
-          Revenir à aujourd&apos;hui
-        </button>
-      )}
     </div>
   )
 }
@@ -872,19 +977,14 @@ function Fleche({
       onClick={onClick}
       disabled={!actif}
       aria-label={label}
-      className="glass"
+      className="rond"
       style={{
-        width: 38,
-        height: 38,
-        borderRadius: '50%',
-        display: 'grid',
-        placeItems: 'center',
         opacity: actif ? 1 : 0.3,
         cursor: actif ? 'pointer' : 'default',
         transform: sens === 'gauche' ? 'scaleX(-1)' : undefined,
       }}
     >
-      <Icon name="chevronRight" size={16} />
+      <Icon name="chevronRight" size={18} />
     </button>
   )
 }
