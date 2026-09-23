@@ -1087,9 +1087,10 @@ parce qu'ils nommaient l'onglet Allures.
   vert, le vélo comme la course. **L'intensité s'écrit en texte, sur la ligne
   des repères**, jamais en pilule : la pilule a été essayée puis retirée le
   23 septembre, tout le reste de l'app écrit ses chiffres en texte.
-- **Logo et icônes** : le logo de Mathieu (rond bleu sur fond vert, mot-clé
-  « tenload ») remplit favicon, apple-touch et les trois icônes PWA. Le
-  `theme_color` suit le fond blanc de l'app.
+- **Logo et icônes** : le logo de Mathieu, un demi-disque bleu sur fond vert,
+  sans texte depuis le 23 septembre 2026 (le mot « tenload » devenait
+  illisible à 48 px). Il remplit favicon, apple-touch et les trois icônes
+  PWA ; le `theme_color` suit le fond blanc de l'app.
 - Dans le détail du calcul, toutes les barres se remplissent depuis la
   gauche, le soin compris, et la ligne des gestes donne la charge de la
   veille : c'est elle qui décide du −5 de journée de repos.
