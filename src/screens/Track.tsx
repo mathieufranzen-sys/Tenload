@@ -319,9 +319,10 @@ export function Track({
       secondes: Math.round(f.allure * MARATHON_KM),
       lu: f.seances >= MIN_SEANCES,
     }))
-    // Séance par séance sur quatorze jours (retour du 23 septembre) : une
-    // moyenne par semaine sur trois mois lissait tout ce qu'on vient y voir.
-    const depuis = addDays(now, -13)
+    // Séance par séance sur un mois (retour du 23 septembre) : une moyenne
+    // par semaine sur trois mois lissait tout ce qu'on vient y voir, et
+    // quinze jours ne montraient pas assez de séances pour juger.
+    const depuis = addDays(now, -29)
     const effort = feedback
       .filter((f) => f.day >= depuis && f.day <= now && RPE_ATTENDU[f.session_type as SessionType] != null)
       .sort((a, b) => (a.day < b.day ? -1 : 1))
@@ -431,7 +432,7 @@ export function Track({
         </Viz>
 
         <Viz
-          titre="Effort perçu contre effort attendu, 14 jours"
+          titre="Effort perçu contre effort attendu, 30 jours"
           legendeCouleurs={[
             { label: 'Plus facile que prévu', couleur: 'var(--chart-1)' },
             { label: 'Plus dur', couleur: 'var(--chart-2)' },

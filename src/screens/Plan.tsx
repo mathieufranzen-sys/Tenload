@@ -276,31 +276,31 @@ export function Plan({
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 9,
-              padding: '7px 15px',
+              gap: 7,
+              padding: '5px 11px',
               borderRadius: 'var(--pill)',
               background: 'var(--bleu-50)',
               border: '1px solid var(--bleu-200)',
               color: 'var(--bleu-700)',
-              fontSize: 'var(--fs-detail)',
+              fontSize: 'var(--fs-micro)',
               fontWeight: 700,
               letterSpacing: '.02em',
               textTransform: 'uppercase',
             }}
           >
-            <span aria-hidden style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--bleu-500)' }} />
+            <span aria-hidden style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--bleu-500)' }} />
             {`Bloc ${bloc.id}\u00a0· ${bloc.name}`}
           </span>
           <span
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              padding: '7px 15px',
+              padding: '5px 11px',
               borderRadius: 'var(--pill)',
               background: 'var(--surface-2)',
               border: '1px solid var(--border)',
               color: 'var(--ink-2)',
-              fontSize: 'var(--fs-detail)',
+              fontSize: 'var(--fs-micro)',
               fontWeight: 700,
               letterSpacing: '.02em',
               textTransform: 'uppercase',

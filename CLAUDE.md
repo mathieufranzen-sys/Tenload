@@ -1101,7 +1101,7 @@ parce qu'ils nommaient l'onglet Allures.
   la même couleur de trait de repère (`TRAIT_REPERE`).
 - Suivi porte quatre chiffres, le quatrième étant le **seuil cumulé de la
   semaine** contre la cible de 20 à 30 min (contrainte 9). L'effort perçu se
-  lit **séance par séance sur 14 jours** : une moyenne hebdomadaire sur trois
+  lit **séance par séance sur 30 jours** : une moyenne hebdomadaire sur trois
   mois lissait ce qu'on vient y chercher.
 - `--good` est le m3 de la famille verte des bandes (#1f8a3b) : le vert
   profond appartient au coach.
