@@ -1053,6 +1053,24 @@ parce qu'ils nommaient l'onglet Allures.
   total reprend l'encre de l'app, la teinte m4 d'une bande étant trop claire
   pour un chiffre de 72 px.
 
+- **Une seule ligne de repères** sur toute carte de séance : distance, durée,
+  allure, puis l'échelle d'intensité, en texte (23 septembre). L'intensité
+  vivait dans une pilule et la durée en texte brut sur la même carte, et
+  l'inverse sur la carte d'à côté. Les cartes n'ont plus d'icône de
+  discipline, seule la séance notée garde sa coche.
+- Une séance **sautée** descend avec les séances notées sur Aujourd'hui,
+  barrée : elle n'est plus « à faire ».
+- Profil à deux niveaux (23 septembre) : ton suivi en cartes (bilans, séances
+  à noter, patterns, dossards passés, rappels), puis deux portes,
+  « Informations du programme » et « Paramètres », et la déconnexion.
+- Suivi ne garde que trois chiffres (course sur 7 jours, santé du tendon,
+  séances notées) : ceux de la semaine en cours répétaient Aujourd'hui. Il
+  porte les **chronos équivalents** (colonnes « Aujourd'hui » et « Visé le
+  4 avril ») et le **rapport aigu sur chronique** (`RatioChart`), dessiné sur
+  ses trois plages de lecture.
+- Objectif n'a plus de bascule course/vélo : chaque zone porte sa fourchette
+  de FC en course et celle du vélo entre parenthèses.
+
 ### Les dossards
 
 `src/lib/dossards.ts` (+ 11 tests), `SectionDossards`, table

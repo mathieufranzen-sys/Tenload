@@ -134,7 +134,8 @@ export function CarteForme({
             position: 'absolute',
             left: `${pos(objectif)}%`,
             transform: 'translateX(-50%)',
-            color: 'var(--accent-2)',
+            // Même bleu que la ligne d'objectif du graphique juste en dessous.
+            color: 'var(--chart-3)',
             fontWeight: 600,
             whiteSpace: 'nowrap',
             // Les deux libellés se chevauchent quand la forme touche
@@ -170,7 +171,9 @@ export function CarteForme({
               {ecartTendance === 0 ? 'Stable' : `${ecartTendance < 0 ? '−' : '+'}${formatEcartCourt(Math.abs(ecartTendance))}`}
             </div>
             <div style={{ fontSize: 'var(--fs-meta)', color: 'var(--ink-2)', marginTop: 5, lineHeight: 1.35 }}>
-              en 4 semaines, sur {seances} séance{seances > 1 ? 's' : ''} notée{seances > 1 ? 's' : ''}
+              {/* Même tournure que la note du graphique de niveau :
+                  « valeur sur N semaines » (retour du 23 septembre). */}
+              sur 4 semaines, {seances} séance{seances > 1 ? 's' : ''} notée{seances > 1 ? 's' : ''}
             </div>
           </div>
         </div>

@@ -7,13 +7,13 @@
  * Mathieu — les gestes protecteurs se saisissent dans Aujourd'hui et pèsent
  * dans l'indice, un décompte de plus n'apportait rien.
  */
-import { useMemo, useState, type ReactNode } from 'react'
+import { Fragment, useMemo, useState, type ReactNode } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan } from '../data/types'
 import type { SessionType } from '../data/types'
 import { addDays, formatDay, formatNumber, mondayOf, today as todayISO } from '../lib/dates'
 import { adapt, construireContexte, seancesDeLaSemaine } from '../lib/adapt'
-import { construireInsights, familleDe, familleDuSport } from '../lib/insights'
+import { familleDe, familleDuSport } from '../lib/insights'
 import type { EcartRow } from '../lib/overrides'
 import { Icon } from '../components/Icon'
 import type { LoadMap, PainMap } from '../lib/tendonIndex'
@@ -28,12 +28,37 @@ import { EffortChart, FormeChart } from '../components/charts/NiveauChart'
 import { MIN_SEANCES, ecartEffortSemaine, serieForme, type AjustementForme } from '../lib/forme'
 import { CarteForme } from '../components/CarteForme'
 import { RepartitionChart } from '../components/charts/RepartitionChart'
+import { RatioChart, type PointRatio } from '../components/charts/RatioChart'
+import { chronoEquivalent, formatChrono } from '../lib/dossards'
+import { HALF_KM } from '../lib/paces'
 import { repartitionSemaine } from '../lib/repartition'
 import { MARATHON_KM } from '../lib/paces'
 import { Segmented } from '../components/Segmented'
 import { EnteteEcran } from '../components/EnteteEcran'
 
 const plan = planJson as unknown as Plan
+
+/** Les quatre distances qui se courent, de la plus courte à la plus longue. */
+const DISTANCES_EQUIVALENTES: Array<[string, number]> = [
+  ['5 km', 5],
+  ['10 km', 10],
+  ['Semi-marathon', HALF_KM],
+  ['Marathon', MARATHON_KM],
+]
+
+/** Les lignes du tableau des chronos : même filet, même hauteur, alignées. */
+const LIGNE_EQ = {
+  padding: '10px 0',
+  borderTop: '1px solid var(--border)',
+  fontSize: 'var(--fs-texte)',
+  color: 'var(--ink-2)',
+} as const
+const VALEUR_EQ = {
+  fontSize: 'var(--fs-c-s)',
+  textAlign: 'right',
+  color: 'var(--ink)',
+  fontVariantNumeric: 'tabular-nums',
+} as const
 
 interface Props {
   load: LoadMap
@@ -102,19 +127,19 @@ export function Track({
   // Les compteurs de la semaine ont quitté la jauge d'Aujourd'hui le
   // 22 septembre. Ils se calculent ici exactement comme là-bas (charge
   // attestée comprise), pour que l'indice d'hier cité soit le même chiffre.
-  const { insights, semaineN, seancesSemaine } = useMemo(() => {
+  // La semaine en cours, pour la répartition de la course : mêmes séances
+  // que l'écran Aujourd'hui, écarts et adaptations compris.
+  const { semaineN, seancesSemaine } = useMemo(() => {
     const aJour = adapt(load, pain, feedback, now, attestes)
     const contexte = construireContexte(plan.weeks, feedback, pain, now, ecarts)
     const semaine =
       plan.weeks.find((w) => now >= w.monday && now <= addDays(w.monday, 6)) ??
       plan.weeks[now < plan.weeks[0].monday ? 0 : plan.weeks.length - 1]
-    const seances = seancesDeLaSemaine(plan.weeks, semaine, now, aJour.byDate, ecarts, contexte)
     return {
       semaineN: semaine.n,
-      seancesSemaine: seances,
-      insights: construireInsights({ seances, now, feedback, activities, byDate: aJour.byDate, ecarts }),
+      seancesSemaine: seancesDeLaSemaine(plan.weeks, semaine, now, aJour.byDate, ecarts, contexte),
     }
-  }, [load, pain, feedback, now, attestes, ecarts, activities])
+  }, [load, pain, feedback, now, attestes, ecarts])
   const repartition = useMemo(
     () => repartitionSemaine(seancesSemaine.map((x) => x.s), marathonPace),
     [seancesSemaine, marathonPace],
@@ -183,25 +208,15 @@ export function Track({
     [A.byDate],
   )
 
-  /**
-   * Écart de l'indice moyen entre les 7 derniers jours et les 7 précédents,
-   * EN POINTS et non en pourcentage.
-   *
-   * Un indice borné à 100 ne se compare pas en ratio : passer de 8 à 26 est un
-   * mouvement banal de début de plan, et l'afficher « +224 % » donnait un
-   * chiffre spectaculaire qui ne voulait rien dire. Dix-huit points de plus,
-   * si — c'est la moitié d'une bande.
-   *
-   * La projection est exclue : un plan calme à venir ferait baisser l'écart
-   * sans rien dire de ce qui s'est passé.
-   */
-  const idxEcart = useMemo(() => {
-    const passe = idxRows.filter((r) => r.day <= now)
-    const moy = (l: typeof passe) => (l.length ? l.reduce((a, r) => a + r.idx, 0) / l.length : null)
-    const der = moy(passe.slice(-7))
-    const prec = moy(passe.slice(-14, -7))
-    return der != null && prec != null ? Math.round(der - prec) : null
-  }, [idxRows, now])
+  /** Le rapport aigu sur chronique jour par jour, jusqu'à aujourd'hui. */
+  const ratioRows: PointRatio[] = useMemo(
+    () =>
+      Object.values(A.byDate)
+        .filter((r) => r.day <= now && r.acr > 0)
+        .sort((x, y) => (x.day < y.day ? -1 : 1))
+        .map((r) => ({ day: r.day, acr: r.acr })),
+    [A.byDate, now],
+  )
 
   const painRows: PainRow[] = useMemo(
     () =>
@@ -328,38 +343,15 @@ export function Track({
           onOuvrirProfil={onOuvrirProfil}
         />
 
-        {/* Les six chiffres, chacun dans une carte grise comme les
-            graphiques qui suivent (retour du 22 septembre). */}
+        {/* Trois chiffres, chacun dans une carte grise comme les graphiques
+            qui suivent. Ceux de la semaine en cours sont partis le
+            23 septembre : ils répétaient ce que dit l'écran Aujourd'hui. */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-          <Kpi
-            label="Indice depuis la semaine dernière"
-            valeur={idxEcart == null ? '—' : `${idxEcart > 0 ? '+' : idxEcart < 0 ? '−' : ''}${Math.abs(idxEcart)}`}
-            suffix={idxEcart == null ? '' : ' pts'}
-            couleur={
-              idxEcart == null ? undefined : idxEcart > 5 ? 'var(--warning)' : idxEcart < -5 ? 'var(--good)' : undefined
-            }
-          />
-          <Kpi
-            label="Indice depuis hier"
-            valeur={
-              insights.chargeEcart == null
-                ? '—'
-                : `${insights.chargeEcart > 0 ? '+' : insights.chargeEcart < 0 ? '−' : ''}${Math.abs(insights.chargeEcart)}`
-            }
-            suffix={insights.chargeEcart == null ? '' : ' pts'}
-            detail={insights.chargeVeille != null ? `${insights.chargeVeille} hier` : 'Hier inconnu'}
-          />
           <Kpi
             label="Course sur 7 jours"
             valeur={formatNumber(km7)}
             suffix=" km"
             detail={`${formatNumber(km28)} km sur 28 j`}
-          />
-          <Kpi
-            label="Séances de la semaine"
-            valeur={`${insights.seancesTotal.realise}`}
-            suffix={` / ${insights.seancesTotal.prevu}`}
-            detail={`${insights.seances.course.realise}/${insights.seances.course.prevu} course · ${insights.seances.velo.realise}/${insights.seances.velo.prevu} vélo · ${insights.seances.renfo.realise}/${insights.seances.renfo.prevu} renfo`}
           />
           <Kpi
             label="Santé du tendon"
@@ -446,6 +438,36 @@ export function Track({
         {/* Le temps de la semaine par intensité, en anneau (demandé le
             22 septembre) : le plan de la semaine en cours, écarts et
             adaptations compris, séances sautées exclues. */}
+        {/* Ce que ta forme du jour vaut sur les autres distances, et ce que
+            l'objectif du 4 avril y vaudrait. Même équivalence que le recalage
+            d'un chrono de course, prise à l'envers (`chronoEquivalent`). */}
+        <Viz titre="Chronos équivalents">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', columnGap: 18 }}>
+            <span />
+            <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--accent)', textAlign: 'right', paddingBottom: 6 }}>
+              Aujourd'hui
+            </span>
+            <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--bleu-700)', textAlign: 'right', paddingBottom: 6 }}>
+              Visé le 4 avril
+            </span>
+            {DISTANCES_EQUIVALENTES.map(([libelle, km]) => (
+              <Fragment key={libelle}>
+                <span style={LIGNE_EQ}>{libelle}</span>
+                <span className="chiffre" style={{ ...LIGNE_EQ, ...VALEUR_EQ }}>
+                  {formatChrono(chronoEquivalent(km, forme.allure))}
+                </span>
+                <span className="chiffre" style={{ ...LIGNE_EQ, ...VALEUR_EQ, color: 'var(--bleu-700)' }}>
+                  {formatChrono(chronoEquivalent(km, marathonPace))}
+                </span>
+              </Fragment>
+            ))}
+          </div>
+        </Viz>
+
+        <Viz titre="Rapport aigu sur chronique">
+          <RatioChart points={ratioRows} now={now} />
+        </Viz>
+
         <Viz titre={`Répartition de la course, semaine ${semaineN}`}>
           <RepartitionChart minutes={repartition} />
         </Viz>

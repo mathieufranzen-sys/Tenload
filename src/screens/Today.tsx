@@ -188,8 +188,10 @@ export function Today({
    * dans les compteurs, et la laisser en tête d'écran continuait de la réclamer.
    * Elle redescend plus bas, où elle sert de trace plutôt que de consigne.
    */
-  const restantes = duJour.filter((x) => !feedbackDe(x))
-  const faites = duJour.filter((x) => feedbackDe(x))
+  // Une séance sautée n'est pas « à faire » : elle descend avec les séances
+  // notées, barrée et estompée (retour du 22 septembre).
+  const restantes = duJour.filter((x) => !feedbackDe(x) && !x.s.saute)
+  const faites = duJour.filter((x) => feedbackDe(x) || x.s.saute)
 
   /** La semaine en cours, pour les compteurs et le coach : eux parlent du
    *  présent, pas du jour qu'on est en train de relire. */

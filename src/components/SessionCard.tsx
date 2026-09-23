@@ -10,7 +10,7 @@ import type { Session } from '../data/types'
 import { formatNumber } from '../lib/dates'
 import { estimateDuration, formatDuration } from '../lib/paces'
 import { Icon } from './Icon'
-import { EchelleIntensite, MarqueSeance } from './MarqueSeance'
+import { EchelleIntensite } from './MarqueSeance'
 import { styleSeance } from '../lib/seanceStyle'
 
 interface Props {
@@ -72,7 +72,10 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
       {/* Une séance notée prend la coche verte de la maquette à la place de
           son icône : c'est ce qu'on cherche en balayant la journée. Elle
           n'est plus grisée, le vert suffit à dire qu'elle est derrière. */}
-      {feedback ? (
+      {/* Une séance notée garde sa coche : c'est ce qu'on cherche en
+          balayant la journée. Les autres n'ont plus d'icône de discipline
+          (retour du 22 septembre) : le titre la dit déjà. */}
+      {feedback && (
         <span
           role="img"
           aria-label="Séance notée"
@@ -89,8 +92,6 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
         >
           <Icon name="check" size={20} />
         </span>
-      ) : (
-        <MarqueSeance type={s.type} />
       )}
 
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -109,38 +110,26 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
             un contexte qui la porte déjà — le jour consulté sur Aujourd'hui,
             l'en-tête du jour sur Programme — et elle occupait la place des
             deux seuls chiffres qui décident de la séance. */}
+        {/* Une seule ligne de repères, en texte : la durée, la distance et
+            l'intensité au même niveau. L'intensité vivait dans une pilule et
+            la durée non, sur la même carte (retour du 22 septembre). */}
         {s.type !== 'repos' && (
-          <div style={{ color: 'var(--sur-ink-2)', fontSize: 'var(--fs-detail)', fontWeight: 500 }}>
-            {[duration, volume].filter(Boolean).join(' · ')}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 7,
+              color: 'var(--sur-ink-2)',
+              fontSize: 'var(--fs-detail)',
+              fontWeight: 500,
+            }}
+          >
+            <span>{[volume, duration].filter(Boolean).join(' · ')}</span>
+            {st.intensite > 0 && <EchelleIntensite niveau={st.intensite} hauteur={11} />}
           </div>
         )}
 
-        {/* Les étiquettes d'écart tiennent sur la même ligne que l'intensité :
-            elles qualifient la même séance, les empiler sur deux rangs donnait
-            à lire deux informations de nature différente. */}
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 7, marginTop: 10 }}>
-          {/* Le nom de la séance était déjà le titre, juste au-dessus. Le tag
-              porte donc ce qui n'est écrit nulle part ailleurs : l'effort. */}
-          {st.intensite > 0 && (
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '4px 10px',
-                borderRadius: 'var(--pill)',
-                background: 'var(--surface-3)',
-                fontSize: 'var(--fs-micro)',
-                fontWeight: 500,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Intensité
-              <EchelleIntensite niveau={st.intensite} hauteur={11} />
-            </span>
-          )}
-          {/* Blanc pour une décision de Mathieu, orange pour le moteur
-              d'adaptation : la couleur dit d'où vient le changement. */}
           {s.ecart && <span className="tag-ecart">{s.ecart}</span>}
           {s.adapted && <span className="tag-adapte">{s.adapted}</span>}
         </div>

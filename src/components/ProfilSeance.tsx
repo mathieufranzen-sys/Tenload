@@ -15,7 +15,6 @@
 import type { Session } from '../data/types'
 import { formatPace, zonePace } from '../lib/paces'
 import {
-  COULEUR_ROLE,
   couleurSegment,
   hauteurSegment,
   roleDe,
@@ -49,7 +48,9 @@ function barres(blocs: BlocDeroule[]): Barre[] {
         out.push({
           part: b.recup.secondes ?? 30,
           hauteur: hauteurSegment(b.recup, true),
-          couleur: COULEUR_ROLE.recup,
+          // La même couleur que la ligne du dessous : la récupération est
+          // verte dans les deux (retour du 22 septembre).
+          couleur: couleurSegment(b.recup, 'recup'),
         })
       }
     }

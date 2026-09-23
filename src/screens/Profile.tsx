@@ -42,6 +42,8 @@ export type SectionKey =
   | 'patterns'
   | 'dossards'
   | 'bilans'
+  | 'programme'
+  | 'reglages'
 
 type IconeRubrique = 'alert' | 'clip' | 'chart' | 'heart' | 'gauge' | 'run' | 'sun' | 'flag'
 
@@ -52,35 +54,54 @@ interface Rubrique {
   icone: IconeRubrique
 }
 
-const GROUPES: Array<{ titre: string; rubriques: Rubrique[] }> = [
+/**
+ * Deux niveaux depuis le 23 septembre 2026. Le premier est TON suivi :
+ * ce que tu consultes ou saisis, une carte par rubrique. Le second range ce
+ * qui se lit une fois et se règle rarement, derrière deux portes.
+ */
+const PERSONNEL: Rubrique[] = [
+  { key: 'bilans', titre: 'Bilans de la semaine', description: 'Chaque semaine terminée et son bilan', icone: 'clip' },
+  { key: 'anoter', titre: 'Séances à noter', description: 'Les journées que l’indice ne mesure pas encore', icone: 'clip' },
+  { key: 'patterns', titre: 'Patterns', description: 'Les liens entre douleur et entraînement', icone: 'chart' },
+  { key: 'dossards', titre: 'Dossards passés', description: 'Les courses courues, leurs chronos et le mot du coach', icone: 'flag' },
+  { key: 'rappels', titre: 'Rappels du carnet', description: 'La raideur à 8 h, le point du soir à 23 h', icone: 'sun' },
+]
+
+const PROGRAMME: Rubrique[] = [
+  { key: 'contraintes', titre: 'Contraintes', description: 'Les règles non négociables du plan', icone: 'alert' },
+  { key: 'structure', titre: 'Structure des 34 semaines', description: 'Les cinq blocs, de la reprise à l’affûtage', icone: 'clip' },
+  { key: 'indice', titre: 'Indice de charge du tendon', description: 'Les bandes et le détail du calcul', icone: 'chart' },
+]
+
+const PARAMETRES: Rubrique[] = [
+  { key: 'allure', titre: 'Réglages d’allure', description: 'La forme projetée et l’objectif marathon', icone: 'gauge' },
+  { key: 'coeur', titre: 'Fréquence cardiaque', description: 'La FC max et les zones cardiaques', icone: 'heart' },
+]
+
+/** Les deux portes du second niveau. */
+const PORTES: Array<{ key: SectionKey; titre: string; description: string; icone: IconeRubrique; rubriques: Rubrique[] }> = [
   {
-    titre: 'Le plan',
-    rubriques: [
-      { key: 'contraintes', titre: 'Contraintes', description: 'Les règles non négociables du plan', icone: 'alert' },
-      { key: 'structure', titre: 'Structure des 34 semaines', description: 'Les cinq blocs, de la reprise à l’affûtage', icone: 'clip' },
-    ],
+    key: 'programme',
+    titre: 'Informations du programme',
+    description: 'Contraintes, structure des 34 semaines, indice de charge',
+    icone: 'clip',
+    rubriques: PROGRAMME,
   },
   {
-    titre: 'Ton corps',
-    rubriques: [
-      { key: 'bilans', titre: 'Bilans de la semaine', description: 'Chaque semaine terminée et son bilan', icone: 'clip' },
-      { key: 'anoter', titre: 'Séances à noter', description: 'Les journées que l’indice ne mesure pas encore', icone: 'clip' },
-      { key: 'patterns', titre: 'Patterns', description: 'Les liens entre douleur et entraînement', icone: 'chart' },
-      { key: 'indice', titre: 'Indice de charge du tendon', description: 'Les bandes et le détail du calcul', icone: 'chart' },
-      { key: 'coeur', titre: 'Fréquence cardiaque', description: 'La FC max et les zones cardiaques', icone: 'heart' },
-      { key: 'dossards', titre: 'Dossards passés', description: 'Les courses courues, leurs chronos et le mot du coach', icone: 'flag' },
-    ],
-  },
-  {
-    titre: 'Réglages',
-    rubriques: [
-      { key: 'allure', titre: 'Réglages d’allure', description: 'La forme projetée et l’objectif marathon', icone: 'gauge' },
-      { key: 'rappels', titre: 'Rappels du carnet', description: 'La raideur à 8 h, le point du soir à 23 h', icone: 'sun' },
-    ],
+    key: 'reglages',
+    titre: 'Paramètres',
+    description: 'Allures et fréquence cardiaque',
+    icone: 'gauge',
+    rubriques: PARAMETRES,
   },
 ]
 
-const TOUTES = GROUPES.flatMap((g) => g.rubriques)
+const TOUTES: Rubrique[] = [
+  ...PERSONNEL,
+  ...PROGRAMME,
+  ...PARAMETRES,
+  ...PORTES.map(({ key, titre, description, icone }) => ({ key, titre, description, icone })),
+]
 
 interface ProfilPatch {
   fitness_pace_s?: number
@@ -179,86 +200,24 @@ export function Profile({
       }}>
           <EnteteEcran titre="Profil"  />
 
-          {GROUPES.map((groupe) => (
-            <section key={groupe.titre} style={{ marginBottom: 22 }}>
-              <h2
-                style={{
-                  fontSize: 'var(--fs-detail)',
-                  fontWeight: 500,
-                  color: 'var(--accent)',
-                  margin: '0 0 10px 2px',
-                }}
-              >
-                {groupe.titre}
-              </h2>
-              {groupe.rubriques.map((r) => (
-                <button
-                  key={r.key}
-                  onClick={() => onSection(r.key)}
-                  className="carte"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 14,
-                    width: '100%',
-                    textAlign: 'left',
-                    color: 'inherit',
-                    borderRadius: 22,
-                    padding: '14px 16px',
-                    marginBottom: 9,
-                    cursor: 'pointer',
-                  }}
-                >
-                  <span
-                    aria-hidden
-                    style={{
-                      width: 42,
-                      height: 42,
-                      borderRadius: '50%',
-                      flex: 'none',
-                      display: 'grid',
-                      placeItems: 'center',
-                      background: 'var(--surface-3)',
-                      color: 'var(--accent)',
-                    }}
-                  >
-                    <Icon name={r.icone} size={18} />
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <b className="display" style={{ display: 'block', fontSize: 'var(--fs-t-liste)', fontWeight: 400, lineHeight: 1.2 }}>
-                      {r.titre}
-                      {r.key === 'anoter' && enRetard > 0 && (
-                        <span
-                          style={{
-                            marginLeft: 7,
-                            fontSize: 'var(--fs-micro)',
-                            fontWeight: 800,
-                            letterSpacing: '.4px',
-                            padding: '2.5px 7px',
-                            borderRadius: 'var(--pill)',
-                            background: 'var(--adapte-fond)',
-                            border: 'none',
-                            color: 'var(--warning)',
-                            verticalAlign: 'middle',
-                          }}
-                        >
-                          {enRetard}
-                        </span>
-                      )}
-                    </b>
-                    <span style={{ display: 'block', color: 'var(--sur-ink-2)', fontSize: 'var(--fs-meta)', marginTop: 2 }}>
-                      {r.description}
-                    </span>
-                  </div>
-                  <Icon
-                    name="chevronRight"
-                    size={18}
-                    style={{ color: 'var(--sur-ink-3)', flex: 'none', strokeWidth: 1.7 }}
-                  />
-                </button>
-              ))}
-            </section>
-          ))}
+          {/* Niveau 1 : ton suivi, une carte par rubrique. */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 4 }}>
+            {PERSONNEL.map((r) => (
+              <CarteRubrique
+                key={r.key}
+                rubrique={r}
+                onClick={() => onSection(r.key)}
+                badge={r.key === 'anoter' && enRetard > 0 ? `${enRetard} en retard` : undefined}
+              />
+            ))}
+          </div>
+
+          {/* Niveau 2 : ce qui se lit une fois et se règle rarement. */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 22 }}>
+            {PORTES.map((porte) => (
+              <CarteRubrique key={porte.key} rubrique={porte} discret onClick={() => onSection(porte.key)} />
+            ))}
+          </div>
 
           {onDeconnexion && (
             <button
@@ -282,6 +241,13 @@ export function Profile({
       </div>
 
       <SubPage ouvert={section != null} titre={active?.titre ?? ''} onBack={() => onSection(null)}>
+        {PORTES.filter((porte) => porte.key === section).map((porte) => (
+          <div key={porte.key} style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+            {porte.rubriques.map((r) => (
+              <CarteRubrique key={r.key} rubrique={r} onClick={() => onSection(r.key)} />
+            ))}
+          </div>
+        ))}
         {section === 'contraintes' && <Constraints />}
         {section === 'indice' && <TendonIndexInfo idx={A.detail.idx} band={A.band} />}
         {section === 'allure' && <PaceSettings marathonPace={marathonPace} test3k={test3k} onSave={onSaveProfil} />}
@@ -294,5 +260,65 @@ export function Profile({
         {section === 'bilans' && bilans}
       </SubPage>
     </>
+  )
+}
+
+/** Une rubrique du profil : icône, titre, une ligne de description. */
+function CarteRubrique({
+  rubrique: r,
+  onClick,
+  badge,
+  discret = false,
+}: {
+  rubrique: { titre: string; description: string; icone: IconeRubrique }
+  onClick: () => void
+  badge?: string
+  /** Les portes du second niveau : même carte, sans le rond d'icône plein. */
+  discret?: boolean
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="carte"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 14,
+        width: '100%',
+        textAlign: 'left',
+        color: 'inherit',
+        borderRadius: 22,
+        padding: '16px 16px',
+        cursor: 'pointer',
+        background: discret ? 'transparent' : undefined,
+      }}
+    >
+      <span
+        aria-hidden
+        style={{
+          width: 42,
+          height: 42,
+          borderRadius: '50%',
+          flex: 'none',
+          display: 'grid',
+          placeItems: 'center',
+          background: discret ? 'transparent' : 'var(--surface-2)',
+          border: discret ? '1px solid var(--border-2)' : 'none',
+          color: 'var(--ink-2)',
+        }}
+      >
+        <Icon name={r.icone} size={18} />
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <b className="display" style={{ display: 'block', fontSize: 'var(--fs-t-liste)', fontWeight: 400, lineHeight: 1.2 }}>
+          {r.titre}
+        </b>
+        <span style={{ display: 'block', color: 'var(--sur-ink-2)', fontSize: 'var(--fs-meta)', marginTop: 2 }}>
+          {r.description}
+        </span>
+      </div>
+      {badge && <span className="tag-adapte">{badge}</span>}
+      <Icon name="chevronRight" size={18} style={{ color: 'var(--sur-ink-3)', flex: 'none', strokeWidth: 1.7 }} />
+    </button>
   )
 }

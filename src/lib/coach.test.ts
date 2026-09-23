@@ -297,7 +297,7 @@ describe('motDuCoach — un changement à indice bas doit quand même parler', (
   it('parle d’une séance déplacée jusqu’ici', () => {
     const m = mot([seance({ typePlan: 'long', type: 'long', dist: 26, distPlan: 26, ecart: 'deplacement' })])
     expect(m.texte).toContain('sortie longue de 26 km')
-    expect(m.texte).toContain("arrivée sur aujourd'hui")
+    expect(m.texte).toContain("passée sur aujourd'hui")
   })
 
   it('relève une distance réelle supérieure au plan', () => {
@@ -413,7 +413,7 @@ describe('motDuCoach — lectures réfléchies', () => {
     const m = motDuCoach({ ...base, pain: {}, hier: [hier({ rpe: 10 })] })
     expect(m.cle).toBe('seance-hier')
     expect(m.ton).toBe('vigilance')
-    expect(m.texte).toContain('10 sur dix')
+    expect(m.texte).toContain('10 sur 10')
     expect(m.texte).toContain('8 attendu')
   })
 
@@ -499,7 +499,7 @@ describe('motDuCoach — la règle du lendemain de sortie longue', () => {
       indice: { idx: 32, painInconnue: false, chargeInconnue: false },
     })
     expect(m.cle).toBe('course-neutralisee')
-    expect(m.texte).toContain('3 sur dix')
+    expect(m.texte).toContain('3 sur 10')
     expect(m.texte).not.toContain('32 sur 100')
   })
 })

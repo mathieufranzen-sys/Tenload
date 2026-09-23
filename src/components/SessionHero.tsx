@@ -5,16 +5,12 @@
  * puces, et la pastille pâle qui ouvre le détail. Le premier pas de la séance
  * reste sous un filet : c'est la seule consigne à avoir en tête au départ.
  */
-import type { ReactNode } from 'react'
-import planJson from '../data/plan.json'
-import type { Plan, Session, ZoneKey } from '../data/types'
+import type { Session } from '../data/types'
 import { formatNumber } from '../lib/dates'
-import { allureUnique, estimateDuration, formatDuration, formatPace, zonePace } from '../lib/paces'
-import { encreZone, styleSeance } from '../lib/seanceStyle'
+import { allureUnique, estimateDuration, formatDuration, formatPace } from '../lib/paces'
+import { styleSeance } from '../lib/seanceStyle'
 import { EchelleIntensite } from './MarqueSeance'
 import { Icon } from './Icon'
-
-const plan = planJson as unknown as Plan
 
 export function SessionHero({
   session: s,
@@ -32,8 +28,6 @@ export function SessionHero({
   onClick?: () => void
 }) {
   const Balise = onClick ? 'button' : 'div'
-  const premierSegment = s.struct?.[0]
-  const premierPas = s.main?.[0] ?? s.wu?.[0]
   // Le plan ne fixe une durée que pour le vélo et la muscu : pour une course,
   // elle se déduit de la structure et des allures courantes.
   const [dureeMin, dureeMax] = s.type === 'repos' ? [0, 0] : estimateDuration(s, marathonPace)
@@ -102,8 +96,9 @@ export function SessionHero({
           fontSize: 'var(--fs-meta)',
         }}
       >
+        {/* La catégorie seule : l'intensité rejoint la ligne de repères,
+            comme sur les cartes de séance. */}
         <span>{s.cat}</span>
-        {st.intensite > 0 && <EchelleIntensite niveau={st.intensite} hauteur={11} />}
       </div>
 
       {s.adapted && (
@@ -112,72 +107,41 @@ export function SessionHero({
         </div>
       )}
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 14 }}>
-        {s.dist ? <span className="puce">{formatNumber(s.dist)} km</span> : null}
-        {dureeMin > 0 ? (
-          <span className="puce">
-            {dureeMin === dureeMax ? formatDuration(dureeMin) : `${formatDuration(dureeMin)} à ${formatDuration(dureeMax)}`}
-          </span>
-        ) : null}
-        {allure != null ? (
-          <span className="puce">{formatPace(allure)}/km</span>
-        ) : s.type === 'repos' ? (
-          <span className="puce">Aucune charge</span>
-        ) : null}
+      {/* Les mêmes repères que les cartes en dessous, dans le même ordre et
+          au même niveau : distance, durée, allure (retour du 22 septembre).
+          Le premier pas de la séance a quitté cet écran, le détail est à un
+          geste. */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 7,
+          marginTop: 12,
+          color: 'var(--sur-ink-2)',
+          fontSize: 'var(--fs-detail)',
+          fontWeight: 500,
+        }}
+      >
+        <span>
+          {[
+            s.dist ? `${formatNumber(s.dist)} km` : null,
+            dureeMin > 0
+              ? dureeMin === dureeMax
+                ? formatDuration(dureeMin)
+                : `${formatDuration(dureeMin)} à ${formatDuration(dureeMax)}`
+              : null,
+            allure != null ? `${formatPace(allure)}/km` : s.type === 'repos' ? 'Aucune charge' : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </span>
+        {st.intensite > 0 && <EchelleIntensite niveau={st.intensite} hauteur={11} />}
       </div>
-
-      {/* Une séance d'un seul bloc (une course facile de 10 km) ne ferait que
-          répéter ici la distance et l'allure des puces du dessus. */}
-      {!(premierSegment && s.struct?.length === 1) && (premierSegment || premierPas || s.ex?.length) && (
-        <div style={{ marginTop: 14, paddingTop: 14, borderTop: SEPARATEUR }}>
-          {premierSegment && (
-            <Pas
-              titre={`${formatNumber(premierSegment.km)} km : ${formatPace(zonePace(marathonPace, premierSegment.zone))}/km`}
-              detail={detailZone(premierSegment.zone, marathonPace)}
-              couleur={encreZone(premierSegment.zone)}
-            />
-          )}
-          {!premierSegment && premierPas && (
-            <Pas
-              titre={typeof premierPas[0] === 'number' ? `${formatNumber(premierPas[0])} km` : String(premierPas[0])}
-              detail={typeof premierPas[1] === 'string' && !(premierPas[1] in plan.zones) ? premierPas[1] : undefined}
-              couleur="var(--accent-doux)"
-            />
-          )}
-          {!premierSegment && !premierPas && s.ex?.[0] && (
-            <Pas titre={s.ex[0][0]} detail={s.ex[0][1]} couleur="var(--accent-doux)" />
-          )}
-        </div>
-      )}
 
       {/* Pas de mot du coach ici : il vit dans le détail de séance, à un clic,
           et l'écran Aujourd'hui en porte déjà un en bas. Trois fois la même
           voix sur un même écran, c'est deux fois de trop. */}
     </Balise>
   )
-}
-
-const SEPARATEUR = '1px solid var(--border)'
-
-function Pas({ titre, detail, couleur }: { titre: string; detail?: ReactNode; couleur: string }) {
-  return (
-    <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
-      <span aria-hidden style={{ width: 3, borderRadius: 2, background: couleur, flex: 'none' }} />
-      <div>
-        <div style={{ fontSize: 'var(--fs-texte)', fontWeight: 500, lineHeight: 1.3 }}>{titre}</div>
-        {detail && (
-          <div style={{ fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)', marginTop: 3, lineHeight: 1.4 }}>
-            {detail}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function detailZone(zone: ZoneKey, marathonPace: number): string {
-  if (zone === 'am') return 'Ton allure cible marathon'
-  if (zone === 'ef' || zone === 'recup')
-    return `Pas plus vite que ${formatPace(zonePace(marathonPace, zone))}/km. C'est une limite, pas un objectif.`
-  return plan.zones[zone].label
 }
