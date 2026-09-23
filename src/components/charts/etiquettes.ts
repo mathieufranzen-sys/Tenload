@@ -40,3 +40,6 @@ export function indicesEtiquettes(
  * quatre significations.
  */
 export const POINTILLE = '4 4'
+
+/** La couleur de ces pointillés : un repère se lit pareil partout. */
+export const TRAIT_REPERE = 'var(--chart-3)'

@@ -243,9 +243,11 @@ export function ChargeSheet({
                 style={{
                   width: `${soin}%`,
                   marginLeft: `-${soin}%`,
-                  // Le soin en vert plein, à la fin de la barre : hachuré, il
-                  // se lisait comme une zone incertaine.
-                  background: 'var(--good)',
+                  // Hachuré (retour du 23 septembre) : le soin se retranche
+                  // de ce qui précède, il ne s'y ajoute pas. Le vert dit d'où
+                  // il vient, la hachure qu'il se soustrait.
+                  background:
+                    'repeating-linear-gradient(135deg, var(--good) 0 4px, color-mix(in srgb, var(--good) 35%, transparent) 4px 8px)',
                 }}
               />
             )}

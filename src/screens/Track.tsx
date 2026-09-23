@@ -25,7 +25,7 @@ import { VolumeChart, type BarRow, type VueVolume } from '../components/charts/V
 import { LoadChart, type StackRow } from '../components/charts/LoadChart'
 import { MeshBackground } from '../components/MeshBackground'
 import { EffortChart, FormeChart } from '../components/charts/NiveauChart'
-import { MIN_SEANCES, ecartEffortSemaine, serieForme, type AjustementForme } from '../lib/forme'
+import { MIN_SEANCES, RPE_ATTENDU, serieForme, type AjustementForme } from '../lib/forme'
 import { RepartitionChart } from '../components/charts/RepartitionChart'
 import { RatioChart, type PointRatio } from '../components/charts/RatioChart'
 import { chronoEquivalent, formatChrono } from '../lib/dossards'
@@ -319,7 +319,16 @@ export function Track({
       secondes: Math.round(f.allure * MARATHON_KM),
       lu: f.seances >= MIN_SEANCES,
     }))
-    const effort = lundis.map((l) => ({ label: formatDay(l), ecart: ecartEffortSemaine(feedback, l).ecart }))
+    // Séance par séance sur quatorze jours (retour du 23 septembre) : une
+    // moyenne par semaine sur trois mois lissait tout ce qu'on vient y voir.
+    const depuis = addDays(now, -13)
+    const effort = feedback
+      .filter((f) => f.day >= depuis && f.day <= now && RPE_ATTENDU[f.session_type as SessionType] != null)
+      .sort((a, b) => (a.day < b.day ? -1 : 1))
+      .map((f) => ({
+        label: formatDay(f.day),
+        ecart: f.rpe - (RPE_ATTENDU[f.session_type as SessionType] as number),
+      }))
     return { forme, effort }
   }, [formeTest, feedback, now])
 
@@ -358,6 +367,13 @@ export function Track({
             suffix=""
             couleur={sante.couleur}
             detail="Douleur des 30 derniers jours"
+          />
+          <Kpi
+            label="Seuil cette semaine"
+            valeur={`${repartition.seuil}`}
+            suffix=" min"
+            couleur={repartition.seuil >= 20 ? 'var(--good)' : undefined}
+            detail="Cible 20 à 30 min"
           />
           <Kpi
             label="Séances notées"
@@ -415,7 +431,7 @@ export function Track({
         </Viz>
 
         <Viz
-          titre="Effort perçu contre effort attendu"
+          titre="Effort perçu contre effort attendu, 14 jours"
           legendeCouleurs={[
             { label: 'Plus facile que prévu', couleur: 'var(--chart-1)' },
             { label: 'Plus dur', couleur: 'var(--chart-2)' },

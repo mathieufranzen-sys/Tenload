@@ -137,7 +137,6 @@ export function Plan({
   }, [focusSeance, jetonFocus])
 
   const [premiere, derniere] = bloc.weeks
-  const rangDansBloc = semaine.n - premiere + 1
   const dureeBloc = derniere - premiere + 1
 
   return (
@@ -265,54 +264,83 @@ export function Plan({
           </>
         ) : (
           <>
-        {/* La semaine se choisit par deux flèches rondes de part et d'autre du
-            numéro ; la plage de dates seule dessous, le bloc a sa carte. */}
-        {/* Plus d'air autour du numéro de semaine (retour du 22 septembre). */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0 24px' }}>
-          <button
-            onClick={() => onChangerSemaine(numeroSemaine - 1)}
-            disabled={numeroSemaine <= 1}
-            aria-label="Semaine précédente"
-            className="rond"
+        {/* L'en-tête de semaine, sur la structure donnée par Mathieu le
+            23 septembre 2026 : la pastille du bloc, la semaine entre ses deux
+            flèches, la progression du bloc, ce que le bloc cherche, puis les
+            trois chiffres de la semaine. */}
+        <div className="carte" style={{ padding: '18px 18px 20px', margin: '4px 0 20px' }}>
+          {/* Deux pastilles sur la même ligne : le bloc et la nature de la
+              semaine. Sous les dates, la nature les poussait sur deux lignes. */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 9,
+              padding: '7px 15px',
+              borderRadius: 'var(--pill)',
+              background: 'var(--bleu-50)',
+              border: '1px solid var(--bleu-200)',
+              color: 'var(--bleu-700)',
+              fontSize: 'var(--fs-detail)',
+              fontWeight: 700,
+              letterSpacing: '.02em',
+              textTransform: 'uppercase',
+            }}
           >
-            <Icon name="chevronLeft" size={19} />
-          </button>
-          <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
-            <div className="display" style={{ fontSize: 'var(--fs-t-page)', lineHeight: 1.1 }}>
-              Semaine {semaine.n}
-              <span style={{ color: 'var(--sur-ink-3)' }}> / {plan.weeks.length}</span>
-            </div>
-            <div style={{ fontSize: 'var(--fs-meta)', color: 'var(--accent)', marginTop: 3 }}>
-              {formatDay(semaine.monday)} → {formatDay(addDays(semaine.monday, 6))} ·{' '}
-              {(() => {
-                const n = libelleNature(semaine, { charge: true })
-                return n.charAt(0).toUpperCase() + n.slice(1)
-              })()}
-            </div>
+            <span aria-hidden style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--bleu-500)' }} />
+            {`Bloc ${bloc.id}\u00a0· ${bloc.name}`}
+          </span>
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '7px 15px',
+              borderRadius: 'var(--pill)',
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border)',
+              color: 'var(--ink-2)',
+              fontSize: 'var(--fs-detail)',
+              fontWeight: 700,
+              letterSpacing: '.02em',
+              textTransform: 'uppercase',
+            }}
+          >
+            {libelleNature(semaine, { charge: true })}
+          </span>
           </div>
-          <button
-            onClick={() => onChangerSemaine(numeroSemaine + 1)}
-            disabled={numeroSemaine >= plan.weeks.length}
-            aria-label="Semaine suivante"
-            className="rond"
-          >
-            <Icon name="chevronRight" size={19} />
-          </button>
-        </div>
 
-        {/* Le bloc en tête de semaine, avec les chiffres de la semaine dedans
-            (retour du 22 septembre) : c'est lui qui dit pourquoi la semaine
-            ressemble à ça. Les semaines déjà passées du bloc sont en vert
-            foncé, celle d'aujourd'hui en néon. Pas de phrase de bloc, et
-            trois puces qui tiennent sur une ligne : la nature de la semaine
-            est montée sous les dates, où elle qualifie la semaine. */}
-        <div className="carte" style={{ padding: '20px 18px 22px', marginBottom: 20 }}>
-          <h2 className="display" style={{ fontSize: 'var(--fs-t-liste)', lineHeight: 1.25, margin: 0 }}>
-            {/* Espaces insécables avant chaque point : une ligne ne commence
-                jamais par « · ». */}
-            {`Bloc ${bloc.id}\u00a0· ${bloc.name}\u00a0· semaine ${rangDansBloc} sur ${dureeBloc}`}
-          </h2>
-          <div style={{ display: 'flex', gap: 3, margin: '18px 0 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16 }}>
+            <button
+              onClick={() => onChangerSemaine(numeroSemaine - 1)}
+              disabled={numeroSemaine <= 1}
+              aria-label="Semaine précédente"
+              className="rond"
+            >
+              <Icon name="chevronLeft" size={19} />
+            </button>
+            <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
+              <div className="display" style={{ fontSize: 'var(--fs-t-page)', lineHeight: 1.1 }}>
+                Semaine {semaine.n}
+                <span style={{ color: 'var(--sur-ink-3)' }}> / {plan.weeks.length}</span>
+              </div>
+              <div style={{ fontSize: 'var(--fs-meta)', color: 'var(--accent)', marginTop: 3 }}>
+                {formatDay(semaine.monday)} — {formatDay(addDays(semaine.monday, 6))}
+              </div>
+            </div>
+            <button
+              onClick={() => onChangerSemaine(numeroSemaine + 1)}
+              disabled={numeroSemaine >= plan.weeks.length}
+              aria-label="Semaine suivante"
+              className="rond"
+            >
+              <Icon name="chevronRight" size={19} />
+            </button>
+          </div>
+
+          {/* Une barre par semaine du bloc : passée en vert foncé, en cours en
+              néon, à venir en gris. */}
+          <div style={{ display: 'flex', gap: 5, margin: '18px 0 0' }}>
             {Array.from({ length: dureeBloc }, (_, i) => {
               const w = plan.weeks.find((x) => x.n === premiere + i)
               const finie = w != null && addDays(w.monday, 6) < now
@@ -323,7 +351,7 @@ export function Plan({
                   aria-hidden
                   style={{
                     flex: 1,
-                    height: premiere + i === semaine.n ? 9 : 6,
+                    height: premiere + i === semaine.n ? 8 : 5,
                     alignSelf: 'center',
                     borderRadius: 'var(--pill)',
                     background: finie ? 'var(--braise)' : enCours ? 'var(--neon-2)' : 'var(--surface-3)',
@@ -332,18 +360,26 @@ export function Plan({
               )
             })}
           </div>
-          <div style={{ display: 'flex', gap: 6, marginTop: 18 }}>
-            <span className="puce" style={PUCE_BLOC}>
-              {formatNumber(kmCourse)} km prévus
-            </span>
-            <span className="puce" style={PUCE_BLOC}>
-              {nbCourses} course{nbCourses > 1 ? 's' : ''}
-            </span>
-            {semaine.sl ? (
-              <span className="puce" style={PUCE_BLOC}>
-                Longue {semaine.sl} km
-              </span>
-            ) : null}
+
+          <p style={{ margin: '16px 0 0', fontSize: 'var(--fs-meta)', lineHeight: 1.5, color: 'var(--ink-2)' }}>
+            {bloc.focus}
+          </p>
+
+          <div style={{ display: 'flex', gap: 22, marginTop: 18 }}>
+            {[
+              semaine.sl ? { valeur: `${semaine.sl} km`, libelle: 'sortie longue' } : null,
+              { valeur: `${nbCourses}`, libelle: nbCourses > 1 ? 'courses' : 'course' },
+              { valeur: `${formatNumber(kmCourse)} km`, libelle: 'de course' },
+            ]
+              .filter((x): x is { valeur: string; libelle: string } => x != null)
+              .map((x) => (
+                <div key={x.libelle} style={{ minWidth: 0 }}>
+                  <div className="chiffre" style={{ fontSize: 'var(--fs-c-m)', lineHeight: 1.1 }}>
+                    {x.valeur}
+                  </div>
+                  <div style={{ fontSize: 'var(--fs-detail)', color: 'var(--ink-2)', marginTop: 2 }}>{x.libelle}</div>
+                </div>
+              ))}
           </div>
         </div>
 
@@ -409,15 +445,6 @@ export function Plan({
     </div>
   )
 }
-
-/** Les trois puces du bloc se partagent la ligne : à 14 px, leur retrait
- *  d'origine faisait déborder la troisième sur un écran de 390. */
-const PUCE_BLOC = {
-  background: 'var(--surface-2)',
-  flex: '1 1 auto',
-  justifyContent: 'center',
-  padding: '6px 10px',
-} as const
 
 const JOUR_COURT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 

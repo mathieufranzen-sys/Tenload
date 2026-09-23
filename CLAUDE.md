@@ -1093,6 +1093,19 @@ parce qu'ils nommaient l'onglet Allures.
   gauche, le soin compris, et la ligne des gestes donne la charge de la
   veille : c'est elle qui décide du −5 de journée de repos.
 
+- **L'en-tête du Programme** suit la structure donnée par Mathieu le
+  23 septembre : pastille du bloc et nature de la semaine, la semaine entre
+  ses deux flèches avec ses dates, la progression du bloc, ce que le bloc
+  cherche, puis trois chiffres (sortie longue, courses, kilomètres).
+- Tous les graphiques de Suivi partagent le même pointillé (`POINTILLE`) et
+  la même couleur de trait de repère (`TRAIT_REPERE`).
+- Suivi porte quatre chiffres, le quatrième étant le **seuil cumulé de la
+  semaine** contre la cible de 20 à 30 min (contrainte 9). L'effort perçu se
+  lit **séance par séance sur 14 jours** : une moyenne hebdomadaire sur trois
+  mois lissait ce qu'on vient y chercher.
+- `--good` est le m3 de la famille verte des bandes (#1f8a3b) : le vert
+  profond appartient au coach.
+
 ### Les dossards
 
 `src/lib/dossards.ts` (+ 11 tests), `SectionDossards`, table

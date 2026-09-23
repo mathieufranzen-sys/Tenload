@@ -189,7 +189,9 @@
      elles ne servent qu'en aplat. « Vigilance » et « à noter » partagent
      désormais la même encre : deux oranges pour deux degrés du même
      message, ça ne se lisait pas comme une échelle. */
-  --good: #2e731a;
+  /* Le m3 de la famille verte des bandes : le vert profond appartient au
+     coach, et « Bonne » s'écrivait dans sa couleur (retour du 23 septembre). */
+  --good: #1f8a3b;
   --warning: var(--orange-700);
   --serious: var(--orange-700);
   --critical: #e5261c;
