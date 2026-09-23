@@ -22,21 +22,7 @@ import { SectionDossards } from '../components/SectionDossards'
 
 const plan = planJson as unknown as Plan
 
-const ZONE_DESC: Record<ZoneKey, string> = {
-  recup: 'Lendemain de sortie longue',
-  ef: 'Le socle du plan, allure conversationnelle',
-  am: "L'allure du 4 avril",
-  semi: 'Allure du semi, fin de sortie longue avant un dossard',
-  seuil: 'Effort soutenu tenable 40 à 60 minutes',
-  vo2: 'Fractionné 800 m à 1 200 m',
-  rep: '400 m à 600 m',
-}
 
-/**
- * Le camaïeu des zones, dans la gamme bleue, la couleur secondaire des
- * allures (arbitré par Mathieu le 22 septembre 2026) : du bleu pâle de la
- * récupération au bleu nuit des répétitions.
- */
 // Les couleurs d'allure vivent dans `seanceStyle.ts` : le déroulé d'une
 // séance et ces barres doivent montrer la même zone de la même couleur.
 
@@ -117,7 +103,6 @@ export function Paces({
           {zones.map(([k, z], i) => {
             const [lo, hi] = zoneHrRange(k, 'course', hrMax)
             const [loV, hiV] = zoneHrRange(k, 'velo', hrMax)
-            const desc = ZONE_DESC[k]
             const ancre = k === 'am'
             return (
               <div key={k}>
@@ -143,10 +128,10 @@ export function Paces({
                   </span>
                 </div>
                 <div style={{ margin: '6px 20px 0', fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)', lineHeight: 1.4 }}>
-                  {/* Les deux disciplines sur la même ligne : une bascule
-                      cachait la moitié de l'information (retour du
+                  {/* Les deux fourchettes et rien d'autre : la description
+                      de la zone faisait sauter la ligne (retour du
                       23 septembre). */}
-                  FC {lo}–{hi} · {desc.charAt(0).toLowerCase() + desc.slice(1)} (à vélo {loV}–{hiV})
+                  FC {lo}–{hi} · à vélo FC {loV}–{hiV}
                 </div>
               </div>
             )

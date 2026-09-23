@@ -1068,8 +1068,9 @@ parce qu'ils nommaient l'onglet Allures.
   porte les **chronos équivalents** (colonnes « Aujourd'hui » et « Visé le
   4 avril ») et le **rapport aigu sur chronique** (`RatioChart`), dessiné sur
   ses trois plages de lecture.
-- Objectif n'a plus de bascule course/vélo : chaque zone porte sa fourchette
-  de FC en course et celle du vélo entre parenthèses.
+- Objectif n'a plus de bascule course/vélo : sous chaque barre, « FC 126–154
+  · à vélo FC 106–134 », et rien d'autre. La description de la zone faisait
+  sauter la ligne.
 
 - **L'indice de Suivi se dessine en colonnes**, une par journée, à la couleur
   de sa bande (dessin choisi par Mathieu parmi quatre, le 23 septembre 2026).
