@@ -1059,7 +1059,9 @@ parce qu'ils nommaient l'onglet Allures.
   l'inverse sur la carte d'à côté. Les cartes n'ont plus d'icône de
   discipline, seule la séance notée garde sa coche.
 - Une séance **sautée** descend avec les séances notées sur Aujourd'hui,
-  barrée : elle n'est plus « à faire ».
+  barrée : elle n'est plus « à faire ». Une séance **notée** prend un fond
+  vert très clair (23 septembre) : elle est derrière toi et ne doit plus
+  peser autant qu'une carte qui attend quelque chose.
 - Profil à deux niveaux (23 septembre) : ton suivi en cartes (bilans, séances
   à noter, patterns, dossards passés, rappels), puis deux portes,
   « Informations du programme » et « Paramètres », et la déconnexion.

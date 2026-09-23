@@ -60,8 +60,12 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
         padding: '15px 15px',
         marginBottom: 11,
         overflow: 'hidden',
-        // Une séance sautée s'efface plus qu'une séance notée : elle reste
-        // lisible dans la semaine, mais elle ne réclame plus rien.
+        // Une séance notée passe en vert très clair (retour du 23 septembre) :
+        // elle est derrière toi, elle ne doit plus peser autant qu'une carte
+        // qui attend quelque chose. Une séance sautée, elle, s'efface : il n'y
+        // a rien à en retirer.
+        background: feedback ? 'color-mix(in srgb, var(--neon) 14%, var(--bg))' : undefined,
+        borderColor: feedback ? 'color-mix(in srgb, var(--neon-2) 35%, transparent)' : undefined,
         opacity: s.saute ? 0.4 : 1,
         transition: 'transform var(--dur-fast), background var(--dur-fast)',
       }}
