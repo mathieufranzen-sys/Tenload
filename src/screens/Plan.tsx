@@ -30,6 +30,8 @@ import { Segmented } from '../components/Segmented'
 import { VueCalendrier } from '../components/VueCalendrier'
 import { libelleNature } from '../lib/natureSemaine'
 import { GrilleCalendrier } from '../components/GrilleCalendrier'
+import { CarteDossardJour } from '../components/CarteDossardJour'
+import type { Dossard } from '../lib/dossards'
 
 const plan = planJson as unknown as PlanType
 
@@ -62,6 +64,14 @@ interface Props {
   focusSeance?: string | null
   /** Change à chaque « Déplacer », même sur la même séance : c'est la demande qui compte, pas la clé. */
   jetonFocus?: number
+  /**
+   * Les dossards ajoutés à la main, posés à leur date. Ils ne font pas partie
+   * du plan : rien n'entre dans la charge ni dans les contraintes, la carte
+   * est là pour que la semaine se prépare avec la course en vue.
+   */
+  dossards?: Dossard[]
+  /** Ouvre la page du dossard, qui vit dans Objectif. */
+  onOuvrirDossard?: (id: string) => void
   onOuvrirProfil: () => void
 }
 
@@ -77,6 +87,8 @@ export function Plan({
   onSaveEcart,
   focusSeance,
   jetonFocus,
+  dossards,
+  onOuvrirDossard,
   onOuvrirProfil,
 }: Props) {
   const now = todayISO()
@@ -138,6 +150,8 @@ export function Plan({
 
   const [premiere, derniere] = bloc.weeks
   const dureeBloc = derniere - premiere + 1
+  /** Les dossards hors plan posés sur une date. */
+  const dossardsDuJour = (date: string) => (dossards ?? []).filter((d) => d.day === date)
 
   return (
     <div style={{ position: 'relative', maxWidth: 'var(--shell-max)', margin: '0 auto', paddingBottom: 90 }}>
@@ -245,6 +259,8 @@ export function Plan({
             now={now}
             semaineVisee={semaine.n}
             estNotee={(x) => feedbackDe(x) != null}
+            dossards={dossards}
+            onOuvrirDossard={onOuvrirDossard}
             jourVise={jourVise ?? (focusSeance ? null : now)}
             focus={focusSeance}
             onOuvrirSeance={onOuvrirSeance}
@@ -288,8 +304,10 @@ export function Plan({
               textTransform: 'uppercase',
             }}
           >
-            <span aria-hidden style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--bleu-500)' }} />
-            {`Bloc ${bloc.id}\u00a0· ${bloc.name}`}
+            {/* « Bloc Réathlétisation », sans la lettre ni la pastille devant
+                (retour du 24 septembre) : le nom du bloc suffit à le nommer,
+                et la lettre se retrouve dans la progression juste en dessous. */}
+            {`Bloc ${bloc.name}`}
           </span>
           <span
             style={{
@@ -397,9 +415,20 @@ export function Plan({
                   date={date}
                   aujourdhui={estAujourdhui}
                   passe={date < now}
-                  vide={!duJour.length}
+                  vide={!duJour.length && !dossardsDuJour(date).length}
                 />
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {/* Le dossard passe AVANT les séances du jour : c'est lui le
+                      rendez-vous, la séance du plan est ce qu'il reste à
+                      arbitrer autour. */}
+                  {dossardsDuJour(date).map((d) => (
+                    <CarteDossardJour
+                      key={d.id}
+                      dossard={d}
+                      now={now}
+                      onOuvrir={onOuvrirDossard && (() => onOuvrirDossard(d.id))}
+                    />
+                  ))}
                   {duJour.length ? (
                     duJour.map((x) => (
                       <SessionCard
@@ -414,7 +443,7 @@ export function Plan({
                         onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
                       />
                     ))
-                  ) : (
+                  ) : dossardsDuJour(date).length ? null : (
                     <div
                       style={{
                         flex: 1,

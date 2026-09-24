@@ -21,11 +21,27 @@ import { formatNumber } from '../lib/dates'
 import type { Band, IndexBreakdown } from '../lib/tendonIndex'
 import { Icon } from './Icon'
 
+/**
+ * Le complément de « la baisse vient surtout … », écrit à la main.
+ * La contraction française ne se déduit pas d'un libellé : la phrase disait
+ * « vient surtout de emballement de la charge et de monotonie ».
+ */
+const COMPLEMENT: Record<string, string> = {
+  'Douleur déclarée': 'de la douleur déclarée',
+  'Emballement de la charge': 'de l’emballement de la charge',
+  'Fraîcheur immédiate': 'de la fraîcheur immédiate',
+  Tendance: 'de la tendance de la raideur',
+  Monotonie: 'de la monotonie',
+  'Gestes protecteurs': 'des gestes protecteurs',
+}
+
 interface Terme {
   label: string
   valeur: number
   plafond: number
   detail: string
+  /** Le détail ligne par ligne, quand le terme se décompose (les gestes). */
+  gestes?: Array<{ label: string; points: string }>
 }
 
 export function ChargeSheet({
@@ -108,14 +124,21 @@ export function ChargeSheet({
       label: 'Gestes protecteurs',
       valeur: -b.credits,
       plafond: -15,
-      detail: soins
+      detail: 'Excentrique −6, repos −5, sauts −2, hydratation −2',
+      // Un geste et ses points tiennent sur la même ligne, les points alignés
+      // à droite (retour du 24 septembre) : en phrase courante, un geste et
+      // son chiffre se retrouvaient de part et d'autre d'un retour à la ligne.
+      gestes: soins
         ? [
-            `Excentrique ${soins.excentrique ? '−6' : '0'}`,
-            `Journée de repos ${soins.repos ? '−5' : '0'}`,
-            `Sauts ${soins.sauts ? '−2' : '0'}`,
-            `Hydratation ${soins.hydratation ? '−2' : '0'}`,
-          ].join(' · ') + ` · hier, charge ${formatNumber(Math.round(soins.chargeVeille * 10) / 10)}`
-        : 'Excentrique −6, repos −5, sauts −2, hydratation −2',
+            { label: 'Excentrique la veille', points: soins.excentrique ? '−6' : '0' },
+            { label: 'Journée de repos', points: soins.repos ? '−5' : '0' },
+            { label: 'Sauts', points: soins.sauts ? '−2' : '0' },
+            { label: 'Hydratation 2 L', points: soins.hydratation ? '−2' : '0' },
+            // C'est elle qui décide du −5 : sous 2, la journée d'hier compte
+            // comme un vrai repos.
+            { label: 'Charge d’hier', points: formatNumber(Math.round(soins.chargeVeille * 10) / 10) },
+          ]
+        : undefined,
     },
   ]
 
@@ -162,13 +185,13 @@ export function ChargeSheet({
       'Gestes protecteurs': -veille.credits,
     }
     const causes = termes
-      .map((t) => ({ label: t.label.toLowerCase(), delta: t.valeur - (hier[t.label] ?? 0) }))
+      .map((t) => ({ label: t.label, delta: t.valeur - (hier[t.label] ?? 0) }))
       .filter((t) => Math.sign(t.delta) === Math.sign(d) && Math.abs(t.delta) >= 1)
       .sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta))
       .slice(0, 2)
-    const noms = causes.map((c) => c.label)
+    const noms = causes.map((c) => COMPLEMENT[c.label] ?? `de ${c.label.toLowerCase()}`)
     return `L'indice est passé de ${veille.idx} à ${b.idx}${
-      noms.length ? ` : ${d > 0 ? 'la hausse' : 'la baisse'} vient surtout de ${noms.join(' et de ')}.` : '.'
+      noms.length ? ` : ${d > 0 ? 'la hausse' : 'la baisse'} vient surtout ${noms.join(' et ')}.` : '.'
     }`
   })()
 
@@ -341,9 +364,34 @@ export function ChargeSheet({
                     }}
                   />
                 </div>
-                <p style={{ margin: '10px 0 0', fontSize: 'var(--fs-meta)', lineHeight: 1.5, color: 'var(--sur-ink-2)' }}>
-                  {t.detail}
-                </p>
+                {t.gestes ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', marginTop: 8 }}>
+                    {t.gestes.map((g) => (
+                      <div
+                        key={g.label}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'baseline',
+                          gap: 12,
+                          padding: '5px 0',
+                          fontSize: 'var(--fs-meta)',
+                          lineHeight: 1.4,
+                          // Un geste qui n'a pas compté reste lisible mais
+                          // s'efface : la page répond à « lequel a compté ».
+                          color: g.points === '0' ? 'var(--sur-ink-3)' : 'var(--sur-ink-2)',
+                        }}
+                      >
+                        <span>{g.label}</span>
+                        <span style={{ flex: 'none', fontVariantNumeric: 'tabular-nums' }}>{g.points}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ margin: '10px 0 0', fontSize: 'var(--fs-meta)', lineHeight: 1.5, color: 'var(--sur-ink-2)' }}>
+                    {t.detail}
+                  </p>
+                )}
               </section>
             )
           })}

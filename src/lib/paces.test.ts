@@ -3,9 +3,11 @@
  * tests verrouillent le sens et l'ordre de grandeur, pas la décimale.
  */
 import { describe, expect, it } from 'vitest'
-import type { Session } from '../data/types'
+import planJson from '../data/plan.json'
+import type { Plan, Session, ZoneKey } from '../data/types'
 import {
   allureUnique,
+  ZONE_OFFSETS,
   coutDuRelief,
   estimateDuration,
   formatPace,
@@ -162,5 +164,39 @@ describe('allureUnique', () => {
 
   it('ne donne rien quand aucune zone n’est fixée', () => {
     expect(allureUnique(seance({ type: 'velo', dur: [50, 60] }), PACE)).toBeNull()
+  })
+})
+
+/**
+ * Le plan embarque sa propre table de zones, et `plan.json` est casté en
+ * `Record<ZoneKey, Zone>` : le typage ne vérifie donc rien. L'allure semi y a
+ * manqué pendant six jours, ce qui ouvrait le détail d'une sortie longue sur un
+ * écran blanc. Ce test est le garde-fou que le typage ne peut pas être.
+ */
+describe('la table de zones du plan', () => {
+  const zones = (planJson as unknown as Plan).zones
+
+  it('connaît toutes les zones du modèle', () => {
+    for (const cle of Object.keys(ZONE_OFFSETS) as ZoneKey[]) {
+      expect(zones[cle], `zone ${cle} absente de plan.json`).toBeDefined()
+      expect(zones[cle].label.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('donne les mêmes écarts que le modèle', () => {
+    for (const cle of Object.keys(ZONE_OFFSETS) as ZoneKey[]) {
+      expect(zones[cle].off).toBe(ZONE_OFFSETS[cle])
+    }
+  })
+
+  it('nomme une zone pour chaque allure écrite dans une séance', () => {
+    const plan = planJson as unknown as Plan
+    for (const semaine of plan.weeks) {
+      for (const s of semaine.sessions) {
+        for (const seg of s.struct ?? []) {
+          expect(zones[seg.zone], `${s.title} : zone ${seg.zone}`).toBeDefined()
+        }
+      }
+    }
   })
 })

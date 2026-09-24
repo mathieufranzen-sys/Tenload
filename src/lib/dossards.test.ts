@@ -5,6 +5,7 @@ import { indexerEcarts } from './overrides'
 import { projeterMarathon } from './paces'
 import {
   chronoEquivalent,
+  dossardsAjoutes,
   formatChrono,
   idDossardPlan,
   listerDossards,
@@ -117,5 +118,32 @@ describe('objectifs par défaut', () => {
     const id = idDossardPlan(14, 6, 0)
     const l = listerDossards(plan, [perso({ id, objectif_s: 2400 })], undefined, '2026-09-22', 277)
     expect(l.find((d) => d.id === id)!.objectifS).toBe(2400)
+  })
+})
+
+/**
+ * Ce que le Programme affiche depuis le 24 septembre 2026. La règle qui compte
+ * n'est pas la liste, c'est ce qu'elle N'EST PAS : aucune séance, aucun accès
+ * au plan, donc rien qui puisse déborder sur la charge ou les contraintes.
+ */
+describe('dossardsAjoutes', () => {
+  it('ne garde que les dossards ajoutés à la main, par date', () => {
+    const l = dossardsAjoutes([
+      perso({ id: 'd-2', nom: 'Corrida de Noël', day: '2026-12-24' }),
+      perso({ id: 'plan-14-6-0', nom: '10 km Hoka de Paris', day: '2026-11-15' }),
+      perso({ id: 'd-1', nom: 'Foulées', day: '2026-10-03' }),
+    ])
+    expect(l.map((d) => d.nom)).toEqual(['Foulées', 'Corrida de Noël'])
+    expect(l.every((d) => !d.duPlan)).toBe(true)
+  })
+
+  it('oublie un dossard supprimé', () => {
+    expect(dossardsAjoutes([perso({ supprime: true })])).toEqual([])
+  })
+
+  it('ne produit aucune séance : rien ne peut entrer dans la charge', () => {
+    const [d] = dossardsAjoutes([perso({ distance_km: 10 })])
+    expect(d).not.toHaveProperty('seance')
+    expect(d.km).toBe(10)
   })
 })

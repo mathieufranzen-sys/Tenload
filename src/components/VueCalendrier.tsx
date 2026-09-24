@@ -15,6 +15,8 @@
  * Mathieu qui tranche, pas l'app.
  */
 import { libelleNature } from '../lib/natureSemaine'
+import { CarteDossardJour } from './CarteDossardJour'
+import type { Dossard } from '../lib/dossards'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Plan, Session, Week } from '../data/types'
 import type { SeancePlanifiee } from '../lib/adapt'
@@ -60,6 +62,12 @@ interface Props {
   /** Clé `semaine-jour-slot` de la séance à mettre en avant, après « Déplacer ». */
   focus?: string | null
   onOuvrirSeance?: (seance: SeancePlanifiee) => void
+  /**
+   * Les dossards ajoutés à la main, posés à leur date. Hors plan : ils ne
+   * changent ni la charge, ni les contraintes, ni les cibles d'un déplacement.
+   */
+  dossards?: Dossard[]
+  onOuvrirDossard?: (id: string) => void
   /** Absent en lecture seule : le calendrier reste alors consultable. */
   onDeplacer?: (seance: SeancePlanifiee, jour: number, semaines: number) => void
   /** Vrai quand la séance a son ressenti : elle n'est plus « à faire ». */
@@ -78,6 +86,8 @@ export function VueCalendrier({
   onOuvrirSeance,
   onDeplacer,
   estNotee,
+  dossards,
+  onOuvrirDossard,
 }: Props) {
   const [initial, setInitial] = useState(false)
   const [prise, setPrise] = useState<SeancePlanifiee | null>(null)
@@ -352,6 +362,16 @@ export function VueCalendrier({
                 </div>
 
                 <div style={{ flex: 1, minWidth: 0, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 6 }}>
+                  {(dossards ?? [])
+                    .filter((d) => d.day === jour)
+                    .map((d) => (
+                      <CarteDossardJour
+                        key={d.id}
+                        dossard={d}
+                        now={now}
+                        onOuvrir={onOuvrirDossard && !prise ? () => onOuvrirDossard(d.id) : undefined}
+                      />
+                    ))}
                   {(parJour.get(jour) ?? []).map((x) => (
                     <CarteJour
                       key={`${x.semaineOrigine}-${x.jourOrigine}-${x.slot}`}

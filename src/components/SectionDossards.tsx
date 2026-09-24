@@ -4,9 +4,10 @@
  * Une carte par course : date et compte à rebours, distance, objectif,
  * chrono une fois le jour passé, et le mot du coach qui compare les trois à
  * la forme projetée. Les dossards du plan y sont d'office et ne se suppriment
- * pas ; ceux qu'on ajoute ne touchent ni au programme ni à la charge.
+ * pas ; ceux qu'on ajoute s'affichent dans le programme à leur date, sans
+ * jamais entrer dans le plan ni dans la charge.
  */
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import type { Plan } from '../data/types'
 import type { EcartPatch, EcartRow } from '../lib/overrides'
@@ -46,6 +47,8 @@ export function SectionDossards({
   onSave,
   onSaveEcart,
   onRecalibrerForme,
+  focusDossard,
+  jetonFocus,
   periode,
   allureMarathon,
   titre = true,
@@ -72,6 +75,10 @@ export function SectionDossards({
   onSave?: (ligne: DossardRow) => void
   onSaveEcart?: (week: number, dayIndex: number, slot: number, patch: EcartPatch) => void
   onRecalibrerForme?: (allure: number) => void
+  /** Le dossard à ouvrir d'emblée, quand on arrive depuis le Programme. */
+  focusDossard?: string | null
+  /** Change à chaque demande, même sur le même dossard. */
+  jetonFocus?: number
 }) {
   const dossards = listerDossards(plan, lignes, ecarts, now, allureMarathon).filter((d) =>
     periode === 'avenir' ? d.day >= now : d.day < now,
@@ -79,6 +86,12 @@ export function SectionDossards({
   const [ajout, setAjout] = useState(false)
   const [ouvert, setOuvert] = useState<string | null>(null)
   const dossardOuvert = dossards.find((d) => d.id === ouvert) ?? null
+
+  // Arrivée depuis la carte du Programme : la page du dossard s'ouvre seule.
+  // Le jeton, et non l'identité : rouvrir le même dossard est une demande.
+  useEffect(() => {
+    if (focusDossard) setOuvert(focusDossard)
+  }, [focusDossard, jetonFocus])
   const modifiable = Boolean(onSave) && !indisponibles
 
   /** La ligne à écrire pour un dossard, avec ce qui change. */
@@ -562,7 +575,7 @@ function FormulaireDossard({
       </Champ>
 
       <p style={{ margin: '4px 2px 14px', fontSize: 'var(--fs-detail)', lineHeight: 1.5, color: 'var(--sur-ink-3)' }}>
-        Un dossard ajouté ne change rien au programme ni à l'indice : le plan reste celui qui est écrit.
+        Un dossard ajouté s'affiche dans le programme à sa date, mais il ne change ni le plan ni l'indice.
         S'il tombe sur une séance, c'est à toi de la déplacer ou de la remplacer.
       </p>
 
@@ -604,7 +617,15 @@ function Champ({ label, children }: { label: string; children: ReactNode }) {
 }
 
 const styleChamp = {
+  display: 'block',
   width: '100%',
+  // Sur iPhone, `input[type=date]` garde une largeur intrinsèque et refuse de
+  // descendre en dessous : le champ débordait de la carte. Ces trois lignes
+  // l'obligent à tenir dans son parent, et ne changent rien aux autres champs.
+  minWidth: 0,
+  maxWidth: '100%',
+  WebkitAppearance: 'none',
+  appearance: 'none',
   padding: '12px 16px',
   borderRadius: 16,
   background: 'var(--surface-2)',

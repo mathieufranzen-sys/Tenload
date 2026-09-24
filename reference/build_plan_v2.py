@@ -535,7 +535,11 @@ for w in range(1, 35):
 plan = {
     "meta": {**archive["meta"], "raceDate": RACE.isoformat(),
              "weeks": 34, "targetMarathonPace": MP},
-    "zones": archive.get("zones", ZONES),
+    # ZONES et non l'archive : le plan archivé date d'avant l'allure semi, et
+    # le repli l'emportait silencieusement. Les séances écrivaient donc une
+    # zone que la table du plan ne connaissait pas, ce qui ouvrait le détail
+    # d'une sortie longue sur un écran blanc.
+    "zones": ZONES,
     "blocs": BLOCS,
     "weeks": weeks,
 }

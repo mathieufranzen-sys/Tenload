@@ -208,6 +208,18 @@ et se lit en Z3 haut côté cardiaque.
 Ces valeurs reproduisent les tables de Jack Daniels pour un VDOT autour de 55,
 qui est le sien.
 
+**`plan.json` porte sa PROPRE table de zones, et elle doit suivre.** L'allure
+semi a vécu six jours dans `ZONE_OFFSETS` sans exister dans `plan.json` : le
+générateur écrivait `archive.get("zones", ZONES)`, donc le plan d'avant la
+refonte l'emportait silencieusement. Les séances écrivaient `zone: "semi"`,
+la table l'ignorait, et le détail de la sortie longue du 5 octobre s'ouvrait
+sur un ÉCRAN BLANC. Le typage n'y pouvait rien, `plan.json` étant casté en
+`Record<ZoneKey, Zone>`. Deux garde-fous depuis : `paces.test.ts` vérifie que
+la table du plan couvre toute `ZoneKey` avec les mêmes écarts et que chaque
+zone écrite dans une séance existe, et `deroule.test.ts` déroule les
+275 séances réelles. **Tout test qui ne s'exécute que sur des séances
+fabriquées à la main ne voit pas ce genre de trou.**
+
 **Test de calibrage** : 3 km le 8 août 2026 en **12:02** (4:00/km, meilleur
 kilomètre à 3:50, splits 3:59 / 3:55 / 4:05). Le test était bien maximal, voir
 la section suivante.
@@ -1128,6 +1140,17 @@ parce qu'ils nommaient l'onglet Allures.
   un nombre de pixels : la hauteur de la barre dépend de l'appareil. Attention,
   **un élément collant ne dépasse pas la boîte de son parent** : la barre et
   la date ne doivent partager aucun englobant.
+- **Un geste de soin et ses points tiennent sur la même ligne**, les points
+  alignés à droite (24 septembre). En phrase courante, un geste et son chiffre
+  se retrouvaient de part et d'autre d'un retour à la ligne, et on lisait le
+  crédit du geste d'à côté. La charge de la veille ferme la liste : c'est elle
+  qui décide du −5 de journée de repos.
+- La pastille du Programme dit **« Bloc Réathlétisation »**, sans la lettre ni
+  le point devant (24 septembre) : le nom du bloc suffit, et la lettre se
+  retrouve dans la progression juste en dessous.
+- **Sur iPhone, `input[type=date]` ne descend pas sous sa largeur
+  intrinsèque** : le champ débordait de la carte d'ajout d'un dossard. Il lui
+  faut `min-width: 0`, `max-width: 100 %` et `appearance: none`.
 - **Une piste qui défile s'estompe à ses bords, elle ne se coupe pas net.**
   La barre d'actions d'une séance tranchait « Corriger » en deux, ce qui se
   lit comme un bouton mal posé et non comme une suite à faire venir. Le fondu
@@ -1144,8 +1167,15 @@ le dit et n'enregistre rien, sans allumer la bannière de synchronisation.
   ligne ne porte que l'objectif ; le chrono d'une course qui recale la forme
   (10 à 39 km) reste la durée réelle de l'écart, saisie par le même chemin que
   la feuille de séance. Une valeur, une source.
-- **Un dossard ajouté ne touche ni au programme ni à l'indice.** Son chrono ne
-  recale rien.
+- **Un dossard ajouté s'AFFICHE dans le Programme à sa date**, en carte bleu
+  clair marquée « Dossard hors plan », dans la vue semaine comme dans le
+  calendrier (24 septembre 2026). C'est une affaire de VUE : `dossardsAjoutes`
+  ne lit pas `plan.json`, ne produit aucune séance, et rien n'entre dans la
+  charge, dans les contraintes ni dans les cibles d'un déplacement. Le plan de
+  référence ne bouge pas d'une ligne, et si le dossard tombe sur une séance,
+  c'est à Mathieu de la déplacer ou de la remplacer. La carte ouvre la page du
+  dossard, qui vit dans Objectif : on y arrive par un jeton de focus, comme
+  « Déplacer » ouvre le calendrier sur une séance. Son chrono ne recale rien.
 - Une suppression est un drapeau `supprime`, jamais un DELETE : toutes les
   écritures restent des upserts rejouables.
 - **Objectifs par défaut** (`objectifParDefaut`), tant qu'aucun n'est saisi :

@@ -33,6 +33,11 @@
    "off": 0,
    "color": "long"
   },
+  "semi": {
+   "label": "Allure semi",
+   "off": -13,
+   "color": "tempo"
+  },
   "seuil": {
    "label": "Seuil",
    "off": -20,

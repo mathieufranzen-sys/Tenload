@@ -58,6 +58,10 @@ interface Props {
   dossards: DossardRow[]
   dossardsIndisponibles: boolean
   onSaveDossard?: (ligne: DossardRow) => void
+  /** Le dossard à ouvrir d'emblée, quand on arrive depuis le Programme. */
+  focusDossard?: string | null
+  /** Change à chaque demande, même sur le même dossard. */
+  jetonDossard?: number
   /** Forme du dernier test, sans ajustement : la base d'un recalage sur chrono. */
   formeTest: number
   onSaveEcart?: (week: number, dayIndex: number, slot: number, patch: EcartPatch) => void
@@ -73,6 +77,8 @@ export function Paces({
   dossards,
   dossardsIndisponibles,
   onSaveDossard,
+  focusDossard,
+  jetonDossard,
   formeTest,
   onSaveEcart,
   onRecalibrerForme,
@@ -151,6 +157,8 @@ export function Paces({
           onSave={onSaveDossard}
           onSaveEcart={onSaveEcart}
           onRecalibrerForme={onRecalibrerForme}
+          focusDossard={focusDossard}
+          jetonFocus={jetonDossard}
         />
       </div>
     </div>

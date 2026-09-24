@@ -8,8 +8,11 @@
  * Deux règles tiennent tout le module :
  *
  * 1. **Un dossard ajouté ne touche pas au plan.** Il n'entre ni dans la
- *    charge, ni dans le programme, ni dans les contraintes. Mathieu l'a
- *    demandé en ces termes : aucun changement de programme ni de calcul.
+ *    charge, ni dans les contraintes, et ne produit aucune séance. Depuis le
+ *    24 septembre 2026 il S'AFFICHE dans le Programme à sa date
+ *    (`dossardsAjoutes`), ce qui est une affaire de vue et non de plan : une
+ *    course signée est un rendez-vous, et préparer sa semaine sans elle
+ *    n'avait pas de sens. Le plan de référence, lui, ne bouge pas d'une ligne.
  * 2. **Une valeur, une source.** Le chrono d'une course du plan qui recale la
  *    forme (10 à 39 km, `recalageSurCourse`) vit déjà dans `plan_overrides`,
  *    comme durée réelle de la course : il se saisit par la même voie, et la
@@ -129,6 +132,31 @@ export function listerDossards(
   const avenir = out.filter((d) => d.day >= now).sort((a, b) => (a.day < b.day ? -1 : 1))
   const passes = out.filter((d) => d.day < now).sort((a, b) => (a.day < b.day ? 1 : -1))
   return [...avenir, ...passes]
+}
+
+/**
+ * Les dossards ajoutés à la main, par date.
+ *
+ * Ils s'affichent aussi dans le Programme depuis le 24 septembre 2026 : une
+ * course qu'on a signée est un rendez-vous, et ne la voir que dans Objectif
+ * revenait à préparer sa semaine sans elle. Ça ne change RIEN au plan : la
+ * fonction ne lit pas `plan.json`, ne produit pas de séance, et rien de ce
+ * qu'elle rend n'entre dans la charge ni dans les contraintes. Le programme
+ * l'affiche à côté de ses séances, il ne l'y range pas.
+ */
+export function dossardsAjoutes(lignes: DossardRow[]): Dossard[] {
+  return lignes
+    .filter((l) => !l.id.startsWith('plan-') && !l.supprime)
+    .map((l) => ({
+      id: l.id,
+      nom: l.nom,
+      day: l.day,
+      km: Number(l.distance_km),
+      objectifS: l.objectif_s,
+      chronoS: l.chrono_s,
+      duPlan: false,
+    }))
+    .sort((a, b) => (a.day < b.day ? -1 : 1))
 }
 
 /**

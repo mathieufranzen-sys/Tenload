@@ -15,7 +15,7 @@ import { buildPain, type DailyLogRow, type FeedbackRow } from './lib/buildPain'
 import { NOTE_DEMO, construireDemo } from './data/demo'
 import { cleEcart, indexerEcarts, type EcartPatch, type EcartRow } from './lib/overrides'
 import { adapt, construireContexte, weekSessions } from './lib/adapt'
-import type { DossardRow } from './lib/dossards'
+import { dossardsAjoutes, type DossardRow } from './lib/dossards'
 import type { PainMap } from './lib/tendonIndex'
 import { addDays, today } from './lib/dates'
 import { isConfigured } from './lib/supabase'
@@ -346,6 +346,13 @@ function Coquille({
   // séance déplacée pèse sur son nouveau jour. L'indice projeté suit.
   const ecarts = useMemo(() => indexerEcarts(ecartsRows), [ecartsRows])
 
+  /**
+   * Les dossards ajoutés à la main, affichés dans le Programme à leur date.
+   * Ils n'entrent NI dans `entreeCharge`, NI dans les écarts : le plan et
+   * l'indice ne les voient pas, c'est l'affichage seul qui les pose.
+   */
+  const ajoutes = useMemo(() => dossardsAjoutes(dossards), [dossards])
+
   const entreeCharge = useMemo(
     () => ({ weeks: plan.weeks, activities: data.activities, completed, today: now, ecarts }),
     [data.activities, completed, now, ecarts],
@@ -388,6 +395,12 @@ function Coquille({
   const [seance, setSeance] = useState<SeanceOuverte | null>(null)
   /** Séance à mettre en avant dans la vue calendrier, après « Déplacer ». */
   const [focusSeance, setFocusSeance] = useState<{ cle: string; jeton: number } | null>(null)
+  /**
+   * Le dossard à ouvrir, quand on arrive depuis sa carte du Programme. Même
+   * motif que `focusSeance` : c'est la demande qui compte, donc un jeton, et
+   * non la seule identité.
+   */
+  const [focusDossard, setFocusDossard] = useState<{ id: string; jeton: number } | null>(null)
   const [numeroSemaine, setNumeroSemaine] = useState(
     () => (plan.weeks.find((w) => now >= w.monday && now <= addDays(w.monday, 6)) ?? plan.weeks[0]).n,
   )
@@ -464,6 +477,11 @@ function Coquille({
           onSaveEcart={onSaveEcart}
           focusSeance={focusSeance?.cle ?? null}
           jetonFocus={focusSeance?.jeton}
+          dossards={ajoutes}
+          onOuvrirDossard={(id) => {
+            setFocusDossard({ id, jeton: Date.now() })
+            setOnglet('paces')
+          }}
           onOuvrirProfil={() => setOnglet('profile')}
         />
       )}
@@ -506,6 +524,8 @@ function Coquille({
           dossards={dossards}
           dossardsIndisponibles={dossardsIndisponibles}
           onSaveDossard={onSaveDossard}
+          focusDossard={focusDossard?.id ?? null}
+          jetonDossard={focusDossard?.jeton}
           formeTest={fitnessPaceTest}
           onSaveEcart={onSaveEcart}
           onRecalibrerForme={onSaveProfil && ((allure) => onSaveProfil({ fitness_pace_s: allure }))}

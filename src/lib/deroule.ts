@@ -84,6 +84,26 @@ export function estRecup(libelle: string): boolean {
   return /^r[ée]cup/i.test(libelle.trim())
 }
 
+/**
+ * Le libellé d'une zone, avec un repli.
+ *
+ * La table du plan a déjà pris du retard sur `ZoneKey` : l'allure semi vivait
+ * dans `ZONE_OFFSETS` mais pas dans `plan.json`, et le détail d'une sortie
+ * longue qui l'utilisait s'ouvrait sur un écran blanc. Le typage ne l'avait pas
+ * vu, le JSON étant casté. Une zone inconnue doit dégrader, pas tout éteindre.
+ */
+const libelleZone = (z: ZoneKey) => plan.zones[z]?.label ?? z
+
+/**
+ * Le libellé d'un segment. Deux zones portent déjà le mot dans leur nom,
+ * l'allure marathon et l'allure semi : les préfixer donnait « Allure Allure
+ * semi ».
+ */
+const allureDe = (z: ZoneKey) => {
+  const l = libelleZone(z)
+  return /^allure/i.test(l) ? l.charAt(0).toUpperCase() + l.slice(1) : `Allure ${l}`
+}
+
 function segment(step: Step, marathonPace: number): SegmentDeroule {
   const brut = String(step[0])
   const second = step[1]
@@ -98,7 +118,7 @@ function segment(step: Step, marathonPace: number): SegmentDeroule {
   // reprendre en dessous de la quantité aurait affiché deux fois la même
   // phrase, « 45 s en côte modérée » au-dessus de lui-même.
   const libelle = zone
-    ? `Allure ${plan.zones[zone].label}`
+    ? allureDe(zone)
     : recup
       ? 'Récupération'
       : (consigne ?? 'Effort libre')
@@ -120,7 +140,7 @@ function depuisStruct(s: Session, marathonPace: number): BlocDeroule[] {
     phase: 'main' as const,
     reps: 1,
     effort: {
-      libelle: `Allure ${plan.zones[seg.zone].label}`,
+      libelle: allureDe(seg.zone),
       quantite: `${String(seg.km).replace('.', ',')} km`,
       zone: seg.zone,
       secondes: seg.km * zonePace(marathonPace, seg.zone),

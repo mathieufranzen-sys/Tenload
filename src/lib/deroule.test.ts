@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { Session } from '../data/types'
+import planJson from '../data/plan.json'
+import type { Plan, Session } from '../data/types'
 import { deroulerSeance, dureeSegment, estRecup, hauteurSegment, lireRepetition, roleDe } from './deroule'
 
 const AM = 277 // allure marathon objectif, 4:37/km
@@ -157,5 +158,31 @@ describe('roleDe et hauteurSegment', () => {
   it('monte avec l’intensité, sauf en récupération', () => {
     expect(hauteurSegment(seg('rep'), false)).toBeGreaterThan(hauteurSegment(seg('ef'), false))
     expect(hauteurSegment(seg('rep'), true)).toBeLessThan(hauteurSegment(seg('ef'), false))
+  })
+})
+
+/**
+ * Le balayage des 275 séances.
+ *
+ * Une sortie longue du 5 octobre ouvrait sur un écran blanc : son déroulé
+ * lisait une zone absente de `plan.json`. Aucun test ne passait sur le plan
+ * RÉEL, seulement sur des séances fabriquées à la main, donc rien ne pouvait
+ * voir le trou. Celui-ci déroule tout ce que l'app peut ouvrir.
+ */
+describe('le déroulé de chaque séance du plan', () => {
+  const plan = planJson as unknown as Plan
+
+  it('se construit sans exception, et nomme chaque segment', () => {
+    for (const semaine of plan.weeks) {
+      for (const s of semaine.sessions) {
+        const blocs = deroulerSeance(s, AM)
+        for (const b of blocs) {
+          expect(b.effort.libelle, `S${semaine.n} ${s.title}`).toBeTruthy()
+          expect(b.effort.libelle).not.toMatch(/undefined/)
+          // « Allure Allure semi » : le mot ne se répète jamais.
+          expect(b.effort.libelle).not.toMatch(/Allure Allure/)
+        }
+      }
+    }
   })
 })
