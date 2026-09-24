@@ -1151,6 +1151,13 @@ parce qu'ils nommaient l'onglet Allures.
 - **Sur iPhone, `input[type=date]` ne descend pas sous sa largeur
   intrinsèque** : le champ débordait de la carte d'ajout d'un dossard. Il lui
   faut `min-width: 0`, `max-width: 100 %` et `appearance: none`.
+- **La feuille de séance et les sous-pages ont leur voile collant** (24
+  septembre) : elles s'ouvrent par-dessus un écran et n'en héritent pas, donc
+  le déroulé d'une séance et le carnet remontaient sous l'horloge. Le retour
+  reste en haut, le titre d'une sous-page avec lui. La recette est dans
+  `styleCollant` (`components/collant.ts`) : zone sûre occupée, voile presque
+  opaque, flou, et fondu plutôt que coupe. **C'est elle qui fait foi pour tout
+  nouveau voile** ; les cinq écrans ont gardé la leur, aux valeurs près.
 - **Une piste qui défile s'estompe à ses bords, elle ne se coupe pas net.**
   La barre d'actions d'une séance tranchait « Corriger » en deux, ce qui se
   lit comme un bouton mal posé et non comme une suite à faire venir. Le fondu

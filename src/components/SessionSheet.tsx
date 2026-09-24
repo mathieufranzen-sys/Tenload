@@ -29,6 +29,7 @@ import {
 import { formatPace, zonePace } from '../lib/paces'
 import type { FeedbackRow } from '../lib/buildPain'
 import { Icon } from './Icon'
+import { styleCollant } from './collant'
 import { encreZone, styleSeance } from '../lib/seanceStyle'
 import { deroulerSeance } from '../lib/deroule'
 import { DecoupageSeance, ProfilSeance } from './ProfilSeance'
@@ -166,21 +167,25 @@ export function SessionSheet({
           la place. */}
       <div aria-hidden className="braise" style={{ position: 'absolute', height: 460, bottom: 'auto' }} />
 
+      {/* Le retour vit dans un voile collant : sans lui, le déroulé de la
+          séance remontait sous l'horloge, et le bouton partait avec. */}
+      <div style={styleCollant()}>
+        <button onClick={onClose} aria-label="Fermer" className="rond">
+          <Icon name="chevronLeft" size={20} />
+        </button>
+      </div>
+
       <div
         style={{
           position: 'relative',
           // Place pour la barre d'actions collée en bas.
-          padding: `calc(14px + env(safe-area-inset-top)) var(--page-x) ${onSaveEcart ? 120 : 40}px`,
+          padding: `0 var(--page-x) ${onSaveEcart ? 120 : 40}px`,
         }}
       >
         <div style={{ position: 'relative' }}>
-          {/* La tête d'une fiche AllTrails : retour à gauche, le titre en
-              grand, une ligne de repères dessous, puis la rangée de chiffres. */}
-          <button onClick={onClose} aria-label="Fermer" className="rond">
-            <Icon name="chevronLeft" size={20} />
-          </button>
-
-          <h2 className="display" style={{ margin: '18px 0 0', fontSize: 'var(--fs-t-ecran)', lineHeight: 1.05 }}>
+          {/* La tête d'une fiche AllTrails : le titre en grand, une ligne de
+              repères dessous, puis la rangée de chiffres. */}
+          <h2 className="display" style={{ margin: '4px 0 0', fontSize: 'var(--fs-t-ecran)', lineHeight: 1.05 }}>
             {s.title}
           </h2>
 

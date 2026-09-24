@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { Icon } from './Icon'
+import { styleCollant } from './collant'
 
 /** Sous-page en tiroir, glissée depuis la droite — le drill-down des réglages. */
 export function SubPage({
@@ -38,27 +39,28 @@ export function SubPage({
         transition: 'transform .3s cubic-bezier(.32,.72,0,1)',
       }}
     >
-      <div style={{ padding: 'calc(14px + env(safe-area-inset-top)) var(--page-x) 40px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 22 }}>
-          <button
-            onClick={onBack}
-            aria-label="Retour"
-            className="rond"
-            style={{ cursor: 'pointer' }}
-          >
-            <Icon name="chevronLeft" size={20} />
-          </button>
-          <div style={{ minWidth: 0, paddingTop: surtitre ? 0 : 8 }}>
-            {surtitre && (
-              <p style={{ margin: '0 0 3px', fontSize: 'var(--fs-meta)', color: 'var(--accent)' }}>{surtitre}</p>
-            )}
-            <h2 className="display" style={{ margin: 0, fontSize: 'var(--fs-t-page)', lineHeight: 1.1 }}>
-              {titre}
-            </h2>
-          </div>
+      {/* Retour et titre restent en haut, sous un voile : une sous-page défile
+          souvent long (le carnet, un bilan), et le contenu passait sous
+          l'horloge. */}
+      <div style={{ ...styleCollant(), display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+        <button
+          onClick={onBack}
+          aria-label="Retour"
+          className="rond"
+          style={{ cursor: 'pointer' }}
+        >
+          <Icon name="chevronLeft" size={20} />
+        </button>
+        <div style={{ minWidth: 0, paddingTop: surtitre ? 0 : 8 }}>
+          {surtitre && (
+            <p style={{ margin: '0 0 3px', fontSize: 'var(--fs-meta)', color: 'var(--accent)' }}>{surtitre}</p>
+          )}
+          <h2 className="display" style={{ margin: 0, fontSize: 'var(--fs-t-page)', lineHeight: 1.1 }}>
+            {titre}
+          </h2>
         </div>
-        {children}
       </div>
+      <div style={{ padding: '6px var(--page-x) 40px' }}>{children}</div>
     </div>
   )
 }
