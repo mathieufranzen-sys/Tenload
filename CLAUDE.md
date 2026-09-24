@@ -690,6 +690,13 @@ semaine légère, c'est-à-dire dans le sens rassurant, qui est le seul dangereu
   jauge et la feuille de charge le disent.
 - **Le feu vert est bloqué tant que `chargeInconnue` est vrai**, exactement
   comme pour `painInconnue`. Les deux absences se valent.
+- **La jauge ne donne la part mécanique que si elle est attestée** (24
+  septembre 2026). Cinq jours sans rien saisir, c'est aussi cinq jours de
+  séances non notées : l'écran « Je ne sais pas » annonçait alors « la charge
+  mécanique, elle, est connue : 0 points sur 58 », un chiffre rassurant tiré
+  d'un silence, et il contredisait l'avertissement affiché juste en dessous.
+  Quand `chargeInconnue` est vrai, la phrase dit que la charge est inconnue
+  elle aussi.
 - Le chiffre, lui, ne bouge pas : c'est le plafond de confiance qui fait le
   travail numérique. On ne dégrade toujours pas sur une absence d'information.
 

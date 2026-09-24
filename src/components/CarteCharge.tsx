@@ -109,10 +109,22 @@ export function CarteCharge({
               <div className="display" style={{ fontSize: 'var(--fs-t-etat)', lineHeight: 1 }}>
                 Je ne sais pas
               </div>
+              {/* La part mécanique ne se donne QUE si elle est attestée. Après
+                  cinq jours sans rien saisir, les séances ne sont pas notées non
+                  plus : la phrase annonçait « la charge mécanique est connue :
+                  0 points sur 58 », c'est-à-dire un chiffre rassurant tiré d'un
+                  silence, l'erreur exacte que l'indice existe pour éviter. */}
               <p style={{ margin: '12px 0 0', fontSize: 'var(--fs-texte)', lineHeight: 1.5, color: 'var(--sur-ink-2)' }}>
                 Aucune douleur saisie depuis {detail.joursSansDouleur ?? 'plus de 60'} jours.
-                L'indice n'est pas bas : il est inconnu. La charge mécanique, elle, est connue :{' '}
-                {Math.round(detail.ratio + detail.freshness + detail.monotony)} points sur 58.
+                L'indice n'est pas bas : il est inconnu.{' '}
+                {detail.chargeInconnue ? (
+                  <>La charge non plus : trop de journées passées sans séance notée.</>
+                ) : (
+                  <>
+                    La charge mécanique, elle, est connue : {Math.round(detail.ratio + detail.freshness + detail.monotony)}{' '}
+                    points sur 58.
+                  </>
+                )}
               </p>
             </>
           ) : (
