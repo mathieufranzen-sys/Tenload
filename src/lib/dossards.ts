@@ -56,7 +56,12 @@ export interface Dossard {
   recale?: boolean
 }
 
-const estDossard = (s: Session) => s.type === 'course' || s.type === 'race'
+/**
+ * Une séance de dossard : une course avec un temps de passage, pas un test.
+ * Exportée depuis le 24 septembre 2026 pour que le Programme la reconnaisse
+ * et lui donne sa carte bleue — une seule définition, deux lecteurs.
+ */
+export const estDossard = (s: Session) => s.type === 'course' || s.type === 'race'
 
 /**
  * Les objectifs déjà donnés par Mathieu, appliqués tant qu'il n'en a pas saisi

@@ -16,7 +16,8 @@
  */
 import { libelleNature } from '../lib/natureSemaine'
 import { CarteDossardJour } from './CarteDossardJour'
-import type { Dossard } from '../lib/dossards'
+import { Icon } from './Icon'
+import { estDossard, type Dossard } from '../lib/dossards'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Plan, Session, Week } from '../data/types'
 import type { SeancePlanifiee } from '../lib/adapt'
@@ -377,6 +378,7 @@ export function VueCalendrier({
                       key={`${x.semaineOrigine}-${x.jourOrigine}-${x.slot}`}
                       seance={x}
                       priseEnCours={prise?.day === x.day && prise?.slot === x.slot}
+                      dossard={estDossard(x.s)}
                       passe={jour < now}
                       aFaire={jour === now && x.s.type !== 'repos' && !x.s.saute && !estNotee?.(x)}
                       misEnAvant={focus === cleEcart(x.semaineOrigine, x.jourOrigine, x.slot)}
@@ -589,6 +591,7 @@ function CarteJour({
   priseEnCours,
   passe,
   aFaire,
+  dossard,
   misEnAvant,
   onOuvrir,
   onPrise,
@@ -597,12 +600,17 @@ function CarteJour({
   priseEnCours: boolean
   /** La séance du jour pas encore notée : le même bloc bleu que dans la vue semaine. */
   aFaire?: boolean
+  /** Un dossard : le bleu clair des cartes de course, comme dans la vue semaine. */
+  dossard?: boolean
   /** Jour révolu : grisé, comme dans la vue semaine. */
   passe: boolean
   misEnAvant: boolean
   onOuvrir?: () => void
   onPrise?: (e: React.PointerEvent) => void
 }) {
+  // Le jour même, le bleu plein de la journée en cours prime sur celui du
+  // dossard : les deux ne se superposent pas.
+  const enDossard = Boolean(dossard) && !aFaire
   return (
     <div
       onPointerDown={onPrise}
@@ -616,15 +624,22 @@ function CarteJour({
         gap: 9,
         padding: '10px 13px',
         borderRadius: 16,
-        background: aFaire ? 'var(--bleu-500)' : 'var(--surface)',
+        background: aFaire ? 'var(--bleu-500)' : enDossard ? 'var(--bleu-50)' : 'var(--surface)',
         color: aFaire ? '#ffffff' : undefined,
-        border: misEnAvant ? '1.5px solid var(--accent)' : aFaire ? '1px solid transparent' : '1px solid var(--glass-border)',
+        border: misEnAvant
+          ? '1.5px solid var(--accent)'
+          : aFaire
+            ? '1px solid transparent'
+            : `1px solid ${enDossard ? 'var(--bleu-100)' : 'var(--glass-border)'}`,
         opacity: priseEnCours ? 0.3 : seance.s.saute ? 0.4 : passe ? 0.55 : 1,
         cursor: onOuvrir ? 'pointer' : 'default',
         userSelect: 'none',
         WebkitUserSelect: 'none',
       }}
     >
+      {enDossard && (
+        <Icon name="flag" size={15} style={{ flex: 'none', color: 'var(--bleu-700)' }} />
+      )}
       <div style={{ minWidth: 0, flex: 1 }}>
         <div
           className="display"

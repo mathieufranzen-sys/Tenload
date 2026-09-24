@@ -31,11 +31,27 @@ interface Props {
    * filet fort). `passe` : un jour révolu, grisé.
    */
   etat?: 'aFaire' | 'passe'
+  /**
+   * Vue semaine du Programme : la séance est un dossard. Elle prend alors le
+   * bleu clair des cartes de dossard (retour du 24 septembre) — une course
+   * est un rendez-vous, et les quatre du plan doivent se lire comme ceux
+   * qu'on ajoute soi-même.
+   */
+  dossard?: boolean
 }
 
-export function SessionCard({ session: s, marathonPace, feedback, onClick, compact = false, etat }: Props) {
+export function SessionCard({ session: s, marathonPace, feedback, onClick, compact = false, etat, dossard }: Props) {
   if (compact)
-    return <CarteCompacte session={s} marathonPace={marathonPace} feedback={feedback} onClick={onClick} etat={etat} />
+    return (
+      <CarteCompacte
+        session={s}
+        marathonPace={marathonPace}
+        feedback={feedback}
+        onClick={onClick}
+        etat={etat}
+        dossard={dossard}
+      />
+    )
   const [lo, hi] = estimateDuration(s, marathonPace)
   const duration = lo === hi ? formatDuration(lo) : `${formatDuration(lo)} à ${formatDuration(hi)}`
   // La distance seulement : le repli sur `s.dur` répétait la durée à côté
@@ -156,11 +172,14 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
   )
 }
 
-function CarteCompacte({ session: s, marathonPace, feedback, onClick, etat }: Omit<Props, 'compact'>) {
+function CarteCompacte({ session: s, marathonPace, feedback, onClick, etat, dossard }: Omit<Props, 'compact'>) {
   const [lo, hi] = estimateDuration(s, marathonPace)
   const duree = lo === hi ? formatDuration(lo) : `${formatDuration(lo)} à ${formatDuration(hi)}`
   const repos = s.type === 'repos'
   const st = styleSeance(s.type)
+  // Le jour même, la séance garde le bleu plein de la journée en cours : c'est
+  // ce qu'il y a à faire aujourd'hui qui prime sur ce qu'elle est.
+  const enDossard = Boolean(dossard) && etat !== 'aFaire'
 
   return (
     <button
@@ -179,11 +198,25 @@ function CarteCompacte({ session: s, marathonPace, feedback, onClick, etat }: Om
           ? '1.5px dashed var(--border-2)'
           : etat === 'aFaire'
             ? 'none'
-            : '1px solid var(--glass-border)',
-        background: repos ? 'transparent' : etat === 'aFaire' ? '#4f63f2' : 'var(--surface)',
+            : `1px solid ${enDossard ? 'var(--bleu-100)' : 'var(--glass-border)'}`,
+        background: repos
+          ? 'transparent'
+          : etat === 'aFaire'
+            ? '#4f63f2'
+            : enDossard
+              ? 'var(--bleu-50)'
+              : 'var(--surface)',
         opacity: s.saute ? 0.45 : etat === 'passe' ? 0.55 : 1,
       }}
     >
+      {enDossard && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <Icon name="flag" size={15} style={{ color: 'var(--bleu-700)' }} />
+          <span className="etiquette" style={{ fontSize: 'var(--fs-micro)', color: 'var(--bleu-700)' }}>
+            Dossard
+          </span>
+        </div>
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
         <span
           className={repos ? undefined : 'display'}

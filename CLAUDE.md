@@ -1167,6 +1167,12 @@ le dit et n'enregistre rien, sans allumer la bannière de synchronisation.
   ligne ne porte que l'objectif ; le chrono d'une course qui recale la forme
   (10 à 39 km) reste la durée réelle de l'écart, saisie par le même chemin que
   la feuille de séance. Une valeur, une source.
+- **Tout dossard est une carte bleue dans le Programme**, les quatre du plan
+  comme ceux qu'on ajoute (24 septembre 2026) : bleu clair, drapeau et
+  étiquette, dans la vue semaine comme dans le calendrier. `estDossard`
+  (dossards.ts) est la seule définition, et la vue globale garde sa pastille
+  bleu nuit. Le jour même, le bleu plein de la journée en cours l'emporte :
+  ce qu'il y a à faire aujourd'hui prime sur ce que la séance est.
 - **Un dossard ajouté s'AFFICHE dans le Programme à sa date**, en carte bleu
   clair marquée « Dossard hors plan », dans la vue semaine comme dans le
   calendrier (24 septembre 2026). C'est une affaire de VUE : `dossardsAjoutes`

@@ -31,7 +31,7 @@ import { VueCalendrier } from '../components/VueCalendrier'
 import { libelleNature } from '../lib/natureSemaine'
 import { GrilleCalendrier } from '../components/GrilleCalendrier'
 import { CarteDossardJour } from '../components/CarteDossardJour'
-import type { Dossard } from '../lib/dossards'
+import { estDossard, type Dossard } from '../lib/dossards'
 
 const plan = planJson as unknown as PlanType
 
@@ -438,6 +438,7 @@ export function Plan({
                           date < now ? 'passe' : estAujourdhui && !feedbackDe(x) ? 'aFaire' : undefined
                         }
                         session={x.s}
+                        dossard={estDossard(x.s)}
                         marathonPace={marathonPace}
                         feedback={feedbackDe(x)}
                         onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
