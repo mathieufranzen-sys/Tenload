@@ -1,4 +1,5 @@
 /** Dates, en français et sans dépendance. Tout circule en ISO `YYYY-MM-DD`. */
+import { dateDeSimulation } from './simulation'
 
 export const DAYS_LONG = [
   'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche',
@@ -15,6 +16,9 @@ export const MONTHS = [
  * soir doit rester rattachée à la bonne journée même après minuit UTC.
  */
 export function today(): string {
+  // Le laboratoire de charge avance le temps à la main (simulation.ts).
+  const simulee = dateDeSimulation()
+  if (simulee) return simulee
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
     d.getDate(),

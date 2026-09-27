@@ -1218,6 +1218,47 @@ le dit et n'enregistre rien, sans allumer la bannière de synchronisation.
   `chronoEquivalent`, l'inverse exact de `projeterMarathon` sur la forme
   projetée, puis, la course passée, le chrono à l'objectif et à la forme.
 
+## Le laboratoire de charge
+
+`npm run dev`, puis **http://localhost:5173/labo.html**. Demandé par Mathieu
+le 27 septembre 2026 : tester le calcul de la charge en condition, sur quatre
+histoires de tendon, en avançant jour après jour.
+
+- **Quatre profils, même plan, même objectif, même allure** (`scenarios.ts`) :
+  début de convalescence en pleine crise (rouge), fin de crise en pleine
+  convalescence (jaune), fin de convalescence calme depuis un mois (vert),
+  nouvelle crise sur convalescence longue (orange). 90 jours d'historique
+  chacun, ancrés sur le dimanche 27 septembre 2026 (`ANCRE`) : des activités
+  de type Strava avant le 10 août, puis les séances du plan faites, sautées,
+  remplacées par du vélo ou de la marche, ou raccourcies, selon la douleur du
+  matin. Tirage déterministe : la même histoire à chaque ouverture.
+- **`labo.test.ts` passe par le vrai moteur** (`moteur.ts`, la même chaîne que
+  `Coquille`) et verrouille la bande de chaque profil à l'ancre, plus un fait
+  de son histoire : le noir de la crise du profil 1 cette semaine, celui du
+  profil 2 trois semaines plus tôt, aucun épisode depuis un mois pour le 3.
+  **Si une constante de l'indice change et qu'un profil change de bande, c'est
+  au scénario de suivre, pas au modèle.**
+- **La date est simulée** (`lib/simulation.ts`) : `today()` la rend si elle est
+  posée, et tous les écrans passent par `today()`. Changer de date REMONTE
+  l'app du téléphone, pour que les états partis d'« aujourd'hui » (jour
+  affiché, semaine du Programme) repartent de la nouvelle date ; l'onglet
+  ouvert, lui, est gardé.
+- **Les saisies restent**, profil par profil, dans le navigateur
+  (`tenload-labo-v1-<profil>`) : on note demain, on avance, et c'est gardé. La
+  mémoire du coach est suffixée par profil, sinon les quatre iframes, qui
+  partagent un même stockage, auraient nourri une seule mémoire.
+- **Le banc ne calcule rien** (`banc.ts`) : il porte la date, affiche l'état
+  que chaque téléphone lui renvoie, et envoie des commandes rapides (raideur,
+  soir, excentrique, séances faites ou sautées) qui passent par les MÊMES
+  chemins que l'app (`PontLabo`). Le détail se règle dans le téléphone.
+- **Rien du laboratoire n'entre en production** : `labo.html` n'est pas une
+  entrée du build, et l'app ne répond à `?labo=` que sous
+  `import.meta.env.DEV`, par un import à la demande.
+- Un piège trouvé en le construisant : sans racine, un `IntersectionObserver`
+  mesure contre la fenêtre du navigateur de PLUS HAUT niveau. Dans une iframe,
+  l'en-tête collant d'Aujourd'hui se croyait recouvert dès l'ouverture. Il
+  prend désormais `root: document`, ce qui ne change rien dans la PWA.
+
 ## Pistes connues
 
 - Le bundle passe 600 Ko, essentiellement `plan.json` embarqué. Sans

@@ -1,0 +1,236 @@
+/* Le banc d'essai du laboratoire. Mêmes jetons que l'app (tokens.css) : c'est
+   un outil, mais il se lit avec les couleurs et les corps qu'on connaît. */
+
+body {
+  background: var(--bg);
+}
+
+.banc-barre {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 24px;
+  padding: 16px 24px;
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1px solid var(--border);
+}
+
+.banc-titre h1 {
+  margin: 0;
+  font-size: var(--fs-t-page);
+  line-height: 1.1;
+}
+.banc-titre p {
+  margin: 2px 0 0;
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+}
+
+.banc-temps {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.banc-date {
+  min-width: 250px;
+  text-align: center;
+}
+.banc-date .jour {
+  font-size: var(--fs-t-liste);
+  line-height: 1.1;
+}
+.banc-date .relatif {
+  font-size: var(--fs-detail);
+  color: var(--ink-2);
+  margin-top: 2px;
+}
+.banc-temps input[type='date'] {
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+  font-size: var(--fs-texte);
+  color: var(--ink);
+}
+.banc-bouton {
+  padding: 10px 16px;
+  border-radius: var(--pill);
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+  font-size: var(--fs-texte);
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.banc-bouton.plein {
+  background: var(--neon);
+  border-color: transparent;
+}
+.banc-bouton:hover {
+  border-color: var(--ink-3);
+}
+
+.banc-grille {
+  display: grid;
+  gap: 16px;
+  row-gap: 0;
+  padding: 20px 24px 40px;
+  align-items: start;
+}
+
+/* Les quatre colonnes partagent leurs rangées (sous-grille) : un titre sur
+   quatre lignes ne décale plus son téléphone par rapport aux trois autres. */
+.banc-colonne {
+  display: grid;
+  grid-row: span 4;
+  grid-template-rows: subgrid;
+  /* Sans colonne bornée, la sous-grille prend la largeur de son contenu le
+     plus long et le texte déborde de la carte. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  min-width: 0;
+}
+
+.banc-entete h2 {
+  margin: 0;
+  font-size: var(--fs-t-carte);
+  line-height: 1.15;
+}
+.banc-entete p {
+  margin: 6px 0 0;
+  font-size: var(--fs-detail);
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.banc-indice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.banc-indice .chiffre {
+  font-size: var(--fs-c-l);
+  line-height: 1;
+}
+.banc-indice .bande {
+  padding: 5px 12px;
+  border-radius: var(--pill);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+}
+.banc-indice .alerte {
+  font-size: var(--fs-detail);
+  color: var(--warning);
+}
+
+.banc-ecran {
+  position: relative;
+  justify-self: center;
+  border-radius: 34px;
+  border: 1px solid var(--border-2);
+  overflow: hidden;
+  background: #fff;
+}
+.banc-ecran iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 390px;
+  height: 844px;
+  border: 0;
+  transform-origin: 0 0;
+}
+
+.banc-commandes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.banc-ligne {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: var(--fs-meta);
+}
+.banc-ligne select {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border-2);
+  background: var(--bg);
+  font-size: var(--fs-meta);
+  color: var(--ink);
+  min-width: 72px;
+}
+.banc-ligne input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--ink);
+}
+
+.banc-seances {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0 2px;
+}
+.banc-seance {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--fs-detail);
+}
+.banc-seance span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.banc-seance .etat {
+  flex: none;
+  color: var(--ink-3);
+}
+.banc-seance .etat.faite {
+  color: var(--good);
+}
+.banc-seance .etat.sautee {
+  color: var(--warning);
+}
+.banc-vide {
+  font-size: var(--fs-detail);
+  color: var(--ink-3);
+}
+
+.banc-actions {
+  display: flex;
+  gap: 6px;
+}
+.banc-actions .banc-bouton {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: var(--fs-meta);
+}
+.banc-lien {
+  align-self: flex-start;
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: var(--fs-detail);
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}

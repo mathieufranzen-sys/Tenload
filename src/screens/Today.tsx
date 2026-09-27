@@ -9,6 +9,7 @@
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import planJson from '../data/plan.json'
+import { suffixeStockage } from '../lib/simulation'
 import type { Plan, Week } from '../data/types'
 import {
   DAYS_LONG,
@@ -52,11 +53,12 @@ const plan = planJson as unknown as Plan
  * faut pas remontrer. Safari en navigation privée refuse le stockage, d'où
  * les try : sans mémoire, le coach peut se répéter, il ne doit pas planter.
  */
-const CLE_MEMOIRE_COACH = 'tenload-coach'
+// Suffixée dans le laboratoire : chaque profil a sa propre mémoire.
+const cleMemoireCoach = () => `tenload-coach${suffixeStockage()}`
 
 function lireMemoireCoach(): Record<string, string> {
   try {
-    return JSON.parse(localStorage.getItem(CLE_MEMOIRE_COACH) ?? '{}') as Record<string, string>
+    return JSON.parse(localStorage.getItem(cleMemoireCoach()) ?? '{}') as Record<string, string>
   } catch {
     return {}
   }
@@ -67,7 +69,7 @@ function ecrireMemoireCoach(jour: string, cle: string) {
     const garde = Object.entries({ ...lireMemoireCoach(), [jour]: cle })
       .sort(([a], [b]) => (a < b ? 1 : -1))
       .slice(0, 3)
-    localStorage.setItem(CLE_MEMOIRE_COACH, JSON.stringify(Object.fromEntries(garde)))
+    localStorage.setItem(cleMemoireCoach(), JSON.stringify(Object.fromEntries(garde)))
   } catch {
     // Stockage refusé : on vit sans mémoire.
   }
@@ -737,9 +739,18 @@ function EnteteJour({
     const cible = repere.current
     if (!cible || typeof IntersectionObserver === 'undefined') return
     const haut = Math.round(barre.current?.offsetHeight ?? 64)
-    const obs = new IntersectionObserver(([e]) => setCompact(!e.isIntersecting), {
-      rootMargin: `-${haut}px 0px 0px 0px`,
-    })
+    const surChangement: IntersectionObserverCallback = ([e]) => setCompact(!e.isIntersecting)
+    // Le document lui-même comme repère, et non la fenêtre implicite : sans
+    // racine, la marge s'applique à la fenêtre du navigateur de PLUS HAUT
+    // niveau. Dans une iframe (le laboratoire de charge), la barre se croyait
+    // donc toujours recouverte et affichait la date compacte dès l'ouverture.
+    // Dans la PWA les deux repères sont le même : rien n'y change.
+    let obs: IntersectionObserver
+    try {
+      obs = new IntersectionObserver(surChangement, { root: document, rootMargin: `-${haut}px 0px 0px 0px` })
+    } catch {
+      obs = new IntersectionObserver(surChangement, { rootMargin: `-${haut}px 0px 0px 0px` })
+    }
     obs.observe(cible)
     return () => obs.disconnect()
   }, [])

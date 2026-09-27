@@ -50,7 +50,7 @@ export interface ActiviteRow {
   relative_effort: number | null
 }
 
-interface DonneesDistantes {
+export interface DonneesDistantes {
   profil: ProfilRow | null
   logs: DailyLogRow[]
   feedback: FeedbackRow[]
@@ -145,6 +145,7 @@ const Contexte = createContext<EtatProvider | null>(null)
 export function DataProvider({
   userId,
   demo,
+  surChangement,
   children,
 }: {
   userId: string
@@ -155,9 +156,21 @@ export function DataProvider({
    * le cache ni dans la file d'attente. Rien ne sort de l'onglet.
    */
   demo?: DonneesDistantes
+  /**
+   * Laboratoire de charge seulement : chaque changement de l'état démo est
+   * remis à l'appelant, qui le garde d'un jour simulé à l'autre. Sans lui, la
+   * saisie de demain disparaissait au moment d'avancer d'un jour.
+   */
+  surChangement?: (d: DonneesDistantes) => void
   children: ReactNode
 }) {
   const [donnees, setDonnees] = useState<DonneesDistantes>(() => demo ?? lireCache() ?? VIDE)
+
+  useEffect(() => {
+    if (demo) surChangement?.(donnees)
+    // `demo` et le rappel sont fixes pour la vie du provider : seul l'état compte.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [donnees])
   const [chargement, setChargement] = useState(() => !demo && lireCache() === null)
   const [erreur, setErreur] = useState<string | null>(null)
   const [dossardsIndisponibles, setDossardsIndisponibles] = useState(false)

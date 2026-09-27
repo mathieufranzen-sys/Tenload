@@ -2,7 +2,7 @@
  * Socle de l'application : authentification, chargement des données, puis la
  * navigation à cinq onglets (Aujourd'hui, Programme, Suivi, Allures, Profil).
  */
-import { useMemo, useState } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useState, type ReactNode } from 'react'
 import planJson from './data/plan.json'
 import notionSeed from './data/notion-seed.json'
 import stravaSeed from './data/strava-seed.json'
@@ -14,7 +14,7 @@ import { ajusterForme } from './lib/forme'
 import { buildPain, type DailyLogRow, type FeedbackRow } from './lib/buildPain'
 import { NOTE_DEMO, construireDemo } from './data/demo'
 import { cleEcart, indexerEcarts, type EcartPatch, type EcartRow } from './lib/overrides'
-import { adapt, construireContexte, weekSessions } from './lib/adapt'
+import { adapt, construireContexte, weekSessions, type AdaptResult, type ContextePlan } from './lib/adapt'
 import { dossardsAjoutes, type DossardRow } from './lib/dossards'
 import type { PainMap } from './lib/tendonIndex'
 import { addDays, today } from './lib/dates'
@@ -55,6 +55,32 @@ function versSport(sport: string): string {
 const plan = planJson as unknown as Plan
 
 /**
+ * Le laboratoire de charge (`labo.html`) : quatre profils fictifs qu'on avance
+ * jour après jour. Chargé à la demande et en développement seulement : le
+ * bundle de production n'en porte pas une ligne.
+ */
+const CoquilleLabo = import.meta.env.DEV ? lazy(() => import('./labo/CoquilleLabo')) : null
+
+/** Ce que la coquille remet au laboratoire : le calcul du jour, et de quoi y écrire. */
+export interface ContexteLabo {
+  now: string
+  A: AdaptResult
+  ecarts: Map<string, EcartRow>
+  contexte: ContextePlan
+  feedback: FeedbackRow[]
+  onSaveFeedback?: (ligne: FeedbackRow) => void
+  onSaveEcart?: (week: number, dayIndex: number, slot: number, patch: EcartPatch, reason?: string | null) => void
+}
+
+export interface OptionsLabo {
+  /** Changer de date remonte l'app : l'onglet ouvert ne doit pas sauter pour autant. */
+  ongletInitial?: Onglet
+  surOnglet?: (o: Onglet) => void
+  /** Le pont vers le banc d'essai. Il ne dessine rien. */
+  pont?: (ctx: ContexteLabo) => ReactNode
+}
+
+/**
  * Porte d'entrée. Sans configuration Supabase, l'app reste ouverte sur les
  * instantanés embarqués : `npm run dev` doit fonctionner sans .env.local. Une
  * fois configurée, elle exige une connexion et lit tout depuis Supabase.
@@ -66,6 +92,13 @@ export function App() {
   // restaurer, et aucun risque d'y atterrir par un lien collé.
   const [demo, setDemo] = useState(false)
 
+  const cleLabo = CoquilleLabo ? new URLSearchParams(window.location.search).get('labo') : null
+  if (CoquilleLabo && cleLabo)
+    return (
+      <Suspense fallback={null}>
+        <CoquilleLabo cle={cleLabo} />
+      </Suspense>
+    )
   if (demo) return <CoquilleDemo onQuitter={() => setDemo(false)} />
   if (!isConfigured) return <Coquille />
   if (auth.state === 'loading') return null
@@ -101,12 +134,15 @@ function CoquilleDemo({ onQuitter }: { onQuitter: () => void }) {
   )
 }
 
-function CoquilleDemoInterne({
+export function CoquilleDemoInterne({
   activities,
   onQuitter,
+  labo,
 }: {
   activities: ActivityRow[]
-  onQuitter: () => void
+  onQuitter?: () => void
+  /** Le laboratoire réutilise la démo : mêmes données en mémoire, sans bandeau. */
+  labo?: OptionsLabo
 }) {
   const { logs } = useLogs()
   const { feedback } = useFeedback()
@@ -131,7 +167,8 @@ function CoquilleDemoInterne({
       profil={profil}
       ecarts={ecarts}
       journalActif
-      demo
+      demo={!labo}
+      labo={labo}
       onQuitterDemo={onQuitter}
       onSaveFeedback={enregistrerFeedback}
       onSaveProfil={enregistrerProfil}
@@ -278,7 +315,9 @@ function Coquille({
   dossards = [],
   dossardsIndisponibles = false,
   onSaveDossard,
+  labo,
 }: {
+  labo?: OptionsLabo
   /** Les dossards ajoutés et les objectifs de ceux du plan. */
   dossards?: DossardRow[]
   /** La table `dossards` n'existe pas encore : le script SQL reste à passer. */
@@ -373,7 +412,12 @@ function Coquille({
     [entreeCharge],
   )
 
-  const [onglet, setOnglet] = useState<Onglet>('today')
+  const [onglet, setOnglet] = useState<Onglet>(labo?.ongletInitial ?? 'today')
+  useEffect(() => {
+    labo?.surOnglet?.(onglet)
+    // Le rappel est stable pour la vie de la coquille : seul l'onglet compte.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onglet])
   /** Sous-page du Profil, pilotée ici : Suivi doit pouvoir y envoyer droit. */
   const [sectionProfil, setSectionProfil] = useState<SectionKey | null>(null)
 
@@ -436,7 +480,8 @@ function Coquille({
   return (
     <>
       {demo && <BandeauDemo onQuitter={onQuitterDemo} />}
-      {!demo && !isConfigured && <BandeauSeed />}
+      {!demo && !labo && !isConfigured && <BandeauSeed />}
+      {labo?.pont?.({ now, A, ecarts, contexte, feedback, onSaveFeedback, onSaveEcart })}
       {erreurSync && <BandeauErreur />}
 
       {onglet === 'today' && (
