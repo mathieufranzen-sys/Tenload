@@ -1343,6 +1343,15 @@ histoires de tendon, en avançant jour après jour.
   l'en-tête collant d'Aujourd'hui se croyait recouvert dès l'ouverture. Il
   prend désormais `root: document`, ce qui ne change rien dans la PWA.
 
+## Le garde-fou contre la page blanche
+
+`src/components/GardeEcran.tsx`, autour de chaque écran et de la feuille de
+séance, jamais de la barre de navigation. Une erreur de rendu démontait l'app
+entière (retour du laboratoire, 28 septembre 2026, Suivi en page blanche sans
+barre). L'écran fautif dit ce qui s'est passé, les autres onglets restent
+accessibles, et « Copier le détail » donne l'erreur et sa pile : un plantage
+devient un bug qu'on peut corriger. Changer d'onglet le remet à zéro.
+
 ## Pistes connues
 
 - Le bundle passe 600 Ko, essentiellement `plan.json` embarqué. Sans

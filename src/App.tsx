@@ -26,6 +26,7 @@ import { Plan as ProgrammeScreen } from './screens/Plan'
 import { Track } from './screens/Track'
 import { Paces } from './screens/Paces'
 import { Profile, type SectionKey } from './screens/Profile'
+import { GardeEcran } from './components/GardeEcran'
 import { BottomNav, type Onglet } from './components/BottomNav'
 import { SessionSheet } from './components/SessionSheet'
 import { BilansPasses } from './components/BilansPasses'
@@ -497,6 +498,7 @@ function Coquille({
       {erreurSync && <BandeauErreur />}
 
       {onglet === 'today' && (
+        <GardeEcran key="today" ecran="Aujourd'hui">
         <Today
           load={load}
           pain={data.pain}
@@ -518,8 +520,10 @@ function Coquille({
             setOnglet('profile')
           }}
         />
+        </GardeEcran>
       )}
       {onglet === 'plan' && (
+        <GardeEcran key="plan" ecran="Programme">
         <ProgrammeScreen
           load={load}
           pain={data.pain}
@@ -541,8 +545,10 @@ function Coquille({
           }}
           onOuvrirProfil={() => setOnglet('profile')}
         />
+        </GardeEcran>
       )}
       {onglet === 'track' && (
+        <GardeEcran key="track" ecran="Suivi">
         <Track
           load={load}
           loadParDiscipline={loadParDiscipline}
@@ -561,8 +567,10 @@ function Coquille({
           }}
           onOuvrirProfil={() => setOnglet('profile')}
         />
+        </GardeEcran>
       )}
       {onglet === 'paces' && (
+        <GardeEcran key="paces" ecran="Objectif">
         <Paces
           load={load}
           pain={data.pain}
@@ -587,8 +595,10 @@ function Coquille({
           onSaveEcart={onSaveEcart}
           onRecalibrerForme={onSaveProfil && ((allure) => onSaveProfil({ fitness_pace_s: allure }))}
         />
+        </GardeEcran>
       )}
       {onglet === 'profile' && (
+        <GardeEcran key="profile" ecran="Profil">
         <Profile
           userId={userId}
           load={load}
@@ -637,11 +647,13 @@ function Coquille({
             ((x) => setSeance({ semaineN: x.semaineOrigine, jourOrigine: x.jourOrigine, slot: x.slot }))
           }
         />
+        </GardeEcran>
       )}
 
       <BottomNav actif={onglet} onChange={setOnglet} />
 
       {ouverte && (
+        <GardeEcran key="feuille" ecran="La séance">
         <SessionSheet
           week={ouverte.semaine}
           seance={ouverte.seance}
@@ -663,6 +675,7 @@ function Coquille({
           onRecalibrerForme={onSaveProfil && ((allure) => onSaveProfil({ fitness_pace_s: allure }))}
           onClose={() => setSeance(null)}
         />
+        </GardeEcran>
       )}
     </>
   )
