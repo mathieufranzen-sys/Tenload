@@ -298,7 +298,7 @@ export function ouvrirVolume(s: Session): Session {
     ...versType(s, 'ef'),
     adapted: 'Volume ouvert · huit semaines sans douleur au-dessus de 2',
     motif: 'volume',
-    note: 'Huit semaines sans douleur au-dessus de 2 sur dix : le vélo de la semaine devient une course facile, de la même durée. Allure de conversation du début à la fin. Elle redevient du vélo dès qu’une douleur dépasse 2.',
+    note: 'Huit semaines sans douleur au-dessus de 2 sur dix : le vélo de la semaine devient une course facile, de la même durée. Allure de conversation du début à la fin. Elle redevient du vélo dès qu’un réveil ou une fin de journée dépasse 2, ou qu’une douleur d’effort atteint 4.',
   }
 }
 
@@ -566,14 +566,15 @@ export function adapt(
   const fenetre = verdictVolume(pain, now)
   if (fenetre) {
     const commun =
-      `${fenetre.releves} relevés sur les ${fenetre.jours} derniers jours, ` +
-      `aucun au-dessus de ${SEUIL_SANS_DOULEUR}.`
+      `${fenetre.releves} réveils notés sur les ${fenetre.jours} derniers jours, aucun réveil ni ` +
+      `aucune fin de journée au-dessus de ${SEUIL_SANS_DOULEUR}, aucun effort au-dessus de ${EFFORT_TOLERE}, ` +
+      'et une raideur qui ne monte pas.'
     rules.push({
       id: 'VOLUME',
       title: `Deux mois sans douleur au-dessus de ${SEUIL_SANS_DOULEUR} sur dix`,
       action:
         `${commun} Le tendon a tenu la charge : le vélo du mercredi devient une course facile, ` +
-        'de la même durée. Il redevient du vélo dès qu’une douleur dépasse 2.',
+        'de la même durée. Il redevient du vélo dès qu’un réveil ou une fin de journée dépasse 2, ou qu’une douleur d’effort atteint 4.',
     })
   }
 
@@ -614,24 +615,64 @@ export interface VerdictVolume {
 export interface ProgresVolume {
   /** Jours d'affilée sans aucune douleur au-dessus du seuil, aujourd'hui compris. */
   jours: number
-  /** Relevés exploitables dans la fenêtre, qui compte les 56 derniers jours au plus. */
+  /** Réveils saisis dans la fenêtre, qui compte les 56 derniers jours au plus. */
   releves: number
   joursRequis: number
   relevesRequis: number
   atteint: boolean
   /** Le relevé qui a remis le compteur à zéro, s'il y en a un. */
   remise: { day: string; valeur: number } | null
+  /** Raideur moyenne de la semaine écoulée contre celle d'avant, quand elle monte. */
+  raideurEnHausse: { avant: number; apres: number } | null
 }
 
 /**
  * Le compteur de l'ouverture du volume (question de Mathieu, 29 septembre
  * 2026 : « comment savoir où j'en suis ? »). Même règle que le second palier
- * de `verdictVolume` : 56 jours sans douleur au-dessus de 2, et 42 relevés
+ * de `verdictVolume` : 56 jours calmes (voir `remiseAZero`), et 42 réveils notés
  * au moins, parce qu'un carnet vide n'est pas un tendon calme.
  *
  * Le compteur ne remonte pas avant la première saisie du carnet : des jours
  * dont on ne sait rien ne sont pas des jours propres.
  */
+/**
+ * Ce qui remet le compteur à zéro. Arbitré le 29 septembre 2026 d'après les
+ * références du calcul, les trois mesures ne pèsent plus pareil :
+ *
+ * - le réveil et la fin de journée restent à 2 ou moins. La fin de journée
+ *   est la douleur de la vie courante, et 2 sur 10 y est le critère de reprise
+ *   de la course (Silbernagel et Crossley 2015) ; le réveil, pris à froid, est
+ *   l'état du tendon ;
+ * - la douleur pendant l'effort est tolérée jusqu'à 3. Le modèle de
+ *   surveillance de la douleur accepte 5 pendant l'effort si le lendemain est
+ *   calme (Silbernagel 2007) : une sortie longue à 3 suivie d'un réveil à 1
+ *   remettait huit semaines à zéro. À 4 commence l'alerte orange de l'app.
+ */
+export const EFFORT_TOLERE = 3
+
+function remiseAZero(p: PainMap[string] | undefined): number | null {
+  if (!p) return null
+  const trop = [
+    p.wake != null && p.wake > SEUIL_SANS_DOULEUR ? p.wake : null,
+    p.evening != null && p.evening > SEUIL_SANS_DOULEUR ? p.evening : null,
+    p.effort != null && p.effort > EFFORT_TOLERE ? p.effort : null,
+  ].filter((x): x is number => x != null)
+  return trop.length ? Math.max(...trop) : null
+}
+
+/** Hausse de la raideur moyenne tolérée d'une semaine à l'autre, en points. */
+export const HAUSSE_RAIDEUR_SEMAINE = 0.5
+
+/** Moyenne des réveils de `debut` à `debut + 6`, `null` sous trois relevés. */
+function raideurDeLaSemaine(pain: PainMap, debut: string): number | null {
+  const vs: number[] = []
+  for (let k = 0; k < 7; k++) {
+    const w = pain[addDays(debut, k)]?.wake
+    if (w != null) vs.push(w)
+  }
+  return vs.length >= 3 ? vs.reduce((a, b) => a + b, 0) / vs.length : null
+}
+
 export function progresVolume(pain: PainMap, now: string): ProgresVolume {
   const { jours: joursRequis, releves: relevesRequis } = PALIERS_VOLUME[0]
   const premier = Object.keys(pain).sort()[0]
@@ -640,40 +681,36 @@ export function progresVolume(pain: PainMap, now: string): ProgresVolume {
   let remise: ProgresVolume['remise'] = null
   if (premier) {
     for (let k = 0; addDays(now, -k) >= premier; k++) {
-      const p = pain[addDays(now, -k)]
-      const vs = p ? [p.wake, p.effort, p.evening].filter((x): x is number => x != null) : []
-      if (vs.length && Math.max(...vs) > SEUIL_SANS_DOULEUR) {
-        remise = { day: addDays(now, -k), valeur: Math.max(...vs) }
+      const d = addDays(now, -k)
+      const valeur = remiseAZero(pain[d])
+      if (valeur != null) {
+        remise = { day: d, valeur }
         break
       }
       jours++
-      if (vs.length && k < joursRequis) releves++
+      // Le relevé qui compte est le réveil : c'est la mesure de référence.
+      if (pain[d]?.wake != null && k < joursRequis) releves++
     }
   }
+  // La raideur ne doit pas monter d'une semaine à l'autre (Silbernagel 2007) :
+  // la semaine écoulée contre celle d'avant.
+  const apres = raideurDeLaSemaine(pain, addDays(now, -6))
+  const avant = raideurDeLaSemaine(pain, addDays(now, -13))
+  const raideurEnHausse =
+    apres != null && avant != null && apres >= avant + HAUSSE_RAIDEUR_SEMAINE ? { avant, apres } : null
   return {
     jours,
     releves,
     joursRequis,
     relevesRequis,
-    atteint: jours >= joursRequis && releves >= relevesRequis,
+    atteint: jours >= joursRequis && releves >= relevesRequis && !raideurEnHausse,
     remise,
+    raideurEnHausse,
   }
 }
 
+/** Le verdict de la règle VOLUME : le même compteur, pour qu'un écran ne puisse pas contredire l'autre. */
 export function verdictVolume(pain: PainMap, now: string): VerdictVolume | null {
-  // Du plus exigeant au moins exigeant : le premier atteint gagne.
-  for (const { palier, jours, releves: minimum } of PALIERS_VOLUME) {
-    let releves = 0
-    let propre = true
-    for (let k = 0; k < jours && propre; k++) {
-      const p = pain[addDays(now, -k)]
-      if (!p) continue
-      const vs = [p.wake, p.effort, p.evening].filter((x): x is number => x != null)
-      if (vs.length === 0) continue
-      if (Math.max(...vs) > SEUIL_SANS_DOULEUR) propre = false
-      else releves++
-    }
-    if (propre && releves >= minimum) return { palier, releves, jours }
-  }
-  return null
+  const p = progresVolume(pain, now)
+  return p.atteint ? { palier: 2, releves: p.releves, jours: p.joursRequis } : null
 }

@@ -403,10 +403,16 @@ describe('ouverture du volume : la sortie de la contrainte 5', () => {
     expect(verdictVolume({}, JOUR)).toBeNull()
   })
 
-  it('exige 42 relevés sur les 56 jours', () => {
-    // Trois sur quatre dans la fenêtre.
-    expect(verdictVolume(carnet(41), JOUR)).toBeNull()
-    expect(verdictVolume(carnet(42), JOUR)!.palier).toBe(2)
+  it('exige 42 réveils notés sur les 56 jours', () => {
+    // Trois sur quatre dans la fenêtre ; les autres jours portent seulement
+    // leur fin de journée, qui compte dans la série mais pas comme relevé.
+    const avecReveils = (n: number): PainMap => {
+      const p = carnet(56)
+      for (let k = n; k < 56; k++) p[shiftDay(JOUR, -k)] = { evening: 1.5 }
+      return p
+    }
+    expect(verdictVolume(avecReveils(41), JOUR)).toBeNull()
+    expect(verdictVolume(avecReveils(42), JOUR)!.palier).toBe(2)
   })
 })
 
@@ -441,6 +447,37 @@ describe('progresVolume', () => {
 
   it('est atteint à 56 jours et 42 relevés', () => {
     expect(progresVolume(carnet(60, () => 1), NOW).atteint).toBe(true)
+  })
+
+  it('tolère 3 pendant l’effort, pas 4', () => {
+    const avec = (effort: number): PainMap => {
+      const p = carnet(60, () => 1)
+      p[addDays(NOW, -20)] = { wake: 1, effort, evening: 1 }
+      return p
+    }
+    expect(progresVolume(avec(3), NOW).atteint).toBe(true)
+    const r = progresVolume(avec(4), NOW)
+    expect(r.jours).toBe(20)
+    expect(r.remise).toEqual({ day: addDays(NOW, -20), valeur: 4 })
+  })
+
+  it('remet à zéro sur une fin de journée à 3', () => {
+    const p = carnet(60, () => 1)
+    p[addDays(NOW, -5)] = { wake: 1, evening: 3 }
+    expect(progresVolume(p, NOW).jours).toBe(5)
+  })
+
+  it('compte les réveils, pas les autres mesures', () => {
+    const p: PainMap = {}
+    for (let k = 0; k < 60; k++) p[addDays(NOW, -k)] = { evening: 1 }
+    expect(progresVolume(p, NOW).releves).toBe(0)
+  })
+
+  it('attend si la raideur monte d’une semaine à l’autre', () => {
+    const r = progresVolume(carnet(60, (k) => (k < 7 ? 2 : 1)), NOW)
+    expect(r.jours).toBe(60)
+    expect(r.raideurEnHausse).toEqual({ avant: 1, apres: 2 })
+    expect(r.atteint).toBe(false)
   })
 })
 

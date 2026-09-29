@@ -23,7 +23,7 @@ const PLEIN = 'var(--chart-1)'
 const PALE = 'color-mix(in srgb, var(--chart-1) 30%, transparent)'
 
 export function OuvertureChart({ progres, pain, now }: { progres: ProgresVolume; pain: PainMap; now: string }) {
-  const { jours, joursRequis, releves, relevesRequis, atteint, remise } = progres
+  const { jours, joursRequis, releves, relevesRequis, atteint, remise, raideurEnHausse } = progres
   const faits = Math.min(jours, joursRequis)
   // La fenêtre part du premier jour de la série en cours ; une fois atteinte,
   // elle montre les huit dernières semaines.
@@ -42,7 +42,7 @@ export function OuvertureChart({ progres, pain, now }: { progres: ProgresVolume;
         <span style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-texte)' }}>jours sur {joursRequis}</span>
       </p>
 
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Jours sans douleur au-dessus de 2" style={{ marginTop: 10 }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Jours calmes d’affilée" style={{ marginTop: 10 }}>
         {Array.from({ length: lignes }, (_, s) => (
           <text key={s} x={0} y={s * (COTE + ECART) + COTE / 2 + 3.5} fontSize={10} fill="var(--chart-texte)">
             S{2 * s + 1}-{2 * s + 2}
@@ -79,7 +79,7 @@ export function OuvertureChart({ progres, pain, now }: { progres: ProgresVolume;
 
       <div style={{ marginTop: 14 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-meta)', color: 'var(--ink-2)' }}>
-          <span>Relevés du carnet</span>
+          <span>Réveils notés</span>
           <span style={{ fontVariantNumeric: 'tabular-nums' }}>
             {Math.min(releves, relevesRequis)} sur {relevesRequis}
           </span>
@@ -98,8 +98,12 @@ export function OuvertureChart({ progres, pain, now }: { progres: ProgresVolume;
 
       <p style={{ margin: '14px 0 0', color: 'var(--ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5 }}>
         {atteint
-          ? 'Huit semaines sans douleur au-dessus de 2 : le vélo du mercredi est devenu une course facile.'
-          : `Au plus tôt le ${formatDay(addDays(now, joursRequis - faits))}, si aucune douleur ne dépasse 2. Le vélo du mercredi devient alors une course facile.`}
+          ? 'Huit semaines calmes : le vélo du mercredi est devenu une course facile.'
+          : faits < joursRequis
+            ? `Au plus tôt le ${formatDay(addDays(now, joursRequis - faits))}, si réveil et fin de journée restent à 2 ou moins et l'effort à 3 ou moins. Le vélo du mercredi devient alors une course facile.`
+            : raideurEnHausse
+              ? `Huit semaines tenues, mais ta raideur monte : ${formatNumber(Math.round(raideurEnHausse.apres * 10) / 10)} de moyenne cette semaine contre ${formatNumber(Math.round(raideurEnHausse.avant * 10) / 10)} la semaine d'avant. L'ouverture attend qu'elle redescende.`
+              : `Huit semaines tenues : il manque des réveils notés pour ouvrir.`}
         {remise && ` Dernière remise à zéro le ${formatDay(remise.day)}, à ${formatNumber(remise.valeur)} sur 10.`}
       </p>
     </div>
