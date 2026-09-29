@@ -111,3 +111,27 @@ describe('un noir demande plus qu’une crise', () => {
     expect(e.requis).toBe(14)
   })
 })
+
+describe('le réveil calme tient compte de la raideur habituelle', () => {
+  /** Une raideur de fond à `fond` sur quatre semaines, puis une crise le lundi. */
+  const fondPuisCrise = (fond: number): PainMap => {
+    const p: PainMap = {}
+    for (let k = -28; k <= 14; k++) p[addDays(LUNDI, k)] = { wake: fond, evening: 2 }
+    p[LUNDI] = { wake: 6, evening: 2 }
+    return p
+  }
+
+  it('une base à 2,5 laisse passer des réveils à 2,5', () => {
+    expect(etatReprise(jour(2), fondPuisCrise(2.5), jour(2))!.courseSuspendue).toBe(false)
+  })
+
+  it('une base plus haute ne desserre pas au-delà de 2,5', () => {
+    expect(etatReprise(jour(2), fondPuisCrise(3), jour(2))!.courseSuspendue).toBe(true)
+  })
+
+  it('sans base, le seuil reste à 2', () => {
+    const p: PainMap = { [LUNDI]: { wake: 6, evening: 2 } }
+    for (let k = 1; k <= 3; k++) p[jour(k)] = { wake: 2.5, evening: 2 }
+    expect(etatReprise(jour(3), p, jour(3))!.courseSuspendue).toBe(true)
+  })
+})

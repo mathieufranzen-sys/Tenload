@@ -119,7 +119,33 @@ function matinCalme(m: string, lire: ReturnType<typeof lecteur>, now: string): b
   if (effort != null && effort > EFFORT_TOLERE) return false
   const reveil = lire(m, 'wake')
   if (reveil == null) return m > now
-  return reveil <= SEUIL_SANS_DOULEUR
+  return reveil <= reveilCalme(m, lire)
+}
+
+/**
+ * Le réveil calme : 2, ou jusqu'à 2,5 si c'est la raideur habituelle.
+ *
+ * Arbitré par Mathieu le 29 septembre 2026. Un seuil fixe à 2 bloquait la
+ * course pour de bon d'un tendon dont la raideur de fond s'est installée
+ * juste au-dessus : le profil 2 du laboratoire ne courait plus depuis trois
+ * semaines. La raideur habituelle est la moyenne des réveils des quatre
+ * semaines précédentes, sur dix relevés au moins ; elle ne desserre le seuil
+ * que jusqu'à 2,5, jamais plus. Au-delà, ce n'est plus une base, c'est un
+ * tendon qui n'est pas revenu au calme.
+ */
+export const REVEIL_CALME_MAX = 2.5
+const FENETRE_HABITUELLE = 28
+const RELEVES_HABITUELS = 10
+
+function reveilCalme(m: string, lire: ReturnType<typeof lecteur>): number {
+  const vs: number[] = []
+  for (let k = 1; k <= FENETRE_HABITUELLE; k++) {
+    const w = lire(addDays(m, -k), 'wake')
+    if (w != null) vs.push(w)
+  }
+  if (vs.length < RELEVES_HABITUELS) return SEUIL_SANS_DOULEUR
+  const habituelle = vs.reduce((a, b) => a + b, 0) / vs.length
+  return Math.min(REVEIL_CALME_MAX, Math.max(SEUIL_SANS_DOULEUR, habituelle))
 }
 
 /** Le relevé le plus sévère d'un jour, parmi ceux qu'on pouvait lire. */

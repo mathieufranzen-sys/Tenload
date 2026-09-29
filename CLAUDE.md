@@ -651,7 +651,11 @@ plus longtemps le tendon a mal, plus fort et plus longtemps le plan s'adapte.**
 
 - **Elle se lit sur des matins calmes, pas sur une durée.** Un matin calme :
   réveil à 2 ou moins, et la veille ni fin de journée au-dessus de 2 ni effort
-  au-dessus de 3. Le compteur part du dernier relevé douloureux, donc un
+  au-dessus de 3. Le réveil tolère jusqu'à 2,5 quand c'est la raideur
+  habituelle (moyenne des 28 jours précédents, dix relevés au moins), jamais
+  plus : un seuil fixe à 2 bloquait pour de bon un tendon dont la raideur de
+  fond s'est installée juste au-dessus (arbitré le 29 septembre 2026). Le
+  compteur d'ouverture du volume, lui, reste strict à 2. Le compteur part du dernier relevé douloureux, donc un
   épisode long le démarre tard.
 - **Trois niveaux, avec les planchers mêmes de l'indice** (`plancherDuReleve`) :
   alerte (orange), la course reste et l'intensité attend 3 matins calmes ;

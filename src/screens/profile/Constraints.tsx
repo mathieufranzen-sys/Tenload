@@ -26,7 +26,7 @@ const REGLES: Array<{ titre: string; texte: string; source: string }> = [
   {
     titre: 'Un matin calme',
     texte:
-      'Réveil à 2 ou moins, et la veille ni fin de journée au-dessus de 2 ni effort au-dessus de 3. Plus l’épisode dure, plus tard le compteur démarre : il part du dernier relevé douloureux.',
+      'Réveil à 2 ou moins, jusqu’à 2,5 si c’est ta raideur habituelle des quatre dernières semaines ; et la veille ni fin de journée au-dessus de 2 ni effort au-dessus de 3. Plus l’épisode dure, plus tard le compteur démarre : il part du dernier relevé douloureux.',
     source: 'Silbernagel 2007 : l’effort peut aller jusqu’à 5 si le lendemain matin est revenu au calme.',
   },
   {
