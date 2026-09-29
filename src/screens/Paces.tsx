@@ -13,7 +13,7 @@ import type { LoadMap, PainMap } from '../lib/tendonIndex'
 import type { FeedbackRow } from '../lib/buildPain'
 import type { EcartPatch, EcartRow } from '../lib/overrides'
 import type { DossardRow } from '../lib/dossards'
-import { ZONE_OFFSETS, formatPace, zonePace, zoneHrRange } from '../lib/paces'
+import { PLAGE_LENTE, formatPace, zonePace, zoneHrRange } from '../lib/paces'
 import { COULEUR_ZONE, ENCRE_ZONE } from '../lib/seanceStyle'
 import type { AjustementForme } from '../lib/forme'
 import { EnteteEcran } from '../components/EnteteEcran'
@@ -26,17 +26,6 @@ const plan = planJson as unknown as Plan
 // Les couleurs d'allure vivent dans `seanceStyle.ts` : le déroulé d'une
 // séance et ces barres doivent montrer la même zone de la même couleur.
 
-/**
- * La borne lente des zones qui se courent en plage, en s/km au-dessus de
- * l'allure marathon. L'endurance va de sa propre allure à celle de la
- * récupération, la récupération descend jusqu'à 6:30 pour un objectif de
- * 3 h 15 (+113). Donné par Mathieu le 22 septembre 2026. Les autres zones
- * restent une allure : ce sont des cibles, pas des plafonds.
- */
-const PLAGE_LENTE: Partial<Record<ZoneKey, number>> = {
-  ef: ZONE_OFFSETS.recup,
-  recup: 113,
-}
 
 
 

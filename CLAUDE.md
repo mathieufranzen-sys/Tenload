@@ -274,6 +274,18 @@ emmener le plan loin de la mesure :
 4. **L'écart est borné à ±15 s/km.** Le ressenti nuance le test, il ne le
    remplace pas : au-delà, c'est un nouveau test qu'il faut, pas un calcul.
 
+**Les courses chronométrées parlent aussi par leur allure** (29 septembre
+2026, `coursesChronometrees`, `ecartChronometre`). Sans Strava, la forme ne
+bougeait que par l'effort perçu, et un carnet noté près de l'attendu la
+laissait plate depuis août. Une course facile (endurance, récupération,
+longue sans allure rapide) dont la « donnée réelle » porte le temps se situe
+dans la plage prescrite à la forme du moment : dans la plage, seule l'effort
+compte ; plus vite, la forme progresse ; plus lent que la plage, elle recule.
+Une récupération courue lentement, comme demandé, ne coûte donc rien. Même
+échelle (4 s/km par point), même borne de ±15 s/km, mêmes trois séances
+minimum. La note sous le graphique de Suivi dit combien de courses
+chronométrées la courbe a lues.
+
 L'écart appliqué s'affiche en pastille sous la forme projetée, dans Allures :
 une valeur qui bouge toute seule sans dire pourquoi ne serait pas lisible.
 

@@ -26,7 +26,7 @@ import { VolumeChart, type BarRow, type VueVolume } from '../components/charts/V
 import { LoadChart, type StackRow } from '../components/charts/LoadChart'
 import { MeshBackground } from '../components/MeshBackground'
 import { EffortChart, FormeChart } from '../components/charts/NiveauChart'
-import { MIN_SEANCES, RPE_ATTENDU, serieForme, type AjustementForme } from '../lib/forme'
+import { MIN_SEANCES, RPE_ATTENDU, coursesChronometrees, serieForme, type AjustementForme } from '../lib/forme'
 import { RepartitionChart } from '../components/charts/RepartitionChart'
 import { RatioChart, type PointRatio } from '../components/charts/RatioChart'
 import { chronoEquivalent, formatChrono } from '../lib/dossards'
@@ -320,11 +320,14 @@ export function Track({
     const lundiCourant = mondayOf(now)
     const lundis = Array.from({ length: 12 }, (_, k) => addDays(lundiCourant, -7 * (11 - k)))
     const dates = [...lundis.slice(1), now]
-    const forme = serieForme(formeTest, feedback, dates).map((f, i) => ({
+    const chronos = coursesChronometrees(feedback, ecarts, plan.weeks)
+    const forme = serieForme(formeTest, feedback, dates, chronos).map((f, i) => ({
       label: i === dates.length - 1 ? "auj." : formatDay(dates[i]),
       minutes: Math.round((f.allure * MARATHON_KM) / 60),
       secondes: Math.round(f.allure * MARATHON_KM),
       lu: f.seances >= MIN_SEANCES,
+      seances: f.seances,
+      chronometrees: f.chronometrees,
     }))
     // Séance par séance sur un mois (retour du 23 septembre) : une moyenne
     // par semaine sur trois mois lissait tout ce qu'on vient y voir, et
@@ -338,7 +341,7 @@ export function Track({
         ecart: f.rpe - (RPE_ATTENDU[f.session_type as SessionType] as number),
       }))
     return { forme, effort }
-  }, [formeTest, feedback, now])
+  }, [formeTest, feedback, now, ecarts])
 
   const volumeAffiche =
     vueVolume === 'cumul'
@@ -432,7 +435,12 @@ export function Track({
           note={(() => {
             const f = niveau.forme
             const d = f.length > 1 ? f[f.length - 1].minutes - f[0].minutes : 0
-            return d === 0 ? 'Stable sur 12 semaines' : `${d < 0 ? '−' : '+'}${Math.abs(d)} min sur 12 semaines`
+            const tendance = d === 0 ? 'Stable sur 12 semaines' : `${d < 0 ? '−' : '+'}${Math.abs(d)} min sur 12 semaines`
+            // Ce que la courbe lit : sans le dire, une ligne plate passait
+            // pour une absence de progrès au lieu d'une absence de mesure.
+            const dernier = f[f.length - 1]
+            if (!dernier || dernier.seances < MIN_SEANCES) return `${tendance}. Pas assez de séances notées ces 28 jours pour la faire bouger.`
+            return `${tendance}. Ces 28 jours : ${dernier.chronometrees} course${dernier.chronometrees > 1 ? 's' : ''} chronométrée${dernier.chronometrees > 1 ? 's' : ''} sur ${dernier.seances} séances lues.`
           })()}
         >
           <FormeChart points={niveau.forme} objectif={Math.round((marathonPace * MARATHON_KM) / 60)} />

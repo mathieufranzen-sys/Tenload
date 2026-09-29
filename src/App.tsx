@@ -10,7 +10,7 @@ import type { Plan, Session } from './data/types'
 import { buildLoad, buildLoadParDiscipline, joursAttestes, type ActivityRow } from './lib/load'
 import { compterEnRetard, seancesANoter } from './lib/aNoter'
 import { HR_MAX } from './lib/paces'
-import { ajusterForme } from './lib/forme'
+import { ajusterForme, coursesChronometrees } from './lib/forme'
 import { buildPain, type DailyLogRow, type FeedbackRow } from './lib/buildPain'
 import { NOTE_DEMO, construireDemo } from './data/demo'
 import { cleEcart, indexerEcarts, type EcartPatch, type EcartRow } from './lib/overrides'
@@ -371,7 +371,10 @@ function Coquille({
   // Le test de 3 km ancre la forme, le ressenti la fait vivre entre deux
   // tests — qui sont rares, un par bloc au mieux. L'écart est borné à
   // ±15 s/km : le ressenti nuance la mesure, il ne la remplace pas.
-  const forme = useMemo(() => ajusterForme(fitnessPaceTest, feedback, now), [fitnessPaceTest, feedback, now])
+  const forme = useMemo(
+    () => ajusterForme(fitnessPaceTest, feedback, now, coursesChronometrees(feedback, indexerEcarts(ecartsRows), plan.weeks)),
+    [fitnessPaceTest, feedback, now, ecartsRows],
+  )
   const fitnessPace = forme.allure
 
   // Une séance sans import Strava (muscu, escalade, ou une course avant que

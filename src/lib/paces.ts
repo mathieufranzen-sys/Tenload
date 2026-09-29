@@ -28,6 +28,19 @@ export const ZONE_OFFSETS: Record<ZoneKey, number> = {
 export const MARATHON_KM = 42.195
 export const HALF_KM = 21.0975
 
+/**
+ * La borne lente des zones qui se courent en plage, en s/km au-dessus de
+ * l'allure marathon. L'endurance va de sa propre allure à celle de la
+ * récupération, la récupération descend jusqu'à 6:30 pour un objectif de
+ * 3 h 15 (+113). Donné par Mathieu le 22 septembre 2026. Les autres zones
+ * restent une allure : ce sont des cibles, pas des plafonds. L'écran
+ * Objectif les affiche, `forme.ts` y situe les courses chronométrées.
+ */
+export const PLAGE_LENTE: Partial<Record<ZoneKey, number>> = {
+  ef: ZONE_OFFSETS.recup,
+  recup: 113,
+}
+
 /** Allure d'une zone, en secondes par kilomètre. */
 export const zonePace = (marathonPace: number, zone: ZoneKey): number =>
   marathonPace + (ZONE_OFFSETS[zone] ?? 0)
