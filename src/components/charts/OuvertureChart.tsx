@@ -1,5 +1,5 @@
 /**
- * Le compteur de l'ouverture du volume, en huit semaines d'une ligne chacune.
+ * Le compteur de l'ouverture du volume, deux semaines par ligne.
  *
  * Demandé par Mathieu le 29 septembre 2026, en dernier graphique de Suivi et
  * « un peu plus visuel » qu'un chiffre : un carré par jour, parce que ce qui
@@ -13,9 +13,14 @@ import type { ProgresVolume } from '../../lib/adapt'
 import type { PainMap } from '../../lib/tendonIndex'
 
 const W = 320
-const COTE = 30
-const ECART = 5
-const MARGE = 30
+/** Deux semaines par ligne : quatre lignes au lieu de huit, le graphique garde sa série sans prendre la hauteur d'un écran. */
+const PAR_LIGNE = 14
+const MARGE = 34
+const ECART = 3
+const COTE = (W - MARGE - (PAR_LIGNE - 1) * ECART) / PAR_LIGNE
+/** Les couleurs de Suivi : le vert pour le tendon calme, le bleu pour le carnet. */
+const PLEIN = 'var(--chart-1)'
+const PALE = 'color-mix(in srgb, var(--chart-1) 30%, transparent)'
 
 export function OuvertureChart({ progres, pain, now }: { progres: ProgresVolume; pain: PainMap; now: string }) {
   const { jours, joursRequis, releves, relevesRequis, atteint, remise } = progres
@@ -23,8 +28,8 @@ export function OuvertureChart({ progres, pain, now }: { progres: ProgresVolume;
   // La fenêtre part du premier jour de la série en cours ; une fois atteinte,
   // elle montre les huit dernières semaines.
   const debut = addDays(now, -(faits - 1))
-  const semaines = Math.ceil(joursRequis / 7)
-  const H = semaines * (COTE + ECART)
+  const lignes = Math.ceil(joursRequis / PAR_LIGNE)
+  const H = lignes * (COTE + ECART) - ECART
   const releve = (d: string) => {
     const p = pain[d]
     return p != null && [p.wake, p.effort, p.evening].some((v) => v != null)
@@ -37,22 +42,22 @@ export function OuvertureChart({ progres, pain, now }: { progres: ProgresVolume;
         <span style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-texte)' }}>jours sur {joursRequis}</span>
       </p>
 
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Jours sans douleur au-dessus de 2" style={{ marginTop: 14 }}>
-        {Array.from({ length: semaines }, (_, s) => (
-          <text key={s} x={0} y={s * (COTE + ECART) + COTE / 2 + 4} fontSize={10} fill="var(--chart-texte)">
-            S{s + 1}
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Jours sans douleur au-dessus de 2" style={{ marginTop: 10 }}>
+        {Array.from({ length: lignes }, (_, s) => (
+          <text key={s} x={0} y={s * (COTE + ECART) + COTE / 2 + 3.5} fontSize={10} fill="var(--chart-texte)">
+            S{2 * s + 1}-{2 * s + 2}
           </text>
         ))}
         {Array.from({ length: joursRequis }, (_, i) => {
           const d = addDays(debut, i)
           const passe = d <= now
-          const x = MARGE + (i % 7) * (COTE + ECART)
-          const y = Math.floor(i / 7) * (COTE + ECART)
+          const x = MARGE + (i % PAR_LIGNE) * (COTE + ECART)
+          const y = Math.floor(i / PAR_LIGNE) * (COTE + ECART)
           const fill = !passe
             ? 'none'
             : releve(d)
-              ? 'var(--good)'
-              : 'color-mix(in srgb, var(--good) 28%, transparent)'
+              ? PLEIN
+              : PALE
           return (
             <rect
               key={d}
@@ -60,7 +65,7 @@ export function OuvertureChart({ progres, pain, now }: { progres: ProgresVolume;
               y={y}
               width={COTE}
               height={COTE}
-              rx={7}
+              rx={4}
               fill={fill}
               stroke={passe ? 'none' : 'var(--border-2)'}
               strokeWidth={1.2}
@@ -85,7 +90,7 @@ export function OuvertureChart({ progres, pain, now }: { progres: ProgresVolume;
               width: `${Math.min(100, (releves / relevesRequis) * 100)}%`,
               height: '100%',
               borderRadius: 4,
-              background: 'var(--good)',
+              background: 'var(--chart-2)',
             }}
           />
         </div>
