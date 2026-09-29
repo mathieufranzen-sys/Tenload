@@ -532,9 +532,26 @@ for w in range(1, 35):
         "sessions": sessions,
     })
 
+# Les contraintes du plan, numérotées comme dans CLAUDE.md. Elles venaient de
+# l'archive, c'est-à-dire du plan d'avant la refonte du 18 septembre : le
+# Profil affichait encore l'escalade du mercredi et « deux vélos qui
+# remplacent les petites EF ». Le numéro 2 reste vacant, des écarts en base y
+# font référence.
+CONTRAINTES = [
+    "La sortie longue ne monte jamais de plus de 2 km d'une semaine de charge à la suivante ; une décharge la coupe d'au moins 20 %, sortie longue et semaine entière.",
+    "Retirée le 18 septembre 2026 : l'escalade n'est plus une séance de la semaine, seulement un remplacement possible.",
+    "Ni séance de vitesse ni renforcement bas du corps accolés à la sortie longue, ni la veille, ni le lendemain.",
+    "Un jour de repos jambes complet par semaine, le dimanche.",
+    "Un vélo par semaine, du volume aérobie sans impact au sol. Il devient une course facile après huit semaines calmes.",
+    "Jamais deux jours de course d'affilée, sauf le lundi-mardi, et la course qui remplace le vélo une fois le volume ouvert.",
+    "Aucune séance dure hors bloc spécifique : effort 7,5 sur 10 au maximum, trois à quatre répétitions en réserve.",
+    "La sortie longue reste sous 48 % du volume de course de la semaine, 46 % au-delà de 65 km.",
+    "20 à 30 minutes au seuil par semaine, trois séances de seuil pour une séance de vitesse.",
+]
+
 plan = {
     "meta": {**archive["meta"], "raceDate": RACE.isoformat(),
-             "weeks": 34, "targetMarathonPace": MP},
+             "weeks": 34, "targetMarathonPace": MP, "constraints": CONTRAINTES},
     # ZONES et non l'archive : le plan archivé date d'avant l'allure semi, et
     # le repli l'emportait silencieusement. Les séances écrivaient donc une
     # zone que la table du plan ne connaissait pas, ce qui ouvrait le détail

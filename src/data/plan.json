@@ -10,11 +10,15 @@
   "weeks": 34,
   "targetMarathonPace": 277,
   "constraints": [
-   "Sortie longue : +2 km maximum d'une semaine sur l'autre",
-   "Escalade le mercredi soir : aucune course ni renfo haut du corps ce jour-là",
-   "Séance de vitesse et renfo bas du corps jamais accolés à la sortie longue",
-   "Un jour de repos jambes complet par semaine (dimanche)",
-   "2 séances de vélo remplacent les petites EF tant que le tendon n'est pas guéri"
+   "La sortie longue ne monte jamais de plus de 2 km d'une semaine de charge à la suivante ; une décharge la coupe d'au moins 20 %, sortie longue et semaine entière.",
+   "Retirée le 18 septembre 2026 : l'escalade n'est plus une séance de la semaine, seulement un remplacement possible.",
+   "Ni séance de vitesse ni renforcement bas du corps accolés à la sortie longue, ni la veille, ni le lendemain.",
+   "Un jour de repos jambes complet par semaine, le dimanche.",
+   "Un vélo par semaine, du volume aérobie sans impact au sol. Il devient une course facile après huit semaines calmes.",
+   "Jamais deux jours de course d'affilée, sauf le lundi-mardi, et la course qui remplace le vélo une fois le volume ouvert.",
+   "Aucune séance dure hors bloc spécifique : effort 7,5 sur 10 au maximum, trois à quatre répétitions en réserve.",
+   "La sortie longue reste sous 48 % du volume de course de la semaine, 46 % au-delà de 65 km.",
+   "20 à 30 minutes au seuil par semaine, trois séances de seuil pour une séance de vitesse."
   ]
  },
  "zones": {

@@ -6,7 +6,7 @@ import { Suspense, lazy, useEffect, useMemo, useState, type ReactNode } from 're
 import planJson from './data/plan.json'
 import notionSeed from './data/notion-seed.json'
 import stravaSeed from './data/strava-seed.json'
-import type { Plan } from './data/types'
+import type { Plan, Session } from './data/types'
 import { buildLoad, buildLoadParDiscipline, joursAttestes, type ActivityRow } from './lib/load'
 import { compterEnRetard, seancesANoter } from './lib/aNoter'
 import { HR_MAX } from './lib/paces'
@@ -14,7 +14,7 @@ import { ajusterForme } from './lib/forme'
 import { buildPain, type DailyLogRow, type FeedbackRow } from './lib/buildPain'
 import { NOTE_DEMO, construireDemo } from './data/demo'
 import { cleEcart, indexerEcarts, type EcartPatch, type EcartRow } from './lib/overrides'
-import { adapt, construireContexte, weekSessions, type AdaptResult, type ContextePlan } from './lib/adapt'
+import { adapt, construireContexte, formeProjetee, weekSessions, type AdaptResult, type ContextePlan } from './lib/adapt'
 import { dossardsAjoutes, type DossardRow } from './lib/dossards'
 import type { PainMap } from './lib/tendonIndex'
 import { addDays, today } from './lib/dates'
@@ -392,9 +392,25 @@ function Coquille({
    */
   const ajoutes = useMemo(() => dossardsAjoutes(dossards), [dossards])
 
+  // Le contexte avant la charge : la projection de la charge lit ses plafonds
+  // de progression et sa reprise, qui ne dépendent pas de l'indice.
+  const contexte = useMemo(
+    () => construireContexte(plan.weeks, feedback, data.pain, now, ecarts),
+    [feedback, data.pain, now, ecarts],
+  )
+
   const entreeCharge = useMemo(
-    () => ({ weeks: plan.weeks, activities: data.activities, completed, today: now, ecarts }),
-    [data.activities, completed, now, ecarts],
+    () => ({
+      weeks: plan.weeks,
+      activities: data.activities,
+      completed,
+      today: now,
+      ecarts,
+      feedback,
+      projection: (s: Session, prevue: Session, cle: string, day: string) =>
+        formeProjetee(s, prevue, cle, day, now, contexte),
+    }),
+    [data.activities, completed, now, ecarts, feedback, contexte],
   )
 
   const load = useMemo(() => buildLoad(entreeCharge), [entreeCharge])
@@ -453,10 +469,6 @@ function Coquille({
   const A = useMemo(
     () => adapt(load, data.pain, feedback, now, attestes),
     [load, data.pain, feedback, now, attestes],
-  )
-  const contexte = useMemo(
-    () => construireContexte(plan.weeks, feedback, data.pain, now, ecarts),
-    [feedback, data.pain, now, ecarts],
   )
   const ouverte = useMemo(() => {
     if (!seance) return null

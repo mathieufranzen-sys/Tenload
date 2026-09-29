@@ -246,6 +246,7 @@ export function appliquerPalierSpecifique(s: Session, palier: PalierSpecifique):
     main: m.main,
     cd: m.cd,
     adapted: `Palier tenu · ${palier.raison}`,
+    motif: 'palier',
     note: `La séance ne monte pas cette semaine : ${palier.raison.toLowerCase()}. On répète celle de la semaine dernière au lieu d'ajouter une répétition. Si celle-ci passe sans réaction le lendemain, la progression reprend la semaine d'après.`,
   }
 }
@@ -257,6 +258,7 @@ export function appliquerPalier(s: Session, palier: PalierLongue): Session {
     dist: palier.km,
     title: `Sortie longue de ${palier.km} km`,
     adapted: `Palier tenu · ${palier.raison}`,
+    motif: 'palier',
     struct: [{ km: palier.km, zone: 'ef' }],
     note: `La distance ne monte pas cette semaine : ${palier.raison.toLowerCase()}. On répète le palier au lieu de le franchir. Si celle-ci passe sans réaction le lendemain, la progression reprend la semaine d'après.`,
   }

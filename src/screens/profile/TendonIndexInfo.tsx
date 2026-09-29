@@ -17,7 +17,7 @@ const TERMES: Array<{ nom: string; poids: string; texte: string }> = [
   {
     nom: 'Fraîcheur immédiate',
     poids: "jusqu'à 20 points",
-    texte: "Ce que tu as encaissé hier et avant-hier, rapporté à ton niveau habituel. Un tendon met 48 heures à se réparer.",
+    texte: "Ce que tu as encaissé hier et avant-hier, rapporté à ton niveau habituel. Le collagène du tendon est en perte nette 24 à 36 heures après une charge, puis il se reconstruit.",
   },
   {
     nom: 'Tendance',
@@ -80,11 +80,12 @@ export function TendonIndexInfo({ idx, band }: { idx: number; band: Band }) {
           </div>
         ))}
         <p style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-meta)', lineHeight: 1.5, margin: '14px 0 0' }}>
-          Deux garde-fous s'ajoutent. Une douleur déclarée à 4 impose un plancher orange, à 6 un
-          plancher rouge, à 8 un plancher noir : ces seuils ne peuvent pas être contournés par un
-          indice bas ailleurs. Et après un pic au-dessus de 60, un plancher décroissant tient
-          quelques jours, parce qu'un tendon réactif reste fragile même quand la douleur est
-          retombée.
+          Deux garde-fous s'ajoutent. Les planchers, sur deux échelles : la raideur au réveil impose
+          l'orange à 4, le rouge à 5, le noir à 7 ; la douleur d'effort ou du soir, l'orange à 4, le
+          rouge à 6, le noir à 8. Ils tiennent pleins le jour même et le lendemain, et aucun indice
+          bas ailleurs ne peut les contourner. Et après un pic au-dessus de 60, un plancher
+          décroissant tient quelques jours. Ce que le programme fait ensuite, jusqu'au retour au
+          calme, est dans Contraintes.
         </p>
       </div>
     </>

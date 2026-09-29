@@ -166,7 +166,7 @@ export const BANDS: readonly Band[] = [
     color: '#34d399',
     headline: 'Tout est autorisé',
     detail:
-      "Le tendon encaisse. Si tu restes sous 15 trois jours de suite, tu peux même ajouter du volume.",
+      "Le tendon encaisse. Le volume, lui, s'ouvre après huit semaines calmes : le compteur est dans Suivi.",
   },
   {
     key: 'jaune',
@@ -202,7 +202,7 @@ export const BANDS: readonly Band[] = [
     color: '#a855f7',
     headline: 'Repos complet des jambes',
     detail:
-      'Zéro charge. Mobilité douce, glaçage. Si tu restes ici trois jours, tu prends rendez-vous chez ton kiné.',
+      'Zéro charge sur les jambes. Mobilité douce. Si tu restes ici trois jours, tu prends rendez-vous chez ton kiné.',
   },
 ] as const
 
@@ -275,6 +275,15 @@ const SEUILS_EFFORT: Seuils = [[8, 80], [6, 65], [4, 50]]
 const plancher = (v: number, seuils: Seuils): number => {
   for (const [seuil, valeur] of seuils) if (v >= seuil) return valeur
   return 0
+}
+
+/**
+ * Le plancher qu'un relevé pose à lui seul : 0, 50, 65 ou 80. La reprise
+ * (`reprise.ts`) s'en sert pour qualifier un épisode avec les seuils mêmes de
+ * l'indice : une seule échelle de douleur dans toute l'app.
+ */
+export function plancherDuReleve(valeur: number, mesure: 'reveil' | 'effort'): number {
+  return plancher(valeur, mesure === 'reveil' ? SEUILS_REVEIL : SEUILS_EFFORT)
 }
 
 const painValues = (p?: PainDay): number[] =>

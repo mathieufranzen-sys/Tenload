@@ -16,7 +16,8 @@
 import type { Session, SessionType, Week } from '../data/types'
 import { KM_COST, MIN_COST, RUN_COST, type LoadMap } from './tendonIndex'
 import { addDays } from './dates'
-import { seancesAvecEcarts, slotsParJour, type EcartRow } from './overrides'
+import { formeNotee, seancesAvecEcarts, slotsParJour, type EcartRow } from './overrides'
+import type { FeedbackRow } from './buildPain'
 import { familleDe, familleDuSport } from './insights'
 
 export interface ActivityRow {
@@ -90,6 +91,18 @@ export interface BuildLoadInput {
   horizon?: number
   /** Écarts volontaires, indexés par `cleEcart`. Absent = plan nominal. */
   ecarts?: Map<string, EcartRow>
+  /**
+   * Les ressentis : une séance notée pèse la forme sous laquelle elle a été
+   * faite. Sans eux, une course passée au vélo par l'indice pesait encore ses
+   * kilomètres une fois notée.
+   */
+  feedback?: FeedbackRow[]
+  /**
+   * La forme projetée d'une séance à venir, plafonds de progression et
+   * reprise compris (`formeProjetee`, adapt.ts). Sans elle, la projection
+   * reprenait le plan tel qu'écrit juste après une crise.
+   */
+  projection?: (s: Session, plan: Session, cle: string, day: string) => Session
 }
 
 export interface LoadParDiscipline {
@@ -122,7 +135,10 @@ export function buildLoadParDiscipline({
   today,
   horizon = 21,
   ecarts,
+  feedback,
+  projection,
 }: BuildLoadInput): Record<string, LoadParDiscipline> {
+  const notees = new Map((feedback ?? []).map((f) => [`${f.week}-${f.day_index}-${f.slot}`, f]))
   const load: Record<string, LoadParDiscipline> = {}
   const bump = (day: string, famille: keyof LoadParDiscipline, valeur: number) => {
     if (!valeur) return
@@ -161,9 +177,15 @@ export function buildLoadParDiscipline({
         if (daysWithActivity.has(day)) return
         // La clé garde le jour d'ORIGINE : déplacer une séance ne doit pas
         // détacher le ressenti qui lui était déjà rattaché.
-        if (!completed.has(`${w.n}-${w.sessions[i].day}-${slots[i]}`)) return
+        const cle = `${w.n}-${w.sessions[i].day}-${slots[i]}`
+        if (!completed.has(cle)) return
+        const f = notees.get(cle)
+        const faite = f ? formeNotee(s, f, ecarts?.get(cle)?.patch.dist != null) : s
+        bump(day, familleSession(faite.type), sessionLoad(faite))
+        return
       }
-      bump(day, familleSession(s.type), sessionLoad(s))
+      const projetee = projection ? projection(s, w.sessions[i], `${w.n}-${w.sessions[i].day}-${slots[i]}`, day) : s
+      bump(day, familleSession(projetee.type), sessionLoad(projetee))
     })
   }
 

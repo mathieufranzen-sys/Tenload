@@ -68,7 +68,7 @@ const PERSONNEL: Rubrique[] = [
 ]
 
 const PROGRAMME: Rubrique[] = [
-  { key: 'contraintes', titre: 'Contraintes', description: 'Les règles non négociables du plan', icone: 'alert' },
+  { key: 'contraintes', titre: 'Contraintes', description: 'Les règles du plan et de la reprise, avec leurs sources', icone: 'alert' },
   { key: 'structure', titre: 'Structure des 34 semaines', description: 'Les cinq blocs, de la reprise à l’affûtage', icone: 'clip' },
   { key: 'indice', titre: 'Indice de charge du tendon', description: 'Les bandes et le détail du calcul', icone: 'chart' },
 ]

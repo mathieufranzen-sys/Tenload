@@ -497,3 +497,34 @@ describe('le lendemain de la sortie longue passe au vélo si la raideur dépasse
     expect(avec(0, 3, { faites: new Set(['3-1-0']) }).s.type).toBe('ef')
   })
 })
+
+describe('une séance notée garde la forme sous laquelle elle a été faite', () => {
+  const fait = (session_type: string, distance_km: number | null) =>
+    new Map([['3-1-0', { week: 3, day_index: 1, slot: 0, day: addDays(LUNDI, 1), session_type, pain: 1, rpe: 4, distance_km }]])
+  const w = semaine([
+    seance({ day: 0, type: 'long', dist: 24, title: 'Sortie longue de 24 km' }),
+    seance({ day: 1, type: 'ef', dist: 8, title: 'Course facile de 8 km' }),
+  ])
+
+  it('le vélo qui remplaçait la course reste un vélo une fois noté', () => {
+    // Le retour du laboratoire : noter le vélo le faisait redevenir course.
+    const out = weekSessions(w, addDays(LUNDI, 3), indice(10), undefined, { realisees: fait('velo', null) })
+    const mardi = out.find((x) => x.jourOrigine === 1)!.s
+    expect(mardi.type).toBe('velo')
+    expect(mardi.motif).toBe('faite')
+  })
+
+  it('la distance notée fait foi', () => {
+    const out = weekSessions(w, addDays(LUNDI, 3), indice(10), undefined, { realisees: fait('ef', 6) })
+    const mardi = out.find((x) => x.jourOrigine === 1)!.s
+    expect(mardi.dist).toBe(6)
+    expect(mardi.title).toBe('Course facile de 6 km')
+  })
+
+  it('une séance faite comme prévue reste telle quelle', () => {
+    const out = weekSessions(w, addDays(LUNDI, 3), indice(10), undefined, { realisees: fait('ef', 8) })
+    const mardi = out.find((x) => x.jourOrigine === 1)!.s
+    expect(mardi).toMatchObject({ type: 'ef', dist: 8 })
+    expect(mardi.adapted).toBeUndefined()
+  })
+})

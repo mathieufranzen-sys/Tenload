@@ -18,7 +18,9 @@ import {
   type PainMap,
 } from './tendonIndex'
 import type { Session, SessionType, Week } from '../data/types'
-import { cleEcart, seancesAvecEcarts, slotsParJour, versType, type EcartRow } from './overrides'
+import { avecDistance, cleEcart, formeNotee, labelType, seancesAvecEcarts, slotsParJour, versType, type EcartRow } from './overrides'
+import { EFFORT_TOLERE, SEUIL_SANS_DOULEUR, avancement, etatReprise, raisonEpisode, type EtatReprise } from './reprise'
+import { plafondsProgression, type Plafond } from './progression'
 import {
   appliquerPalier,
   appliquerPalierSpecifique,
@@ -137,12 +139,13 @@ export function applyFx(s: Session, fx: Fx, ctx: ContexteSeance = CONTEXTE_NEUTR
       dur: null,
       dist: undefined,
       adapted: `Indice ${fx.idx}/100`,
+      motif: 'indice',
       struct: null,
       wu: null,
       main: null,
       cd: null,
       ex: null,
-      note: 'Indice de charge du tendon au-delà de 80 : aucune charge sur les jambes aujourd’hui. Mobilité de cheville, glaçage 15 minutes deux fois dans la journée, jambes surélevées le soir. Si tu es encore ici dans trois jours, prends rendez-vous chez ton kiné.',
+      note: 'Indice de charge du tendon au-delà de 80 : aucune charge sur les jambes aujourd’hui. Mobilité de cheville, jambes surélevées le soir. Si tu es encore ici dans trois jours, prends rendez-vous chez ton kiné.',
     }
   }
   if (fx.lightLegs && s.type === 'muscu-bas') {
@@ -151,6 +154,7 @@ export function applyFx(s: Session, fx: Fx, ctx: ContexteSeance = CONTEXTE_NEUTR
       title: 'Bas du corps — version allégée',
       dur: [25, 30],
       adapted: `Indice ${fx.idx}/100`,
+      motif: 'indice',
       ex: [
         ['Stanish unilatéral', '3 x 10', 'charge divisée par deux, 4 s à la descente'],
         ['Pointes de pied genou fléchi', '3 x 12', 'sans charge'],
@@ -169,6 +173,7 @@ export function applyFx(s: Session, fx: Fx, ctx: ContexteSeance = CONTEXTE_NEUTR
       title: 'Vélo Z2 50 min remplace la course',
       dur: [50, 60],
       adapted: `Indice ${fx.idx}/100 · course en pause`,
+      motif: 'indice',
       // Sans ça une EF/tempo/sortie longue devenue vélo garde son kilométrage :
       // la carte afficherait « Vélo · 12 km » au lieu d'une durée.
       dist: undefined,
@@ -176,7 +181,7 @@ export function applyFx(s: Session, fx: Fx, ctx: ContexteSeance = CONTEXTE_NEUTR
       wu: null,
       main: null,
       cd: null,
-      note: 'La course est en pause : l’indice de charge du tendon est dans le rouge. Vélo souple sans résistance, cadence élevée. Le tendon redevient disponible dès que l’indice repasse sous 65.',
+      note: 'La course est en pause : l’indice de charge du tendon est dans le rouge. Vélo souple sans résistance, cadence élevée. La course revient quand l’indice repasse sous 65 et, après une crise, après deux matins calmes d’affilée.',
     }
   }
   if (s.type === 'long' && fx.slCut && s.dist) {
@@ -186,6 +191,7 @@ export function applyFx(s: Session, fx: Fx, ctx: ContexteSeance = CONTEXTE_NEUTR
       dist: nd,
       title: `Sortie longue de ${nd} km`,
       adapted: `Réduite de ${Math.round(fx.slCut * 100)} % · indice ${fx.idx}/100`,
+      motif: 'indice',
       struct: [{ km: nd, zone: 'ef' }],
       note: 'Version réduite : le tendon a parlé. 100 % allure conversationnelle, protocole course/marche autorisé.',
     }
@@ -200,6 +206,7 @@ export function applyFx(s: Session, fx: Fx, ctx: ContexteSeance = CONTEXTE_NEUTR
         : 'Vélo Z3 50 min remplace la qualité',
       dur: fx.cancelQuality ? [60, 70] : [50, 60],
       adapted: `Qualité neutralisée · indice ${fx.idx}/100`,
+      motif: 'indice',
       dist: undefined,
       struct: null,
       wu: null,
@@ -224,6 +231,7 @@ export function applyFx(s: Session, fx: Fx, ctx: ContexteSeance = CONTEXTE_NEUTR
       adapted: parIndice
         ? `Course neutralisée · indice ${fx.idx}/100`
         : `Raideur au réveil ${formatNumber(ctx.raideurReveil!)}/10 · lendemain de sortie longue`,
+      motif: parIndice ? 'indice' : 'raideur',
       dist: undefined,
       struct: null,
       note: parIndice
@@ -285,6 +293,16 @@ export interface ContextePlan {
   reveils?: Record<string, number>
   /** Huit semaines sans douleur au-dessus de 2 : le vélo du plan devient une course. */
   volumeOuvert?: boolean
+  /**
+   * Les ressentis par séance. Une séance notée prend la forme sous laquelle
+   * elle a été faite : sans eux, une course passée au vélo par l'indice
+   * redevenait une course dès qu'elle était notée.
+   */
+  realisees?: Map<string, FeedbackRow>
+  /** L'état de reprise par jour, dans la fenêtre des dix jours, voir `reprise.ts`. */
+  reprise?: Record<string, EtatReprise>
+  /** Les plafonds de progression par séance, voir `progression.ts`. */
+  plafonds?: Map<string, Plafond>
 }
 
 /**
@@ -318,8 +336,18 @@ export function construireContexte(
   ecarts?: Map<string, EcartRow>,
 ): ContextePlan {
   const seances = arrangerPlan(weeks, ecarts)
+  // La reprise se lit du passé récent jusqu'au bout de la fenêtre de dix jours.
+  const reprise: Record<string, EtatReprise> = {}
+  for (let k = -56; k <= 10; k++) {
+    const d = addDays(now, k)
+    const e = etatReprise(d, pain, now)
+    if (e) reprise[d] = e
+  }
   return {
     faites: new Set(feedback.map((f) => cleEcart(f.week, f.day_index, f.slot))),
+    realisees: new Map(feedback.map((f) => [cleEcart(f.week, f.day_index, f.slot), f])),
+    reprise,
+    plafonds: plafondsProgression(seances, feedback, now),
     palier: palierProchaineLongue(seances, feedback, pain, now),
     palierSpecifique: palierProchaineSpecifique(seances, feedback, pain, now),
     volumeOuvert: progresVolume(pain, now).atteint,
@@ -328,6 +356,142 @@ export function construireContexte(
         .filter(([, p]) => p?.wake != null)
         .map(([d, p]) => [d, p.wake as number]),
     ),
+  }
+}
+
+const TYPES_QUALITE_REPRISE: SessionType[] = ['inter', 'tempo', 'test']
+const ZONES_FACILES = ['ef', 'recup']
+
+/** Une distance plafonnée par la progression du volume, voir `progression.ts`. */
+export function appliquerPlafond(s: Session, p: Plafond): Session {
+  const out = avecDistance(s, p.km)
+  if (p.motif === 'plafond' && p.reference) {
+    return {
+      ...out,
+      adapted: `Plafonnée à ${formatNumber(p.km)} km · plus longue du mois : ${formatNumber(p.reference.km)} km`,
+      motif: 'plafond',
+      note: `Ta plus longue sortie des trente derniers jours fait ${formatNumber(p.reference.km)} km : celle-ci ne la dépasse pas de plus de 10 %. Au-delà, le risque de blessure monte, et plus nettement que sur une semaine trop chargée. Elle regagne sa distance prévue de sortie en sortie.`,
+    }
+  }
+  const part = p.part != null ? Math.round(p.part * 100) : null
+  return {
+    ...out,
+    adapted: `Volume en remontée · ${formatNumber(p.km)} km au lieu de ${formatNumber(s.dist ?? 0)}`,
+    motif: 'progression',
+    note:
+      (part != null ? `La semaine dernière a porté ${part} % de ce que le plan prévoyait. ` : '') +
+      'Le volume remonte de 15 % au plus par semaine : c’est cette course qui cède, en gardant le même nombre de sorties. Le plan retrouve ses chiffres de lui-même, d’autant plus vite que l’épisode a été court.',
+  }
+}
+
+/** La séance telle que la reprise la laisse : course suspendue, ou intensité en pause. */
+export function appliquerReprise(s: Session, etat: EtatReprise): Session {
+  if (!TYPES_COURSE.includes(s.type)) return s
+  const raison = raisonEpisode(etat.episode)
+  if (etat.courseSuspendue) {
+    return {
+      ...s,
+      type: 'velo',
+      cat: 'Vélo',
+      title: 'Vélo Z2 50 min remplace la course',
+      dur: [50, 60],
+      dist: undefined,
+      struct: null,
+      wu: null,
+      main: null,
+      cd: null,
+      adapted: `Course en pause · ${raison}`,
+      motif: 'reprise',
+      note: `La course revient après ${etat.requis} matins calmes d’affilée, et tu en as ${etat.calmes} : réveil à 2 ou moins, et la veille ni fin de journée au-dessus de 2 ni effort au-dessus de 3. C’est le critère de reprise de la course des rééducations du tendon d’Achille. Vélo souple d’ici là, cadence haute.`,
+    }
+  }
+  if (!etat.intensiteSuspendue || s.type === 'course') return s
+  const intense = TYPES_QUALITE_REPRISE.includes(s.type) || s.struct?.some((seg) => !ZONES_FACILES.includes(seg.zone))
+  if (!intense) return s
+  const km = s.dist
+  const facile: Session = TYPES_QUALITE_REPRISE.includes(s.type)
+    ? {
+        ...s,
+        type: 'ef',
+        cat: 'Course facile',
+        title: km ? `Course facile de ${formatNumber(km)} km` : 'Course facile',
+        struct: km ? [{ km, zone: 'ef' }] : null,
+        wu: null,
+        main: null,
+        cd: null,
+        specifique: undefined,
+      }
+    : { ...s, struct: km ? [{ km, zone: 'ef' }] : null }
+  return {
+    ...facile,
+    adapted: `Intensité en pause · ${raison}`,
+    motif: 'intensite',
+    note: `Pas d’intensité tant que le tendon n’a pas aligné ${etat.requis} matins calmes (${avancement(etat)}). L’intensité est la première chose qu’on retire et la dernière qu’on rend : même distance, tout en allure de conversation.`,
+  }
+}
+
+/**
+ * La forme d'une séance à venir telle que la charge doit la projeter : les
+ * règles qui ne dépendent pas de l'indice (ouverture du volume, plafonds de
+ * progression, reprise). L'indice, lui, se calcule sur cette charge : il ne
+ * peut pas entrer dans sa propre projection.
+ */
+export function formeProjetee(
+  s: Session,
+  plan: Session,
+  cle: string,
+  day: string,
+  now: string,
+  contexte: ContextePlan,
+): Session {
+  if (s.saute) return s
+  let v = s
+  if (contexte.volumeOuvert && s.type === 'velo' && plan.type === 'velo' && day >= now) v = ouvrirVolume(v)
+  const p = contexte.plafonds?.get(cle)
+  if (p && v.dist && v.dist > p.km) v = appliquerPlafond(v, p)
+  const e = contexte.reprise?.[day]
+  if (e) v = appliquerReprise(v, e)
+  return v
+}
+
+/** Après une crise : la course du lendemain d'une course passe au vélo. */
+function alternerAuVelo(s: Session): Session {
+  return {
+    ...s,
+    type: 'velo',
+    cat: 'Vélo',
+    title: 'Vélo Z2 45 min remplace la course',
+    dur: [45, 55],
+    dist: undefined,
+    struct: null,
+    wu: null,
+    main: null,
+    cd: null,
+    adapted: 'Reprise · un jour sans course entre deux courses',
+    motif: 'alternance',
+    note: 'Tu sors d’une crise : tant que l’intensité est en pause, un jour sans course sépare deux courses. Le collagène du tendon est en perte nette dans les 24 à 36 heures qui suivent une charge, puis il se reconstruit : c’est ce jour-là qui le lui laisse.',
+  }
+}
+
+/**
+ * La séance notée, telle que son ressenti dit qu'elle a été faite. Quand le
+ * calcul redonne la même discipline, on garde sa forme et son étiquette ; la
+ * distance notée fait foi, sauf « donnée réelle » saisie après coup. Sinon,
+ * la forme vient du ressenti seul.
+ */
+function reconcilier(v: Session, base: Session, fait: FeedbackRow, distanceCorrigee: boolean): Session {
+  if (v.type === fait.session_type) {
+    const km = distanceCorrigee ? base.dist : (fait.distance_km ?? v.dist)
+    if (km == null || v.dist == null || Math.abs(km - v.dist) < 0.05) return v
+    const out = avecDistance(v, km)
+    // Courue sur toute la distance prévue : l'adaptation n'a pas eu lieu.
+    return base.dist != null && km >= base.dist ? { ...out, adapted: undefined, motif: undefined } : out
+  }
+  if (base.type === fait.session_type) return formeNotee(base, fait, distanceCorrigee)
+  return {
+    ...formeNotee(base, fait, distanceCorrigee),
+    adapted: `Faite en ${labelType(fait.session_type as SessionType).toLowerCase()}`,
+    motif: 'faite',
   }
 }
 
@@ -360,23 +524,25 @@ export function weekSessions(
   const avecEcarts = ecarts ? seancesAvecEcarts(week, ecarts) : week.sessions
   const jourLongue = jourDeLaLongue(avecEcarts)
 
-  return avecEcarts.map((s, i) => {
+  const out = avecEcarts.map((s, i) => {
     const jourOrigine = week.sessions[i].day
     const slot = slots[i]
     // `semaines` porte le déplacement d'une semaine à l'autre : la clé
     // Supabase reste celle du plan de référence, seule la date change.
     const day = addDays(week.monday, s.day + 7 * (s.semaines ?? 0))
     const cle = cleEcart(week.n, jourOrigine, slot)
+    const fait = contexte?.realisees?.get(cle)
 
-    // Une séance déjà notée est derrière lui : aucune adaptation ne la
-    // réécrit, c'est une mesure.
-    const notee = Boolean(contexte?.faites?.has(cle))
+    // Sans le détail du ressenti, une séance notée reste figée telle que le
+    // plan la donne : c'est l'ancien gel, gardé pour les appelants qui ne
+    // passent que les clés.
+    const figee = !fait && Boolean(contexte?.faites?.has(cle))
 
     let vecue = s
-    if (!notee) {
-      // Le palier est une règle de progression : il ne vise que ce qui reste
-      // à courir, donc jamais une séance sautée.
-      if (!s.saute) {
+    if (!figee) {
+      // Les règles de progression ne visent que ce qui reste à courir : ni une
+      // séance sautée, ni une séance déjà faite.
+      if (!s.saute && !fait) {
         // Le vélo DU PLAN seulement : un vélo que Mathieu a posé lui-même
         // par un écart reste sa décision. Et jamais dans le passé.
         if (contexte?.volumeOuvert && s.type === 'velo' && week.sessions[i].type === 'velo' && day >= now) {
@@ -393,21 +559,31 @@ export function weekSessions(
         if (ps && s.specifique && day === ps.jour) {
           vecue = appliquerPalierSpecifique(vecue, ps)
         }
+        // Le palier d'abord, les plafonds de volume ensuite : ils ne font
+        // que baisser, et la coupe de l'indice mord sur ce qu'ils laissent.
+        const plafond = contexte?.plafonds?.get(cle)
+        if (plafond && vecue.dist && vecue.dist > plafond.km) vecue = appliquerPlafond(vecue, plafond)
       }
-      vecue = applyFx(vecue, fxForDate(day, now, byDate), {
-        lendemainDeLongue: jourLongue != null && s.day === jourLongue + 1,
-        raideurReveil: contexte?.reveils?.[day] ?? null,
-      })
+      if (!fait || day <= now) {
+        vecue = applyFx(vecue, fxForDate(day, now, byDate), {
+          lendemainDeLongue: jourLongue != null && s.day === jourLongue + 1,
+          raideurReveil: contexte?.reveils?.[day] ?? null,
+        })
+        const etat = contexte?.reprise?.[day]
+        if (etat) vecue = appliquerReprise(vecue, etat)
+      }
       // Une séance sautée garde l'ADAPTATION à l'écran mais perd son
       // étiquette (retour du 22 septembre) : Mathieu a sauté le vélo que
       // l'indice avait posé, pas la course du plan, et la carte doit dire
       // « vélo sauté ». Rien ne change au calcul : une séance sautée vaut
       // zéro dans la charge, quelle que soit sa discipline.
-      if (s.saute) vecue = { ...vecue, adapted: undefined }
+      if (s.saute) vecue = { ...vecue, adapted: undefined, motif: undefined }
     }
 
     return {
       s: vecue,
+      base: s,
+      fait,
       typePlan: week.sessions[i].type,
       semaineOrigine: week.n,
       jourOrigine,
@@ -416,6 +592,25 @@ export function weekSessions(
       ecart: ecarts?.get(cle) ?? null,
     }
   })
+
+  // Après une crise, tant que l'intensité est en pause : un jour sans course
+  // entre deux courses. Seul le couple lundi-mardi du plan est concerné en
+  // pratique ; c'est la course du lendemain qui passe au vélo, sauf si c'est
+  // la sortie longue, qui garde sa place.
+  const courues = out
+    .filter((x) => !x.s.saute && !x.fait && TYPES_COURSE.includes(x.s.type))
+    .sort((a, b) => (a.day < b.day ? -1 : 1))
+  for (let k = 1; k < courues.length; k++) {
+    const [a, b] = [courues[k - 1], courues[k]]
+    if (addDays(a.day, 1) !== b.day || !contexte?.reprise?.[b.day]?.alterner) continue
+    const cible = b.s.type === 'long' ? a : b
+    if (TYPES_COURSE.includes(cible.s.type)) cible.s = alternerAuVelo(cible.s)
+  }
+
+  // Une séance notée prend la forme sous laquelle elle a été faite.
+  return out.map(({ base, fait, ...x }) =>
+    fait ? { ...x, s: reconcilier(x.s, base, fait, x.ecart?.patch.dist != null) } : x,
+  )
 }
 
 /**
@@ -475,7 +670,7 @@ const TEXTE_BANDE: Partial<Record<Band['key'], string>> = {
     'Séance de qualité remplacée par du vélo Z3, renfo bas du corps allégé, sortie longue raccourcie de 20 %.',
   rouge:
     'Aucune course. Vélo Z2 et haut du corps uniquement, protocole excentrique quotidien à charge légère.',
-  noir: 'Repos complet des jambes. Mobilité et glaçage seulement. Trois jours dans cette zone et tu appelles ton kiné.',
+  noir: 'Repos complet des jambes. Mobilité de cheville seulement. Trois jours dans cette zone et tu appelles ton kiné.',
 }
 
 /** Une séance de qualité (tempo, intervalles, test, course) au sens du feu vert / allures. */
@@ -586,7 +781,7 @@ export function adapt(
  * tourne autour de 0,8 au réveil et 1,3 en fin de journée. Le seuil est donc
  * 2, au-dessus duquel le tendon parle.
  */
-export const SEUIL_SANS_DOULEUR = 2
+export { SEUIL_SANS_DOULEUR, EFFORT_TOLERE }
 
 /**
  * La sortie de la contrainte 5 : une seule marche, à huit semaines.
@@ -648,7 +843,6 @@ export interface ProgresVolume {
  *   calme (Silbernagel 2007) : une sortie longue à 3 suivie d'un réveil à 1
  *   remettait huit semaines à zéro. À 4 commence l'alerte orange de l'app.
  */
-export const EFFORT_TOLERE = 3
 
 function remiseAZero(p: PainMap[string] | undefined): number | null {
   if (!p) return null

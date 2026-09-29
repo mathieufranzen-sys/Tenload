@@ -274,7 +274,9 @@ export function Today({
           distPlan: distDuPlan(x.semaineOrigine, x.jourOrigine, x.slot),
           ecart: nature,
           adaptee: Boolean(x.s.adapted),
-          motif: x.s.adapted?.startsWith('Raideur') ? 'raideur' : 'indice',
+          motif: x.s.motif ?? (x.s.adapted?.startsWith('Raideur') ? 'raideur' : 'indice'),
+          // Ce qui suit le premier « · » de l'étiquette : la raison chiffrée.
+          raison: x.s.adapted?.split(' · ').slice(1).join(' · ') || null,
           raideurMatin: pain[x.day]?.wake ?? null,
           faite: Boolean(feedbackDe(x)),
           saute: Boolean(x.s.saute),

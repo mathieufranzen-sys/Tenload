@@ -42,6 +42,8 @@ export type MotifAdaptation =
   | 'faite'
   /** Huit semaines sans douleur au-dessus de 2 : le vélo devient une course. */
   | 'volume'
+  /** Le volume remonte de 15 % au plus par semaine après un décrochage. */
+  | 'progression'
 
 export interface Zone {
   label: string

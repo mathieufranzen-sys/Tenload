@@ -641,6 +641,77 @@ résultat de la séance qui charge le plus le tendon.
   `Session.specifique`, jamais au jour : une règle vise une séance, jamais une
   case du calendrier.
 
+### La reprise après un épisode et la progression du volume
+
+`src/lib/reprise.ts` (+ 12 tests) et `src/lib/progression.ts` (+ 6 tests),
+demandés le 28 et arbitrés le 29 septembre 2026. L'indice est un état du
+jour : ses planchers tiennent deux jours, et un 5 pendant la sortie longue du
+lundi rendait le fractionné du jeudi. **La reprise est graduée : plus fort ou
+plus longtemps le tendon a mal, plus fort et plus longtemps le plan s'adapte.**
+
+- **Elle se lit sur des matins calmes, pas sur une durée.** Un matin calme :
+  réveil à 2 ou moins, et la veille ni fin de journée au-dessus de 2 ni effort
+  au-dessus de 3. Le compteur part du dernier relevé douloureux, donc un
+  épisode long le démarre tard.
+- **Trois niveaux, avec les planchers mêmes de l'indice** (`plancherDuReleve`) :
+  alerte (orange), la course reste et l'intensité attend 3 matins calmes ;
+  crise (rouge), la course attend 2 matins calmes et l'intensité 7 ; noir, 3
+  et 14. Les nombres de matins sont un choix de l'app, les sources donnent le
+  critère et pas le délai, et la page Contraintes le dit.
+- **Pendant la pause d'intensité** la qualité devient une course facile de même
+  distance, les allures rapides d'une longue passent en endurance. Un dossard
+  n'est jamais touché : c'est une décision de Mathieu.
+- **Après une crise seulement**, un jour sans course sépare deux courses.
+  Après une alerte, la fréquence reste (Running Addict) et c'est le volume qui
+  cède.
+- **Ce qu'on savait le matin** : la séance d'un jour se décide sur le passé et
+  le réveil du jour, jamais sur l'effort ou le soir saisis ensuite. Un matin
+  encore à venir est supposé calme pour la projection ; aujourd'hui et le
+  passé exigent un vrai relevé.
+- **Le volume remonte de 15 % par semaine au plus, en part du plan** : une
+  semaine ne dépasse pas de 15 % la part du plan tenue la semaine d'avant.
+  Compté en part du plan et non en kilomètres, pour que le retour d'une
+  décharge prévue ne passe pas pour un emballement. Un épisode d'un jour
+  (90 % tenu) ne plafonne rien ; trois semaines à 45 % demandent cinq
+  semaines de remontée. Les courses faciles raccourcissent d'abord, jusqu'à
+  4 km, puis la longue ; aucune course n'est retirée, la qualité n'est pas
+  raccourcie. Taux choisi par Mathieu.
+- **Aucune sortie ne dépasse de plus de 10 % la plus longue des 30 derniers
+  jours.** Le plan de référence le respecte partout sauf le marathon : ce
+  plafond ne mord que quand la réalité s'écarte du plan.
+- **La charge projetée passe par les mêmes règles** (`formeProjetee`) : le
+  graphique de charge de Suivi montre la remontée, pas le plan tel qu'écrit.
+  L'indice ne peut pas entrer dans sa propre projection, donc les bandes n'y
+  sont pas.
+- **Une séance notée garde la forme sous laquelle elle a été faite**, à l'écran
+  (`reconcilier`) comme dans la charge (`formeNotee`) : le ressenti enregistre
+  la discipline et la distance affichées. Un vélo qui remplaçait une course
+  redevenait course une fois noté, et pesait ses kilomètres.
+- Chaque adaptation porte son **motif** (`Session.motif`) : le coach disait
+  « raccourcie parce que l'indice est à 20 » d'une longue tenue par le palier.
+
+### Les références du calcul
+
+Choisies par Mathieu le 28 septembre 2026 : tout changement du calcul se
+justifie par elles, et ce qui n'en vient pas se dit comme une extrapolation.
+Les demi-vies restent à 3,5 et 14 jours, sur sa décision.
+
+- Silbernagel et al. 2007, AJSM : surveillance de la douleur (effort ≤ 5,
+  retombée le lendemain matin, pas de hausse d'une semaine à l'autre).
+- Silbernagel et Crossley 2015, JOSPT : douleur de la vie courante ≤ 2 avant
+  de reprendre la course et les sauts.
+- Martin et al., recommandation JOSPT 2018, révisée en 2024 : mise en charge
+  lourde, progressive, trois fois par semaine, trois mois au moins.
+- van der Vlist 2021, BJSM ; Malliaras 2013 ; Beyer 2015.
+- Magnusson, Langberg et Kjær 2010 : collagène en perte nette 24 à 36 heures.
+- Cook et Purdam 2009 : l'intensité sort en premier et revient en dernier.
+- Gabbett 2016, Williams 2017, Impellizzeri 2020 : le rapport aigu sur
+  chronique et ses limites.
+- Frandsen et al. 2025, BJSM : une sortie à plus de 10 % de la plus longue du
+  mois. Nielsen 2014, JOSPT : plus de 30 % sur deux semaines. Buist 2008.
+- Bohm, Mersmann et Arampatzis 2015 : huit semaines au moins pour modifier un
+  tendon adulte.
+
 ### Ce qui est fait ne se réécrit plus
 
 **Le ressenti, et non la date, atteste qu'une séance a eu lieu.** `fxForDate`

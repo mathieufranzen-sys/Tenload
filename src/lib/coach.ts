@@ -13,7 +13,7 @@
  */
 import { DAYS_LONG, addDays, daysBetween, formatDay, formatNumber, weekdayIndex } from './dates'
 import { formatDuration, formatPace } from './paces'
-import type { SessionType } from '../data/types'
+import type { MotifAdaptation, SessionType } from '../data/types'
 import type { PainMap } from './tendonIndex'
 
 export interface MotCoach {
@@ -85,8 +85,10 @@ export interface SeanceDuJour {
   ecart: 'saut' | 'remplacement' | 'deplacement' | 'donnee' | null
   /** L'indice de charge a changé la séance. */
   adaptee: boolean
-  /** Ce qui l'a changée : l'indice, ou la raideur du lendemain de sortie longue. */
-  motif?: 'indice' | 'raideur'
+  /** Ce qui l'a changée. Un chiffre cité doit être celui qui a décidé. */
+  motif?: MotifAdaptation
+  /** La raison chiffrée de l'étiquette : « réveil à 6 le 24 sept. ». */
+  raison?: string | null
   /** Raideur au réveil du jour, pour citer la valeur qui a coupé. */
   raideurMatin?: number | null
   faite: boolean
@@ -166,6 +168,13 @@ function nomCourt(t: SessionType): string {
   return 'séance'
 }
 
+/** « ta sortie longue », mais « ton endurance facile » : l'élision devant une voyelle. */
+function possessif(t: SessionType, majuscule = false): string {
+  const n = nomCourt(t)
+  const p = /^[aeéèiouy]/i.test(n) ? 'ton' : 'ta'
+  return `${majuscule ? p[0].toUpperCase() + p.slice(1) : p} ${n}`
+}
+
 /** « du vélo », « de la marche », « ta séance de qualité ». */
 const avecArticle = (t: SessionType): string => {
   const n = nomCourt(t)
@@ -215,22 +224,60 @@ function candidatsSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach[] {
   const neutralisee = vivantes.find(
     (x) => x.adaptee && COURSE.includes(x.typePlan) && !COURSE.includes(x.type),
   )
-  if (neutralisee) {
+  if (neutralisee && (neutralisee.motif === 'reprise' || neutralisee.motif === 'alternance')) {
+    out.push({
+      cle: 'course-en-reprise', sujet: 'seance',
+      obligatoire: neutralisee.motif === 'reprise',
+      ton: 'vigilance',
+      texte:
+        neutralisee.motif === 'reprise'
+          ? `Pas de course aujourd'hui : ${neutralisee.raison ?? 'la crise n’est pas levée'}, et le tendon n'a pas encore aligné ses matins calmes. ${possessif(neutralisee.typePlan, true)} passe au vélo. La course revient d'elle-même quand les réveils le disent, pas à une date.`
+          : `Pas de course aujourd'hui : tu as couru hier, et après une crise un jour sans course sépare deux courses. ${possessif(neutralisee.typePlan, true)} passe au vélo. C'est dans les 36 heures qui suivent une charge que le tendon se reconstruit.`,
+    })
+  } else if (neutralisee) {
     out.push({
       cle: 'course-neutralisee', sujet: 'seance',
       obligatoire: true,
       ton: 'vigilance',
       texte:
         neutralisee.motif === 'raideur' && neutralisee.raideurMatin != null
-          ? `Pas de course aujourd'hui : ta raideur au réveil est à ${formatNumber(neutralisee.raideurMatin)} sur 10, le lendemain de ta sortie longue. Ta règle passe ta ${nomCourt(neutralisee.typePlan)} au vélo souple : la longue n'est pas digérée, et c'est au réveil que le tendon le dit.`
+          ? `Pas de course aujourd'hui : ta raideur au réveil est à ${formatNumber(neutralisee.raideurMatin)} sur 10, le lendemain de ta sortie longue. Ta règle passe ${possessif(neutralisee.typePlan)} au vélo souple : la longue n'est pas digérée, et c'est au réveil que le tendon le dit.`
           : neutralisee.type === 'repos'
-          ? `Je ne te recommande rien sur les jambes aujourd'hui : ${surIndice}. Ta ${nomCourt(neutralisee.typePlan)} saute, mobilité de cheville et glaçage à la place. Trois jours ici et tu appelles ton kiné.`
-          : `Je ne te recommande pas de courir aujourd'hui : ${surIndice}. Ta ${nomCourt(neutralisee.typePlan)} passe au vélo. Ce n'est pas une séance perdue, c'est le même volume aérobie sans impact au sol, et c'est ce qui raccourcit l'épisode plutôt que de le prolonger.`,
+          ? `Je ne te recommande rien sur les jambes aujourd'hui : ${surIndice}. ${possessif(neutralisee.typePlan, true)} saute, mobilité de cheville à la place. Trois jours ici et tu appelles ton kiné.`
+          : `Je ne te recommande pas de courir aujourd'hui : ${surIndice}. ${possessif(neutralisee.typePlan, true)} passe au vélo. Ce n'est pas une séance perdue, c'est le même volume aérobie sans impact au sol, et c'est ce qui raccourcit l'épisode plutôt que de le prolonger.`,
     })
   }
 
   // ── 2. L'indice a raccourci la sortie longue ────────────────────────────
-  const raccourcie = vivantes.find((x) => x.adaptee && x.type === 'long')
+  // Une longue tenue par le palier ou par la progression du volume n'est pas
+  // raccourcie par l'indice : le dire citerait un chiffre qui n'a rien décidé.
+  const tenue = vivantes.find(
+    (x) => x.adaptee && x.type === 'long' && (x.motif === 'palier' || x.motif === 'plafond' || x.motif === 'progression'),
+  )
+  if (tenue) {
+    out.push({
+      cle: 'longue-tenue', sujet: 'seance',
+      ton: 'neutre',
+      texte:
+        tenue.motif === 'palier'
+          ? `Ta sortie longue ne monte pas : ${nomAvecKm('long', tenue.dist)}, parce que ${(tenue.raison ?? 'la précédente n’est pas passée').toLowerCase()}. On répète la marche au lieu de la franchir.`
+          : tenue.motif === 'plafond'
+            ? `Ta sortie longue fait ${formatNumber(tenue.dist ?? 0)} km au lieu de ${formatNumber(tenue.distPlan ?? 0)} : elle ne dépasse jamais de plus de 10 % ta plus longue du mois. C'est au-delà que le risque de blessure monte.`
+            : `Ta sortie longue fait ${formatNumber(tenue.dist ?? 0)} km au lieu de ${formatNumber(tenue.distPlan ?? 0)} : le volume remonte de 15 % par semaine au plus, et le plan retrouve ses chiffres de lui-même.`,
+    })
+  }
+  const pause = vivantes.find((x) => x.adaptee && x.motif === 'intensite')
+  if (pause) {
+    out.push({
+      cle: 'intensite-en-pause', sujet: 'seance',
+      ton: 'neutre',
+      texte: `Pas d'intensité aujourd'hui : ${pause.raison ?? 'un épisode récent'}. ${possessif(pause.typePlan, true)} se court en allure de conversation. L'intensité est la première chose qu'on retire et la dernière qu'on rend.`,
+    })
+  }
+
+  const raccourcie = vivantes.find(
+    (x) => x.adaptee && x.type === 'long' && (x.motif ?? 'indice') === 'indice',
+  )
   if (raccourcie) {
     out.push({
       cle: 'longue-raccourcie', sujet: 'seance',
@@ -273,12 +320,12 @@ function candidatsSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach[] {
           ? {
               cle: 'remplacement', sujet: 'seance',
               ton: 'neutre',
-              texte: `Tu as remplacé ta ${nomAvecKm(remplacee.typePlan, remplacee.distPlan)} par ${avecArticle(remplacee.type)}. Rien ne te le demandait, ${surIndice} : c'est donc ton ressenti qui a tranché, et c'est le bon ordre. Ces kilomètres sortent du volume de la semaine : si tu peux, remets-les un autre jour plutôt que de les perdre.`,
+              texte: `Tu as remplacé ${possessif(remplacee.typePlan)}${remplacee.distPlan != null ? ` de ${formatNumber(remplacee.distPlan)} km` : ''} par ${avecArticle(remplacee.type)}. Rien ne te le demandait, ${surIndice} : c'est donc ton ressenti qui a tranché, et c'est le bon ordre. Ces kilomètres sortent du volume de la semaine : si tu peux, remets-les un autre jour plutôt que de les perdre.`,
             }
           : {
               cle: 'remplacement', sujet: 'seance',
               ton: 'bravo',
-              texte: `Bon réflexe : tu as remplacé ta ${nomCourt(remplacee.typePlan)} par ${avecArticle(remplacee.type)} alors que ${surIndice}. C'est la décision que le plan aurait prise à ta place.`,
+              texte: `Bon réflexe : tu as remplacé ${possessif(remplacee.typePlan)} par ${avecArticle(remplacee.type)} alors que ${surIndice}. C'est la décision que le plan aurait prise à ta place.`,
             },
       )
     } else if (versDur) {
@@ -291,7 +338,7 @@ function candidatsSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach[] {
       out.push({
         cle: 'remplacement', sujet: 'seance',
         ton: 'neutre',
-        texte: `Tu as remplacé ta ${nomCourt(remplacee.typePlan)} du jour par ${avecArticle(remplacee.type)}. ${surIndice[0].toUpperCase()}${surIndice.slice(1)}, et la semaine tient toujours ses contraintes.`,
+        texte: `Tu as remplacé ${possessif(remplacee.typePlan)} du jour par ${avecArticle(remplacee.type)}. ${surIndice[0].toUpperCase()}${surIndice.slice(1)}, et la semaine tient toujours ses contraintes.`,
       })
     }
   }
@@ -315,7 +362,7 @@ function candidatsSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach[] {
     out.push({
       cle: 'donnee-corrigee', sujet: 'seance',
       ton: plus ? 'vigilance' : 'neutre',
-      texte: `Tu as noté ${formatNumber(corrigee.dist ?? 0)} km sur ta ${nomCourt(corrigee.type)}, au lieu des ${formatNumber(corrigee.distPlan ?? 0)} km prévus. ${
+      texte: `Tu as noté ${formatNumber(corrigee.dist ?? 0)} km sur ${possessif(corrigee.type)}, au lieu des ${formatNumber(corrigee.distPlan ?? 0)} km prévus. ${
         plus
           ? "C'est du volume que le plan n'avait pas budgété : il entre dans la charge, et la sortie longue de la semaine prochaine se décidera dessus."
           : "La charge suit ce que tu as vraiment fait, pas ce qui était écrit."
@@ -352,7 +399,7 @@ function candidatsFond(entree: EntreeCoach): MotCoach[] {
   const aVenir = (duJour ?? []).find(
     (x) => !x.faite && !x.saute && ['long', 'tempo', 'inter', 'test'].includes(x.type),
   )
-  const relance = aVenir ? ` Tiens l'allure prévue sur ta ${nomCourt(aVenir.type)} d'aujourd'hui.` : ''
+  const relance = aVenir ? ` Tiens l'allure prévue sur ${possessif(aVenir.type)} d'aujourd'hui.` : ''
 
   const recent = reveils(pain, now, 14)
   const avant = reveils(pain, addDays(now, -14), 14)
@@ -555,7 +602,7 @@ function candidatsVigilance({ pain, now, duJour, indice, semaine }: EntreeCoach)
       const course = aFaire.find((x) => COURSE.includes(x.type))
       const velo = aFaire.find((x) => x.type === 'velo')
       const conseil = course
-        ? ` C'est ta ${nomCourt(course.type)} d'aujourd'hui qu'il faut alléger en premier : raccourcis-la, ou passe-la au vélo en Z2.`
+        ? ` C'est ${possessif(course.type)} d'aujourd'hui qu'il faut alléger en premier : raccourcis-la, ou passe-la au vélo en Z2.`
         : velo
           ? " Même le vélo d'aujourd'hui compte : reste en Z2. Les deux pics du soir de ton carnet suivaient tous les deux du home trainer en Z3."
           : ''

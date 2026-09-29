@@ -319,7 +319,7 @@ export function SessionSheet({
                     zone={null}
                     sub={
                       s.type === 'repos'
-                        ? 'Mobilité cheville, étirements doux, glaçage si sensible'
+                        ? 'Mobilité cheville, étirements doux'
                         : 'Voies en tête et en moulinette, effort libre'
                     }
                     marathonPace={marathonPace}
