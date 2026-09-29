@@ -17,6 +17,32 @@ export type SessionType =
   | 'escalade'
   | 'repos'
 
+/**
+ * Ce qui a changé une séance. Le coach le devinait au début de l'étiquette :
+ * tout ce qui ne commençait pas par « Raideur » passait pour l'indice, si bien
+ * qu'une longue tenue par le palier se disait « raccourcie parce que l'indice
+ * est à 20 ». Un chiffre cité doit être celui qui a décidé.
+ */
+export type MotifAdaptation =
+  /** La bande de l'indice projeté du jour. */
+  | 'indice'
+  /** La raideur au réveil le lendemain de la sortie longue. */
+  | 'raideur'
+  /** La dernière longue ou la dernière spécifique n'est pas passée. */
+  | 'palier'
+  /** Plus de 10 % au-dessus de la plus longue des trente derniers jours. */
+  | 'plafond'
+  /** Une crise qui n'est pas encore levée : la course attend. */
+  | 'reprise'
+  /** Un jour sans course entre deux courses, pendant une reprise. */
+  | 'alternance'
+  /** L'intensité revient en dernier après un épisode. */
+  | 'intensite'
+  /** La forme sous laquelle la séance a été notée. */
+  | 'faite'
+  /** Huit semaines sans douleur au-dessus de 2 : le vélo devient une course. */
+  | 'volume'
+
 export interface Zone {
   label: string
   /** Écart en secondes par kilomètre par rapport à l'allure marathon cible. */
@@ -98,6 +124,8 @@ export interface Session {
   swap?: { title: string; reason: string }
   /** Rempli à l'exécution quand le moteur d'adaptation modifie la séance. */
   adapted?: string
+  /** Rempli avec `adapted` : ce qui a changé la séance. */
+  motif?: MotifAdaptation
   /** Rempli à l'exécution quand un écart volontaire modifie la séance. */
   ecart?: string
   /** Rempli à l'exécution : séance déclarée non faite. Vaut zéro dans la charge. */

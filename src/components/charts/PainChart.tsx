@@ -120,9 +120,18 @@ export function echelle(
   return { max: plafond, graduations: [0, plafond / 2, plafond] }
 }
 
-export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
+/**
+ * `jusqua` : dernier jour tracé. L'axe peut continuer au-delà — Suivi pose la
+ * douleur sur les jours de l'indice, projection comprise, pour que les deux
+ * graphiques partagent la même échelle de temps — mais une douleur ne se
+ * projette pas : sans cette borne, la courbe aurait tenu sa dernière valeur
+ * sur les dix jours à venir.
+ */
+export function PainChart({ rows, vue, jusqua }: { rows: PainRow[]; vue: VuePain; jusqua?: string }) {
   const n = rows.length
   if (!n) return null
+  const fin = jusqua ? rows.filter((r) => r.day <= jusqua).length : n
+  const traces = rows.slice(0, fin)
 
   const cumulee = vue === 'cumulee'
   const seuil = cumulee ? 12 : 4
@@ -173,9 +182,11 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
    * plein, comme la référence, plutôt qu'un simple faisceau de courbes.
    */
   const surface = (basValeurs: number[], hautValeurs: number[]): string => {
+    const m = hautValeurs.length
+    if (!m) return ''
     let d = `M${x(0)} ${y(hautValeurs[0])} `
-    for (let i = 1; i < n; i++) d += `L${x(i)} ${y(hautValeurs[i])} `
-    for (let i = n - 1; i >= 0; i--) d += `L${x(i)} ${y(basValeurs[i])} `
+    for (let i = 1; i < m; i++) d += `L${x(i)} ${y(hautValeurs[i])} `
+    for (let i = m - 1; i >= 0; i--) d += `L${x(i)} ${y(basValeurs[i])} `
     return d + 'Z'
   }
 
@@ -218,12 +229,12 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
           // Chaque jour sans aucune saisie ne contribue à aucune couche : un
           // zéro forcé aurait affiché un creux au sol, comme si le tendon
           // n'avait rien senti ce jour-là plutôt que rien mesuré.
-          let cumul = new Array(n).fill(0)
+          let cumul = new Array(traces.length).fill(0)
           return (
             <g>
               {EMPILEMENT.map(({ cle, couleur }) => {
                 const precedent = [...cumul]
-                cumul = rows.map((r, i) => precedent[i] + (r[cle] ?? 0))
+                cumul = traces.map((r, i) => precedent[i] + (r[cle] ?? 0))
                 const d = surface(precedent, cumul)
                 // Le contour reprend la couleur de sa propre couche : un liseré
                 // blanc débordait visiblement des pics, y compris hors du
@@ -235,7 +246,7 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
         })()
       ) : (
         SERIES.map(({ cle, couleur, epaisseur }) => {
-          const pts = rows
+          const pts = traces
             .map((r, i) => [i, r[cle]] as const)
             .filter((p): p is readonly [number, number] => p[1] != null)
           if (!pts.length) return null
@@ -245,7 +256,7 @@ export function PainChart({ rows, vue }: { rows: PainRow[]; vue: VuePain }) {
                   se posent que sur du mesuré, pour qu'on voie encore ce qui a
                   été relevé sous ce qui est moyenné. */}
               <path
-                d={trace(lisser(rows.map((r) => r[cle]), 7))}
+                d={trace(lisser(traces.map((r) => r[cle]), 7))}
                 fill="none"
                 stroke={couleur}
                 strokeWidth={epaisseur}

@@ -47,9 +47,15 @@ comme référence. Elles sont vérifiées par `reference/check_plan_v2.py` sur l
 4. **Un jour de repos jambes complet par semaine** : le dimanche.
 5. **Un vélo par semaine.** Il n'est plus une béquille qui remplace la course
    mais **du volume aérobie sans impact au sol**, ce que Maxime recommande
-   d'ajouter plutôt que de retirer. Il deviendra une cinquième course quand le
-   tendon aura tenu 56 jours sans douleur au-dessus de 2 sur dix, avec 42
-   relevés dans la fenêtre.
+   d'ajouter plutôt que de retirer. **Il devient de lui-même une course facile
+   de la même durée** quand le tendon a tenu 56 jours sans douleur au-dessus de
+   2 sur dix, avec 42 relevés dans la fenêtre (`progresVolume`, `ouvrirVolume`
+   dans adapt.ts, décision du 29 septembre 2026). Une seule marche : le palier
+   à un mois datait des deux vélos. Seul le vélo DU PLAN bascule, jamais un vélo
+   posé par un écart, jamais dans le passé, et l'indice passe par-dessus. Cette
+   course est la seconde exception de la contrainte 6 : si le compteur l'a
+   ouverte, le tendon peut de nouveau enchaîner. Le compteur est le dernier
+   graphique de Suivi (`OuvertureChart`), un carré par jour sur huit semaines.
 6. **Jamais deux jours de course consécutifs**, sauf la paire lundi-mardi où le
    mardi est une récupération très lente, et qui bascule en vélo si la douleur
    au réveil dépasse 2. Cette bascule vit dans `applyFx`

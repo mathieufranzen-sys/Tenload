@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { addDays } from './dates'
-import { adapt, applyFx, fxForDate, verdictVolume, weekSessions, type Fx } from './adapt'
+import { adapt, applyFx, fxForDate, progresVolume, verdictVolume, weekSessions, type Fx } from './adapt'
 import { shiftDay, type LoadMap, type PainMap } from './tendonIndex'
 import type { Session, Week } from '../data/types'
 import type { FeedbackRow } from './buildPain'
@@ -373,21 +373,12 @@ describe('ouverture du volume : la sortie de la contrainte 5', () => {
     expect(v!.releves).toBe(56)
   })
 
-  it('un mois seulement ouvre le premier palier', () => {
-    // Un vélo devient la séance spécifique, le second reste. Rendre les deux
-    // d'un coup ajouterait deux jours d'impact la même semaine.
-    const v = verdictVolume(carnet(30), JOUR)
-    expect(v).not.toBeNull()
-    expect(v!.palier).toBe(1)
-    expect(v!.jours).toBe(28)
+  it('un mois seulement n’ouvre rien : une seule marche, à huit semaines', () => {
+    expect(verdictVolume(carnet(30), JOUR)).toBeNull()
   })
 
-  it('un pic au 40e jour ferme le second palier, pas le premier', () => {
-    // Le tendon a parlé il y a plus d'un mois : les deux mois repartent de là,
-    // mais le mois écoulé, lui, est propre. Un seul palier tombe.
-    const v = verdictVolume(carnet(56, { a: 40, valeur: 3 }), JOUR)
-    expect(v).not.toBeNull()
-    expect(v!.palier).toBe(1)
+  it('un pic au 40e jour referme l’ouverture', () => {
+    expect(verdictVolume(carnet(56, { a: 40, valeur: 3 }), JOUR)).toBeNull()
   })
 
   it('un pic dans le mois écoulé referme tout', () => {
@@ -412,11 +403,88 @@ describe('ouverture du volume : la sortie de la contrainte 5', () => {
     expect(verdictVolume({}, JOUR)).toBeNull()
   })
 
-  it('chaque palier a son minimum de relevés', () => {
-    // Trois sur quatre dans sa fenêtre : 21 sur 28, puis 42 sur 56.
-    expect(verdictVolume(carnet(20), JOUR)).toBeNull()
-    expect(verdictVolume(carnet(21), JOUR)!.palier).toBe(1)
-    expect(verdictVolume(carnet(41), JOUR)!.palier).toBe(1)
+  it('exige 42 relevés sur les 56 jours', () => {
+    // Trois sur quatre dans la fenêtre.
+    expect(verdictVolume(carnet(41), JOUR)).toBeNull()
     expect(verdictVolume(carnet(42), JOUR)!.palier).toBe(2)
+  })
+})
+
+describe('progresVolume', () => {
+  const carnet = (jours: number, valeur: (k: number) => number | null): PainMap => {
+    const p: PainMap = {}
+    for (let k = 0; k < jours; k++) {
+      const v = valeur(k)
+      p[addDays(NOW, -k)] = v == null ? {} : { wake: v, evening: v }
+    }
+    return p
+  }
+
+  it('compte les jours propres depuis le dernier relevé au-dessus de 2', () => {
+    const r = progresVolume(carnet(40, (k) => (k === 12 ? 4 : 1)), NOW)
+    expect(r.jours).toBe(12)
+    expect(r.releves).toBe(12)
+    expect(r.remise).toEqual({ day: addDays(NOW, -12), valeur: 4 })
+    expect(r.atteint).toBe(false)
+  })
+
+  it('ne compte pas les jours d’avant la première saisie', () => {
+    expect(progresVolume(carnet(20, () => 1), NOW).jours).toBe(20)
+  })
+
+  it('exige les relevés, pas seulement le calme', () => {
+    const r = progresVolume(carnet(70, (k) => (k % 2 ? 1 : null)), NOW)
+    expect(r.jours).toBe(70)
+    expect(r.releves).toBe(28)
+    expect(r.atteint).toBe(false)
+  })
+
+  it('est atteint à 56 jours et 42 relevés', () => {
+    expect(progresVolume(carnet(60, () => 1), NOW).atteint).toBe(true)
+  })
+})
+
+describe('le volume ouvert change le vélo du plan en course', () => {
+  const semaine: Week = {
+    n: 12, bloc: 'B', blocName: '', monday: NOW, deload: false, sl: 24, efKm: 8,
+    sessions: [
+      seance({ day: 1, type: 'ef', dist: 8 }),
+      seance({ day: 2, type: 'velo', title: 'Vélo Z2 60 min', dur: [60, 70] }),
+      seance({ day: 4, type: 'muscu-haut' }),
+    ],
+  }
+  const calme = Object.fromEntries(
+    Array.from({ length: 14 }, (_, k) => [addDays(NOW, k - 3), { idx: 10 } as never]),
+  )
+
+  it('en course facile de la même durée', () => {
+    const out = weekSessions(semaine, NOW, calme, undefined, { volumeOuvert: true })
+    const mercredi = out.find((x) => x.jourOrigine === 2)!.s
+    expect(mercredi.type).toBe('ef')
+    expect(mercredi.dist).toBe(11) // 60 min à l'allure facile
+    expect(mercredi.motif).toBe('volume')
+  })
+
+  it('pas avant l’ouverture', () => {
+    const out = weekSessions(semaine, NOW, calme)
+    expect(out.find((x) => x.jourOrigine === 2)!.s.type).toBe('velo')
+  })
+
+  it('jamais un vélo que Mathieu a posé lui-même', () => {
+    const ecarts = indexerEcarts([{ week: 12, day_index: 4, slot: 0, patch: { type: 'velo' }, reason: null }])
+    const out = weekSessions(semaine, NOW, calme, ecarts, { volumeOuvert: true })
+    expect(out.find((x) => x.jourOrigine === 4)!.s.type).toBe('velo')
+  })
+
+  it('une bande rouge la rend au vélo', () => {
+    const rouge = Object.fromEntries(Object.keys(calme).map((d) => [d, { idx: 70 } as never]))
+    const out = weekSessions(semaine, NOW, rouge, undefined, { volumeOuvert: true })
+    expect(out.find((x) => x.jourOrigine === 2)!.s.type).toBe('velo')
+  })
+
+  it('n’allume pas la contrainte 6 entre le mardi et le mercredi', async () => {
+    const { verifierContraintes } = await import('./overrides')
+    const out = weekSessions(semaine, NOW, calme, undefined, { volumeOuvert: true })
+    expect(verifierContraintes(out.map((x) => x.s)).filter((a) => a.contrainte === 6)).toEqual([])
   })
 })

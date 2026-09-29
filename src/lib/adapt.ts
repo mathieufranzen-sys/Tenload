@@ -18,7 +18,7 @@ import {
   type PainMap,
 } from './tendonIndex'
 import type { Session, SessionType, Week } from '../data/types'
-import { cleEcart, seancesAvecEcarts, slotsParJour, type EcartRow } from './overrides'
+import { cleEcart, seancesAvecEcarts, slotsParJour, versType, type EcartRow } from './overrides'
 import {
   appliquerPalier,
   appliquerPalierSpecifique,
@@ -283,6 +283,23 @@ export interface ContextePlan {
   palierSpecifique?: PalierSpecifique | null
   /** Raideur au réveil par jour : la règle du lendemain de sortie longue la lit. */
   reveils?: Record<string, number>
+  /** Huit semaines sans douleur au-dessus de 2 : le vélo du plan devient une course. */
+  volumeOuvert?: boolean
+}
+
+/**
+ * Le vélo du plan devenu course facile, de la même durée. C'est la sortie de
+ * la contrainte 5, appliquée d'elle-même depuis le 29 septembre 2026 : si le
+ * compteur l'a ouverte, c'est que le tendon va bien et peut de nouveau
+ * enchaîner. L'indice passe par-dessus : une bande rouge la rend au vélo.
+ */
+export function ouvrirVolume(s: Session): Session {
+  return {
+    ...versType(s, 'ef'),
+    adapted: 'Volume ouvert · huit semaines sans douleur au-dessus de 2',
+    motif: 'volume',
+    note: 'Huit semaines sans douleur au-dessus de 2 sur dix : le vélo de la semaine devient une course facile, de la même durée. Allure de conversation du début à la fin. Elle redevient du vélo dès qu’une douleur dépasse 2.',
+  }
 }
 
 /**
@@ -305,6 +322,7 @@ export function construireContexte(
     faites: new Set(feedback.map((f) => cleEcart(f.week, f.day_index, f.slot))),
     palier: palierProchaineLongue(seances, feedback, pain, now),
     palierSpecifique: palierProchaineSpecifique(seances, feedback, pain, now),
+    volumeOuvert: progresVolume(pain, now).atteint,
     reveils: Object.fromEntries(
       Object.entries(pain)
         .filter(([, p]) => p?.wake != null)
@@ -359,6 +377,11 @@ export function weekSessions(
       // Le palier est une règle de progression : il ne vise que ce qui reste
       // à courir, donc jamais une séance sautée.
       if (!s.saute) {
+        // Le vélo DU PLAN seulement : un vélo que Mathieu a posé lui-même
+        // par un écart reste sa décision. Et jamais dans le passé.
+        if (contexte?.volumeOuvert && s.type === 'velo' && week.sessions[i].type === 'velo' && day >= now) {
+          vecue = ouvrirVolume(vecue)
+        }
         const palier = contexte?.palier
         if (palier && s.type === 'long' && day === palier.jour && s.dist && s.dist > palier.km) {
           vecue = appliquerPalier(vecue, palier)
@@ -520,15 +543,16 @@ export function adapt(
       id: 'FEUVERT',
       title: 'Deux semaines sous 25 sans à-coup',
       action:
-        'Le tendon a tourné la page. Tu peux transformer un vélo en course facile, ou pousser la sortie longue de 2 km de plus que prévu.',
+        'Le tendon a tourné la page : le plan se déroule tel quel. Le volume, lui, s’ouvre à huit semaines sans douleur au-dessus de 2, et le compteur est dans Suivi.',
     })
   }
 
-  // Sortie de la contrainte 5 : les deux vélos redeviennent de la course.
+  // Sortie de la contrainte 5 : le vélo du mercredi redevient une course.
   //
-  // Décision de Mathieu, prise le 4 septembre 2026 : deux mois sans douleur
-  // déclarée et le volume s'ouvre au-dessus de 60 km par semaine, en
-  // remplaçant les vélos par des sorties faciles. C'est le levier qui pèse le
+  // Décision de Mathieu, prise le 4 septembre 2026 et confirmée le 29 : deux
+  // mois sans douleur déclarée et le volume s'ouvre, le vélo devenant une
+  // course facile. `weekSessions` l'applique de lui-même (`volumeOuvert`) ;
+  // cette règle l'annonce. C'est le levier qui pèse le
   // plus sur le chrono d'avril après « finir les blocs sans interruption »,
   // parce qu'un plan à 55 km ne prépare pas les dix derniers kilomètres.
   //
@@ -546,18 +570,10 @@ export function adapt(
       `aucun au-dessus de ${SEUIL_SANS_DOULEUR}.`
     rules.push({
       id: 'VOLUME',
-      title:
-        fenetre.palier === 1
-          ? `Un mois sans douleur au-dessus de ${SEUIL_SANS_DOULEUR} sur dix`
-          : `Deux mois sans douleur au-dessus de ${SEUIL_SANS_DOULEUR} sur dix`,
+      title: `Deux mois sans douleur au-dessus de ${SEUIL_SANS_DOULEUR} sur dix`,
       action:
-        fenetre.palier === 1
-          ? `${commun} Premier palier : le vélo du jeudi peut devenir la séance spécifique, et la ` +
-            'semaine passe à quatre jours de course. Le vélo du vendredi reste, et la séance ' +
-            'spécifique démarre courte.'
-          : `${commun} Second palier : le tendon a tenu la charge, le vélo du vendredi peut ` +
-            'devenir une course facile et la semaine passer au-dessus de 60 km. Un seul ' +
-            'changement à la fois.',
+        `${commun} Le tendon a tenu la charge : le vélo du mercredi devient une course facile, ` +
+        'de la même durée. Il redevient du vélo dès qu’une douleur dépasse 2.',
     })
   }
 
@@ -572,28 +588,76 @@ export function adapt(
 export const SEUIL_SANS_DOULEUR = 2
 
 /**
- * La sortie de la contrainte 5 se fait en deux temps, pas d'un coup.
+ * La sortie de la contrainte 5 : une seule marche, à huit semaines.
  *
- * Le vélo est un substitut à la course : il part quand la course revient. Mais
- * rendre les deux d'un seul coup ajouterait deux jours d'impact la même
- * semaine, sur un tendon dont c'est justement le décalage d'adaptation qui
- * l'avait blessé. Un mois ouvre le premier, deux mois le second.
+ * Il y en avait deux, un mois puis deux mois, du temps où la semaine portait
+ * deux vélos. Elle n'en porte plus qu'un depuis le 18 septembre, et Mathieu a
+ * gardé les huit semaines le 29 : c'est aussi l'ordre de grandeur des
+ * programmes qui modifient un tendon adulte (Bohm, Mersmann et Arampatzis 2015,
+ * huit semaines au moins).
  *
- * Trois relevés sur quatre au minimum dans chaque fenêtre : en dessous, c'est
- * du silence et pas une absence de douleur, et ce serait le feu vert le plus
+ * Trois relevés sur quatre au minimum dans la fenêtre : en dessous, c'est du
+ * silence et pas une absence de douleur, et ce serait le feu vert le plus
  * dangereux de l'app.
  */
-const PALIERS_VOLUME = [
-  { palier: 2 as const, jours: 56, releves: 42 },
-  { palier: 1 as const, jours: 28, releves: 21 },
-]
+const PALIERS_VOLUME = [{ palier: 2 as const, jours: 56, releves: 42 }]
 
 export interface VerdictVolume {
-  /** 1 : un vélo devient la séance spécifique. 2 : le second devient une course. */
-  palier: 1 | 2
+  /** Toujours 2 depuis le 29 septembre 2026 : le nom de l'ancien second palier est resté. */
+  palier: 2
   /** Relevés exploitables dans la fenêtre, pour que le message cite du réel. */
   releves: number
   jours: number
+}
+
+/** Où en est l'ouverture du volume, pour l'afficher avant qu'elle arrive. */
+export interface ProgresVolume {
+  /** Jours d'affilée sans aucune douleur au-dessus du seuil, aujourd'hui compris. */
+  jours: number
+  /** Relevés exploitables dans la fenêtre, qui compte les 56 derniers jours au plus. */
+  releves: number
+  joursRequis: number
+  relevesRequis: number
+  atteint: boolean
+  /** Le relevé qui a remis le compteur à zéro, s'il y en a un. */
+  remise: { day: string; valeur: number } | null
+}
+
+/**
+ * Le compteur de l'ouverture du volume (question de Mathieu, 29 septembre
+ * 2026 : « comment savoir où j'en suis ? »). Même règle que le second palier
+ * de `verdictVolume` : 56 jours sans douleur au-dessus de 2, et 42 relevés
+ * au moins, parce qu'un carnet vide n'est pas un tendon calme.
+ *
+ * Le compteur ne remonte pas avant la première saisie du carnet : des jours
+ * dont on ne sait rien ne sont pas des jours propres.
+ */
+export function progresVolume(pain: PainMap, now: string): ProgresVolume {
+  const { jours: joursRequis, releves: relevesRequis } = PALIERS_VOLUME[0]
+  const premier = Object.keys(pain).sort()[0]
+  let jours = 0
+  let releves = 0
+  let remise: ProgresVolume['remise'] = null
+  if (premier) {
+    for (let k = 0; addDays(now, -k) >= premier; k++) {
+      const p = pain[addDays(now, -k)]
+      const vs = p ? [p.wake, p.effort, p.evening].filter((x): x is number => x != null) : []
+      if (vs.length && Math.max(...vs) > SEUIL_SANS_DOULEUR) {
+        remise = { day: addDays(now, -k), valeur: Math.max(...vs) }
+        break
+      }
+      jours++
+      if (vs.length && k < joursRequis) releves++
+    }
+  }
+  return {
+    jours,
+    releves,
+    joursRequis,
+    relevesRequis,
+    atteint: jours >= joursRequis && releves >= relevesRequis,
+    remise,
+  }
 }
 
 export function verdictVolume(pain: PainMap, now: string): VerdictVolume | null {

@@ -13,7 +13,11 @@
  * s'applique par-dessus. Jamais l'inverse : sinon déplacer une séance
  * garderait l'adaptation calculée pour son ancien jour.
  */
-import type { Session, SessionType, Week } from '../data/types'
+import planJson from '../data/plan.json'
+import type { Exercise, Plan, Session, SessionType, Week } from '../data/types'
+import { ZONE_OFFSETS, estimateDuration } from './paces'
+
+const plan = planJson as unknown as Plan
 
 /** Ce qu'un écart a le droit de changer sur une séance. */
 export interface EcartPatch {
@@ -177,27 +181,165 @@ const LABEL_PAR_TYPE = new Map(TYPES_REMPLACEMENT.map((r) => [r.type, r.label]))
 /** Libellé lisible d'un type, pour les phrases d'écart. */
 export const labelType = (t: SessionType): string => LABEL_PAR_TYPE.get(t) ?? t
 
+/** Les disciplines qui se courent, et qui ont donc une distance. */
+export const TYPES_COURUS: ReadonlyArray<SessionType> = ['long', 'ef', 'inter', 'tempo', 'test', 'course', 'race']
+
+/**
+ * Le mot du coach d'une séance mise à la place d'une autre.
+ *
+ * Le remplacement gardait la note de la séance d'origine : un vélo mis à la
+ * place de la sortie longue s'ouvrait sur « elle accélère jusqu'au bout, allure
+ * semi puis seuil » (retour du laboratoire, 28 septembre 2026). La feuille
+ * disait « Vélo » en titre et parlait d'une course juste en dessous.
+ */
+const NOTE_REMPLACEMENT: Partial<Record<SessionType, string>> = {
+  ef: "Course facile, à allure de conversation du début à la fin. Si tu ne peux plus parler en phrases complètes, ralentis : c'est l'allure qui fait la séance, pas la distance.",
+  velo: 'Vélo souple, cadence haute, sans résistance. C’est du volume aérobie sans impact au sol : il entretient le moteur sans charger le tendon.',
+  marche:
+    'Marche active, sur du plat. Au kilomètre, elle charge le tendon deux fois moins que la course : c’est le repli quand courir n’est pas raisonnable.',
+  'muscu-bas':
+    'Le protocole excentrique passe en premier : c’est le traitement du tendon, et il fait baisser ton indice le lendemain. Charge progressive, descente lente.',
+  'muscu-haut':
+    'Le haut du corps ne charge pas le tendon. Le Stanish reste : c’est un traitement, pas un complément.',
+  escalade:
+    'Escalade à la place de la séance prévue. Elle compte dans la charge des jambes : garde-la tranquille si le tendon a parlé ces derniers jours.',
+  repos: 'Repos des jambes. Mobilité de cheville, étirements doux : c’est ce jour-là que le tendon se répare.',
+}
+
+/**
+ * Les exercices du renfo, repris du plan. Un renfo mis à la place d'un vélo
+ * n'avait AUCUN exercice : le remplacement effaçait la liste de l'ancienne
+ * séance sans en poser une nouvelle.
+ */
+const EXERCICES_PAR_TYPE: Partial<Record<SessionType, Exercise[]>> = (() => {
+  const out: Partial<Record<SessionType, Exercise[]>> = {}
+  for (const w of plan.weeks) {
+    for (const s of w.sessions) if (s.ex?.length && !out[s.type]) out[s.type] = s.ex
+  }
+  return out
+})()
+
+/** Allure de l'endurance facile, en secondes par kilomètre : celle qui convertit une durée en distance. */
+const ALLURE_EF = plan.meta.targetMarathonPace + ZONE_OFFSETS.ef
+
 /**
  * Change la discipline d'une séance. Tout ce qui décrivait l'ancienne — les
- * segments d'allure, les blocs de fractionné, les exercices, le kilométrage —
+ * segments d'allure, les blocs de fractionné, les exercices, le mot du coach —
  * disparaît : garder la distance d'une sortie longue sur un vélo afficherait
  * « Vélo · 26 km », ce qui n'a aucun sens. Même précaution que `applyFx`.
+ *
+ * Ce qui la MESURE, en revanche, passe d'une discipline à l'autre : c'est ce
+ * que lit la charge. Une course n'a pas de durée dans le plan, seulement une
+ * distance, et un vélo n'a pas de distance : une sortie longue remplacée par
+ * du vélo valait donc zéro dans la charge, comme une course facile mise à la
+ * place d'un vélo. Le remplacement garde le TEMPS de la séance d'origine, à
+ * l'allure de l'endurance facile quand il faut repasser en kilomètres.
  */
-function versType(s: Session, type: SessionType): Session {
+export function versType(s: Session, type: SessionType): Session {
   if (type === s.type) return s
+  const court = TYPES_COURUS.includes(type)
+  const courait = TYPES_COURUS.includes(s.type)
+
+  let dist: number | undefined
+  let dur: [number, number] | null = type === 'repos' ? null : (s.dur ?? null)
+  let title = labelType(type)
+  let struct: Session['struct'] = null
+  if (court) {
+    // D'une durée vers une course : autant de temps, à allure facile.
+    const km = courait ? s.dist : s.dur ? Math.round((s.dur[0] * 60) / ALLURE_EF) : undefined
+    if (km) {
+      dist = km
+      dur = null
+      title = `${labelType(type)} de ${formatKm(km)} km`
+      struct = [{ km, zone: 'ef' }]
+    }
+  } else if (courait && type !== 'repos' && !s.dur && s.dist) {
+    // D'une course vers une durée : le temps qu'elle aurait pris.
+    dur = estimateDuration(s, plan.meta.targetMarathonPace)
+  }
+
   return {
     ...s,
     type,
     cat: CAT_PAR_TYPE.get(type) ?? s.cat,
-    title: labelType(type),
-    dist: undefined,
-    dur: type === 'repos' ? null : s.dur,
-    struct: null,
+    title,
+    dist,
+    dur,
+    struct,
     wu: null,
     main: null,
     cd: null,
-    ex: null,
+    ex: EXERCICES_PAR_TYPE[type] ?? null,
+    specifique: undefined,
+    note: NOTE_REMPLACEMENT[type] ?? s.note,
   }
+}
+
+/**
+ * Change la distance d'une séance sans rien changer d'autre. Les segments
+ * suivent au prorata, ce qui garde le mélange de zones — c'est le moins
+ * inventé de tous les choix possibles — et le titre suit s'il annonçait
+ * l'ancienne distance.
+ */
+export function avecDistance(s: Session, km: number): Session {
+  const out: Session = { ...s }
+  // `sessionLoad` lit les segments d'abord : changer la distance sans les
+  // suivre laisserait la charge d'une sortie longue de 28 km sur une sortie
+  // écourtée à 14.
+  if (out.struct?.length && out.dist) {
+    const facteur = km / out.dist
+    out.struct = out.struct.map((seg) => ({ ...seg, km: Math.round(seg.km * facteur * 10) / 10 }))
+  }
+  out.title = titreAvecDistance(out.title, out.dist, km)
+  out.dist = km
+  return out
+}
+
+/** Ce qu'un ressenti dit de la séance : la discipline et la distance affichées quand elle a été notée. */
+export interface TraceRessenti {
+  session_type: string
+  distance_km?: number | null
+}
+
+/**
+ * La séance telle qu'elle a été faite, d'après son ressenti.
+ *
+ * Le ressenti enregistre la discipline et la distance AFFICHÉES au moment où
+ * la séance est notée. C'est la seule trace de ce qui a vraiment eu lieu : une
+ * course passée au vélo par l'indice redevenait une course dès qu'elle était
+ * notée, à l'écran comme dans la charge, qui comptait alors des kilomètres
+ * jamais courus (retour du laboratoire, 28 septembre 2026).
+ *
+ * `distanceCorrigee` : une « donnée réelle » saisie après coup l'emporte sur
+ * la distance du ressenti, qui date d'avant la correction.
+ */
+export function formeNotee(s: Session, trace: TraceRessenti, distanceCorrigee = false): Session {
+  const type = trace.session_type as SessionType
+  const km = distanceCorrigee ? s.dist : (trace.distance_km ?? s.dist)
+
+  if (type === s.type) {
+    if (km != null && s.dist != null && TYPES_COURUS.includes(type) && Math.abs(km - s.dist) >= 0.05) {
+      return avecDistance(s, km)
+    }
+    return s
+  }
+  if (TYPES_COURUS.includes(type) && TYPES_COURUS.includes(s.type)) {
+    // Une course faite autrement, typiquement une qualité courue en endurance
+    // pendant une reprise : même distance, tout en allure facile.
+    const d = km ?? undefined
+    return {
+      ...versType(s, type),
+      dist: d,
+      title: d ? `${labelType(type)} de ${formatKm(d)} km` : labelType(type),
+      struct: d ? [{ km: d, zone: 'ef' }] : null,
+    }
+  }
+  if (type === 'velo' && TYPES_COURUS.includes(s.type)) {
+    // Une course faite en vélo sans écart ne peut venir que du moteur, dont
+    // tous les vélos de remplacement durent de 45 à 70 minutes.
+    return { ...versType(s, 'velo'), title: 'Vélo Z2', dur: [50, 60] }
+  }
+  return versType(s, type)
 }
 
 /**
@@ -214,18 +356,7 @@ export function appliquerEcart(s: Session, e: EcartPatch): Session {
   // remplace entièrement, elle ne s'y ajoute pas.
   if (e.qualite) out = versQualite(out, e.qualite)
 
-  if (e.dist != null) {
-    // `sessionLoad` lit les segments d'abord : changer la distance sans les
-    // suivre laisserait la charge d'une sortie longue de 28 km sur une sortie
-    // écourtée à 14. On redimensionne au prorata, ce qui garde le mélange de
-    // zones — c'est le moins inventé de tous les choix possibles.
-    if (out.struct?.length && out.dist) {
-      const facteur = e.dist / out.dist
-      out.struct = out.struct.map((seg) => ({ ...seg, km: Math.round(seg.km * facteur * 10) / 10 }))
-    }
-    out.title = titreAvecDistance(out.title, out.dist, e.dist)
-    out.dist = e.dist
-  }
+  if (e.dist != null) out = avecDistance(out, e.dist)
   if (e.durMin != null) out.dur = [e.durMin, e.durMin]
   if (e.day != null) out.day = e.day
   if (e.semaines) out.semaines = e.semaines
@@ -360,9 +491,15 @@ export function verifierContraintes(seances: Session[]): Alerte[] {
         texte: `Deux séances de course le même jour (${JOURS[d]}).`,
       })
   }
+  // Seconde exception : la course qui remplace le vélo une fois le volume
+  // ouvert. Huit semaines sans douleur au-dessus de 2 disent que le tendon
+  // encaisse à nouveau des jours de course enchaînés (décision de Mathieu,
+  // 29 septembre 2026).
+  const courseEnchainable = (d: number) =>
+    jour(d).some((s) => TYPES_COURSE.includes(s.type) && s.motif !== 'volume')
   for (let d = 0; d < 6; d++) {
     if (d === 0) continue
-    if (porte(d, TYPES_COURSE) && porte(d + 1, TYPES_COURSE))
+    if (courseEnchainable(d) && courseEnchainable(d + 1))
       alertes.push({
         contrainte: 6,
         texte: `Deux jours de course consécutifs (${JOURS[d]} et ${JOURS[d + 1]}).`,

@@ -12,14 +12,15 @@ import planJson from '../data/plan.json'
 import type { Plan } from '../data/types'
 import type { SessionType } from '../data/types'
 import { addDays, formatDay, formatNumber, mondayOf, today as todayISO } from '../lib/dates'
-import { adapt, construireContexte, seancesDeLaSemaine } from '../lib/adapt'
+import { adapt, construireContexte, progresVolume, seancesDeLaSemaine } from '../lib/adapt'
 import { familleDe, familleDuSport } from '../lib/insights'
 import type { EcartRow } from '../lib/overrides'
 import { Icon } from '../components/Icon'
-import type { LoadMap, PainMap } from '../lib/tendonIndex'
+import { indexSeries, type LoadMap, type PainMap } from '../lib/tendonIndex'
 import type { ActivityRow, LoadParDiscipline } from '../lib/load'
 import type { FeedbackRow } from '../lib/buildPain'
 import { IndexChart } from '../components/charts/IndexChart'
+import { OuvertureChart } from '../components/charts/OuvertureChart'
 import { PainChart, type PainRow, type VuePain } from '../components/charts/PainChart'
 import { VolumeChart, type BarRow, type VueVolume } from '../components/charts/VolumeChart'
 import { LoadChart, type StackRow } from '../components/charts/LoadChart'
@@ -196,36 +197,42 @@ export function Track({
   const km7 = km(7)
   const km28 = km(28)
 
+  const volume = useMemo(() => progresVolume(pain, now), [pain, now])
+
   const totalAttendu = plan.weeks.reduce((acc, w) => acc + w.sessions.filter((s) => s.feedback).length, 0)
 
 
-  const idxRows = useMemo(
-    () =>
-      Object.values(A.byDate)
-        .sort((a, b) => (a.day < b.day ? -1 : 1))
-        .map((r) => ({ day: r.day, idx: r.idx })),
-    [A.byDate],
-  )
+  /**
+   * L'indice et la douleur sur les MÊMES jours (retour du 29 septembre 2026).
+   * L'indice s'arrêtait à huit semaines quand la douleur remontait à la
+   * première saisie du carnet : deux axes, deux échelles de temps, et aucun
+   * pic ne se lisait en face de sa cause. La série part donc de la première
+   * douleur saisie et va jusqu'à la projection, charge attestée comprise,
+   * pour que le chiffre d'aujourd'hui soit celui de la jauge.
+   */
+  const serieSuivi = useMemo(() => {
+    const debut = jours.length && jours[0] < addDays(now, -56) ? jours[0] : addDays(now, -56)
+    return indexSeries(debut, addDays(now, 10), load, pain, attestes)
+  }, [jours, now, load, pain, attestes])
+
+  const idxRows = useMemo(() => serieSuivi.map((r) => ({ day: r.day, idx: r.idx })), [serieSuivi])
 
   /** Le rapport aigu sur chronique jour par jour, jusqu'à aujourd'hui. */
   const ratioRows: PointRatio[] = useMemo(
     () =>
-      Object.values(A.byDate)
-        .filter((r) => r.day <= now && r.acr > 0)
-        .sort((x, y) => (x.day < y.day ? -1 : 1))
-        .map((r) => ({ day: r.day, acr: r.acr })),
-    [A.byDate, now],
+      serieSuivi.filter((r) => r.day <= now && r.acr > 0).map((r) => ({ day: r.day, acr: r.acr })),
+    [serieSuivi, now],
   )
 
   const painRows: PainRow[] = useMemo(
     () =>
-      jours.map((d) => ({
+      idxRows.map(({ day: d }) => ({
         day: d,
         wake: pain[d]?.wake ?? null,
         effort: pain[d]?.effort ?? null,
         evening: pain[d]?.evening ?? null,
       })),
-    [jours, pain],
+    [idxRows, pain],
   )
 
   /**
@@ -413,7 +420,7 @@ export function Track({
             { label: 'Fin de journée', couleur: 'var(--chart-3)' },
           ]}
         >
-          <PainChart rows={painRows} vue={vuePain} />
+          <PainChart rows={painRows} vue={vuePain} jusqua={now} />
         </Viz>
 
         <Viz
@@ -513,6 +520,12 @@ export function Track({
           ]}
         >
           <LoadChart rows={loadRows} />
+        </Viz>
+
+        {/* En dernier : c'est ce vers quoi tout le reste tend. Une règle qui
+            se déclenche seule doit se voir venir. */}
+        <Viz titre="Ouverture du volume">
+          <OuvertureChart progres={volume} pain={pain} now={now} />
         </Viz>
       </div>
     </div>
