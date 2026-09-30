@@ -109,17 +109,21 @@ function lecteur(pain: PainMap, jour: string, now: string) {
  * Un matin encore à venir est supposé calme, à moins que la veille déjà
  * saisie ne dise le contraire : la projection montre quand la contrainte
  * tombera SI les réveils restent calmes. Aujourd'hui et le passé, eux,
- * exigent un vrai relevé : on ne lève rien sur une absence de saisie.
+ * exigent un vrai relevé : un réveil non saisi est `inconnu`, il ne compte
+ * pas, mais il ne remet pas non plus le compteur à zéro. Un seul oubli
+ * suspendait sinon la course pour un épisode vieux d'un mois (retour de
+ * Mathieu, 30 septembre 2026 : un pic le 25 août, la course passait au vélo
+ * chaque matin tant que la raideur n'était pas saisie).
  */
-function matinCalme(m: string, lire: ReturnType<typeof lecteur>, now: string): boolean {
+function matinCalme(m: string, lire: ReturnType<typeof lecteur>, now: string): 'calme' | 'agite' | 'inconnu' {
   const veille = addDays(m, -1)
   const soir = lire(veille, 'evening')
   const effort = lire(veille, 'effort')
-  if (soir != null && soir > SEUIL_SANS_DOULEUR) return false
-  if (effort != null && effort > EFFORT_TOLERE) return false
+  if (soir != null && soir > SEUIL_SANS_DOULEUR) return 'agite'
+  if (effort != null && effort > EFFORT_TOLERE) return 'agite'
   const reveil = lire(m, 'wake')
-  if (reveil == null) return m > now
-  return reveil <= reveilCalme(m, lire)
+  if (reveil == null) return m > now ? 'calme' : 'inconnu'
+  return reveil <= reveilCalme(m, lire) ? 'calme' : 'agite'
 }
 
 /**
@@ -192,14 +196,23 @@ export function etatReprise(jour: string, pain: PainMap, now: string): EtatRepri
   for (const n of ORDRE) {
     const e = dernier[n]
     if (!e) continue
-    // Matins calmes d'affilée depuis l'épisode, jusqu'au matin de `jour`.
-    let calmes = 0
-    for (let m = addDays(e.jour, 1); m <= jour; m = addDays(m, 1)) {
-      calmes = matinCalme(m, lire, now) ? calmes + 1 : 0
-    }
+    // Matins calmes d'affilée depuis l'épisode, jusqu'au matin de `jour`. Un
+    // palier atteint est acquis : un réveil à 3 un mois plus tard ne rouvre
+    // pas une crise dont la reprise était faite, il n'est pas un épisode.
     const { course: pourCourse, intensite: pourIntensite } = REPRISE[n]
-    const bloqueCourse = calmes < pourCourse
-    const bloqueIntensite = calmes < pourIntensite
+    let calmes = 0
+    let courseRendue = pourCourse === 0
+    let intensiteRendue = false
+    for (let m = addDays(e.jour, 1); m <= jour; m = addDays(m, 1)) {
+      const etat = matinCalme(m, lire, now)
+      if (etat === 'agite') calmes = 0
+      else if (etat === 'calme') calmes++
+      courseRendue ||= calmes >= pourCourse
+      intensiteRendue ||= calmes >= pourIntensite
+      if (intensiteRendue) break
+    }
+    const bloqueCourse = !courseRendue
+    const bloqueIntensite = !intensiteRendue
     if (!bloqueCourse && !bloqueIntensite) continue
     course ||= bloqueCourse
     intensite ||= bloqueIntensite

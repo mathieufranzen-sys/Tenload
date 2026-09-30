@@ -135,3 +135,38 @@ describe('le réveil calme tient compte de la raideur habituelle', () => {
     expect(etatReprise(jour(3), p, jour(3))!.courseSuspendue).toBe(true)
   })
 })
+
+describe('un épisode ancien ne revient pas sur un oubli', () => {
+  // Le cas de Mathieu, 30 septembre 2026 : un seul pic le 25 août.
+  const PIC = '2026-08-25'
+  const AUJ = '2026-09-30'
+  const carnet = (): PainMap => {
+    const p: PainMap = {}
+    for (let d = addDays(PIC, -20); d < AUJ; d = addDays(d, 1)) p[d] = { wake: 1, evening: 1 }
+    p[PIC] = { wake: 1, effort: 7, evening: 6 }
+    return p
+  }
+
+  it('le réveil du jour non saisi ne suspend pas la course', () => {
+    expect(etatReprise(AUJ, carnet(), AUJ)).toBeNull()
+  })
+
+  it('des réveils oubliés en route ne remettent pas le compteur à zéro', () => {
+    const pain = carnet()
+    for (const k of [2, 5, 9, 13]) delete pain[addDays(PIC, k)]
+    expect(etatReprise(AUJ, pain, AUJ)).toBeNull()
+  })
+
+  it('un réveil à 3 un mois plus tard ne rouvre pas la crise', () => {
+    const pain = carnet()
+    pain[addDays(AUJ, -1)] = { wake: 3, evening: 1 }
+    expect(etatReprise(AUJ, pain, AUJ)).toBeNull()
+  })
+
+  it('un oubli ne compte pas pour autant comme un matin calme', () => {
+    const pain = carnet()
+    for (let k = 1; k <= 20; k++) delete pain[addDays(PIC, k)]
+    const e = etatReprise(addDays(PIC, 21), pain, addDays(PIC, 21))!
+    expect(e.courseSuspendue).toBe(true)
+  })
+})

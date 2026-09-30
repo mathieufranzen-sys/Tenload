@@ -669,6 +669,10 @@ plus longtemps le tendon a mal, plus fort et plus longtemps le plan s'adapte.**
   fond s'est installée juste au-dessus (arbitré le 29 septembre 2026). Le
   compteur d'ouverture du volume, lui, reste strict à 2. Le compteur part du dernier relevé douloureux, donc un
   épisode long le démarre tard.
+  **Un réveil non saisi ne compte pas, mais ne remet pas le compteur à zéro**,
+  et un palier atteint est acquis (30 septembre 2026) : un pic du 25 août
+  repassait sinon la course au vélo chaque matin tant que la raideur du jour
+  n'était pas saisie.
 - **Trois niveaux, avec les planchers mêmes de l'indice** (`plancherDuReleve`) :
   alerte (orange), la course reste et l'intensité attend 3 matins calmes ;
   crise (rouge), la course attend 2 matins calmes et l'intensité 7 ; noir, 3
