@@ -590,7 +590,8 @@ export const SCENARIOS: Scenario[] = [
       const r = reprise(jeu, addDays(ANCRE, 1), 10)
       return {
         valeur: `${r.requis || 'aucun épisode'} : course au ${rang(r.course)} matin, intensité au ${rang(r.intensite)}`,
-        ok: r.course === r.attendu.course && r.intensite === r.attendu.intensite,
+        // Sans épisode reconnu, il n'y a pas de règle à vérifier : raté.
+        ok: r.requis !== '' && r.course === r.attendu.course && r.intensite === r.attendu.intensite,
       }
     },
   },
