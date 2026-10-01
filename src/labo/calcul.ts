@@ -49,7 +49,7 @@ const S = {
   magnusson: { nom: 'Magnusson, Langberg et Kjær 2010, Nat Rev Rheumatol' },
   cook: { nom: 'Cook et Purdam 2009, BJSM' },
   beyer: { nom: 'Beyer et al. 2015, AJSM' },
-  jospt: { nom: 'Martin et al., recommandation JOSPT 2018, révisée 2024' },
+  jospt: { nom: 'Martin et al., recommandation JOSPT 2018' },
   gabbett: { nom: 'Gabbett 2016, BJSM' },
   williams: { nom: 'Williams et al. 2017, BJSM' },
   murray: { nom: 'Murray et al. 2017, BJSM' },
@@ -103,6 +103,49 @@ const S = {
     url: 'https://pubmed.ncbi.nlm.nih.gov/8970928/',
   },
   carnet: { nom: 'Ton carnet et ton historique Strava, mai à août 2026' },
+  // Sources postérieures à 2010, cherchées le 1er octobre 2026 pour doubler
+  // celles d'avant : une source ancienne n'est pas fausse, mais une plus
+  // récente dit si elle tient encore.
+  cpg2024: {
+    nom: 'Recommandation JOSPT 2024, 3e révision : mise en charge aussi lourde que toléré, 3 fois par semaine',
+    url: 'https://www.jospt.org/doi/10.2519/jospt.2024.0302',
+  },
+  corrigan: {
+    nom: 'Corrigan et al. 2022, SJMSS : la douleur en courant ne suit pas la force sur le tendon',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC9972464/',
+  },
+  cook2016: {
+    nom: 'Cook, Rio, Purdam et Docking 2016, BJSM : le modèle du continuum revisité',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/27127294/',
+  },
+  dick: {
+    nom: 'Dick, Arnold et Wakeling 2016, J Biomech : 920 N à 115 W, 1 510 N à 370 W sur le vélo',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC5074891/',
+  },
+  trail: {
+    nom: 'IJERPH 2020 : 25 traileurs sur 52 semaines, la monotonie monte avant les blessures',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC7312824/',
+  },
+  eau2019: {
+    nom: 'Sci Rep 2019 : moins d’eau, tissu plus raide, mesuré sur pièce d’autopsie',
+    url: 'https://www.nature.com/articles/s41598-019-44306-z',
+  },
+  lutteurs: {
+    nom: 'BJSM, 67 lutteurs NCAA sur 7 saisons : +11 % de risque de blessure par % de poids perdu en se déshydratant',
+    url: 'https://www.med.wisc.edu/news/college-wrestling-injury-study',
+  },
+  vanDerVlist2019: {
+    nom: 'van der Vlist et al. 2019, BJSM : facteurs de risque de la tendinopathie d’Achille',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/30718234/',
+  },
+  milewski: {
+    nom: 'Milewski et al. 2014, J Pediatr Orthop : moins de 8 h de sommeil, 1,7 fois plus de blessures',
+    url: 'https://www.researchgate.net/publication/263971781',
+  },
+  dobrosielski: {
+    nom: 'Dobrosielski et al. 2021, revue de 12 cohortes : lien sommeil et blessure limité chez l’adulte',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/34099605/',
+  },
 } satisfies Record<string, Source>
 
 const SECTIONS: Section[] = [
@@ -147,8 +190,8 @@ const SECTIONS: Section[] = [
         propose: '0,05 par minute en Z2, 0,10 en Z3',
         statutPropose: 'inspire',
         pourquoi:
-          'Sur ergocycle, le tendon porte environ 1,1 fois le poids du corps en moyenne, et la force monte avec la puissance. C’est quatre à six fois moins que la course au pic. Ton carnet reste la seule mesure qui donne un coût au vélo : tes deux pics du soir suivaient du Z3. D’où un vélo facile moins cher et un Z3 inchangé. Touche une décision à ne pas défaire : le vélo reste non neutre.',
-        sources: [S.ericson, S.carnet],
+          'Sur ergocycle, le tendon porte environ 1,1 fois le poids du corps en moyenne, et la force monte avec la puissance : +64 % entre 115 et 370 W. C’est quatre à six fois moins que la course au pic. Ton carnet reste la seule mesure qui donne un coût au vélo : tes deux pics du soir suivaient du Z3. D’où un vélo facile moins cher et un Z3 inchangé. Touche une décision à ne pas défaire : le vélo reste non neutre.',
+        sources: [S.dick, S.ericson, S.carnet],
       },
       {
         element: 'Renfo bas',
@@ -224,8 +267,9 @@ const SECTIONS: Section[] = [
         element: 'Douleur, pondération',
         actuel: 'Réveil 45 %, soir de la veille 35 %, effort de la veille 20 %',
         statut: 'inspire',
-        pourquoi: 'La réponse du lendemain matin compte le plus. Les poids sont de l’app.',
-        sources: [S.silbernagel2007],
+        pourquoi:
+          'La réponse du lendemain matin compte le plus. Chez des coureurs en reprise, la douleur pendant la course ne suivait pas la force sur le tendon : c’est le réveil qui dit l’état du tendon, ce qui justifie son poids. Les poids exacts sont de l’app.',
+        sources: [S.silbernagel2007, S.corrigan, S.cpg2024],
       },
       {
         element: 'Douleur, pic sur 72 h',
@@ -253,8 +297,8 @@ const SECTIONS: Section[] = [
         propose: 'Raideur moyenne de la semaine contre la semaine d’avant, pleine à +1',
         statutPropose: 'inspire',
         pourquoi:
-          'Le modèle de surveillance de la douleur compare d’une semaine à l’autre, pas sur quatre jours. Le +1 reste un choix.',
-        sources: [S.silbernagel2007],
+          'Le modèle de surveillance de la douleur compare d’une semaine à l’autre, pas sur quatre jours. La recommandation JOSPT 2024 le reprend. Le +1 reste un choix.',
+        sources: [S.silbernagel2007, S.cpg2024],
       },
       {
         element: 'Monotonie (8 points)',
@@ -262,8 +306,8 @@ const SECTIONS: Section[] = [
         statut: 'inspire',
         propose: 'Compte dès 2, plein à 2,5',
         statutPropose: 'inspire',
-        pourquoi: 'Foster situe le problème au-dessus de 2. Ton plan, avec son dimanche vide, reste en dessous.',
-        sources: [S.foster],
+        pourquoi: 'Foster situe le problème au-dessus de 2. Chez des traileurs suivis un an, la monotonie montait dans les semaines avant une blessure. Ton plan, avec son dimanche vide, reste en dessous.',
+        sources: [S.trail, S.foster],
       },
       {
         element: 'Excentrique la veille',
@@ -271,7 +315,7 @@ const SECTIONS: Section[] = [
         statut: 'inspire',
         pourquoi:
           'La mise en charge lourde est le traitement, sur des semaines. Le lendemain d’une séance, le collagène est plutôt en perte nette : le −6 récompense l’observance, pas un effet mécanique du jour. Décision à ne pas défaire.',
-        sources: [S.beyer, S.jospt, S.magnusson],
+        sources: [S.cpg2024, S.beyer, S.magnusson],
       },
       {
         element: 'Repos la veille',
@@ -288,17 +332,17 @@ const SECTIONS: Section[] = [
         statutPropose: 'inspire',
         pourquoi:
           'En sautillant, le tendon s’étire de 8,3 %, contre 5,8 % en courant : c’est une charge, pas une protection. Silbernagel les réintroduit comme une étape de charge progressive.',
-        sources: [S.deformation, S.silbernagel2007],
+        sources: [S.deformation, S.cpg2024, S.silbernagel2007],
       },
       {
         element: 'Hydratation ≥ 2 L',
         actuel: '−2',
         statut: 'origine',
-        propose: '0',
+        propose: '−2, inchangé',
         statutPropose: 'inspire',
         pourquoi:
-          'Les seules études trouvées mesurent des tendons plongés dans une solution en laboratoire, pas l’effet de boire. Aucune preuve chez l’humain. La saisie peut rester, comme le glaçage.',
-        sources: [S.hydratation],
+          'Preuve indirecte seulement. Un tendon qui perd de l’eau devient plus raide, mesuré sur pièce de laboratoire. Des lutteurs qui se déshydratent pour la pesée se blessent davantage, mais par une perte de 5 à 7 % du poids, pas par un jour à 1,5 L. Aucune étude ne montre que boire 2 L protège un tendon d’Achille. Le −2 tient comme un geste d’observance, au même titre que l’excentrique.',
+        sources: [S.eau2019, S.lutteurs, S.hydratation],
       },
       {
         element: 'Glaçage',
@@ -335,8 +379,8 @@ const SECTIONS: Section[] = [
         element: 'Mémoire d’épisode',
         actuel: 'Après un pic au-dessus de 60 : × 0,74 par jour pendant 5 jours',
         statut: 'origine',
-        pourquoi: 'Aucune source ne chiffre la durée de la phase réactive.',
-        sources: [S.cook],
+        pourquoi: 'Le tendon réactif peut revenir à sa structure si la charge baisse, mais aucune source ne chiffre la durée de cette phase.',
+        sources: [S.cook2016, S.cook],
       },
       {
         element: 'Confiance',
@@ -367,8 +411,8 @@ const SECTIONS: Section[] = [
         element: 'Orange',
         actuel: '50-64 : qualité en vélo, longue −20 %',
         statut: 'inspire',
-        pourquoi: 'L’intensité sort en premier. Le −20 % est de l’app.',
-        sources: [S.cook],
+        pourquoi: 'Ajouter ou retirer de la charge est ce qui fait avancer ou reculer le tendon sur le continuum ; l’intensité sort en premier. Le −20 % est de l’app.',
+        sources: [S.cook2016, S.cook],
       },
       {
         element: 'Rouge',
@@ -382,6 +426,32 @@ const SECTIONS: Section[] = [
         actuel: '80-100 : repos des jambes, kiné après 3 jours',
         statut: 'origine',
         pourquoi: 'Aucune source trouvée.',
+      },
+    ],
+  },
+  {
+    titre: 'Facteurs de vie, pas encore saisis',
+    intro: 'Proposés par Mathieu le 1er octobre 2026. Ni l’un ni l’autre n’entre aujourd’hui dans le calcul.',
+    lignes: [
+      {
+        element: 'Alcool',
+        actuel: 'Non saisi',
+        statut: 'origine',
+        propose: 'Saisi dans le carnet, lu par les patterns, hors de l’indice',
+        statutPropose: 'inspire',
+        pourquoi:
+          'Une consommation modérée fait partie des neuf facteurs de risque de la tendinopathie d’Achille, avec un niveau de preuve limité. Trop faible pour chiffrer des points, assez pour chercher le lien dans TON carnet.',
+        sources: [S.vanDerVlist2019],
+      },
+      {
+        element: 'Sommeil',
+        actuel: 'Non saisi',
+        statut: 'origine',
+        propose: 'Saisi dans le carnet, lu par les patterns, hors de l’indice',
+        statutPropose: 'inspire',
+        pourquoi:
+          'Moins de 8 h de sommeil : 1,7 fois plus de blessures chez des adolescents. Chez l’adulte, la revue de douze cohortes trouve un lien limité. Rien de propre au tendon d’Achille.',
+        sources: [S.milewski, S.dobrosielski],
       },
     ],
   },
@@ -400,7 +470,7 @@ const SECTIONS: Section[] = [
         actuel: 'Alerte 0/3, crise 2/7, noir 3/14 matins calmes (course/intensité)',
         statut: 'inspire',
         pourquoi: 'Les sources donnent le critère et l’ordre, pas le nombre de matins.',
-        sources: [S.cook, S.silbernagelCrossley],
+        sources: [S.cook2016, S.silbernagelCrossley],
       },
       {
         element: 'Remontée du volume',
@@ -436,10 +506,16 @@ const echapper = (s: string) =>
 
 const pastille = (s: Statut) => `<span class="statut statut-${s}">${LIBELLE[s]}</span>`
 
+/** Une source d'avant 2010 se signale : elle a été doublée par une plus récente quand il y en avait une. */
+const ancienne = (s: Source) => {
+  const an = Number(s.nom.match(/\b(19|20)\d{2}\b/)?.[0])
+  return an > 0 && an < 2010
+}
+
 const lien = (s: Source) =>
-  s.url
+  (s.url
     ? `<a href="${echapper(s.url)}" target="_blank" rel="noreferrer">${echapper(s.nom)}</a>`
-    : echapper(s.nom)
+    : echapper(s.nom)) + (ancienne(s) ? ' <span class="ancienne">avant 2010</span>' : '')
 
 function compter(statut: (l: Ligne) => Statut): Record<Statut, number> {
   const c: Record<Statut, number> = { ref: 0, inspire: 0, origine: 0 }

@@ -167,3 +167,9 @@ tr.change td:nth-child(3) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.ancienne {
+  font-size: var(--fs-micro);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
