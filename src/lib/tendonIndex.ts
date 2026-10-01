@@ -36,7 +36,12 @@ export const KM_COST = {
  */
 export const MIN_COST: Record<string, number> = {
   velo: 0.10,
-  'muscu-bas': 0.25, // charge lourde mais contrôlée, thérapeutique
+  // Le renfo bas valait 0,25 : 45 minutes pesaient autant que 11 km
+  // d'endurance. En répétitions, il met le tendon en tension 150 fois environ,
+  // une course de 10 km plusieurs milliers. Arbitré par Mathieu le 1er octobre
+  // 2026 : 0,08, soit 3,6 points pour 45 minutes. C'est le traitement (Beyer
+  // 2015, recommandation JOSPT), pas gratuit pour autant (Magnusson 2010).
+  'muscu-bas': 0.08,
   escalade: 0.06, // appuis en pointe
   'muscu-haut': 0,
   hike: 0.05,

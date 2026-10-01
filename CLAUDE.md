@@ -330,7 +330,7 @@ Six termes s'additionnent, moins ce qui protège :
 | Monotonie | 8 | Écart-type de la charge sur sept jours (Foster). Une semaine sans jour léger use le tendon. |
 | Gestes protecteurs | −15 | Excentrique la veille −6, vraie journée de repos −5, sauts −2, hydratation ≥ 2 L −2. Le glaçage est saisi mais ne pèse plus : pas d'effet démontré sur la charge mécanique du tendon. |
 
-### Trois décisions à ne pas défaire
+### Quatre décisions à ne pas défaire
 
 1. **La réponse à la douleur est convexe** (exposant 1,15). Une gêne de fond à
    2/10 ne doit pas alarmer, un vrai 6 doit tout arrêter. Une réponse linéaire
@@ -339,7 +339,11 @@ Six termes s'additionnent, moins ce qui protège :
 2. **Le vélo n'est pas neutre** : 0,10 point par minute. Les deux seuls pics de
    douleur du soir du carnet suivent tous les deux une séance de home trainer en
    Z3, pas une course. La flexion plantaire soutenue compte.
-3. **Faire son excentrique fait BAISSER l'indice.** C'est le traitement d'une
+3. **Le renfo bas pèse 0,08 point par minute**, soit 3,6 pour 45 minutes
+   (1er octobre 2026). Il valait 0,25, autant que 11 km d'endurance, et
+   faisait à lui seul l'essentiel de la fraîcheur du jeudi. C'est le
+   traitement (Beyer 2015), pas gratuit pour autant (Magnusson 2010).
+4. **Faire son excentrique fait BAISSER l'indice.** C'est le traitement d'une
    tendinopathie, pas une agression, et ça récompense l'observance.
 
 ### Garde-fous

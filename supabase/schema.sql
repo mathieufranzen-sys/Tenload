@@ -278,7 +278,7 @@ select
         end
       when sport = 'Ride'   then (moving_s / 60.0) * 0.10
       when sport = 'Weight' then (moving_s / 60.0)
-                                 * case when name ~* 'jambe|bas|bulgare|trx' then 0.25 else 0.0 end
+                                 * case when name ~* 'jambe|bas|bulgare|trx' then 0.08 else 0.0 end
       when sport = 'Hike'   then (moving_s / 60.0) * 0.05
       else 0
     end
