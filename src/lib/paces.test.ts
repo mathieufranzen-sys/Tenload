@@ -14,6 +14,9 @@ import {
   lireRepetitions,
   vap,
   zoneHrRange,
+  tempsVise,
+  allureVisee,
+  MARATHON_KM,
 } from './paces'
 
 const PACE = 277 // allure marathon objectif, 4:37/km
@@ -198,5 +201,12 @@ describe('la table de zones du plan', () => {
         }
       }
     }
+  })
+})
+
+describe('le temps visé', () => {
+  it('3 h 15 enregistré à 277 s/km se relit 3 h 15, pas 3:14:48', () => {
+    expect(tempsVise(277)).toBe(3 * 3600 + 15 * 60)
+    expect(allureVisee(277) * MARATHON_KM).toBeCloseTo(11700, 5)
   })
 })

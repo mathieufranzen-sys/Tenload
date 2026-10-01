@@ -32,7 +32,7 @@ import { RatioChart, type PointRatio } from '../components/charts/RatioChart'
 import { chronoEquivalent, formatChrono } from '../lib/dossards'
 import { HALF_KM } from '../lib/paces'
 import { repartitionSemaine } from '../lib/repartition'
-import { MARATHON_KM } from '../lib/paces'
+import { MARATHON_KM, allureVisee } from '../lib/paces'
 import { Segmented } from '../components/Segmented'
 import { EnteteEcran } from '../components/EnteteEcran'
 
@@ -478,7 +478,7 @@ export function Track({
                   {formatChrono(chronoEquivalent(km, forme.allure))}
                 </span>
                 <span className="chiffre" style={{ ...LIGNE_EQ, ...VALEUR_EQ, color: 'var(--bleu-700)' }}>
-                  {formatChrono(chronoEquivalent(km, marathonPace))}
+                  {formatChrono(chronoEquivalent(km, allureVisee(marathonPace)))}
                 </span>
               </Fragment>
             ))}

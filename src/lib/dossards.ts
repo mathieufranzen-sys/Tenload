@@ -25,7 +25,7 @@
 import type { Plan, Session } from '../data/types'
 import { addDays, daysBetween } from './dates'
 import { cleEcart, slotsParJour, type EcartRow } from './overrides'
-import { MARATHON_KM, formatPace, projeterMarathon } from './paces'
+import { MARATHON_KM, formatPace, projeterMarathon, tempsVise } from './paces'
 
 /** Une ligne de la table `dossards`. */
 export interface DossardRow {
@@ -70,7 +70,7 @@ export const estDossard = (s: Session) => s.type === 'course' || s.type === 'rac
  * 20 km de Paris n'en a pas : c'est un bonus, aucun chrono n'a été fixé.
  */
 export function objectifParDefaut(s: Session, allureMarathon: number): number | null {
-  if (s.type === 'race') return Math.round(allureMarathon * MARATHON_KM)
+  if (s.type === 'race') return tempsVise(allureMarathon)
   if (s.dist === 10) return 40 * 60 + 12
   if (s.dist != null && Math.abs(s.dist - 21.1) < 0.1) return 90 * 60
   return null

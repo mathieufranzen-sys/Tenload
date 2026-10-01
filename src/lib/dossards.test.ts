@@ -110,7 +110,8 @@ describe('objectifs par défaut', () => {
     const par = Object.fromEntries(l.map((d) => [d.nom, d.objectifS]))
     expect(par['10 km Hoka de Paris']).toBe(2412)
     expect(par['Semi-marathon test']).toBe(5400)
-    expect(par['Marathon de Paris']).toBe(Math.round(277 * 42.195))
+    // 3 h 15 pile, et non 277 × 42,195 = 3:14:48 : l'objectif se fixe à la minute.
+    expect(par['Marathon de Paris']).toBe(3 * 3600 + 15 * 60)
     expect(par['20 km de Paris']).toBeNull()
   })
 

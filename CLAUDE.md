@@ -214,8 +214,17 @@ de sortie longue avant un dossard et le semi test de janvier n'avaient que le
 seuil ou l'allure marathon, deux allures qui encadrent la bonne sans la dire.
 Elle coûte 1,15 au kilomètre dans l'indice, entre l'allure marathon et le seuil,
 et se lit en Z3 haut côté cardiaque.
-Ces valeurs reproduisent les tables de Jack Daniels pour un VDOT autour de 55,
-qui est le sien.
+Ces écarts suivent les tables de Jack Daniels. **Le VDOT n'est pas 55**, comme
+on l'a longtemps écrit ici : le test de 3 km en 12:02 vaut 47,7, l'objectif
+de 3 h 15 vaut 48,7, et le record du 10 km en 40:12 vaut 51,6 (équations de
+Daniels et Gilbert de `vdot`, vérifiées à la seconde sur ses tables).
+
+**Les chronos équivalents de Suivi dérivent tous de la forme projetée**, donc
+du test du 8 août, que seuls l'effort perçu et les courses chronométrées
+déplacent. Ils paraissent lents à côté du record de 40:12 : c'est le niveau
+mesuré en reprise, pas un calcul faux. Le 20 km de Paris les recalera. La
+colonne « Visé » relit l'objectif à la minute (`tempsVise`) : l'allure
+enregistrée, arrondie à la seconde, donnait 3:14:48 pour 3 h 15.
 
 **`plan.json` porte sa PROPRE table de zones, et elle doit suivre.** L'allure
 semi a vécu six jours dans `ZONE_OFFSETS` sans exister dans `plan.json` : le

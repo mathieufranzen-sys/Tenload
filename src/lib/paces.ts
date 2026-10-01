@@ -137,6 +137,20 @@ export const paceForTarget = (targetSeconds: number): number =>
   Math.round(targetSeconds / MARATHON_KM)
 
 /**
+ * Le temps visé au marathon, retrouvé depuis l'allure enregistrée.
+ *
+ * L'objectif se saisit en temps (3 h 15) mais s'enregistre en allure
+ * arrondie à la seconde (277 s/km), et 277 × 42,195 donne 3:14:48. Les
+ * chronos visés s'affichaient donc douze secondes trop vite au marathon, un
+ * peu moins sur les autres distances (retour de Mathieu, 1er octobre 2026).
+ * Un objectif se fixe à la minute : on arrondit le temps, pas l'allure.
+ */
+export const tempsVise = (allureMarathon: number): number => Math.round((allureMarathon * MARATHON_KM) / 60) * 60
+
+/** L'allure exacte de l'objectif, sans l'arrondi de l'enregistrement. */
+export const allureVisee = (allureMarathon: number): number => tempsVise(allureMarathon) / MARATHON_KM
+
+/**
  * Fréquences cardiaques.
  *
  * Corrigées le 9 août 2026 : Strava calculait les zones sur une FC max implicite
