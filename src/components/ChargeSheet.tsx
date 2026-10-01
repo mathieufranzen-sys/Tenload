@@ -329,7 +329,7 @@ export function ChargeSheet({
                       {t.valeur > 0 ? '+' : t.valeur < 0 ? '−' : ''}
                       {Math.abs(t.valeur)}
                     </span>
-                    <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)' }}> / {t.plafond}</span>
+                    <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)' }}> / {String(t.plafond).replace('-', '−')}</span>
                   </span>
                 </div>
                 <div
