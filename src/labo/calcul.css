@@ -1,0 +1,169 @@
+/* Les sources du calcul. Mêmes jetons que l'app et que le banc. */
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+#calcul {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+.calcul-tete h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-t-ecran);
+  line-height: 1.1;
+}
+.calcul-tete > p {
+  margin: 8px 0 0;
+  max-width: 70ch;
+  color: var(--ink-2);
+  font-size: var(--fs-texte);
+  line-height: 1.5;
+}
+
+.legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-top: 16px;
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+}
+.legende span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bilan {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+.bilan div {
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.bilan b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--fs-c-m);
+  font-variant-numeric: tabular-nums;
+}
+.bilan span {
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+}
+
+.calcul-section {
+  margin-top: 36px;
+}
+.calcul-section h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-t-page);
+}
+.calcul-section .intro {
+  margin: 4px 0 0;
+  color: var(--ink-2);
+  font-size: var(--fs-meta);
+}
+
+.table-defile {
+  margin-top: 12px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  font-size: var(--fs-meta);
+  line-height: 1.45;
+}
+thead th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: var(--surface-2);
+  padding: 10px 14px;
+}
+tbody th,
+tbody td {
+  text-align: left;
+  vertical-align: top;
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+}
+tbody th {
+  width: 18%;
+  font-weight: 600;
+}
+tbody td:nth-child(2),
+tbody td:nth-child(3) {
+  width: 20%;
+}
+tbody td p {
+  margin: 0;
+  color: var(--ink-2);
+}
+tr.change td:nth-child(3) {
+  background: color-mix(in srgb, var(--neon) 35%, transparent);
+  font-weight: 600;
+}
+
+.sous {
+  margin-top: 6px;
+}
+.vide {
+  color: var(--ink-3);
+}
+
+.statut {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--pill);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.statut-ref {
+  background: color-mix(in srgb, var(--good) 18%, transparent);
+  color: var(--good);
+}
+.statut-inspire {
+  background: var(--orange-100);
+  color: var(--orange-900);
+}
+.statut-origine {
+  background: color-mix(in srgb, var(--critical) 16%, transparent);
+  color: var(--critical);
+}
+
+.sources {
+  margin: 8px 0 0;
+  padding-left: 16px;
+}
+.sources li {
+  margin-top: 2px;
+}
+.sources a {
+  color: var(--bleu-600);
+}
+
+@media (max-width: 700px) {
+  #calcul {
+    padding: 20px 16px 60px;
+  }
+  .bilan {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

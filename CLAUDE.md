@@ -1363,6 +1363,19 @@ histoires de tendon, en avançant jour après jour.
   l'en-tête collant d'Aujourd'hui se croyait recouvert dès l'ouverture. Il
   prend désormais `root: document`, ce qui ne change rien dans la PWA.
 
+## Les sources du calcul
+
+`npm run dev`, puis **http://localhost:5173/calcul.html** (`src/labo/calcul.ts`).
+Demandée par Mathieu le 1er octobre 2026 : chaque valeur du calcul de la
+charge, sa source, et un statut, référence, inspiré (la source donne le
+principe, la valeur est un choix) ou d'origine (calibré sur ses données ou
+arbitré). Les zones d'origine ont été confrontées à la littérature, et la
+page met la valeur actuelle à côté de la valeur proposée. **La colonne
+« Actuel » lit les coûts dans `tendonIndex.ts`** ; les propositions ne sont
+pas appliquées tant que Mathieu ne les a pas arbitrées. Comme le labo, la page
+n'entre pas dans le build. Toute valeur changée dans le modèle doit y changer
+de statut.
+
 ## Le garde-fou contre la page blanche
 
 `src/components/GardeEcran.tsx`, autour de chaque écran et de la feuille de
