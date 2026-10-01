@@ -271,12 +271,17 @@ select
     case
       when sport = 'Run' then
         (distance_m / 1000.0) * case
-          when name ~* 'fractionn|x800|x400|x200|test' then 0.45 * 2.1 + 0.55 * 1.0
-          when name ~* 'seuil|tempo'                   then 0.45 * 1.6 + 0.55 * 1.0
-          when distance_m >= 18000                     then 1.15
+          when name ~* 'fractionn|x800|x400|x200|test' then 0.45 * 1.35 + 0.55 * 1.0
+          when name ~* 'seuil|tempo'                   then 0.45 * 1.2 + 0.55 * 1.0
           else 1.0
         end
-      when sport = 'Ride'   then (moving_s / 60.0) * 0.10
+        -- La fin des longues : 0,15 de plus par kilomètre au-delà de 20.
+        + case
+          when name ~* 'fractionn|x800|x400|x200|test|seuil|tempo' then 0
+          else greatest(0, distance_m / 1000.0 - 20) * 0.15
+        end
+      when sport = 'Ride'   then (moving_s / 60.0)
+                                 * case when name ~* '\mz3\M|seuil|tempo|fractionn|interval' then 0.10 else 0.05 end
       when sport = 'Weight' then (moving_s / 60.0)
                                  * case when name ~* 'jambe|bas|bulgare|trx' then 0.08 else 0.0 end
       when sport = 'Hike'   then (moving_s / 60.0) * 0.05

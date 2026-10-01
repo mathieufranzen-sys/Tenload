@@ -606,7 +606,6 @@ export function Today({
             // Les crédits lisent la VEILLE du jour affiché : l'excentrique
             // d'hier protège aujourd'hui, et une journée sans charge aussi.
             excentrique: Boolean(pain[addDays(jour, -1)]?.eccentric),
-            sauts: Boolean(pain[addDays(jour, -1)]?.jumps),
             hydratation: Boolean(pain[addDays(jour, -1)]?.hydrated),
             repos: (load[addDays(jour, -1)] ?? 0) < 2,
             chargeVeille: load[addDays(jour, -1)] ?? 0,

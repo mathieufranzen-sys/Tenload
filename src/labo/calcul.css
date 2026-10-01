@@ -173,3 +173,51 @@ tr.change td:nth-child(3) {
   color: var(--ink-3);
   white-space: nowrap;
 }
+
+.calcul-section h3 {
+  margin: 22px 0 0;
+  font-size: var(--fs-body);
+  font-weight: 700;
+}
+.bilan-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 520px;
+}
+.code {
+  display: inline-block;
+  min-width: 28px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.verdict {
+  display: inline-block;
+  margin-bottom: 4px;
+  padding: 2px 8px;
+  border-radius: var(--pill);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+}
+.verdict-ok {
+  background: color-mix(in srgb, var(--good) 18%, transparent);
+  color: var(--good);
+}
+.verdict-non {
+  background: color-mix(in srgb, var(--critical) 16%, transparent);
+  color: var(--critical);
+}
+.table-batterie tbody th {
+  width: 22%;
+}
+.table-batterie tbody td:nth-child(2),
+.table-batterie tbody td:nth-child(3) {
+  width: auto;
+}
+tr.gagne td:last-child {
+  background: color-mix(in srgb, var(--neon) 35%, transparent);
+}
+tr.perd td:last-child {
+  background: color-mix(in srgb, var(--critical) 10%, transparent);
+}
+code {
+  font-size: 0.95em;
+}

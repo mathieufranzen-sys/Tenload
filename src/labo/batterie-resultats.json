@@ -1,0 +1,174 @@
+{
+  "avant": {
+    "1.1": {
+      "valeur": "65, Rouge, charge 0 %",
+      "ok": true
+    },
+    "1.2": {
+      "valeur": "noir : course au 3e matin calme, intensité au 14e",
+      "ok": true
+    },
+    "1.3": {
+      "valeur": "50, Orange, compteur 0",
+      "ok": true
+    },
+    "1.4": {
+      "valeur": "Je ne sais pas, course suspendue",
+      "ok": true
+    },
+    "2.1": {
+      "valeur": "vert en 0 j, maximum 29 ensuite",
+      "ok": false
+    },
+    "2.2": {
+      "valeur": "max 29, yoyo 18, 1 séance(s) changée(s)",
+      "ok": false
+    },
+    "2.3": {
+      "valeur": "maximum 30",
+      "ok": true
+    },
+    "2.4": {
+      "valeur": "maximum 31, emballement 27",
+      "ok": true
+    },
+    "3.1": {
+      "valeur": "max 21, yoyo 20, 0 séance(s) changée(s)",
+      "ok": false
+    },
+    "3.2": {
+      "valeur": "+6 points (20 contre 14)",
+      "ok": true
+    },
+    "3.3": {
+      "valeur": "1,00 par km contre 1,00",
+      "ok": false
+    },
+    "3.4": {
+      "valeur": "Z3 22 contre Z2 22",
+      "ok": false
+    },
+    "3.5": {
+      "valeur": "maximum 22",
+      "ok": false
+    },
+    "3.6": {
+      "valeur": "-1,6 point par jour",
+      "ok": false
+    },
+    "3.7": {
+      "valeur": "50 → 50 → 33 → 13, qualité du jeudi en pause",
+      "ok": true
+    },
+    "4.1": {
+      "valeur": "53, Orange, charge 22 %",
+      "ok": true
+    },
+    "4.2": {
+      "valeur": "crise : course au 2e matin, intensité au 7e",
+      "ok": true
+    },
+    "4.3": {
+      "valeur": "0 jour(s) sans course sur 14",
+      "ok": true
+    },
+    "4.4": {
+      "valeur": "0 jour(s) orange, maximum 27",
+      "ok": true
+    },
+    "R.1": {
+      "valeur": "53, Orange, au-dessus de 90 % des jours",
+      "ok": true
+    },
+    "R.2": {
+      "valeur": "médiane 33, 2 jour(s) douloureux sur 2 en orange",
+      "ok": true
+    }
+  },
+  "apres": {
+    "1.1": {
+      "valeur": "65, Rouge, charge 0 %",
+      "ok": true
+    },
+    "1.2": {
+      "valeur": "noir : course au 3e matin calme, intensité au 14e",
+      "ok": true
+    },
+    "1.3": {
+      "valeur": "50, Orange, compteur 0",
+      "ok": true
+    },
+    "1.4": {
+      "valeur": "Je ne sais pas, course suspendue",
+      "ok": true
+    },
+    "2.1": {
+      "valeur": "vert en 0 j, maximum 19 ensuite",
+      "ok": true
+    },
+    "2.2": {
+      "valeur": "max 19, yoyo 19, 1 séance(s) changée(s)",
+      "ok": false
+    },
+    "2.3": {
+      "valeur": "maximum 12",
+      "ok": true
+    },
+    "2.4": {
+      "valeur": "maximum 24, emballement 20",
+      "ok": false
+    },
+    "3.1": {
+      "valeur": "max 3, yoyo 3, 0 séance(s) changée(s)",
+      "ok": true
+    },
+    "3.2": {
+      "valeur": "+1 points (1 contre 0)",
+      "ok": false
+    },
+    "3.3": {
+      "valeur": "1,03 par km contre 1,00",
+      "ok": true
+    },
+    "3.4": {
+      "valeur": "Z3 0 contre Z2 0",
+      "ok": false
+    },
+    "3.5": {
+      "valeur": "maximum 11",
+      "ok": false
+    },
+    "3.6": {
+      "valeur": "0,0 point par jour",
+      "ok": true
+    },
+    "3.7": {
+      "valeur": "50 → 50 → 17 → 0, qualité du jeudi en pause",
+      "ok": true
+    },
+    "4.1": {
+      "valeur": "50, Orange, charge 0 %",
+      "ok": true
+    },
+    "4.2": {
+      "valeur": "crise : course au 2e matin, intensité au 7e",
+      "ok": true
+    },
+    "4.3": {
+      "valeur": "0 jour(s) sans course sur 14",
+      "ok": true
+    },
+    "4.4": {
+      "valeur": "0 jour(s) orange, maximum 13",
+      "ok": true
+    },
+    "R.1": {
+      "valeur": "29, Vert, au-dessus de 76 % des jours",
+      "ok": false
+    },
+    "R.2": {
+      "valeur": "médiane 13, 2 jour(s) douloureux sur 2 en orange",
+      "ok": true
+    }
+  }
+}

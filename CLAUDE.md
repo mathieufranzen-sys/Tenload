@@ -212,7 +212,7 @@ endurance +50, allure marathon 0, **allure semi −13**, seuil −20, intervalle
 **L'allure semi a été ajoutée le 18 septembre 2026.** Elle manquait : les fins
 de sortie longue avant un dossard et le semi test de janvier n'avaient que le
 seuil ou l'allure marathon, deux allures qui encadrent la bonne sans la dire.
-Elle coûte 1,45 au kilomètre dans l'indice, entre l'allure marathon et le seuil,
+Elle coûte 1,15 au kilomètre dans l'indice, entre l'allure marathon et le seuil,
 et se lit en Z3 haut côté cardiaque.
 Ces valeurs reproduisent les tables de Jack Daniels pour un VDOT autour de 55,
 qui est le sien.
@@ -324,11 +324,22 @@ Six termes s'additionnent, moins ce qui protège :
 | Terme | Plafond | Ce qu'il mesure |
 |---|---|---|
 | Douleur déclarée | 85 | Réveil 45 %, fin de journée 35 %, effort 20 %. Mélange du pondéré (55 %) et du maximum sur 72 h (45 %). |
-| Emballement de la charge | 30 | Rapport charge aiguë (demi-vie 3,5 j) sur charge chronique (14 j). |
-| Fraîcheur immédiate | 20 | Charge de la veille et de l'avant-veille, rapportée au niveau habituel. |
-| Tendance | 6 | Pente de la raideur matinale sur quatre jours. Seule une hausse compte. |
-| Monotonie | 8 | Écart-type de la charge sur sept jours (Foster). Une semaine sans jour léger use le tendon. |
-| Gestes protecteurs | −15 | Excentrique la veille −6, vraie journée de repos −5, sauts −2, hydratation ≥ 2 L −2. Le glaçage est saisi mais ne pèse plus : pas d'effet démontré sur la charge mécanique du tendon. |
+| Emballement de la charge | 30 | Rapport charge aiguë (demi-vie 3,5 j) sur charge chronique (14 j). Ne compte qu'au-dessus de 1,3 (Gabbett), plein à 1,8. |
+| Fraîcheur immédiate | 20 | Charge de la veille et de l'avant-veille, au-delà d'une journée régulière (1,55 fois l'habituelle). |
+| Tendance | 6 | Raideur au réveil de la semaine contre la semaine d'avant (Silbernagel), pleine à +1. Seule une hausse compte. |
+| Monotonie | 8 | Moyenne sur écart-type de la charge sur sept jours, au-dessus de 2 (Foster), pleine à 2,5. |
+| Gestes protecteurs | −13 | Excentrique la veille −6, vraie journée de repos −5, hydratation ≥ 2 L −2. Le glaçage et les sauts sont saisis mais ne pèsent plus : aucun effet démontré pour le premier, une charge pour les seconds. |
+
+**Recalé le 1er octobre 2026 sur les sources** (page `/calcul.html`, à lire
+avant tout changement du calcul). Sans douleur, une semaine du plan faisait
+des allers-retours de 7 à 28 : la fraîcheur se remplissait le lendemain de
+chaque séance ordinaire, et l'emballement comptait dès 0,9, donc tous les
+jours d'un plan qui progresse. Les deux ne comptent plus que ce qui sort de
+l'habitude. Les coûts au kilomètre ont été aplatis (au kilomètre, la charge
+cumulée du tendon baisse quand on accélère), la fin des longues coûte plus
+au-delà de 20 km, le vélo facile coûte moitié moins que le Z3. Une batterie
+de 21 scénarios (`batterie.ts`) compare les deux versions : 14 attentes
+tenues avant, 15 après.
 
 ### Quatre décisions à ne pas défaire
 
@@ -336,9 +347,11 @@ Six termes s'additionnent, moins ce qui protège :
    2/10 ne doit pas alarmer, un vrai 6 doit tout arrêter. Une réponse linéaire
    déclenchait de fausses alertes sur son quotidien normal (moyenne réelle : 0,8
    au réveil, 1,3 en fin de journée).
-2. **Le vélo n'est pas neutre** : 0,10 point par minute. Les deux seuls pics de
-   douleur du soir du carnet suivent tous les deux une séance de home trainer en
-   Z3, pas une course. La flexion plantaire soutenue compte.
+2. **Le vélo n'est pas neutre** : 0,05 point par minute en Z2, 0,10 en Z3
+   (`estVeloAppuye`, au titre de la séance ou au nom de l'activité). Les deux
+   seuls pics de douleur du soir du carnet suivent tous les deux une séance de
+   home trainer en Z3, pas une course. La flexion plantaire soutenue compte, et
+   la force sur le tendon monte avec la puissance (Dick et al. 2016).
 3. **Le renfo bas pèse 0,08 point par minute**, soit 3,6 pour 45 minutes
    (1er octobre 2026). Il valait 0,25, autant que 11 km d'endurance, et
    faisait à lui seul l'essentiel de la fraîcheur du jeudi. C'est le
@@ -401,7 +414,8 @@ apparaissait dénaturé.
 ### Calibration
 
 Calibré sur 45 jours réels (83 activités Strava croisées avec 16 jours de
-carnet) : **médiane 23, maximum 59 le 3 août** — la veille du jour où le carnet
+carnet) : **médiane 23, maximum 59 le 3 août** avec le calcul d'origine ;
+**médiane 13, 29 le 3 août** depuis le recalage du 1er octobre 2026 — la veille du jour où le carnet
 note « entorse cheville gauche après 600 m ». Le modèle ne prédit pas les
 entorses, mais il avait vu que la journée arrivait sur un tendon chargé.
 
@@ -1232,7 +1246,7 @@ parce qu'ils nommaient l'onglet Allures.
   tant que rien ne cloche, rien ne s'allume. L'ambre du haut ne sort qu'au
   delà de 1,3, le gris du bas dit la décharge (palette choisie par Mathieu le
   23 septembre 2026). Au-dessus de 1,3, c'est une **vigilance, pas une
-  alerte** : le terme vaut 17 points sur 100 à 1,3 et plafonne à 30 vers 1,6,
+  alerte** : le terme part de zéro à 1,3 et plafonne à 30 à 1,8,
   il ne peut donc jamais retirer une séance à lui seul — seules les bandes et
   les planchers de douleur le peuvent.
 - Suivi porte quatre chiffres, le quatrième étant le **seuil cumulé de la
@@ -1375,6 +1389,20 @@ page met la valeur actuelle à côté de la valeur proposée. **La colonne
 pas appliquées tant que Mathieu ne les a pas arbitrées. Comme le labo, la page
 n'entre pas dans le build. Toute valeur changée dans le modèle doit y changer
 de statut.
+
+**La batterie de scénarios** (`batterie.ts`, 21 scénarios) passe sur les
+quatre cobayes et sur les données de l'été, par le vrai moteur : le coureur
+simulé fait ce que l'app lui prescrit, matin après matin. Chaque scénario a
+une hypothèse, une attente chiffrée et un résultat. `npx vite-node
+src/labo/batterie-cli.ts <version>` fige les résultats d'une version du calcul
+dans `batterie-resultats.json`, que la page affiche colonne par colonne.
+**Tout changement du calcul repasse la batterie sous un nouveau nom de
+version**, pour voir ce qu'il gagne et ce qu'il perd.
+
+**Question ouverte au 1er octobre 2026 : la douleur sous 4.** Sans le bruit
+de la charge, une raideur de 3,5 tous les matins ne fait plus que 25 points :
+le cobaye 2 est passé du jaune au vert, et une douleur constante à 3 ne
+dépasse plus 38. Le jaune venait de la charge, pas de la douleur.
 
 ## Le garde-fou contre la page blanche
 

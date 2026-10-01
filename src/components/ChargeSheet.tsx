@@ -66,7 +66,6 @@ export function ChargeSheet({
   soins?: {
     excentrique: boolean
     repos: boolean
-    sauts: boolean
     hydratation: boolean
     /** La charge d'hier : sous 2, la journée compte comme un vrai repos. */
     chargeVeille: number
@@ -106,25 +105,25 @@ export function ChargeSheet({
       label: 'Fraîcheur immédiate',
       valeur: b.freshness,
       plafond: 20,
-      detail: 'Ce que tu as encaissé hier et avant-hier',
+      detail: 'Hier et avant-hier, au-delà d’une journée ordinaire',
     },
     {
       label: 'Tendance',
       valeur: b.trend,
       plafond: 6,
-      detail: 'Pente de la raideur matinale sur quatre jours',
+      detail: 'Raideur au réveil, cette semaine contre la précédente',
     },
     {
       label: 'Monotonie',
       valeur: b.monotony,
       plafond: 8,
-      detail: 'Une semaine sans jour léger use le tendon',
+      detail: 'Une semaine où chaque jour se ressemble',
     },
     {
       label: 'Gestes protecteurs',
       valeur: -b.credits,
-      plafond: -15,
-      detail: 'Excentrique −6, repos −5, sauts −2, hydratation −2',
+      plafond: -13,
+      detail: 'Excentrique −6, repos −5, hydratation −2',
       // Un geste et ses points tiennent sur la même ligne, les points alignés
       // à droite (retour du 24 septembre) : en phrase courante, un geste et
       // son chiffre se retrouvaient de part et d'autre d'un retour à la ligne.
@@ -132,7 +131,6 @@ export function ChargeSheet({
         ? [
             { label: 'Excentrique la veille', points: soins.excentrique ? '−6' : '0' },
             { label: 'Journée de repos', points: soins.repos ? '−5' : '0' },
-            { label: 'Sauts', points: soins.sauts ? '−2' : '0' },
             { label: 'Hydratation 2 L', points: soins.hydratation ? '−2' : '0' },
             // C'est elle qui décide du −5 : sous 2, la journée d'hier compte
             // comme un vrai repos.

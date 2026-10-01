@@ -17,7 +17,13 @@ import type { JeuLabo } from './scenarios'
 
 const plan = planJson as unknown as Plan
 
-export function calculer(jeu: JeuLabo, now: string): AdaptResult {
+/**
+ * Les entrées du calcul, telles que l'app les construit : douleur, écarts,
+ * contexte du plan, charge et jours attestés. Exposées pour la batterie de
+ * scénarios (`batterie.ts`), qui doit pouvoir modifier une charge ou une
+ * douleur et relancer l'indice sans repasser par toute la chaîne.
+ */
+export function entrees(jeu: JeuLabo, now: string) {
   const pain = buildPain({ logs: jeu.logs, feedback: jeu.feedback, bascule: '1970-01-01' })
   const completed = new Set(jeu.feedback.map((f) => `${f.week}-${f.day_index}-${f.slot}`))
   const ecarts = indexerEcarts(jeu.ecarts)
@@ -32,5 +38,10 @@ export function calculer(jeu: JeuLabo, now: string): AdaptResult {
     projection: (s: Parameters<typeof formeProjetee>[0], prevue: Parameters<typeof formeProjetee>[1], cle: string, day: string) =>
       formeProjetee(s, prevue, cle, day, now, contexte),
   }
-  return adapt(buildLoad(entree), pain, jeu.feedback, now, joursAttestes(entree))
+  return { pain, ecarts, contexte, load: buildLoad(entree), attestes: joursAttestes(entree) }
+}
+
+export function calculer(jeu: JeuLabo, now: string): AdaptResult {
+  const { pain, load, attestes } = entrees(jeu, now)
+  return adapt(load, pain, jeu.feedback, now, attestes)
 }

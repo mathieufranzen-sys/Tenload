@@ -12,28 +12,28 @@ const TERMES: Array<{ nom: string; poids: string; texte: string }> = [
     nom: 'Emballement de la charge',
     poids: "jusqu'à 30 points",
     texte:
-      'Le rapport entre ta charge des derniers jours et ta charge de fond. Au-delà de 1,3, le tendon encaisse plus que son habitude.',
+      'Le rapport entre ta charge des derniers jours et ta charge de fond. Il ne compte qu’au-delà de 1,3 : en dessous, c’est la zone où le risque de blessure est le plus bas.',
   },
   {
     nom: 'Fraîcheur immédiate',
     poids: "jusqu'à 20 points",
-    texte: "Ce que tu as encaissé hier et avant-hier, rapporté à ton niveau habituel. Le collagène du tendon est en perte nette 24 à 36 heures après une charge, puis il se reconstruit.",
+    texte: "Ce que tu as encaissé hier et avant-hier, au-delà d’une journée ordinaire. Le collagène du tendon est en perte nette 24 à 36 heures après une charge, puis il se reconstruit : une séance prévue ne compte pas, une journée hors norme oui.",
   },
   {
     nom: 'Tendance',
     poids: "jusqu'à 6 points",
-    texte: 'La pente de ta raideur matinale sur quatre jours. Seule une hausse compte.',
+    texte: 'Ta raideur au réveil de la semaine, comparée à la semaine d’avant. Seule une hausse compte.',
   },
   {
     nom: 'Monotonie',
     poids: "jusqu'à 8 points",
-    texte: 'Une semaine sans aucun jour vraiment léger use le tendon, même à volume constant.',
+    texte: 'Une semaine où chaque jour ressemble au précédent use le tendon, même à volume constant. Ton dimanche de repos suffit à l’éviter.',
   },
   {
     nom: 'Gestes protecteurs',
-    poids: 'jusqu’à −15 points',
+    poids: 'jusqu’à −13 points',
     texte:
-      'Le protocole excentrique de la veille vaut −6, une vraie journée de repos −5, les sauts −2, boire au moins 2 litres −2. Faire ta muscu fait baisser ton indice : c’est le traitement, pas une agression. Le glaçage est saisi mais ne pèse plus : pas d’effet démontré sur la charge mécanique.',
+      'Le protocole excentrique de la veille vaut −6, une vraie journée de repos −5, boire au moins 2 litres −2. Les sauts sont saisis mais ne comptent plus : ils chargent le tendon plus que la course. Faire ta muscu fait baisser ton indice : c’est le traitement, pas une agression. Le glaçage est saisi mais ne pèse plus : pas d’effet démontré sur la charge mécanique.',
   },
 ]
 

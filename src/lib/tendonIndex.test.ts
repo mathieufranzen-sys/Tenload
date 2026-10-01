@@ -96,21 +96,25 @@ describe('painScore', () => {
 })
 
 describe('painTrend', () => {
-  it('ne retient que les hausses', () => {
-    const up: PainMap = {
-      '2026-08-10': { wake: 1 },
-      '2026-08-11': { wake: 2 },
-      '2026-08-12': { wake: 3 },
-      '2026-08-13': { wake: 4 },
-    }
-    expect(painTrend('2026-08-13', up)).toBeCloseTo(1, 5)
-    const down: PainMap = {
-      '2026-08-10': { wake: 4 },
-      '2026-08-11': { wake: 3 },
-      '2026-08-12': { wake: 2 },
-      '2026-08-13': { wake: 1 },
-    }
-    expect(painTrend('2026-08-13', down)).toBe(0)
+  /** Une semaine de réveils à `avant`, puis une semaine à `apres`, jusqu'au 13 août. */
+  const deuxSemaines = (avant: number, apres: number): PainMap => {
+    const out: PainMap = {}
+    for (let k = 0; k < 14; k++) out[shiftDay('2026-08-13', -k)] = { wake: k < 7 ? apres : avant }
+    return out
+  }
+
+  it('compare la semaine à la précédente, et ne retient que les hausses', () => {
+    expect(painTrend('2026-08-13', deuxSemaines(1, 2))).toBeCloseTo(1, 5)
+    expect(painTrend('2026-08-13', deuxSemaines(2, 1))).toBe(0)
+  })
+
+  it('deux matins un peu raides ne font pas une tendance', () => {
+    // L'ancienne pente sur quatre jours prenait 1, 2, 3, 4 pour le maximum du
+    // terme. Sur la semaine, ce n'est qu'un point de plus.
+    const pain = deuxSemaines(1, 1)
+    pain['2026-08-12'] = { wake: 3 }
+    pain['2026-08-13'] = { wake: 4 }
+    expect(painTrend('2026-08-13', pain)).toBeCloseTo(5 / 7, 5)
   })
 })
 
@@ -137,8 +141,14 @@ describe('une douleur de fond ne doit pas déclencher de fausse alerte', () => {
     }
   })
 
-  it('commence à basculer à 3/10 constant', () => {
-    expect(Math.max(...series(WEEK1, flat(3)))).toBeGreaterThanOrEqual(50)
+  it('3/10 constant reste sous l’orange : seul le plancher de 4 retire la qualité', () => {
+    // Avant le 1er octobre 2026, ce 3/10 passait à 53 le premier jour, mais
+    // par la charge (emballement et fraîcheur), pas par la douleur. La charge
+    // ne compte plus que ce qui sort de l'habitude : la douleur seule, sous le
+    // plancher, ne retire rien. Signalé à Mathieu, en attente d'arbitrage.
+    const s = series(WEEK1, flat(3))
+    expect(Math.max(...s)).toBeLessThan(50)
+    expect(Math.max(...s)).toBeGreaterThanOrEqual(30)
   })
 })
 
@@ -487,9 +497,11 @@ describe('monotonie', () => {
     expect(tendonIndex('2026-09-01', load, {}).monotony).toBe(0)
   })
 
-  it('la même semaine sans son jour de repos déclenche le terme', () => {
+  it('une semaine aux journées semblables, sans jour léger, déclenche le terme', () => {
+    // Foster place le problème au-dessus de 2 : enlever le repos du dimanche
+    // ne suffit plus (1,45), il faut des journées qui se ressemblent.
     const load: LoadMap = {}
-    const semaine = [27.6, 7, 2.4, 14.5, 4, 12.7, 12] // le dimanche n'est plus vide
+    const semaine = [12, 10, 11, 12, 10, 11, 12]
     for (let k = 0; k < 30; k++) {
       const d = shiftDay('2026-09-01', -k)
       load[d] = semaine[(new Date(`${d}T12:00:00Z`).getUTCDay() + 6) % 7]
@@ -499,25 +511,23 @@ describe('monotonie', () => {
 })
 
 describe('la tendance compte en jours, pas en relevés', () => {
-  it('un trou dans le carnet n’accélère pas la pente', () => {
-    // 2 le lundi puis 4 le jeudi, c'est 0,67 point par jour. Tassées comme si
-    // elles étaient consécutives, les trois mesures donnaient 1 point par jour.
-    const troue: PainMap = {
-      '2026-08-10': { wake: 2 },
-      '2026-08-11': { wake: 3 },
-      '2026-08-13': { wake: 4 },
-    }
-    expect(painTrend('2026-08-13', troue)).toBeCloseTo(0.643, 3)
+  it('un trou dans le carnet ne change pas la moyenne de la semaine', () => {
+    const pain: PainMap = {}
+    for (let k = 0; k < 14; k++) pain[shiftDay('2026-08-13', -k)] = { wake: k < 7 ? 2 : 1 }
+    delete pain['2026-08-11']
+    delete pain['2026-08-09']
+    expect(painTrend('2026-08-13', pain)).toBeCloseTo(1, 5)
   })
 
-  it('quatre jours consécutifs sont inchangés', () => {
-    const plein: PainMap = {
-      '2026-08-10': { wake: 1 },
-      '2026-08-11': { wake: 2 },
-      '2026-08-12': { wake: 3 },
+  it('moins de trois relevés d’un côté : pas de tendance', () => {
+    const pain: PainMap = {
       '2026-08-13': { wake: 4 },
+      '2026-08-12': { wake: 4 },
+      '2026-08-05': { wake: 1 },
+      '2026-08-04': { wake: 1 },
+      '2026-08-03': { wake: 1 },
     }
-    expect(painTrend('2026-08-13', plein)).toBeCloseTo(1, 5)
+    expect(painTrend('2026-08-13', pain)).toBe(0)
   })
 })
 

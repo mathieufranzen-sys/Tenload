@@ -4,17 +4,30 @@
  * Demandé par Mathieu le 1er octobre 2026 : chaque valeur du calcul, d'où
  * elle vient, et ce qui n'a pas de source. Les zones rouges ont été
  * confrontées à la littérature ; quand une source a été trouvée, la page
- * montre la valeur actuelle et la valeur proposée côte à côte.
+ * montre la valeur d'avant et la nouvelle côte à côte.
  *
- * Les coûts actuels sont lus dans `tendonIndex.ts` : la colonne « Actuel »
- * ne peut pas mentir sur le modèle. Les propositions ne sont PAS appliquées,
- * c'est à Mathieu de les arbitrer une par une.
+ * Les valeurs sont appliquées depuis le 1er octobre 2026, sauf celles
+ * marquées `nonApplique` (sommeil, alcool). La colonne « Depuis » lit ses
+ * coûts dans `tendonIndex.ts` : elle ne peut pas mentir sur le modèle.
+ *
+ * En bas, la batterie de scénarios (`batterie.ts`) et ses résultats figés
+ * pour chaque version du calcul (`batterie-resultats.json`).
  *
  * Pas de React ici : une page d'outil, comme le banc.
  */
 import '../styles/global.css'
 import './calcul.css'
-import { KM_COST, MIN_COST } from '../lib/tendonIndex'
+import {
+  EMBALLEMENT_DEPART,
+  JOURNEE_REGULIERE,
+  KM_COST,
+  LONGUE_SEUIL_KM,
+  MIN_COST,
+  SURCOUT_FIN_DE_LONGUE,
+  VELO_Z3,
+} from '../lib/tendonIndex'
+import { SCENARIOS, type Resultat } from './batterie'
+import resultats from './batterie-resultats.json'
 import { formatNumber } from '../lib/dates'
 
 type Statut = 'ref' | 'inspire' | 'origine'
@@ -31,6 +44,8 @@ interface Ligne {
   /** Absent : la recherche n'a rien trouvé qui change la valeur. */
   propose?: string
   statutPropose?: Statut
+  /** Proposé mais pas appliqué au calcul : en attente d'une décision. */
+  nonApplique?: boolean
   pourquoi: string
   sources?: Source[]
 }
@@ -155,9 +170,9 @@ const SECTIONS: Section[] = [
     lignes: [
       {
         element: 'Course, coût au kilomètre selon l’allure',
-        actuel: `Récup ${n(KM_COST.recup)} · EF ${n(KM_COST.ef)} · AM ${n(KM_COST.am)} · semi ${n(KM_COST.semi)} · seuil ${n(KM_COST.seuil)} · VO2 ${n(KM_COST.vo2)}`,
+        actuel: 'Récup 0,9 · EF 1 · AM 1,35 · semi 1,45 · seuil 1,6 · VO2 2,1',
         statut: 'origine',
-        propose: 'Récup 0,95 · EF 1 · AM 1,1 · semi 1,15 · seuil 1,2 · VO2 1,35',
+        propose: `Récup ${n(KM_COST.recup)} · EF ${n(KM_COST.ef)} · AM ${n(KM_COST.am)} · semi ${n(KM_COST.semi)} · seuil ${n(KM_COST.seuil)} · VO2 ${n(KM_COST.vo2)}`,
         statutPropose: 'inspire',
         pourquoi:
           'Au kilomètre, la charge cumulée du tendon baisse quand on accélère : moins d’appuis, chacun plus fort. Le dommage cumulé, qui pondère les appuis forts, reste stable ou monte peu, et la hausse n’est pas significative pour le tendon d’Achille chez Van Hooren. Un fractionné ne vaut donc pas deux fois l’endurance. Le sens et l’ordre de grandeur viennent des sources, les valeurs exactes restent une estimation.',
@@ -165,9 +180,9 @@ const SECTIONS: Section[] = [
       },
       {
         element: 'Sortie longue',
-        actuel: `${n(KM_COST.long)} par km, dès le premier`,
+        actuel: '1,15 par km, dès le premier',
         statut: 'origine',
-        propose: '1 jusqu’à 20 km, 1,15 par km au-delà',
+        propose: `${n(KM_COST.long)} jusqu’à ${LONGUE_SEUIL_KM} km, ${n(KM_COST.long + SURCOUT_FIN_DE_LONGUE)} par km au-delà`,
         statutPropose: 'inspire',
         pourquoi:
           'La force sur le tendon baisse sur les dix premiers kilomètres et remonte après 20 km, quand la fatigue s’installe. Sur 30 minutes, elle baisse même chez des coureurs en reprise de tendinopathie. Le surcoût ne vaut donc que pour la fin des longues.',
@@ -185,9 +200,9 @@ const SECTIONS: Section[] = [
       },
       {
         element: 'Vélo',
-        actuel: `${n(MIN_COST.velo)} par minute`,
+        actuel: '0,10 par minute',
         statut: 'origine',
-        propose: '0,05 par minute en Z2, 0,10 en Z3',
+        propose: `${n(MIN_COST.velo)} par minute en Z2, ${n(VELO_Z3)} en Z3`,
         statutPropose: 'inspire',
         pourquoi:
           'Sur ergocycle, le tendon porte environ 1,1 fois le poids du corps en moyenne, et la force monte avec la puissance : +64 % entre 115 et 370 W. C’est quatre à six fois moins que la course au pic. Ton carnet reste la seule mesure qui donne un coût au vélo : tes deux pics du soir suivaient du Z3. D’où un vélo facile moins cher et un Z3 inchangé. Touche une décision à ne pas défaire : le vélo reste non neutre.',
@@ -195,7 +210,7 @@ const SECTIONS: Section[] = [
       },
       {
         element: 'Renfo bas',
-        actuel: `${n(MIN_COST['muscu-bas'])} par minute`,
+        actuel: '0,08 par minute',
         statut: 'origine',
         propose: '0,08 par minute, inchangé',
         statutPropose: 'inspire',
@@ -247,7 +262,7 @@ const SECTIONS: Section[] = [
         element: 'Emballement (30 points)',
         actuel: 'Compte dès un rapport aigu/chronique de 0,9, plein à 1,6',
         statut: 'inspire',
-        propose: 'Compte dès 1,3, plein à 1,8',
+        propose: `Compte dès ${n(EMBALLEMENT_DEPART)}, plein à ${n(EMBALLEMENT_DEPART + 0.5)}`,
         statutPropose: 'inspire',
         pourquoi:
           'Gabbett place le risque le plus bas entre 0,8 et 1,3 : y donner des points contredit la source. Chez 435 coureurs loisirs, un rapport élevé ne prédisait pas plus de blessures. Impellizzeri conteste sa valeur prédictive. Le seuil de 1,3 vient des sources, le plein à 1,8 est un choix.',
@@ -257,7 +272,7 @@ const SECTIONS: Section[] = [
         element: 'Fraîcheur (20 points)',
         actuel: 'Veille + 0,55 × avant-veille, plein à 2,6 fois la charge habituelle',
         statut: 'origine',
-        propose: 'Ne compte que l’excès au-delà de 1,55 fois la charge habituelle',
+        propose: `Ne compte que l’excès au-delà de ${n(JOURNEE_REGULIERE)} fois la charge habituelle`,
         statutPropose: 'inspire',
         pourquoi:
           'La fenêtre de 48 h suit le collagène, en perte nette 24 à 36 h après une charge. Le 2,6 a été calibré sur ton été Strava, à presque deux activités par jour : avec quatre courses par semaine, une séance ordinaire remplissait le terme. Aucune source ne chiffre l’échelle ; 1,55 est la valeur d’une journée régulière, veille plus 55 % de l’avant-veille.',
@@ -431,7 +446,7 @@ const SECTIONS: Section[] = [
   },
   {
     titre: 'Facteurs de vie, pas encore saisis',
-    intro: 'Proposés par Mathieu le 1er octobre 2026. Ni l’un ni l’autre n’entre aujourd’hui dans le calcul.',
+    intro: 'Proposés par Mathieu le 1er octobre 2026. Ni l’un ni l’autre n’entre dans le calcul : la saisie attend une décision.',
     lignes: [
       {
         element: 'Alcool',
@@ -439,6 +454,7 @@ const SECTIONS: Section[] = [
         statut: 'origine',
         propose: 'Saisi dans le carnet, lu par les patterns, hors de l’indice',
         statutPropose: 'inspire',
+        nonApplique: true,
         pourquoi:
           'Une consommation modérée fait partie des neuf facteurs de risque de la tendinopathie d’Achille, avec un niveau de preuve limité. Trop faible pour chiffrer des points, assez pour chercher le lien dans TON carnet.',
         sources: [S.vanDerVlist2019],
@@ -449,6 +465,7 @@ const SECTIONS: Section[] = [
         statut: 'origine',
         propose: 'Saisi dans le carnet, lu par les patterns, hors de l’indice',
         statutPropose: 'inspire',
+        nonApplique: true,
         pourquoi:
           'Moins de 8 h de sommeil : 1,7 fois plus de blessures chez des adolescents. Chez l’adulte, la revue de douze cohortes trouve un lien limité. Rien de propre au tendon d’Achille.',
         sources: [S.milewski, S.dobrosielski],
@@ -517,6 +534,9 @@ const lien = (s: Source) =>
     ? `<a href="${echapper(s.url)}" target="_blank" rel="noreferrer">${echapper(s.nom)}</a>`
     : echapper(s.nom)) + (ancienne(s) ? ' <span class="ancienne">avant 2010</span>' : '')
 
+const applique = (l: Ligne) => l.propose != null && !l.nonApplique && !l.propose.endsWith('inchangé') && l.propose !== l.actuel
+const statutDepuis = (l: Ligne) => (l.nonApplique ? l.statut : (l.statutPropose ?? l.statut))
+
 function compter(statut: (l: Ligne) => Statut): Record<Statut, number> {
   const c: Record<Statut, number> = { ref: 0, inspire: 0, origine: 0 }
   for (const sec of SECTIONS) for (const l of sec.lignes) c[statut(l)]++
@@ -524,17 +544,17 @@ function compter(statut: (l: Ligne) => Statut): Record<Statut, number> {
 }
 
 function ligne(l: Ligne): string {
-  const change = l.propose != null && l.propose !== l.actuel && !l.propose.endsWith('inchangé')
-  const statutApres = l.statutPropose ?? l.statut
+  const depuis =
+    l.propose == null
+      ? '<span class="vide">Inchangé</span>'
+      : l.nonApplique
+        ? `<span class="vide">Proposé, pas appliqué : ${echapper(l.propose)}</span>`
+        : `${echapper(l.propose)}<div class="sous">${pastille(statutDepuis(l))}</div>`
   return `
-    <tr class="${change ? 'change' : ''}">
+    <tr class="${applique(l) ? 'change' : ''}">
       <th scope="row">${echapper(l.element)}</th>
       <td>${echapper(l.actuel)}<div class="sous">${pastille(l.statut)}</div></td>
-      <td>${
-        l.propose != null
-          ? `${echapper(l.propose)}<div class="sous">${pastille(statutApres)}</div>`
-          : '<span class="vide">Inchangé</span>'
-      }</td>
+      <td>${depuis}</td>
       <td>
         <p>${echapper(l.pourquoi)}</p>
         ${l.sources?.length ? `<ul class="sources">${l.sources.map((s) => `<li>${lien(s)}</li>`).join('')}</ul>` : ''}
@@ -544,15 +564,13 @@ function ligne(l: Ligne): string {
 
 function rendre() {
   const avant = compter((l) => l.statut)
-  const apres = compter((l) => l.statutPropose ?? l.statut)
-  const changes = SECTIONS.flatMap((s) => s.lignes).filter(
-    (l) => l.propose != null && !l.propose.endsWith('inchangé') && l.propose !== l.actuel,
-  )
+  const apres = compter(statutDepuis)
+  const changes = SECTIONS.flatMap((s) => s.lignes).filter(applique)
   const racine = document.getElementById('calcul')!
   racine.innerHTML = `
     <header class="calcul-tete">
       <h1>Sources du calcul</h1>
-      <p>Chaque valeur du calcul de la charge, sa source, et ce qui n’en a pas. La colonne « Actuel » est lue dans le modèle ; la colonne « Proposé » n’est pas appliquée.</p>
+      <p>Chaque valeur du calcul de la charge, sa source, et ce qui n’en a pas. Les valeurs surlignées ont changé le 1er octobre 2026 ; la colonne « Depuis » est lue dans le modèle. En bas, la batterie de scénarios passée sur les deux versions.</p>
       <div class="legende">
         <span>${pastille('ref')} la valeur vient de la source</span>
         <span>${pastille('inspire')} la source donne le principe, la valeur est un choix</span>
@@ -562,7 +580,7 @@ function rendre() {
         <div><b>${avant.origine} → ${apres.origine}</b><span>d’origine</span></div>
         <div><b>${avant.inspire} → ${apres.inspire}</b><span>inspirés</span></div>
         <div><b>${avant.ref} → ${apres.ref}</b><span>référence</span></div>
-        <div><b>${changes.length}</b><span>valeurs à arbitrer</span></div>
+        <div><b>${changes.length}</b><span>valeurs changées</span></div>
       </div>
     </header>
     ${SECTIONS.map(
@@ -572,13 +590,65 @@ function rendre() {
         ${s.intro ? `<p class="intro">${echapper(s.intro)}</p>` : ''}
         <div class="table-defile">
           <table>
-            <thead><tr><th>Élément</th><th>Actuel</th><th>Proposé</th><th>Pourquoi, et la source</th></tr></thead>
+            <thead><tr><th>Élément</th><th>Avant le 1er octobre</th><th>Depuis le 1er octobre</th><th>Pourquoi, et la source</th></tr></thead>
             <tbody>${s.lignes.map(ligne).join('')}</tbody>
           </table>
         </div>
       </section>`,
     ).join('')}
+    ${batterie()}
   `
+}
+
+// ─────────────────────────────────────────────────────────── batterie
+
+const VERSIONS: Array<{ cle: string; titre: string }> = [
+  { cle: 'avant', titre: 'Avant le 1er octobre' },
+  { cle: 'apres', titre: 'Depuis le 1er octobre' },
+]
+const figes = resultats as Record<string, Record<string, Resultat>>
+
+const cellule = (r?: Resultat) =>
+  r
+    ? `<span class="verdict verdict-${r.ok ? 'ok' : 'non'}">${r.ok ? 'Tenu' : 'Raté'}</span><div>${echapper(r.valeur)}</div>`
+    : '<span class="vide">Pas passé</span>'
+
+function batterie(): string {
+  const totaux = VERSIONS.map((v) => {
+    const rs = Object.values(figes[v.cle] ?? {})
+    return `<div><b>${rs.filter((r) => r.ok).length} / ${SCENARIOS.length}</b><span>${v.titre.toLowerCase()}</span></div>`
+  }).join('')
+  const cobayes = [...new Set(SCENARIOS.map((s) => s.cobaye))]
+  return `
+    <section class="calcul-section">
+      <h2>Batterie de scénarios</h2>
+      <p class="intro">Passée par le vrai moteur du laboratoire. Le coureur simulé fait ce que l’app lui prescrit, jour après jour. Pour la repasser : <code>npx vite-node src/labo/batterie-cli.ts &lt;version&gt;</code>.</p>
+      <div class="bilan bilan-2">${totaux}</div>
+      ${cobayes
+        .map(
+          (c) => `
+        <h3>${echapper(c)}</h3>
+        <div class="table-defile">
+          <table class="table-batterie">
+            <thead><tr><th>Scénario</th><th>Hypothèse</th><th>Attente</th>${VERSIONS.map((v) => `<th>${v.titre}</th>`).join('')}</tr></thead>
+            <tbody>${SCENARIOS.filter((s) => s.cobaye === c)
+              .map((s) => {
+                const r = VERSIONS.map((v) => figes[v.cle]?.[s.code])
+                const bascule = r[0] && r[1] && r[0].ok !== r[1].ok
+                return `
+              <tr class="${bascule ? (r[1]!.ok ? 'gagne' : 'perd') : ''}">
+                <th scope="row"><span class="code">${s.code}</span> ${echapper(s.titre)}</th>
+                <td><p>${echapper(s.hypothese)}</p></td>
+                <td><p>${echapper(s.attente)}</p></td>
+                ${r.map((x) => `<td>${cellule(x)}</td>`).join('')}
+              </tr>`
+              })
+              .join('')}</tbody>
+          </table>
+        </div>`,
+        )
+        .join('')}
+    </section>`
 }
 
 rendre()

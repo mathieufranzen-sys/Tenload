@@ -15,27 +15,50 @@
 
 /**
  * Coût tendineux d'un kilomètre couru, selon l'allure.
- * Un tendon d'Achille encaisse une charge élastique qui croît beaucoup plus
- * vite que la vitesse : d'où 2,1 en intervalles contre 1 en endurance.
+ *
+ * Recalé le 1er octobre 2026 sur les mesures de charge cumulée du tendon
+ * (Firminger et al. 2020, Van Hooren et al. 2024, Baggaley et Edwards 2017).
+ * Au kilomètre, la charge cumulée BAISSE quand on accélère : moins d'appuis,
+ * chacun plus fort. Le dommage, qui pondère les appuis forts, reste stable ou
+ * monte peu. L'ancienne échelle allait de 1 à 2,1 et comptait un fractionné
+ * double ; le sens et l'ordre de grandeur viennent des sources, les valeurs
+ * exactes restent une estimation (page /calcul.html).
  */
 export const KM_COST = {
-  recup: 0.9,
+  recup: 0.95,
   ef: 1.0,
-  long: 1.15,
-  am: 1.35,
-  semi: 1.45,
-  seuil: 1.6,
-  vo2: 2.1,
-  rep: 2.1,
+  long: 1.0,
+  am: 1.1,
+  semi: 1.15,
+  seuil: 1.2,
+  vo2: 1.35,
+  rep: 1.35,
 } as const
 
 /**
+ * La fin des longues coûte plus, pas leur début. La force sur le tendon baisse
+ * sur les dix premiers kilomètres et remonte après 20 (Frontiers in Public
+ * Health 2026, semi-marathon simulé ; J Sci Med Sport 2026). Le surcoût de
+ * 0,15 ne vaut donc que pour les kilomètres au-delà de 20.
+ */
+export const LONGUE_SEUIL_KM = 20
+export const SURCOUT_FIN_DE_LONGUE = 0.15
+
+/** Le surcoût d'une sortie de `km` kilomètres, au-delà de 20. */
+export const surcoutLongue = (km: number) => Math.max(0, km - LONGUE_SEUIL_KM) * SURCOUT_FIN_DE_LONGUE
+
+/**
  * Coût par minute pour tout ce qui n'est pas de la course.
+ *
  * Le vélo n'est PAS neutre : les deux seuls pics de douleur du soir relevés
- * dans le carnet suivent tous les deux une séance de home trainer en Z3.
+ * dans le carnet suivent tous les deux une séance de home trainer en Z3. Mais
+ * le tendon y porte peu, environ 1,1 fois le poids du corps, et la force monte
+ * avec la puissance : +64 % entre 115 et 370 W (Dick, Arnold et Wakeling
+ * 2016). Depuis le 1er octobre 2026, le vélo facile coûte donc 0,05 et le Z3
+ * garde les 0,10 que le carnet lui avait donnés (`VELO_Z3`).
  */
 export const MIN_COST: Record<string, number> = {
-  velo: 0.10,
+  velo: 0.05,
   // Le renfo bas valait 0,25 : 45 minutes pesaient autant que 11 km
   // d'endurance. En répétitions, il met le tendon en tension 150 fois environ,
   // une course de 10 km plusieurs milliers. Arbitré par Mathieu le 1er octobre
@@ -48,16 +71,20 @@ export const MIN_COST: Record<string, number> = {
   repos: 0,
 }
 
+/** Le vélo appuyé : Z3, seuil, tempo ou fractionné, au titre ou au nom de l'activité. */
+export const VELO_Z3 = 0.1
+export const estVeloAppuye = (titre: string | null | undefined) => /\bz3\b|seuil|tempo|fractionn|interval/i.test(titre ?? '')
+
 /** Coût moyen au kilomètre d'une séance planifiée, par type. */
 export const RUN_COST: Record<string, number> = {
-  long: 1.15,
+  long: 1.0, // plus `surcoutLongue` au-delà de 20 km
   ef: 1.0,
   recup: 0.95,
-  tempo: 1.27, // 45 % au seuil, 55 % en endurance
-  inter: 1.5,
-  test: 1.5,
-  course: 1.35,
-  race: 1.35,
+  tempo: 1.09, // 45 % au seuil, 55 % en endurance
+  inter: 1.16, // 45 % en VO2, 55 % en endurance
+  test: 1.16,
+  course: 1.15, // à l'allure semi, entre le 10 km et le marathon
+  race: 1.15,
   // La marche charge le tendon deux fois moins que la course au kilomètre :
   // pas de phase aérienne, donc pas de choc à la réception, et la flexion
   // dorsale reste dans une amplitude modérée. C'est ce qui en fait le repli
@@ -356,39 +383,37 @@ export function joursSansDouleur(day: string, pain: PainMap): number | null {
 }
 
 /**
- * Pente de la raideur matinale sur quatre jours, en points par JOUR. Seule une
- * hausse compte.
+ * Hausse de la raideur au réveil d'une semaine à l'autre, en points. Seule
+ * une hausse compte.
  *
- * La régression porte sur la date réelle de chaque relevé, pas sur son rang
- * dans la liste. Un jour non saisi tassait auparavant les mesures restantes
- * comme si elles étaient consécutives : 2 lundi et 4 jeudi donnaient une pente
- * de 2 points par jour au lieu de 0,67, c'est-à-dire le maximum du terme sur
- * une hausse trois fois plus lente qu'annoncé.
+ * C'est la comparaison du modèle de surveillance de la douleur (Silbernagel
+ * 2007, reprise par la recommandation JOSPT 2024) : la raideur ne doit pas
+ * monter d'une semaine à l'autre. Elle remplace le 1er octobre 2026 une pente
+ * sur quatre jours, qui réagissait à deux matins un peu raides et ne
+ * correspondait à aucune source. Trois relevés au moins de chaque côté, sinon
+ * une seule nuit ferait la moyenne.
  */
 export function painTrend(day: string, pain: PainMap): number {
-  const xs: number[] = []
-  const vs: number[] = []
-  for (let k = 3; k >= 0; k--) {
-    const w = pain[shiftDay(day, -k)]?.wake
-    if (w != null) {
-      xs.push(3 - k)
-      vs.push(w)
+  const moyenne = (de: number, a: number) => {
+    const vs: number[] = []
+    for (let k = de; k <= a; k++) {
+      const w = pain[shiftDay(day, -k)]?.wake
+      if (w != null) vs.push(w)
     }
+    return vs.length >= 3 ? vs.reduce((x, y) => x + y, 0) / vs.length : null
   }
-  if (vs.length < 3) return 0
-  const n = vs.length
-  const mx = xs.reduce((a, b) => a + b, 0) / n
-  const mu = vs.reduce((a, b) => a + b, 0) / n
-  let num = 0
-  let den = 0
-  vs.forEach((v, i) => {
-    num += (xs[i] - mx) * (v - mu)
-    den += (xs[i] - mx) ** 2
-  })
-  return den ? Math.max(0, num / den) : 0
+  const cette = moyenne(0, 6)
+  const avant = moyenne(7, 13)
+  if (cette == null || avant == null) return 0
+  return Math.max(0, cette - avant)
 }
 
 // ─────────────────────────────────────────────────────────── l'indice
+
+/** L'emballement compte à partir de ce rapport aigu sur chronique. */
+export const EMBALLEMENT_DEPART = 1.3
+/** Charge des 48 heures, rapportée à l'habituelle, d'une journée régulière. */
+export const JOURNEE_REGULIERE = 1.55
 
 /**
  * Calcule l'indice pour un jour donné.
@@ -436,9 +461,21 @@ export function tendonIndex(
   const chargeInconnue = recents < 5
 
   // Charge : emballement du rapport aigu/chronique, puis fraîcheur immédiate.
-  let ratio = sansReference ? 0 : 30 * clamp((acr - 0.9) / 0.7, 0, 1)
+  //
+  // L'emballement ne compte qu'au-dessus de 1,3 : Gabbett (2016) place le
+  // risque le plus bas entre 0,8 et 1,3, et chez 435 coureurs loisirs un
+  // rapport élevé ne prédisait pas plus de blessures (Sports Med 2021). Il
+  // comptait dès 0,9, donc tous les jours d'un plan qui progresse.
+  //
+  // La fraîcheur ne compte que l'EXCÈS sur une journée régulière, qui vaut
+  // 1,55 fois la charge habituelle (veille + 55 % de l'avant-veille). Son
+  // plafond à 2,6 fois avait été calibré sur un été à presque deux activités
+  // par jour : avec quatre courses par semaine, une séance ordinaire le
+  // remplissait (décision du 1er octobre 2026). La fenêtre de 48 heures, elle,
+  // suit le collagène (Magnusson 2010).
+  let ratio = sansReference ? 0 : 30 * clamp((acr - EMBALLEMENT_DEPART) / 0.5, 0, 1)
   const recent = (load[shiftDay(day, -1)] ?? 0) + 0.55 * (load[shiftDay(day, -2)] ?? 0)
-  let freshness = chronic > 0.5 ? 20 * clamp(recent / (2.6 * chronic), 0, 1) : 0
+  let freshness = chronic > 0.5 ? 20 * clamp((recent / chronic - JOURNEE_REGULIERE) / 2.45, 0, 1) : 0
   if (confidence < 1) {
     const cap = 25 * confidence
     const total = ratio + freshness
@@ -452,7 +489,7 @@ export function tendonIndex(
   // n'alarme pas, un vrai 6 arrête tout.
   const { score, stale } = painScore(day, pain)
   const painPts = score != null ? 85 * Math.pow(clamp(score, 0, 10) / 10, 1.15) : 0
-  const trendPts = 6 * clamp(painTrend(day, pain) / 1.5, 0, 1)
+  const trendPts = 6 * clamp(painTrend(day, pain) / 1, 0, 1)
 
   // Monotonie (Foster) : une semaine sans jour vraiment léger use le tendon.
   // Le rapport moyenne / écart-type monte quand les sept jours se ressemblent.
@@ -467,14 +504,17 @@ export function tendonIndex(
   for (let k = 0; k < 7; k++) week.push(load[shiftDay(day, -k)] ?? 0)
   const mu = week.reduce((a, b) => a + b, 0) / 7
   const sd = Math.sqrt(week.reduce((a, x) => a + (x - mu) ** 2, 0) / 7)
-  const monotony = mu < 0.5 ? 0 : 8 * clamp((mu / Math.max(sd, 1e-9) - 1.3) / 1.2, 0, 1)
+  // Ne compte qu'au-dessus de 2, le seuil de Foster (1998), plein à 2,5.
+  const monotony = mu < 0.5 ? 0 : 8 * clamp((mu / Math.max(sd, 1e-9) - 2) / 0.5, 0, 1)
 
   // Crédits : faire son excentrique fait BAISSER l'indice. C'est le traitement,
   // pas une agression — et ça récompense l'observance.
   let credits = 0
   const y = pain[shiftDay(day, -1)]
   if (y?.eccentric) credits += 6
-  if (y?.jumps) credits += 2
+  // Les sauts ne protègent pas : en sautillant, le tendon s'étire de 8,3 %
+  // contre 5,8 % en courant (revue 2023). Ils restent saisis, sans crédit,
+  // depuis le 1er octobre 2026.
   if (y?.hydrated) credits += 2
   if ((load[shiftDay(day, -1)] ?? 0) < 2) credits += 5
 

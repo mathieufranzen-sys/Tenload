@@ -14,7 +14,7 @@
  * activité enregistrée, on ignore le plan pour cette journée.
  */
 import type { Session, SessionType, Week } from '../data/types'
-import { KM_COST, MIN_COST, RUN_COST, type LoadMap } from './tendonIndex'
+import { KM_COST, MIN_COST, RUN_COST, VELO_Z3, estVeloAppuye, surcoutLongue, type LoadMap } from './tendonIndex'
 import { addDays } from './dates'
 import { formeNotee, seancesAvecEcarts, slotsParJour, type EcartRow } from './overrides'
 import type { FeedbackRow } from './buildPain'
@@ -44,10 +44,10 @@ export function activityLoad(a: ActivityRow): number {
       if (/fractionn|x\s?800|x\s?400|x\s?200|test/.test(name))
         return km * (0.45 * KM_COST.vo2 + 0.55 * KM_COST.ef)
       if (/seuil|tempo/.test(name)) return km * (0.45 * KM_COST.seuil + 0.55 * KM_COST.ef)
-      return km * (km >= 18 ? KM_COST.long : KM_COST.ef)
+      return km * KM_COST.ef + surcoutLongue(km)
     }
     case 'Ride':
-      return min * MIN_COST.velo
+      return min * (estVeloAppuye(name) ? VELO_Z3 : MIN_COST.velo)
     case 'Weight':
       // Seul le bas du corps charge le tendon.
       return /jambe|bas|bulgare|trx|squat|mollet/.test(name) ? min * MIN_COST['muscu-bas'] : 0
@@ -71,12 +71,16 @@ export function activityLoad(a: ActivityRow): number {
  * porter du volume sans charger le tendon.
  */
 export function sessionLoad(s: Session): number {
+  // La fin des longues coûte plus que leur début : au-delà de 20 km seulement.
+  const fin = (km: number) => (s.type === 'long' ? surcoutLongue(km) : 0)
   if (s.struct?.length) {
-    return s.struct.reduce((acc, seg) => acc + seg.km * (KM_COST[seg.zone] ?? 1), 0)
+    const km = s.struct.reduce((acc, seg) => acc + seg.km, 0)
+    return s.struct.reduce((acc, seg) => acc + seg.km * (KM_COST[seg.zone] ?? 1), 0) + fin(km)
   }
   const auKm = RUN_COST[s.type]
-  if (auKm != null && s.dist) return s.dist * auKm
+  if (auKm != null && s.dist) return s.dist * auKm + fin(s.dist)
   const minutes = s.dur?.[0] ?? 0
+  if (s.type === 'velo') return minutes * (estVeloAppuye(s.title) ? VELO_Z3 : MIN_COST.velo)
   return minutes * (MIN_COST[s.type] ?? 0)
 }
 

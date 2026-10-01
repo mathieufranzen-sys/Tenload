@@ -36,7 +36,9 @@ const GESTES: Array<{
   detail: string
 }> = [
   { champ: 'eccentric', label: 'Excentrique', effet: '−6', icone: 'dumb', detail: 'Le traitement, pas un complément' },
-  { champ: 'jumps', label: 'Sauts', effet: '−2', icone: 'up', detail: 'Le test de charge du kiné' },
+  // Les sauts ne protègent pas le tendon, ils le chargent : saisis pour le
+  // carnet, sans crédit depuis le 1er octobre 2026.
+  { champ: 'jumps', label: 'Sauts', effet: '0', icone: 'up', detail: 'Une charge, pas une protection' },
   // Hydratation n'est pas un booléen en base (`hydration_l` est en litres) :
   // le geste écrit 2 L ou efface la saisie, seuil retenu pour le crédit.
   { champ: 'hydration_l', label: 'Hydratation', effet: '−2', icone: 'heart', detail: '2 litres ou plus' },
