@@ -141,14 +141,15 @@ describe('une douleur de fond ne doit pas déclencher de fausse alerte', () => {
     }
   })
 
-  it('3/10 constant reste sous l’orange : seul le plancher de 4 retire la qualité', () => {
+  it('3/10 constant tient le jaune chaque jour, sans passer l’orange', () => {
     // Avant le 1er octobre 2026, ce 3/10 passait à 53 le premier jour, mais
-    // par la charge (emballement et fraîcheur), pas par la douleur. La charge
-    // ne compte plus que ce qui sort de l'habitude : la douleur seule, sous le
-    // plancher, ne retire rien. Signalé à Mathieu, en attente d'arbitrage.
+    // par la charge (emballement et fraîcheur), pas par la douleur. Depuis, la
+    // charge ne compte que ce qui sort de l'habitude, et une douleur de 3
+    // vaut le jaune à elle seule (ECHELLE_DOULEUR). La qualité, elle, est
+    // retirée par la reprise : trois matins non calmes font une alerte.
     const s = series(WEEK1, flat(3))
+    expect(Math.min(...s)).toBeGreaterThanOrEqual(30)
     expect(Math.max(...s)).toBeLessThan(50)
-    expect(Math.max(...s)).toBeGreaterThanOrEqual(30)
   })
 })
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { addDays } from './dates'
-import { etatReprise } from './reprise'
+import { etatReprise, raisonEpisode } from './reprise'
 import type { PainMap } from './tendonIndex'
 
 const LUNDI = '2026-09-28'
@@ -168,5 +168,51 @@ describe('un épisode ancien ne revient pas sur un oubli', () => {
     for (let k = 1; k <= 20; k++) delete pain[addDays(PIC, k)]
     const e = etatReprise(addDays(PIC, 21), pain, addDays(PIC, 21))!
     expect(e.courseSuspendue).toBe(true)
+  })
+})
+
+describe('une douleur de fond est une alerte', () => {
+  // Arbitré le 1er octobre 2026 : sans relevé à 4, un tendon à 3 tous les
+  // matins recevait le plan entier.
+  it('trois matins à 3 mettent l’intensité en pause, pas la course', () => {
+    const pain = calme()
+    for (let k = 0; k < 3; k++) pain[jour(k)] = { wake: 3, evening: 1 }
+    const e = etatReprise(jour(2), pain, jour(2))!
+    expect(e.episode.mesure).toBe('douleur de fond')
+    expect(e.courseSuspendue).toBe(false)
+    expect(e.intensiteSuspendue).toBe(true)
+    expect(raisonEpisode(e.episode)).toContain('trois matins de suite')
+  })
+
+  it('deux matins ne suffisent pas', () => {
+    const pain = calme()
+    for (let k = 0; k < 2; k++) pain[jour(k)] = { wake: 3, evening: 1 }
+    expect(etatReprise(jour(1), pain, jour(1))).toBeNull()
+  })
+
+  it('un soir à 3 compte comme un matin agité le lendemain', () => {
+    const pain = calme()
+    pain[jour(-1)] = { wake: 1, evening: 3 }
+    pain[jour(0)] = { wake: 1, evening: 3 }
+    pain[jour(1)] = { wake: 1, evening: 3 }
+    expect(etatReprise(jour(2), pain, jour(2))?.intensiteSuspendue).toBe(true)
+  })
+
+  it('un matin non saisi interrompt la série', () => {
+    const pain = calme()
+    pain[jour(0)] = { wake: 3, evening: 1 }
+    delete pain[jour(1)]
+    pain[jour(2)] = { wake: 3, evening: 1 }
+    pain[jour(3)] = { wake: 3, evening: 1 }
+    expect(etatReprise(jour(3), pain, jour(3))).toBeNull()
+  })
+
+  it('l’intensité revient après trois matins calmes', () => {
+    const pain = calme()
+    for (let k = 0; k < 3; k++) pain[jour(k)] = { wake: 3, evening: 1 }
+    // L'alerte date du troisième matin agité (jour 2) : calmes les jours 3,
+    // 4 et 5, l'intensité revient le matin du jour 5.
+    expect(etatReprise(jour(4), pain, jour(4))?.intensiteSuspendue).toBe(true)
+    expect(etatReprise(jour(5), pain, jour(5))).toBeNull()
   })
 })

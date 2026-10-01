@@ -18,6 +18,7 @@
 import '../styles/global.css'
 import './calcul.css'
 import {
+  ECHELLE_DOULEUR,
   EMBALLEMENT_DEPART,
   JOURNEE_REGULIERE,
   KM_COST,
@@ -294,10 +295,13 @@ const SECTIONS: Section[] = [
       },
       {
         element: 'Douleur, conversion',
-        actuel: '85 × (score / 10) puissance 1,15',
+        actuel: '85 × (score / 10) puissance 1,15 : une douleur de 3 vaut 21 points',
         statut: 'origine',
-        pourquoi: 'Calibré sur ton carnet : une réponse linéaire alarmait sur ta gêne de fond à 1 ou 2.',
-        sources: [S.carnet],
+        propose: `${ECHELLE_DOULEUR} × (score / 10) puissance 1,15, plafonné à 85 : une douleur de 3 vaut 31 points, le jaune à elle seule`,
+        statutPropose: 'inspire',
+        pourquoi:
+          'La convexité est calibrée sur ton carnet : une réponse linéaire alarmait sur ta gêne de fond à 1 ou 2. Sans le bruit de la charge, un tendon à 3 tous les matins tombait en vert : au-dessus de 2, il n’est pas revenu au calme, d’où le jaune dès 3 (arbitré le 1er octobre). Le facteur exact reste un choix.',
+        sources: [S.carnet, S.silbernagelCrossley],
       },
       {
         element: 'Douleur, report sans saisie',
@@ -483,6 +487,16 @@ const SECTIONS: Section[] = [
         sources: [S.silbernagelCrossley],
       },
       {
+        element: 'Douleur de fond',
+        actuel: 'Aucune règle : seul un relevé à 4 ouvrait un épisode',
+        statut: 'origine',
+        propose: 'Trois matins de suite qui ne sont pas calmes : une alerte, l’intensité attend trois matins calmes',
+        statutPropose: 'inspire',
+        pourquoi:
+          'Un tendon à 3 tous les matins recevait le plan entier. La source demande 2 ou moins avant de reprendre la course et les sauts ; l’app garde la course et retire l’intensité, comme après une alerte. Les trois matins sont un choix.',
+        sources: [S.silbernagelCrossley, S.cook2016],
+      },
+      {
         element: 'Reprise après un épisode',
         actuel: 'Alerte 0/3, crise 2/7, noir 3/14 matins calmes (course/intensité)',
         statut: 'inspire',
@@ -602,9 +616,11 @@ function rendre() {
 
 // ─────────────────────────────────────────────────────────── batterie
 
+/** Les versions du calcul, de la plus ancienne à l'actuelle. */
 const VERSIONS: Array<{ cle: string; titre: string }> = [
-  { cle: 'avant', titre: 'Avant le 1er octobre' },
-  { cle: 'apres', titre: 'Depuis le 1er octobre' },
+  { cle: 'avant', titre: 'Calcul d’origine' },
+  { cle: 'apres', titre: 'Recalage sur les sources' },
+  { cle: 'option3', titre: 'Plus la douleur sous 4' },
 ]
 const figes = resultats as Record<string, Record<string, Resultat>>
 
@@ -623,7 +639,7 @@ function batterie(): string {
     <section class="calcul-section">
       <h2>Batterie de scénarios</h2>
       <p class="intro">Passée par le vrai moteur du laboratoire. Le coureur simulé fait ce que l’app lui prescrit, jour après jour. Pour la repasser : <code>npx vite-node src/labo/batterie-cli.ts &lt;version&gt;</code>.</p>
-      <div class="bilan bilan-2">${totaux}</div>
+      <div class="bilan bilan-3">${totaux}</div>
       ${cobayes
         .map(
           (c) => `
@@ -634,9 +650,11 @@ function batterie(): string {
             <tbody>${SCENARIOS.filter((s) => s.cobaye === c)
               .map((s) => {
                 const r = VERSIONS.map((v) => figes[v.cle]?.[s.code])
-                const bascule = r[0] && r[1] && r[0].ok !== r[1].ok
+                // Ce que la version actuelle change par rapport à la précédente.
+                const [avant, actuel] = r.slice(-2)
+                const bascule = avant && actuel && avant.ok !== actuel.ok
                 return `
-              <tr class="${bascule ? (r[1]!.ok ? 'gagne' : 'perd') : ''}">
+              <tr class="${bascule ? (actuel!.ok ? 'gagne' : 'perd') : ''}">
                 <th scope="row"><span class="code">${s.code}</span> ${echapper(s.titre)}</th>
                 <td><p>${echapper(s.hypothese)}</p></td>
                 <td><p>${echapper(s.attente)}</p></td>

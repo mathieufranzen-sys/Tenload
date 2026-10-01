@@ -30,6 +30,12 @@ const REGLES: Array<{ titre: string; texte: string; source: string }> = [
     source: 'Silbernagel 2007 : l’effort peut aller jusqu’à 5 si le lendemain matin est revenu au calme.',
   },
   {
+    titre: 'Une douleur de fond retire l’intensité',
+    texte:
+      'Trois matins de suite qui ne sont pas calmes, même sans aucun relevé à 4, font une alerte : la course reste, la qualité se court en endurance jusqu’à trois matins calmes d’affilée.',
+    source: 'Silbernagel et Crossley 2015 : douleur de la vie courante à 2 ou moins avant de reprendre la course et les sauts.',
+  },
+  {
     titre: 'Le volume remonte de 15 % par semaine',
     texte:
       'Une semaine ne dépasse pas de plus de 15 % la part du plan tenue la semaine d’avant. Les courses faciles raccourcissent d’abord, jusqu’à vingt minutes, puis la sortie longue ; le nombre de courses reste.',

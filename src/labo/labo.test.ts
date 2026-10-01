@@ -24,11 +24,10 @@ function pic(cle: CleProfil, de: number, a: number): number {
 describe('le laboratoire de charge', () => {
   it('pose chaque profil dans sa propre bande le jour de l’ancre', () => {
     expect(etat('crise-debut').band.key).toBe('rouge')
-    // Vert depuis le 1er octobre 2026 : la raideur de 3,5 tous les matins ne
-    // fait plus que 25 points, la charge ne comptant plus que ce qui sort de
-    // l'habitude. Le jaune venait de la charge, pas de la douleur. Signalé à
-    // Mathieu, en attente d'arbitrage (calibrage de la douleur sous 4).
-    expect(etat('crise-fin').band.key).toBe('vert')
+    // Jaune par la douleur seule depuis le recalage du 1er octobre 2026 :
+    // une raideur de 3,5 tous les matins vaut 37 points, sans rien devoir à
+    // la charge.
+    expect(etat('crise-fin').band.key).toBe('jaune')
     expect(etat('stable').band.key).toBe('vert')
     expect(etat('crise-longue').band.key).toBe('orange')
   })

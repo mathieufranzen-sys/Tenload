@@ -410,6 +410,9 @@ export function painTrend(day: string, pain: PainMap): number {
 
 // ─────────────────────────────────────────────────────────── l'indice
 
+/** Une douleur de 3 vaut 31 points : le jaune, à elle seule. */
+export const ECHELLE_DOULEUR = 125
+
 /** L'emballement compte à partir de ce rapport aigu sur chronique. */
 export const EMBALLEMENT_DEPART = 1.3
 /** Charge des 48 heures, rapportée à l'habituelle, d'une journée régulière. */
@@ -487,8 +490,15 @@ export function tendonIndex(
 
   // Douleur : réponse volontairement convexe. Une gêne de fond à 2/10
   // n'alarme pas, un vrai 6 arrête tout.
+  //
+  // L'échelle valait 85 : une douleur de 3 ne faisait que 21 points, et le
+  // jaune d'un tendon à 3 tous les matins venait du bruit de la charge.
+  // Recalée le 1er octobre 2026 (arbitrage de Mathieu) pour qu'une douleur de
+  // 3 tienne SEULE en jaune, 31 points : au-dessus de 2, le tendon n'est pas
+  // revenu au calme (Silbernagel et Crossley 2015). Le terme reste plafonné à
+  // 85, atteint vers 7,4, là où les planchers ont déjà tout décidé.
   const { score, stale } = painScore(day, pain)
-  const painPts = score != null ? 85 * Math.pow(clamp(score, 0, 10) / 10, 1.15) : 0
+  const painPts = score != null ? Math.min(85, ECHELLE_DOULEUR * Math.pow(clamp(score, 0, 10) / 10, 1.15)) : 0
   const trendPts = 6 * clamp(painTrend(day, pain) / 1, 0, 1)
 
   // Monotonie (Foster) : une semaine sans jour vraiment léger use le tendon.

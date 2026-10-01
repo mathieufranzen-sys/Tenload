@@ -338,13 +338,16 @@ jours d'un plan qui progresse. Les deux ne comptent plus que ce qui sort de
 l'habitude. Les coûts au kilomètre ont été aplatis (au kilomètre, la charge
 cumulée du tendon baisse quand on accélère), la fin des longues coûte plus
 au-delà de 20 km, le vélo facile coûte moitié moins que le Z3. Une batterie
-de 21 scénarios (`batterie.ts`) compare les deux versions : 14 attentes
-tenues avant, 15 après.
+de 23 scénarios (`batterie.ts`) compare les versions : 14 attentes tenues
+avec le calcul d'origine, 16 aujourd'hui.
 
 ### Quatre décisions à ne pas défaire
 
 1. **La réponse à la douleur est convexe** (exposant 1,15). Une gêne de fond à
-   2/10 ne doit pas alarmer, un vrai 6 doit tout arrêter. Une réponse linéaire
+   2/10 ne doit pas alarmer, un vrai 6 doit tout arrêter. **Une douleur de 3
+   tient seule en jaune** (`ECHELLE_DOULEUR`, 125, terme plafonné à 85) depuis
+   le 1er octobre 2026 : sans le bruit de la charge, un tendon à 3 tous les
+   matins tombait en vert. Une réponse linéaire
    déclenchait de fausses alertes sur son quotidien normal (moyenne réelle : 0,8
    au réveil, 1,3 en fin de journée).
 2. **Le vélo n'est pas neutre** : 0,05 point par minute en Z2, 0,10 en Z3
@@ -415,7 +418,7 @@ apparaissait dénaturé.
 
 Calibré sur 45 jours réels (83 activités Strava croisées avec 16 jours de
 carnet) : **médiane 23, maximum 59 le 3 août** avec le calcul d'origine ;
-**médiane 13, 29 le 3 août** depuis le recalage du 1er octobre 2026 — la veille du jour où le carnet
+**médiane 19, 38 le 3 août** depuis le recalage du 1er octobre 2026 — la veille du jour où le carnet
 note « entorse cheville gauche après 600 m ». Le modèle ne prédit pas les
 entorses, mais il avait vu que la journée arrivait sur un tendon chargé.
 
@@ -699,6 +702,10 @@ plus longtemps le tendon a mal, plus fort et plus longtemps le plan s'adapte.**
 - **Pendant la pause d'intensité** la qualité devient une course facile de même
   distance, les allures rapides d'une longue passent en endurance. Un dossard
   n'est jamais touché : c'est une décision de Mathieu.
+- **Une douleur de fond est une alerte** (`episodeDeFond`, arbitré le
+  1er octobre 2026) : trois matins de suite qui ne sont pas calmes, même sans
+  relevé à 4, retirent l'intensité jusqu'à trois matins calmes. La course
+  reste. Sans elle, un tendon à 3 tous les matins recevait le plan entier.
 - **Après une crise seulement**, un jour sans course sépare deux courses.
   Après une alerte, la fréquence reste (Running Addict) et c'est le volume qui
   cède.
@@ -1390,7 +1397,7 @@ pas appliquées tant que Mathieu ne les a pas arbitrées. Comme le labo, la page
 n'entre pas dans le build. Toute valeur changée dans le modèle doit y changer
 de statut.
 
-**La batterie de scénarios** (`batterie.ts`, 21 scénarios) passe sur les
+**La batterie de scénarios** (`batterie.ts`, 23 scénarios) passe sur les
 quatre cobayes et sur les données de l'été, par le vrai moteur : le coureur
 simulé fait ce que l'app lui prescrit, matin après matin. Chaque scénario a
 une hypothèse, une attente chiffrée et un résultat. `npx vite-node
@@ -1399,10 +1406,12 @@ dans `batterie-resultats.json`, que la page affiche colonne par colonne.
 **Tout changement du calcul repasse la batterie sous un nouveau nom de
 version**, pour voir ce qu'il gagne et ce qu'il perd.
 
-**Question ouverte au 1er octobre 2026 : la douleur sous 4.** Sans le bruit
-de la charge, une raideur de 3,5 tous les matins ne fait plus que 25 points :
-le cobaye 2 est passé du jaune au vert, et une douleur constante à 3 ne
-dépasse plus 38. Le jaune venait de la charge, pas de la douleur.
+**La douleur sous 4** (option 3, arbitrée le 1er octobre 2026). Le recalage
+avait révélé que le jaune d'un tendon à 3 tous les matins venait de la charge,
+pas de la douleur. Deux réponses depuis : une douleur de 3 vaut le jaune à
+elle seule (`ECHELLE_DOULEUR`), et trois matins non calmes font une alerte de
+reprise (`episodeDeFond`). Batterie : 14 attentes tenues avec le calcul
+d'origine, 15 après le recalage, 16 avec l'option 3, sur 23.
 
 ## Le garde-fou contre la page blanche
 

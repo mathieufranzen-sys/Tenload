@@ -397,6 +397,24 @@ export const SCENARIOS: Scenario[] = [
     },
   },
 
+  {
+    code: '2.5',
+    cobaye: COBAYES['crise-fin'],
+    titre: 'État au 27 septembre, raideur à 3,5 chaque matin',
+    hypothese: 'Un tendon qui n’est pas revenu au calme se voit, même sans relevé à 4.',
+    attente: 'Jaune par la douleur seule (charge sous 20 %), intensité en pause. La course suit encore la crise d’il y a trois semaines, jamais suivie de matins calmes.',
+    mesurer: () => {
+      const jeu = construireProfil('crise-fin')
+      const r = calculer(jeu, ANCRE).detail
+      const e = etatReprise(ANCRE, entrees(jeu, ANCRE).pain, ANCRE)
+      const part = partMeca(r)
+      return {
+        valeur: `${r.idx}, ${nomBande(r.idx)}, charge ${Math.round(part * 100)} %, intensité ${e?.intensiteSuspendue ? 'en pause' : 'gardée'}, course ${e?.courseSuspendue ? 'en pause' : 'gardée'}`,
+        ok: r.idx >= 30 && r.idx < 50 && part < 0.2 && Boolean(e?.intensiteSuspendue),
+      }
+    },
+  },
+
   // ── Cobaye 3
   {
     code: '3.1',
@@ -518,6 +536,33 @@ export const SCENARIOS: Scenario[] = [
       return {
         valeur: `${s.map((r) => `${r.idx}`).join(' → ')}, qualité du jeudi ${e?.intensiteSuspendue ? 'en pause' : 'gardée'}`,
         ok: s[0].idx >= 50 && s[2].idx < 50,
+      }
+    },
+  },
+
+  {
+    code: '3.8',
+    cobaye: COBAYES.stable,
+    titre: 'Réveils à 3 trois matins de suite, puis calmes',
+    hypothese: 'Une douleur de fond qui s’installe retire l’intensité, pas la course (Silbernagel et Crossley).',
+    attente: 'Jaune au 3e matin, intensité en pause, course gardée, qualité rendue au 3e matin calme.',
+    mesurer: () => {
+      const debut = addDays(ANCRE, 1)
+      const { jeu } = avancer(construireProfil('stable'), debut, 9, (k) =>
+        k < 3 ? { reveil: 3, soir: 1.5, effort: 1 } : { reveil: 1, soir: 1, effort: 1 },
+      )
+      const j3 = addDays(debut, 2)
+      const idx = calculer(jeu, j3).detail.idx
+      const { pain } = entrees(jeu, addDays(debut, 9))
+      const e = etatReprise(j3, pain, j3)
+      let rendue: number | null = null
+      for (let k = 3; k < 9 && rendue == null; k++) {
+        const d = addDays(debut, k)
+        if (!etatReprise(d, pain, d)?.intensiteSuspendue) rendue = k - 2
+      }
+      return {
+        valeur: `${idx}, ${nomBande(idx)}, intensité ${e?.intensiteSuspendue ? 'en pause' : 'gardée'}, course ${e?.courseSuspendue ? 'en pause' : 'gardée'}, qualité rendue au ${rendue ?? '–'}e matin calme`,
+        ok: idx >= 30 && Boolean(e?.intensiteSuspendue) && !e?.courseSuspendue && rendue === 3,
       }
     },
   },

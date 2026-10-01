@@ -6,7 +6,7 @@ const TERMES: Array<{ nom: string; poids: string; texte: string }> = [
     nom: 'Douleur déclarée',
     poids: "jusqu'à 85 points",
     texte:
-      "La raideur au réveil pèse 45 %, la douleur en fin de journée 35 %, le ressenti pendant l'effort 20 %. Un pic isolé n'est jamais dilué par une moyenne. La réponse est volontairement convexe : une gêne de fond à 2 sur 10 ne t'alarme pas, un vrai 6 arrête tout.",
+      "La raideur au réveil pèse 45 %, la douleur en fin de journée 35 %, le ressenti pendant l'effort 20 %. Un pic isolé n'est jamais dilué par une moyenne. La réponse est volontairement convexe : une gêne de fond à 2 sur 10 ne t'alarme pas, un 3 te met en jaune à lui seul, un vrai 6 arrête tout.",
   },
   {
     nom: 'Emballement de la charge',

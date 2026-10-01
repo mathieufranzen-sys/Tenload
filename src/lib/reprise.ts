@@ -35,6 +35,14 @@
  *
  * Les nombres de matins sont une extrapolation de l'app, pas des chiffres des
  * sources : elles donnent le critère (revenir au calme), pas le délai.
+ *
+ * **Une douleur de fond est aussi un épisode** (arbitré par Mathieu le
+ * 1er octobre 2026). Trois matins de suite qui ne sont pas calmes, sans
+ * aucun relevé à 4, font une alerte : l'intensité attend trois matins calmes,
+ * la course reste. Sans cette règle, un tendon à 3 tous les matins recevait
+ * le plan entier, puisque seuls les planchers de l'indice ouvraient un
+ * épisode. Silbernagel et Crossley (2015) demandent 2 ou moins avant de
+ * reprendre la course et les sauts.
  */
 import { addDays } from './dates'
 import { plancherDuReleve, type PainMap } from './tendonIndex'
@@ -64,9 +72,12 @@ const ORDRE: NiveauEpisode[] = ['noir', 'crise', 'alerte']
 export interface Episode {
   niveau: NiveauEpisode
   jour: string
-  mesure: 'réveil' | 'effort' | 'fin de journée'
+  mesure: 'réveil' | 'effort' | 'fin de journée' | 'douleur de fond'
   valeur: number
 }
+
+/** Matins non calmes d'affilée qui font une alerte de fond. */
+export const MATINS_DE_FOND = 3
 
 export interface EtatReprise {
   courseSuspendue: boolean
@@ -171,6 +182,21 @@ function episodeDu(d: string, lire: ReturnType<typeof lecteur>): Episode | null 
 }
 
 /**
+ * Trois matins de suite qui ne sont pas calmes, jusqu'au matin de `d` : une
+ * alerte de fond. Un matin sans relevé ne compte ni pour ni contre, comme
+ * partout : il interrompt la série.
+ */
+function episodeDeFond(d: string, lire: ReturnType<typeof lecteur>, now: string): Episode | null {
+  let pire = 0
+  for (let k = 0; k < MATINS_DE_FOND; k++) {
+    const m = addDays(d, -k)
+    if (matinCalme(m, lire, now) !== 'agite') return null
+    pire = Math.max(pire, lire(m, 'wake') ?? 0, lire(addDays(m, -1), 'evening') ?? 0)
+  }
+  return { niveau: 'alerte', jour: d, mesure: 'douleur de fond', valeur: pire }
+}
+
+/**
  * L'état de reprise pour la séance de `jour`, ou `null` si aucun épisode ne
  * pèse encore. Chaque niveau se lit sur SON dernier épisode : une crise d'il
  * y a dix jours peut encore retenir l'intensité quand l'alerte d'hier, elle,
@@ -182,7 +208,8 @@ export function etatReprise(jour: string, pain: PainMap, now: string): EtatRepri
   // Le dernier épisode de chaque niveau ou plus, dans l'horizon.
   const dernier: Partial<Record<NiveauEpisode, Episode>> = {}
   for (let k = 0; k <= HORIZON_JOURS; k++) {
-    const e = episodeDu(addDays(jour, -k), lire)
+    const d = addDays(jour, -k)
+    const e = episodeDu(d, lire) ?? episodeDeFond(d, lire, now)
     if (!e) continue
     for (const n of ORDRE) if (rang(e.niveau) >= rang(n) && !dernier[n]) dernier[n] = e
     if (dernier.alerte && dernier.crise && dernier.noir) break
@@ -241,6 +268,7 @@ const nb = (v: number) => String(Math.round(v * 10) / 10).replace('.', ',')
 
 /** « réveil à 6 le 24 sept. », pour les étiquettes et le coach. */
 export function raisonEpisode(e: Episode): string {
+  if (e.mesure === 'douleur de fond') return `douleur au-dessus de 2 trois matins de suite, jusqu’au ${jourCourt(e.jour)}`
   const quoi = e.mesure === 'effort' ? `douleur à ${nb(e.valeur)} pendant l'effort` : `${e.mesure} à ${nb(e.valeur)}`
   return `${quoi} le ${jourCourt(e.jour)}`
 }
