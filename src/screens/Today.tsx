@@ -22,7 +22,7 @@ import {
 } from '../lib/dates'
 import { adapt, construireContexte, seancesDeLaSemaine, type SeancePlanifiee } from '../lib/adapt'
 import { construireInsights } from '../lib/insights'
-import { motDuCoach, type SeanceDuJour, type SeanceHier, type SemaineEnCours } from '../lib/coach'
+import { motDuCoach, type MotPasse, type SeanceDuJour, type SeanceHier, type SemaineEnCours } from '../lib/coach'
 import { RPE_ATTENDU, type AjustementForme } from '../lib/forme'
 import { estimateDuration } from '../lib/paces'
 import { bandOf, type LoadMap, type PainMap } from '../lib/tendonIndex'
@@ -56,15 +56,17 @@ const plan = planJson as unknown as Plan
 // Suffixée dans le laboratoire : chaque profil a sa propre mémoire.
 const cleMemoireCoach = () => `tenload-coach${suffixeStockage()}`
 
-function lireMemoireCoach(): Record<string, string> {
+/** Un mot passé. Les anciennes mémoires ne gardaient que le sujet, en texte. */
+function lireMemoireCoach(): Record<string, MotPasse> {
   try {
-    return JSON.parse(localStorage.getItem(cleMemoireCoach()) ?? '{}') as Record<string, string>
+    const brut = JSON.parse(localStorage.getItem(cleMemoireCoach()) ?? '{}') as Record<string, string | MotPasse>
+    return Object.fromEntries(Object.entries(brut).map(([j, m]) => [j, typeof m === 'string' ? { sujet: m } : m]))
   } catch {
     return {}
   }
 }
 
-function ecrireMemoireCoach(jour: string, cle: string) {
+function ecrireMemoireCoach(jour: string, cle: MotPasse) {
   try {
     const garde = Object.entries({ ...lireMemoireCoach(), [jour]: cle })
       .sort(([a], [b]) => (a < b ? 1 : -1))
@@ -376,8 +378,9 @@ export function Today({
       pain,
       attestes,
       forme,
+      allureMarathon: marathonPace,
     })
-  }, [now, semaineCourante, debutPlan, A.byDate, ecarts, contexte, feedback, pain, attestes, forme])
+  }, [now, semaineCourante, debutPlan, A.byDate, ecarts, contexte, feedback, pain, attestes, forme, marathonPace])
 
   const mot = useMemo(
     () =>
@@ -393,11 +396,10 @@ export function Today({
           chargeInconnue: A.detail.chargeInconnue,
         },
         alertes: alertesSemaine,
-        // Deux jours de mémoire, sur le sujet et non sur la règle : quatre
-        // règles différentes parlent de la raideur au réveil, et les exclure
-        // une par une la laissait revenir tous les matins.
-        exclureSujets: [lireMemoireCoach()[addDays(now, -1)], lireMemoireCoach()[addDays(now, -2)]]
-          .filter((x): x is string => Boolean(x)),
+        // Deux jours de mémoire : le sujet pour ne pas répéter, la règle pour
+        // passer un message obligatoire à sa suite, le ton pour encourager.
+        motsPrecedents: [lireMemoireCoach()[addDays(now, -1)], lireMemoireCoach()[addDays(now, -2)]]
+          .filter((x): x is MotPasse => Boolean(x)),
         jusquaCourse: daysBetween(now, plan.meta.raceDate),
         hier: hierPourCoach,
         semaine: semainePourCoach,
@@ -409,8 +411,8 @@ export function Today({
   // Le sujet du jour devient l'exclusion des deux jours suivants. Réécrit à
   // chaque rendu : c'est le dernier mot affiché qui compte, pas le premier.
   useEffect(() => {
-    ecrireMemoireCoach(now, mot.sujet)
-  }, [now, mot.sujet])
+    ecrireMemoireCoach(now, { sujet: mot.sujet, cle: mot.cle, ton: mot.ton })
+  }, [now, mot.sujet, mot.cle, mot.ton])
 
   /** L'indice du jour consulté. `A.detail` ne vaut que pour aujourd'hui. */
   const detail = A.byDate[jour] ?? A.detail

@@ -61,7 +61,7 @@ describe('bilanSemaine', () => {
       [addDays(LUNDI, 1)]: { wake: 1.5, evening: 3 },
       [addDays(LUNDI, 2)]: { wake: 1, eccentric: true },
     }
-    const b = bilanSemaine({ semaine: w, seances: vecue(w, [0, 1, 3]), pain, charge: {}, now: DIMANCHE, faits: faits() })
+    const b = bilanSemaine({ semaine: w, seances: vecue(w, [0, 1, 3]), pain, charge: {}, now: DIMANCHE, allureMarathon: 277, faits: faits() })
     expect(b).toMatchObject({ faites: 3, prevues: 4, sautees: 0, nonNotees: 1, kmRealises: 44, excentrique: 2 })
     expect(b.seuilMin).toBe(24)
     expect(b.pic).toEqual({ valeur: 3, day: addDays(LUNDI, 1), moment: 'soir' })
@@ -69,31 +69,31 @@ describe('bilanSemaine', () => {
   })
 
   it('donne la part de la sortie longue dans le volume réellement couru', () => {
-    const b = bilanSemaine({ semaine: w, seances: vecue(w, [0, 1, 3, 5]), pain: {}, charge: {}, now: DIMANCHE, faits: faits() })
+    const b = bilanSemaine({ semaine: w, seances: vecue(w, [0, 1, 3, 5]), pain: {}, charge: {}, now: DIMANCHE, allureMarathon: 277, faits: faits() })
     // 24 km sur 54 km courus.
     expect(Math.round(b.partLongue!)).toBe(44)
   })
 
   it('ne compare pas la charge au plan quand une séance passée n’est pas notée', () => {
-    const b = bilanSemaine({ semaine: w, seances: vecue(w, [0]), pain: {}, charge: { [LUNDI]: 26 }, now: DIMANCHE, faits: faits() })
+    const b = bilanSemaine({ semaine: w, seances: vecue(w, [0]), pain: {}, charge: { [LUNDI]: 26 }, now: DIMANCHE, allureMarathon: 277, faits: faits() })
     expect(b.ecartCharge).toBeNull()
   })
 
   it('compare la charge au plan quand tout est noté', () => {
     const charge = Object.fromEntries(plan.map((x) => [addDays(LUNDI, x.day), sessionLoad(x)]))
-    const b = bilanSemaine({ semaine: w, seances: vecue(w, [0, 1, 3, 5]), pain: {}, charge, now: DIMANCHE, faits: faits() })
+    const b = bilanSemaine({ semaine: w, seances: vecue(w, [0, 1, 3, 5]), pain: {}, charge, now: DIMANCHE, allureMarathon: 277, faits: faits() })
     expect(b.ecartCharge).toBe(0)
   })
 
   it('ne donne pas de moyenne de raideur sur deux matins', () => {
     const pain = { [LUNDI]: { wake: 1 }, [addDays(LUNDI, 1)]: { wake: 2 } }
-    expect(bilanSemaine({ semaine: w, seances: vecue(w, []), pain, charge: {}, now: DIMANCHE, faits: faits() }).raideur).toBeNull()
+    expect(bilanSemaine({ semaine: w, seances: vecue(w, []), pain, charge: {}, now: DIMANCHE, allureMarathon: 277, faits: faits() }).raideur).toBeNull()
   })
 })
 
 describe('les erreurs de la semaine', () => {
   const erreurs = (extra: Record<number, Partial<SeanceBilan>>, faites = [0, 1, 3, 5]) =>
-    bilanSemaine({ semaine: w, seances: vecue(w, faites, extra), pain: {}, charge: {}, now: DIMANCHE, faits: faits() }).erreurs
+    bilanSemaine({ semaine: w, seances: vecue(w, faites, extra), pain: {}, charge: {}, now: DIMANCHE, allureMarathon: 277, faits: faits() }).erreurs
 
   it('relève une séance courue au-dessus de l’effort attendu', () => {
     const e = erreurs({ 3: { rpe: 9 } })
@@ -122,7 +122,7 @@ describe('les erreurs de la semaine', () => {
 
 describe('les adaptations proposées', () => {
   const avec = (f: Partial<FaitsBilan>, pain: Record<string, { wake?: number; evening?: number }> = {}, extra: Record<number, Partial<SeanceBilan>> = {}) =>
-    bilanSemaine({ semaine: w, seances: vecue(w, [0, 1, 3, 5], extra), pain, charge: {}, now: DIMANCHE, faits: faits(f) }).adaptations
+    bilanSemaine({ semaine: w, seances: vecue(w, [0, 1, 3, 5], extra), pain, charge: {}, now: DIMANCHE, allureMarathon: 277, faits: faits(f) }).adaptations
 
   const raideurs = (semaine: number, precedente: number) =>
     Object.fromEntries(
@@ -159,7 +159,7 @@ describe('les adaptations proposées', () => {
 describe('le mot mental', () => {
   const mental = (suiv: Week) =>
     bilanSemaine({
-      semaine: w, seances: vecue(w, [0, 1, 3, 5]), pain: {}, charge: {}, now: DIMANCHE,
+      semaine: w, seances: vecue(w, [0, 1, 3, 5]), pain: {}, charge: {}, now: DIMANCHE, allureMarathon: 277,
       faits: faits({ echeances: { dixKm: 200, marathon: 400 } }),
       suivante: { semaine: suiv, seances: vecue(suiv, []) },
     }).mental
@@ -181,7 +181,7 @@ describe('le mot mental', () => {
 
   it('bascule sur le 10 km quand il approche', () => {
     const b = bilanSemaine({
-      semaine: w, seances: vecue(w, [0, 1, 3, 5]), pain: {}, charge: {}, now: DIMANCHE,
+      semaine: w, seances: vecue(w, [0, 1, 3, 5]), pain: {}, charge: {}, now: DIMANCHE, allureMarathon: 277,
       faits: faits({ echeances: { dixKm: 20, marathon: 190 } }),
     })
     expect(b.mental).toContain('10 km est dans 20 jours')
@@ -195,7 +195,7 @@ describe('ce que change la semaine suivante', () => {
       s({ day: 3, type: 'tempo', dist: 13, title: 'Seuil 3 x 10 min', seuilMin: 30, qualite: 'seuil' }),
     ])
     const b = bilanSemaine({
-      semaine: w, seances: vecue(w, [0, 1, 3, 5]), pain: {}, charge: {}, now: DIMANCHE, faits: faits(),
+      semaine: w, seances: vecue(w, [0, 1, 3, 5]), pain: {}, charge: {}, now: DIMANCHE, allureMarathon: 277, faits: faits(),
       suivante: { semaine: suiv, seances: vecue(suiv, []) },
     })
     expect(b.suivante.join(' ')).toContain('Sortie longue de 26 km, contre 24 km cette semaine')
@@ -210,9 +210,26 @@ describe('ce que change la semaine suivante', () => {
       reference: suiv.sessions[0],
     }
     const b = bilanSemaine({
-      semaine: w, seances: vecue(w, [0, 1, 3, 5]), pain: {}, charge: {}, now: DIMANCHE, faits: faits(),
+      semaine: w, seances: vecue(w, [0, 1, 3, 5]), pain: {}, charge: {}, now: DIMANCHE, allureMarathon: 277, faits: faits(),
       suivante: { semaine: suiv, seances: [plafonnee] },
     })
     expect(b.suivante[0]).toBe('Sortie longue tenue à 24 km au lieu de 26 km : raideur du lendemain à 4.')
+  })
+})
+
+describe('les minutes au seuil se lisent sur ce qui a été couru', () => {
+  it('compte la fin rapide d’une sortie longue', () => {
+    const longue = s({ day: 0, type: 'long', dist: 20, title: 'Sortie longue de 20 km', struct: [{ km: 14, zone: 'ef' }, { km: 4, zone: 'semi' }, { km: 2, zone: 'seuil' }] })
+    const w2 = semaine(8, LUNDI, [longue])
+    const b = bilanSemaine({ semaine: w2, seances: vecue(w2, [0]), pain: {}, charge: {}, now: DIMANCHE, allureMarathon: 277, faits: faits() })
+    // 4 km à 4:24 et 2 km à 4:17 : 26 minutes, que l'étiquette du plan ignorait.
+    expect(b.seuilMin).toBe(26)
+  })
+
+  it('ne compte pas une qualité passée en endurance', () => {
+    const passee = s({ day: 3, type: 'ef', dist: 12, title: 'Course facile de 12 km', seuilMin: 24, qualite: 'seuil', struct: [{ km: 12, zone: 'ef' }] })
+    const w2 = semaine(8, LUNDI, [passee])
+    const b = bilanSemaine({ semaine: w2, seances: vecue(w2, [3]), pain: {}, charge: {}, now: DIMANCHE, allureMarathon: 277, faits: faits() })
+    expect(b.seuilMin).toBe(0)
   })
 })

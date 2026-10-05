@@ -20,6 +20,7 @@ import type { Session, SessionType, Week } from '../data/types'
 import type { PainMap } from './tendonIndex'
 import { DAYS_LONG, addDays, formatNumber, weekdayIndex } from './dates'
 import { sessionLoad } from './load'
+import { repartitionSemaine } from './repartition'
 
 const COURSE: SessionType[] = ['long', 'ef', 'tempo', 'inter', 'test', 'course', 'race']
 
@@ -80,7 +81,18 @@ export interface EntreeBilan {
   now: string
   faits: FaitsBilan
   suivante?: { semaine: Week; seances: SeanceBilan[] }
+  /** L'allure marathon visée, en s/km : elle donne la durée des segments au seuil. */
+  allureMarathon: number
 }
+
+/**
+ * Une séance qui porte encore une intensité. Une qualité passée en endurance
+ * par la reprise, ou en vélo par l'orange, garde ses étiquettes du plan
+ * (`qualite`, `seuilMin`) : les lire sans regarder le type comptait des
+ * minutes au seuil jamais courues.
+ */
+const TYPES_INTENSES: SessionType[] = ['tempo', 'inter', 'test', 'long', 'course', 'race']
+export const porteIntensite = (s: Session) => TYPES_INTENSES.includes(s.type)
 
 export type MomentDouleur = 'réveil' | 'effort' | 'soir'
 
@@ -147,7 +159,7 @@ export function effortAttendu(s: Session): number | null {
   return nature ? EFFORT_MAX[nature] ?? null : null
 }
 
-export function bilanSemaine({ semaine, seances, pain, charge, now, faits, suivante }: EntreeBilan): BilanSemaine {
+export function bilanSemaine({ semaine, seances, pain, charge, now, faits, suivante, allureMarathon }: EntreeBilan): BilanSemaine {
   const du = semaine.monday
   const au = addDays(du, 6)
   const fin = now < au ? now : au
@@ -168,9 +180,18 @@ export function bilanSemaine({ semaine, seances, pain, charge, now, faits, suiva
   const longue = seances.find((x) => x.s.type === 'long' && !x.s.saute)
   const partLongue = longue?.s.dist && kmRealises > 0 ? (longue.s.dist / kmRealises) * 100 : null
 
+  // Le même calcul que Suivi, sur le déroulé de ce qui a été fait : l'étiquette
+  // `seuilMin` du plan ignorait les fins de sortie longue à allure semi et au
+  // seuil, et survivait aux qualités passées en endurance (retour de Mathieu,
+  // 5 octobre 2026 : deux chiffres différents pour la même semaine).
+  // Une séance sans déroulé lisible garde l'étiquette du plan, si elle porte
+  // encore une intensité.
   const seuilMin = actives
     .filter((x) => x.faite && !x.s.saute)
-    .reduce((a, x) => a + (x.s.seuilMin ?? 0), 0)
+    .reduce((a, x) => {
+      const lu = repartitionSemaine([x.s], allureMarathon).seuil
+      return a + (lu > 0 ? lu : porteIntensite(x.s) ? (x.s.seuilMin ?? 0) : 0)
+    }, 0)
 
   const chargeRealisee = jours.reduce((a, d) => a + (charge[d] ?? 0), 0)
   const chargePrevue = semaine.sessions
@@ -393,7 +414,7 @@ function ceQueChangeLaSuivante(
     }
   }
 
-  const qualite = vivantes.find((x) => x.s.seuilMin || x.s.qualite)
+  const qualite = vivantes.find((x) => porteIntensite(x.s) && x.s.type !== 'long' && (x.s.seuilMin || x.s.qualite))
   if (qualite) {
     const min = qualite.s.seuilMin
     out.push(`${qualite.s.title} le ${jourDe(qualite.day)}${min ? `, ${min} minutes cumulées au seuil` : ''}.`)

@@ -420,6 +420,9 @@ export function appliquerReprise(s: Session, etat: EtatReprise): Session {
         main: null,
         cd: null,
         specifique: undefined,
+        // Plus une qualité : ses étiquettes partent avec elle.
+        qualite: undefined,
+        seuilMin: undefined,
       }
     : { ...s, struct: km ? [{ km, zone: 'ef' }] : null }
   return {

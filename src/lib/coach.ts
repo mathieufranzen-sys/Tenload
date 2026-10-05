@@ -31,6 +31,21 @@ export interface MotCoach {
   sujet: string
   /** Ce que l'indice impose se répète tant que c'est vrai. */
   obligatoire?: boolean
+  /**
+   * Ce qu'un message obligatoire dit les jours suivants. Le même texte mot
+   * pour mot chaque matin cessait d'être lu, et sonnait comme un reproche
+   * (retour de Mathieu, 5 octobre 2026) : la suite redit la contrainte, plus
+   * court, en parlant de ce qui avance. Deux variantes, pour le deuxième jour
+   * et les suivants. Sans suite, le message n'est dit qu'une fois.
+   */
+  suites?: string[]
+}
+
+/** Ce que le coach a dit un jour passé : son sujet, sa règle et son ton. */
+export interface MotPasse {
+  sujet: string
+  cle?: string
+  ton?: MotCoach['ton']
 }
 
 /** Fenêtre glissante de saisies de raideur matinale, la plus récente d'abord. */
@@ -141,6 +156,8 @@ export interface EntreeCoach {
    * jours de mémoire : un sujet ne revient donc qu'au bout de trois jours.
    */
   exclureSujets?: string[]
+  /** Les mots d'hier puis d'avant-hier : règle et ton, pas seulement le sujet. */
+  motsPrecedents?: MotPasse[]
   /** Jours avant le marathon, pour le mot toujours disponible. */
   jusquaCourse?: number
   hier?: SeanceHier[]
@@ -229,6 +246,10 @@ function candidatsSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach[] {
       cle: 'course-en-reprise', sujet: 'seance',
       obligatoire: neutralisee.motif === 'reprise',
       ton: 'vigilance',
+      suites: [
+        `Encore du vélo à la place de la course. Ce n'est pas du temps perdu : le moteur aérobie continue de tourner, et chaque matin calme rapproche la reprise.`,
+        `Toujours en vélo aujourd'hui. C'est ton tendon qui fixe la date de la reprise, matin après matin, et tu tiens le cap : c'est ce qui la fait arriver.`,
+      ],
       texte:
         neutralisee.motif === 'reprise'
           ? `Pas de course aujourd'hui : ${neutralisee.raison ?? 'la crise n’est pas levée'}, et le tendon n'a pas encore aligné ses matins calmes. ${possessif(neutralisee.typePlan, true)} passe au vélo. La course revient d'elle-même quand les réveils le disent, pas à une date.`
@@ -239,6 +260,10 @@ function candidatsSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach[] {
       cle: 'course-neutralisee', sujet: 'seance',
       obligatoire: true,
       ton: 'vigilance',
+      suites: [
+        `Toujours pas de course aujourd'hui : ${surIndice}. Le vélo garde ton volume aérobie intact pendant que le tendon récupère, avril n'y perd rien.`,
+        `Encore une journée sans impact au sol. C'est comme ça qu'un épisode se raccourcit : le travail continue, seul le choc s'arrête.`,
+      ],
       texte:
         neutralisee.motif === 'raideur' && neutralisee.raideurMatin != null
           ? `Pas de course aujourd'hui : ta raideur au réveil est à ${formatNumber(neutralisee.raideurMatin)} sur 10, le lendemain de ta sortie longue. Ta règle passe ${possessif(neutralisee.typePlan)} au vélo souple : la longue n'est pas digérée, et c'est au réveil que le tendon le dit.`
@@ -283,6 +308,9 @@ function candidatsSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach[] {
       cle: 'longue-raccourcie', sujet: 'seance',
       obligatoire: true,
       ton: 'vigilance',
+      suites: [
+        `Ta sortie longue reste raccourcie, ${nomAvecKm('long', raccourcie.dist)} : ${surIndice}. Une longue courte bien encaissée fait plus pour avril qu'une longue entière payée trois jours.`,
+      ],
       texte: `La sortie longue est raccourcie aujourd'hui : ${nomAvecKm('long', raccourcie.dist)} au lieu de ${formatNumber(raccourcie.distPlan ?? 0)} km, parce que ${surIndice}. Les kilomètres qui comptent sont ceux que le tendon encaisse, pas ceux qui se paient trois jours.`,
     })
   }
@@ -294,7 +322,7 @@ function candidatsSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach[] {
       cle: 'contrainte-cassee', sujet: 'semaine',
       obligatoire: true,
       ton: 'vigilance',
-      texte: `Regarde la semaine que tes changements ont formée : ${alertes[0].toLowerCase()} Rien ne t'en empêche, mais cette contrainte vient de ton tendon, pas du plan.`,
+      texte: `Ta semaine modifiée laisse passer une contrainte : ${alertes[0].toLowerCase()} Si c'est voulu, aucun souci : ta raideur de demain matin dira si le tendon a suivi.`,
     })
   }
 
@@ -632,13 +660,13 @@ function candidatsVigilance({ pain, now, duJour, indice, semaine }: EntreeCoach)
         out.push({
           cle: 'semaine-hors-attentes', sujet: 'semaine',
           ton: 'vigilance',
-          texte: `Depuis lundi, tu as encaissé ${ecart} % de charge de plus que le plan n'en prévoyait sur les mêmes jours. Ce surplus n'était pas budgété : garde la fin de semaine telle qu'écrite, sans rien ajouter.`,
+          texte: `Depuis lundi, ${ecart} % de charge de plus que prévu sur les mêmes jours : tu as de l'élan. Garde la fin de semaine telle qu'écrite, c'est elle qui transforme ce surplus en progrès.`,
         })
       } else if (ecart <= -20) {
         out.push({
           cle: 'semaine-hors-attentes', sujet: 'semaine',
           ton: 'neutre',
-          texte: `Depuis lundi, ta charge est ${-ecart} % sous ce que le plan prévoyait sur les mêmes jours. Ne la rattrape pas d'un bloc en fin de semaine : c'est l'accumulation soudaine qui blesse, pas le manque.`,
+          texte: `Semaine plus légère que prévu de ${-ecart} % depuis lundi. Ce n'est pas un retard à combler : le plan reprend tel quel, et ton tendon profite du répit.`,
         })
       }
     }
@@ -833,10 +861,35 @@ export function motDuCoach(entree: EntreeCoach): MotCoach {
     ...candidatsHier(entree),
     ...candidatsFond(entree),
   ]
-  const exclus = new Set(entree.exclureSujets ?? [])
+  const [hier, avantHier] = entree.motsPrecedents ?? []
+  const redit = (c: MotCoach) => hier?.cle === c.cle
+
+  // Un message obligatoire se dit en entier le premier jour, puis par sa suite.
+  // Sans suite, il a été dit : il rejoint les autres.
+  for (const c of candidats.filter((x) => x.obligatoire)) {
+    if (!redit(c)) return c
+    if (c.suites?.length) {
+      const texte = c.suites[Math.min(avantHier?.cle === c.cle ? 1 : 0, c.suites.length - 1)]
+      return { ...c, texte, ton: 'neutre' }
+    }
+  }
+
+  const exclus = new Set([
+    ...(entree.exclureSujets ?? []),
+    ...(entree.motsPrecedents ?? []).map((m) => m.sujet),
+  ])
+  const libres = candidats.filter((c) => !exclus.has(c.sujet) && !(c.obligatoire && redit(c)))
+
+  // Deux jours sans un mot d'encouragement : s'il y en a un de vrai, il passe
+  // devant (retour de Mathieu, 5 octobre 2026, « encourager plus »). Le
+  // coach ne l'invente pas : il choisit parmi ce que les données disent.
+  const tons = (entree.motsPrecedents ?? []).map((m) => m.ton).filter(Boolean)
+  const sansEncouragement = tons.length >= 2 && tons.every((t) => t !== 'bravo')
+  const encourageant = sansEncouragement ? libres.find((c) => c.ton === 'bravo') : undefined
+
   return (
-    candidats.find((c) => c.obligatoire) ??
-    candidats.find((c) => !exclus.has(c.sujet)) ??
+    encourageant ??
+    libres[0] ??
     // Tout a déjà été dit ces derniers jours : mieux vaut répéter le sujet le
     // plus ancien que se taire, mais on prend le dernier de la liste, qui est
     // le moins prioritaire et donc le moins susceptible d'avoir servi hier.

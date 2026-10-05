@@ -14,7 +14,7 @@
  */
 import type { Plan, Week } from '../data/types'
 import type { SeancePlanifiee } from './adapt'
-import { bilanSemaine, type BilanSemaine, type FaitsBilan, type SeanceBilan } from './bilan'
+import { bilanSemaine, porteIntensite, type BilanSemaine, type FaitsBilan, type SeanceBilan } from './bilan'
 import type { FeedbackRow } from './buildPain'
 import { addDays, daysBetween } from './dates'
 import type { AjustementForme } from './forme'
@@ -35,6 +35,7 @@ export function construireBilan({
   pain,
   attestes,
   forme,
+  allureMarathon,
 }: {
   plan: Plan
   bilanee: Week
@@ -49,6 +50,8 @@ export function construireBilan({
   attestes?: Set<string>
   /** La forme du jour : absente pour une semaine passée, elle ne vaudrait que pour aujourd'hui. */
   forme?: AjustementForme | null
+  /** L'allure visée du profil ; celle du plan à défaut. */
+  allureMarathon?: number
 }): BilanSemaine {
   const feedbackDe = ({ semaineOrigine, jourOrigine, slot }: SeancePlanifiee) =>
     feedback.find((f) => f.week === semaineOrigine && f.day_index === jourOrigine && f.slot === slot) ?? null
@@ -77,8 +80,8 @@ export function construireBilan({
     .filter((x) => x.faite && !x.s.saute && x.day > addDays(ref, -28) && x.day <= ref)
   const volume28 = quatreSemaines.reduce((acc, x) => acc + (x.s.dist ?? 0), 0)
   const dosage = {
-    seuil: quatreSemaines.filter((x) => x.s.qualite === 'seuil').length,
-    vitesse: quatreSemaines.filter((x) => x.s.qualite === 'vitesse' || x.s.qualite === 'specifique').length,
+    seuil: quatreSemaines.filter((x) => porteIntensite(x.s) && x.s.qualite === 'seuil').length,
+    vitesse: quatreSemaines.filter((x) => porteIntensite(x.s) && (x.s.qualite === 'vitesse' || x.s.qualite === 'specifique')).length,
   }
 
   // Jours sans douleur au-dessus de 2, et relevés dans la fenêtre : le
@@ -160,5 +163,6 @@ export function construireBilan({
     now: ref,
     faits,
     suivante: suivante ? { semaine: suivante, seances: versBilan(suivante) } : undefined,
+    allureMarathon: allureMarathon ?? plan.meta.targetMarathonPace,
   })
 }

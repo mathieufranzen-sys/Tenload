@@ -369,6 +369,53 @@ describe('motDuCoach — jamais le même mot deux jours de suite', () => {
     expect(m.cle).toBe('course-neutralisee')
   })
 
+  // Retour de Mathieu, 5 octobre 2026 : le même avertissement chaque matin.
+  it('le lendemain, un message obligatoire passe à sa suite, plus courte et sans reproche', () => {
+    const entree = {
+      pain: {},
+      byDate: {},
+      now: NOW,
+      seancesTotal: TOTAL,
+      duJour: [seance({ type: 'velo', typePlan: 'long', adaptee: true })],
+      indice: { idx: 71, painInconnue: false, chargeInconnue: false },
+    }
+    const premier = motDuCoach(entree)
+    const deuxieme = motDuCoach({ ...entree, motsPrecedents: [{ sujet: 'seance', cle: premier.cle, ton: premier.ton }] })
+    const troisieme = motDuCoach({
+      ...entree,
+      motsPrecedents: [{ sujet: 'seance', cle: premier.cle }, { sujet: 'seance', cle: premier.cle }],
+    })
+    expect(deuxieme.cle).toBe('course-neutralisee')
+    expect(deuxieme.texte).not.toBe(premier.texte)
+    expect(deuxieme.ton).toBe('neutre')
+    expect(troisieme.texte).not.toBe(deuxieme.texte)
+  })
+
+  it('une contrainte cassée n’est dite qu’une fois', () => {
+    const entree = {
+      pain: {},
+      byDate: {},
+      now: NOW,
+      seancesTotal: TOTAL,
+      duJour: [seance({ ecart: 'deplacement' })],
+      indice: { idx: 20, painInconnue: false, chargeInconnue: false },
+      alertes: ['Deux courses le même jour.'],
+      jusquaCourse: 190,
+    }
+    expect(motDuCoach(entree).cle).toBe('contrainte-cassee')
+    expect(motDuCoach({ ...entree, motsPrecedents: [{ sujet: 'semaine', cle: 'contrainte-cassee' }] }).cle).not.toBe('contrainte-cassee')
+  })
+
+  it('après deux jours sans encouragement, un mot positif passe devant', () => {
+    // Dix jours notés à 1 : « sans douleur » est vrai et encourageant.
+    const entree = { pain: carnet(serie(10, 1)), byDate: {}, now: NOW, seancesTotal: TOTAL, jusquaCourse: 190 }
+    const m = motDuCoach({
+      ...entree,
+      motsPrecedents: [{ sujet: 'echeance', ton: 'vigilance' }, { sujet: 'semaine', ton: 'neutre' }],
+    })
+    expect(m.ton).toBe('bravo')
+  })
+
   it('ne compte pas des jours sans douleur avant le début du carnet', () => {
     // Dix jours notés à 1 : dix jours sans douleur, pas soixante.
     const m = motDuCoach({ pain: carnet(serie(10, 1)), byDate: {}, now: NOW, seancesTotal: TOTAL })
