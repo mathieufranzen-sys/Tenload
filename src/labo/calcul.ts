@@ -519,7 +519,7 @@ const SECTIONS: Section[] = [
       },
       {
         element: 'Ouverture du volume',
-        actuel: '56 jours calmes, 42 réveils notés',
+        actuel: '56 jours sans indice à 50 ou plus, 42 réveils notés',
         statut: 'inspire',
         pourquoi: 'Huit semaines pour modifier un tendon adulte. Les 42 relevés sont de l’app.',
         sources: [S.bohm],

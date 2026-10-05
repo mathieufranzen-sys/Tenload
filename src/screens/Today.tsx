@@ -174,8 +174,8 @@ export function Today({
   // Séances figées et palier de la sortie longue : ils se lisent sur tout le
   // plan, pas sur une semaine, donc ils se calculent une fois ici.
   const contexte = useMemo(
-    () => construireContexte(plan.weeks, feedback, pain, now, ecarts),
-    [feedback, pain, now, ecarts],
+    () => construireContexte(plan.weeks, feedback, pain, now, ecarts, A.byDate),
+    [feedback, pain, now, ecarts, A.byDate],
   )
   const seances = useMemo(
     () => seancesDeLaSemaine(plan.weeks, semaine, now, A.byDate, ecarts, contexte),

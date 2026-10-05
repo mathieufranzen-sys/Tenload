@@ -101,8 +101,8 @@ export function Plan({
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
   // Séances figées et palier de la sortie longue, calculés sur tout le plan.
   const contexte = useMemo(
-    () => construireContexte(plan.weeks, feedback, pain, now, ecarts),
-    [feedback, pain, now, ecarts],
+    () => construireContexte(plan.weeks, feedback, pain, now, ecarts, A.byDate),
+    [feedback, pain, now, ecarts, A.byDate],
   )
   const seances = useMemo(
     () => seancesDeLaSemaine(plan.weeks, semaine, now, A.byDate, ecarts, contexte),

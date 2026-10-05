@@ -100,11 +100,11 @@ export function OuvertureChart({ progres, pain, now }: { progres: ProgresVolume;
         {atteint
           ? 'Huit semaines calmes : le vélo du mercredi est devenu une course facile.'
           : faits < joursRequis
-            ? `Au plus tôt le ${formatDay(addDays(now, joursRequis - faits))}, si réveil et fin de journée restent à 2 ou moins et l'effort à 3 ou moins. Le vélo du mercredi devient alors une course facile.`
+            ? `Au plus tôt le ${formatDay(addDays(now, joursRequis - faits))}, si l'indice reste sous 50, l'orange. Le vélo du mercredi devient alors une course facile.`
             : raideurEnHausse
               ? `Huit semaines tenues, mais ta raideur monte : ${formatNumber(Math.round(raideurEnHausse.apres * 10) / 10)} de moyenne cette semaine contre ${formatNumber(Math.round(raideurEnHausse.avant * 10) / 10)} la semaine d'avant. L'ouverture attend qu'elle redescende.`
               : `Huit semaines tenues : il manque des réveils notés pour ouvrir.`}
-        {remise && ` Dernière remise à zéro le ${formatDay(remise.day)}, à ${formatNumber(remise.valeur)} sur 10.`}
+        {remise && ` Dernière remise à zéro le ${formatDay(remise.day)}, indice à ${remise.indice}.`}
       </p>
     </div>
   )

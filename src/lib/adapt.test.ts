@@ -378,11 +378,16 @@ describe('ouverture du volume : la sortie de la contrainte 5', () => {
   })
 
   it('un pic au 40e jour referme l’ouverture', () => {
-    expect(verdictVolume(carnet(56, { a: 40, valeur: 3 }), JOUR)).toBeNull()
+    expect(verdictVolume(carnet(56, { a: 40, valeur: 4 }), JOUR)).toBeNull()
   })
 
   it('un pic dans le mois écoulé referme tout', () => {
-    expect(verdictVolume(carnet(56, { a: 10, valeur: 3 }), JOUR)).toBeNull()
+    expect(verdictVolume(carnet(56, { a: 10, valeur: 4 }), JOUR)).toBeNull()
+  })
+
+  // Arbitré le 5 octobre 2026 : seul l'orange remet à zéro.
+  it('un 3 isolé ne referme plus rien', () => {
+    expect(verdictVolume(carnet(56, { a: 10, valeur: 3 }), JOUR)!.palier).toBe(2)
   })
 
   it('la douleur de fond à 2 ne referme rien', () => {
@@ -430,7 +435,7 @@ describe('progresVolume', () => {
     const r = progresVolume(carnet(40, (k) => (k === 12 ? 4 : 1)), NOW)
     expect(r.jours).toBe(12)
     expect(r.releves).toBe(12)
-    expect(r.remise).toEqual({ day: addDays(NOW, -12), valeur: 4 })
+    expect(r.remise).toEqual({ day: addDays(NOW, -12), indice: 50 })
     expect(r.atteint).toBe(false)
   })
 
@@ -458,13 +463,24 @@ describe('progresVolume', () => {
     expect(progresVolume(avec(3), NOW).atteint).toBe(true)
     const r = progresVolume(avec(4), NOW)
     expect(r.jours).toBe(20)
-    expect(r.remise).toEqual({ day: addDays(NOW, -20), valeur: 4 })
+    expect(r.remise).toEqual({ day: addDays(NOW, -20), indice: 50 })
   })
 
-  it('remet à zéro sur une fin de journée à 3', () => {
+  it('une fin de journée à 3 ne remet plus à zéro, un réveil à 4 si', () => {
     const p = carnet(60, () => 1)
     p[addDays(NOW, -5)] = { wake: 1, evening: 3 }
+    expect(progresVolume(p, NOW).jours).toBe(60)
+    p[addDays(NOW, -5)] = { wake: 4, evening: 1 }
     expect(progresVolume(p, NOW).jours).toBe(5)
+  })
+
+  it('lit l’indice du jour quand il est connu : 50 remet à zéro, 49 non', () => {
+    const p = carnet(60, () => 1)
+    const indices = (v: number) => ({ [addDays(NOW, -8)]: { idx: v } })
+    expect(progresVolume(p, NOW, indices(49)).jours).toBe(60)
+    const r = progresVolume(p, NOW, indices(50))
+    expect(r.jours).toBe(8)
+    expect(r.remise).toEqual({ day: addDays(NOW, -8), indice: 50 })
   })
 
   it('compte les réveils, pas les autres mesures', () => {

@@ -133,7 +133,7 @@ function BilanDe({
     // celles du Programme d'aujourd'hui, écarts et séances figées compris.
     const aRef = adapt(load, pain, feedback, ref, attestes)
     const aNow = adapt(load, pain, feedback, now, attestes)
-    const contexte = construireContexte(plan.weeks, feedback, pain, now, ecarts)
+    const contexte = construireContexte(plan.weeks, feedback, pain, now, ecarts, aNow.byDate)
     const i = plan.weeks.findIndex((w) => w.n === semaine.n)
     const bilan = construireBilan({
       plan,

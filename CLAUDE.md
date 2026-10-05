@@ -48,12 +48,16 @@ comme référence. Elles sont vérifiées par `reference/check_plan_v2.py` sur l
 5. **Un vélo par semaine.** Il n'est plus une béquille qui remplace la course
    mais **du volume aérobie sans impact au sol**, ce que Maxime recommande
    d'ajouter plutôt que de retirer. **Il devient de lui-même une course facile
-   de la même durée** quand le tendon a tenu 56 jours calmes, avec 42 réveils
-   notés dans la fenêtre (`progresVolume`, `ouvrirVolume` dans adapt.ts,
-   décision du 29 septembre 2026). Calme veut dire réveil et fin de journée à
-   2 ou moins, effort à 3 ou moins — le modèle de Silbernagel tolère 5 pendant
-   l'effort, et l'alerte orange de l'app commence à 4 —, et une raideur
-   moyenne qui ne monte pas de 0,5 d'une semaine à l'autre. Une seule marche : le palier
+   de la même durée** quand le tendon a tenu 56 jours sans un jour à 50 ou
+   plus sur l'indice (`SEUIL_OUVERTURE`), avec 42 réveils notés dans la
+   fenêtre et une raideur moyenne qui ne monte pas de 0,5 d'une semaine à
+   l'autre (`progresVolume`, `ouvrirVolume` dans adapt.ts). **Arbitré le
+   5 octobre 2026** : la règle du 29 septembre remettait tout à zéro sur un
+   seul réveil à 2,5, trop violent pour un compteur de huit semaines. Seul
+   l'orange compte désormais, le seuil où le plan change de lui-même : un
+   relevé à 4 y suffit par les planchers, un 3 isolé non. Le contexte qui
+   projette la charge se construit avant l'indice : il lit alors le plancher
+   des relevés, qui est la voie par laquelle l'indice franchit 50. Une seule marche : le palier
    à un mois datait des deux vélos. Seul le vélo DU PLAN bascule, jamais un vélo
    posé par un écart, jamais dans le passé, et l'indice passe par-dessus. Cette
    course est la seconde exception de la contrainte 6 : si le compteur l'a

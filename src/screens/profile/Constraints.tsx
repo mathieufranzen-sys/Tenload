@@ -55,7 +55,7 @@ const REGLES: Array<{ titre: string; texte: string; source: string }> = [
   {
     titre: 'Le volume s’ouvre après huit semaines calmes',
     texte:
-      'Huit semaines de matins calmes, avec 42 réveils notés et une raideur qui ne monte pas d’une semaine à l’autre : le vélo du mercredi devient une course facile.',
+      'Huit semaines sans un jour à 50 ou plus sur l’indice, avec 42 réveils notés et une raideur qui ne monte pas d’une semaine à l’autre : le vélo du mercredi devient une course facile. Un mauvais matin isolé ne remet rien à zéro, l’orange si.',
     source: 'Bohm, Mersmann et Arampatzis 2015 : un tendon adulte change sur des programmes de huit semaines au moins.',
   },
 ]

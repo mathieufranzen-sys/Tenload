@@ -129,13 +129,14 @@ export function Track({
   // attestée comprise), pour que l'indice d'hier cité soit le même chiffre.
   // La semaine en cours, pour la répartition de la course : mêmes séances
   // que l'écran Aujourd'hui, écarts et adaptations compris.
-  const { semaineN, seancesSemaine } = useMemo(() => {
+  const { semaineN, seancesSemaine, indicesDuJour } = useMemo(() => {
     const aJour = adapt(load, pain, feedback, now, attestes)
-    const contexte = construireContexte(plan.weeks, feedback, pain, now, ecarts)
+    const contexte = construireContexte(plan.weeks, feedback, pain, now, ecarts, aJour.byDate)
     const semaine =
       plan.weeks.find((w) => now >= w.monday && now <= addDays(w.monday, 6)) ??
       plan.weeks[now < plan.weeks[0].monday ? 0 : plan.weeks.length - 1]
     return {
+      indicesDuJour: aJour.byDate,
       semaineN: semaine.n,
       seancesSemaine: seancesDeLaSemaine(plan.weeks, semaine, now, aJour.byDate, ecarts, contexte),
     }
@@ -197,7 +198,9 @@ export function Track({
   const km7 = km(7)
   const km28 = km(28)
 
-  const volume = useMemo(() => progresVolume(pain, now), [pain, now])
+  // Le même indice qu'Aujourd'hui, jours attestés compris : le compteur ne
+  // doit pas dire autre chose que la jauge.
+  const volume = useMemo(() => progresVolume(pain, now, indicesDuJour), [pain, now, indicesDuJour])
 
   const totalAttendu = plan.weeks.reduce((acc, w) => acc + w.sessions.filter((s) => s.feedback).length, 0)
 

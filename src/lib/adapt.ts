@@ -12,6 +12,7 @@ import { addDays, formatNumber } from './dates'
 import {
   bandOf,
   indexSeries,
+  plancherDuReleve,
   type Band,
   type IndexBreakdown,
   type LoadMap,
@@ -334,6 +335,8 @@ export function construireContexte(
   pain: PainMap,
   now: string,
   ecarts?: Map<string, EcartRow>,
+  /** L'indice par jour, quand il est déjà calculé : il décide de l'ouverture du volume. */
+  indices?: Record<string, { idx: number }>,
 ): ContextePlan {
   const seances = arrangerPlan(weeks, ecarts)
   // La reprise se lit du passé récent jusqu'au bout de la fenêtre de dix jours.
@@ -350,7 +353,7 @@ export function construireContexte(
     plafonds: plafondsProgression(seances, feedback, now),
     palier: palierProchaineLongue(seances, feedback, pain, now),
     palierSpecifique: palierProchaineSpecifique(seances, feedback, pain, now),
-    volumeOuvert: progresVolume(pain, now).atteint,
+    volumeOuvert: progresVolume(pain, now, indices).atteint,
     reveils: Object.fromEntries(
       Object.entries(pain)
         .filter(([, p]) => p?.wake != null)
@@ -761,18 +764,17 @@ export function adapt(
   // La règle exige des SAISIES, pas leur absence. Un carnet vide affiche zéro
   // douleur et déclencherait le feu vert le plus dangereux de l'app : celui
   // qui autorise 10 km de course en plus sur un tendon dont on ne sait rien.
-  const fenetre = verdictVolume(pain, now)
+  const fenetre = verdictVolume(pain, now, byDate)
   if (fenetre) {
     const commun =
-      `${fenetre.releves} réveils notés sur les ${fenetre.jours} derniers jours, aucun réveil ni ` +
-      `aucune fin de journée au-dessus de ${SEUIL_SANS_DOULEUR}, aucun effort au-dessus de ${EFFORT_TOLERE}, ` +
-      'et une raideur qui ne monte pas.'
+      `${fenetre.releves} réveils notés sur les ${fenetre.jours} derniers jours, aucun jour à ${SEUIL_OUVERTURE} ou plus ` +
+      'sur l’indice, et une raideur qui ne monte pas.'
     rules.push({
       id: 'VOLUME',
-      title: `Deux mois sans douleur au-dessus de ${SEUIL_SANS_DOULEUR} sur dix`,
+      title: 'Deux mois sans orange',
       action:
         `${commun} Le tendon a tenu la charge : le vélo du mercredi devient une course facile, ` +
-        'de la même durée. Il redevient du vélo dès qu’un réveil ou une fin de journée dépasse 2, ou qu’une douleur d’effort atteint 4.',
+        `de la même durée. Il redevient du vélo dès que l’indice atteint ${SEUIL_OUVERTURE}.`,
     })
   }
 
@@ -818,8 +820,8 @@ export interface ProgresVolume {
   joursRequis: number
   relevesRequis: number
   atteint: boolean
-  /** Le relevé qui a remis le compteur à zéro, s'il y en a un. */
-  remise: { day: string; valeur: number } | null
+  /** Le jour où l'indice a remis le compteur à zéro, et sa valeur sur 100. */
+  remise: { day: string; indice: number } | null
   /** Raideur moyenne de la semaine écoulée contre celle d'avant, quand elle monte. */
   raideurEnHausse: { avant: number; apres: number } | null
 }
@@ -827,34 +829,38 @@ export interface ProgresVolume {
 /**
  * Le compteur de l'ouverture du volume (question de Mathieu, 29 septembre
  * 2026 : « comment savoir où j'en suis ? »). Même règle que le second palier
- * de `verdictVolume` : 56 jours calmes (voir `remiseAZero`), et 42 réveils notés
+ * de `verdictVolume` : 56 jours sans orange (voir `remiseAZero`), et 42 réveils notés
  * au moins, parce qu'un carnet vide n'est pas un tendon calme.
  *
  * Le compteur ne remonte pas avant la première saisie du carnet : des jours
  * dont on ne sait rien ne sont pas des jours propres.
  */
 /**
- * Ce qui remet le compteur à zéro. Arbitré le 29 septembre 2026 d'après les
- * références du calcul, les trois mesures ne pèsent plus pareil :
+ * Ce qui remet le compteur à zéro : un jour où l'indice atteint l'orange.
  *
- * - le réveil et la fin de journée restent à 2 ou moins. La fin de journée
- *   est la douleur de la vie courante, et 2 sur 10 y est le critère de reprise
- *   de la course (Silbernagel et Crossley 2015) ; le réveil, pris à froid, est
- *   l'état du tendon ;
- * - la douleur pendant l'effort est tolérée jusqu'à 3. Le modèle de
- *   surveillance de la douleur accepte 5 pendant l'effort si le lendemain est
- *   calme (Silbernagel 2007) : une sortie longue à 3 suivie d'un réveil à 1
- *   remettait huit semaines à zéro. À 4 commence l'alerte orange de l'app.
+ * Arbitré par Mathieu le 5 octobre 2026. La règle d'avant lisait chaque
+ * relevé (réveil ou soir au-dessus de 2, effort au-dessus de 3), et un seul
+ * réveil à 2,5 effaçait huit semaines : trop violent pour un compteur aussi
+ * long. Depuis, seul compte le seuil où le plan change de lui-même, 50 : un
+ * relevé à 4 y suffit par les planchers, un 3 isolé ne l'atteint pas.
+ *
+ * Sans l'indice du jour (le contexte se construit avant la charge, ou le jour
+ * sort de la fenêtre calculée), on lit le plancher que les relevés posent à
+ * eux seuls : c'est par lui que l'indice franchit 50 dans l'immense majorité
+ * des cas.
  */
+export const SEUIL_OUVERTURE = 50
 
-function remiseAZero(p: PainMap[string] | undefined): number | null {
+function remiseAZero(d: string, pain: PainMap, indices?: Record<string, { idx: number }>): number | null {
+  const lu = indices?.[d]?.idx
+  if (lu != null) return lu >= SEUIL_OUVERTURE ? lu : null
+  const p = pain[d]
   if (!p) return null
-  const trop = [
-    p.wake != null && p.wake > SEUIL_SANS_DOULEUR ? p.wake : null,
-    p.evening != null && p.evening > SEUIL_SANS_DOULEUR ? p.evening : null,
-    p.effort != null && p.effort > EFFORT_TOLERE ? p.effort : null,
-  ].filter((x): x is number => x != null)
-  return trop.length ? Math.max(...trop) : null
+  const plancher = Math.max(
+    p.wake != null ? plancherDuReleve(p.wake, 'reveil') : 0,
+    ...[p.effort, p.evening].map((v) => (v != null ? plancherDuReleve(v, 'effort') : 0)),
+  )
+  return plancher >= SEUIL_OUVERTURE ? plancher : null
 }
 
 /** Hausse de la raideur moyenne tolérée d'une semaine à l'autre, en points. */
@@ -870,7 +876,7 @@ function raideurDeLaSemaine(pain: PainMap, debut: string): number | null {
   return vs.length >= 3 ? vs.reduce((a, b) => a + b, 0) / vs.length : null
 }
 
-export function progresVolume(pain: PainMap, now: string): ProgresVolume {
+export function progresVolume(pain: PainMap, now: string, indices?: Record<string, { idx: number }>): ProgresVolume {
   const { jours: joursRequis, releves: relevesRequis } = PALIERS_VOLUME[0]
   const premier = Object.keys(pain).sort()[0]
   let jours = 0
@@ -879,9 +885,9 @@ export function progresVolume(pain: PainMap, now: string): ProgresVolume {
   if (premier) {
     for (let k = 0; addDays(now, -k) >= premier; k++) {
       const d = addDays(now, -k)
-      const valeur = remiseAZero(pain[d])
-      if (valeur != null) {
-        remise = { day: d, valeur }
+      const indice = remiseAZero(d, pain, indices)
+      if (indice != null) {
+        remise = { day: d, indice }
         break
       }
       jours++
@@ -907,7 +913,7 @@ export function progresVolume(pain: PainMap, now: string): ProgresVolume {
 }
 
 /** Le verdict de la règle VOLUME : le même compteur, pour qu'un écran ne puisse pas contredire l'autre. */
-export function verdictVolume(pain: PainMap, now: string): VerdictVolume | null {
-  const p = progresVolume(pain, now)
+export function verdictVolume(pain: PainMap, now: string, indices?: Record<string, { idx: number }>): VerdictVolume | null {
+  const p = progresVolume(pain, now, indices)
   return p.atteint ? { palier: 2, releves: p.releves, jours: p.joursRequis } : null
 }
