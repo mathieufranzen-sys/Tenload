@@ -6,6 +6,7 @@ import {
   identifier,
   lirePrescription,
   proposer,
+  suggestionsAAjouter,
   type RenfoRow,
 } from './renfo'
 import type { PainMap } from './tendonIndex'
@@ -110,5 +111,28 @@ describe('la liste de la séance', () => {
 
   it('une évolution demande deux séances', () => {
     expect(evolution(mollet, [ligne('2026-10-01', 'facile')], NOW)).toBeNull()
+  })
+})
+
+describe('les suggestions d’ajout', () => {
+  it('le jour du bas : sauts, fentes, squat, pompes, curl, sauf ce qui est déjà au plan', () => {
+    const liste = exercicesDeLaSeance([['Fentes bulgares', '3 x 10', '']], 'muscu-bas', '2026-10-07', [], {}, NOW)
+    expect(suggestionsAAjouter('muscu-bas', liste).map((e) => e.id)).toEqual([
+      'sauts-deux',
+      'sauts-une',
+      'squat-talonnette',
+      'pompes',
+      'curl',
+    ])
+  })
+
+  it('le jour du haut : tout le bas du corps, et un ajout récent revient d’office', () => {
+    const h: RenfoRow[] = [{ day: '2026-10-02', exercice: 'fentes-bulgares', series: 3, valeur: 10, kg: 12, marge: 'juste' }]
+    const liste = exercicesDeLaSeance([['Stanish (excentrique mollet)', '3 x 12', '']], 'muscu-haut', '2026-10-09', h, {}, NOW)
+    expect(liste.map((x) => x.exo.id)).toEqual(['mollet-tendu', 'fentes-bulgares'])
+    const ids = suggestionsAAjouter('muscu-haut', liste).map((e) => e.id)
+    expect(ids).toContain('squat-talonnette')
+    expect(ids).not.toContain('mollet-tendu')
+    expect(ids).not.toContain('pompes')
   })
 })

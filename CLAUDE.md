@@ -1388,8 +1388,10 @@ que c'était trop léger. Le tendon se renforce sous une charge lourde (Bohm
 - **Noter un exercice du mollet coche l'excentrique du jour** : une saisie,
   un geste, et c'est la case que lit l'indice. Le coût du renfo dans l'indice
   ne change pas : aucune source ne donne un coût au kilo.
-- Les sauts (Baxter 2021) s'ajoutent à une séance du bas, puis reviennent
-  d'office tant qu'ils ont été faits dans les quatre dernières semaines.
+- **Des exercices s'ajoutent hors du plan** (`SUGGESTIONS`) : le jour du bas,
+  sauts sur deux et sur une jambe (Baxter 2021), fentes, squat, pompes, curl ;
+  le jour du haut, tout le bas du corps. Un ajout revient d'office tant qu'il
+  a été fait dans les quatre dernières semaines.
 - On ne note jamais une séance à venir.
 
 ## Le laboratoire de charge

@@ -137,8 +137,32 @@ const CATALOGUE: Array<ExerciceRenfo & { motif: RegExp }> = [
   { id: 'dips', nom: 'Dips sur banc', motif: /dips/i, mesure: 'reps', tendon: false, excentrique: false, leste: false, pas: 1 },
 ]
 
-/** Hors plan, à ajouter à une séance du bas : le palier d'après le renfo lourd (Baxter 2021). */
-export const SAUTS = ['sauts-deux', 'sauts-une'] as const
+/** Le bas du corps, dans l'ordre du catalogue. La mobilité n'a rien à noter. */
+const BAS_DU_CORPS = [
+  'mollet-tendu',
+  'mollet-flechi',
+  'mollet-statique',
+  'sauts-deux',
+  'sauts-une',
+  'sdt-roumain',
+  'sdt-unilateral',
+  'fentes-bulgares',
+  'squat-talonnette',
+  'hip-extension',
+  'pont-fessier',
+  'crab-walk',
+]
+
+/**
+ * Ce qui s'ajoute à une séance hors de sa liste du plan (6 octobre 2026). Les
+ * sauts sont le palier d'après le renfo lourd (Baxter 2021) ; le reste, des
+ * exercices que Mathieu fait déjà sans que le plan les écrive. Le jour du
+ * haut, tout le bas : c'est sa seconde séance de jambes de la semaine.
+ */
+export const SUGGESTIONS: Partial<Record<SessionType, string[]>> = {
+  'muscu-bas': ['sauts-deux', 'sauts-une', 'fentes-bulgares', 'squat-talonnette', 'pompes', 'curl'],
+  'muscu-haut': BAS_DU_CORPS,
+}
 
 const slug = (s: string) =>
   s
@@ -287,11 +311,11 @@ export interface ExerciceDuJour {
   ajoute: boolean
 }
 
-/** Au-delà, des sauts qu'on n'a plus faits ne sont plus proposés d'office. */
-const SAUTS_RECENTS = 28
+/** Au-delà, un exercice ajouté qu'on n'a plus fait ne revient plus d'office. */
+const AJOUTS_RECENTS = 28
 
 /**
- * La liste de la séance : les exercices du plan, puis les sauts s'ils font
+ * La liste de la séance : les exercices du plan, puis les suggestions qui font
  * partie de la routine récente (ou s'ils sont notés ce jour-là), puis tout
  * exercice noté ce jour-là qui n'est dans aucune des deux.
  */
@@ -325,12 +349,10 @@ export function exercicesDeLaSeance(
 
   for (const [nom, serie, precision] of ex) ajouter(identifier(nom, serie), serie, precision, false)
 
-  if (type === 'muscu-bas') {
-    const debut = addDays(jour, -SAUTS_RECENTS)
-    for (const id of SAUTS) {
-      const recent = historique.some((r) => r.exercice === id && r.series > 0 && r.day >= debut && r.day <= jour)
-      if (recent) ajouter(exerciceParId(id)!, '', '', true)
-    }
+  const debut = addDays(jour, -AJOUTS_RECENTS)
+  for (const id of SUGGESTIONS[type] ?? []) {
+    const recent = historique.some((r) => r.exercice === id && r.series > 0 && r.day >= debut && r.day <= jour)
+    if (recent) ajouter(exerciceParId(id)!, '', '', true)
   }
   for (const r of notesDuJour) {
     const exo = exerciceParId(r.exercice) ?? identifier(r.exercice)
@@ -339,10 +361,11 @@ export function exercicesDeLaSeance(
   return liste
 }
 
-/** Les sauts qu'on peut encore ajouter à une séance du bas. */
-export function sautsAAjouter(type: SessionType, liste: ExerciceDuJour[]): ExerciceRenfo[] {
-  if (type !== 'muscu-bas') return []
-  return SAUTS.filter((id) => !liste.some((x) => x.exo.id === id)).map((id) => exerciceParId(id)!)
+/** Les exercices qu'on peut encore ajouter à la séance : ceux qui n'y sont pas déjà. */
+export function suggestionsAAjouter(type: SessionType, liste: ExerciceDuJour[]): ExerciceRenfo[] {
+  return (SUGGESTIONS[type] ?? [])
+    .filter((id) => !liste.some((x) => x.exo.id === id))
+    .map((id) => exerciceParId(id)!)
 }
 
 /** Charge de départ d'un exercice ajouté sans historique ni plan. */

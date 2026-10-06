@@ -15,7 +15,7 @@ import {
   chargeDeDepart,
   exercicesDeLaSeance,
   formatCharge,
-  sautsAAjouter,
+  suggestionsAAjouter,
   type Charge,
   type ExerciceDuJour,
   type ExerciceRenfo,
@@ -69,7 +69,7 @@ export function ExercicesRenfo({
   }
   // On note ce qui est fait, pas ce qui le sera : jamais une séance à venir.
   const saisie = onSave && !indisponible && jour <= now
-  const aAjouter = saisie ? sautsAAjouter(type, liste) : []
+  const aAjouter = saisie ? suggestionsAAjouter(type, liste) : []
 
   return (
     <div>
@@ -99,7 +99,10 @@ export function ExercicesRenfo({
         />
       ))}
       {aAjouter.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '14px 0 4px' }}>
+        <p className="etiquette" style={{ margin: '16px 0 0' }}>Ajouter un exercice</p>
+      )}
+      {aAjouter.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '8px 0 4px' }}>
           {aAjouter.map((exo) => (
             <button
               key={exo.id}
