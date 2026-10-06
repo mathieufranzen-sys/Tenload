@@ -24,6 +24,7 @@ import { supabase } from '../lib/supabase'
 import type { DailyLogRow, FeedbackRow } from '../lib/buildPain'
 import type { EcartPatch, EcartRow } from '../lib/overrides'
 import type { DossardRow } from '../lib/dossards'
+import { exerciceParId, type RenfoRow } from '../lib/renfo'
 import { cleJour, cleSeance, empiler, vider, type Ecriture, type TableEcrivable } from '../lib/offlineQueue'
 
 export interface ProfilRow {
@@ -61,6 +62,8 @@ export interface DonneesDistantes {
    * champ, et un jeu de démo peut s'en passer. Lu partout avec `?? []`.
    */
   dossards?: DossardRow[]
+  /** Facultatif pour la même raison : le suivi du renfo est arrivé après. */
+  renfo?: RenfoRow[]
 }
 
 interface EtatProvider extends DonneesDistantes {
@@ -71,6 +74,9 @@ interface EtatProvider extends DonneesDistantes {
    */
   dossardsIndisponibles: boolean
   enregistrerDossard: (ligne: DossardRow) => void
+  /** La table `renfo_series` manque : `supabase/renfo.sql` reste à exécuter. */
+  renfoIndisponible: boolean
+  enregistrerRenfo: (ligne: RenfoRow) => void
   /** Premier chargement en cours, sans aucune donnée — même pas de cache. */
   chargement: boolean
   erreur: string | null
@@ -121,6 +127,7 @@ const CONFLIT: Record<TableEcrivable, string> = {
   profiles: 'id',
   plan_overrides: 'user_id,week,day_index,slot',
   dossards: 'user_id,id',
+  renfo_series: 'user_id,day,exercice',
 }
 
 function lireCache(): DonneesDistantes | null {
@@ -174,6 +181,7 @@ export function DataProvider({
   const [chargement, setChargement] = useState(() => !demo && lireCache() === null)
   const [erreur, setErreur] = useState<string | null>(null)
   const [dossardsIndisponibles, setDossardsIndisponibles] = useState(false)
+  const [renfoIndisponible, setRenfoIndisponible] = useState(false)
   const [version, setVersion] = useState(0)
 
   const actualiser = useCallback(() => setVersion((v) => v + 1), [])
@@ -208,10 +216,11 @@ export function DataProvider({
         supabase!.from('activities').select('*').eq('user_id', userId).order('day'),
         supabase!.from('plan_overrides').select('*').eq('user_id', userId).order('week'),
         supabase!.from('dossards').select('*').eq('user_id', userId).order('day'),
+        supabase!.from('renfo_series').select('*').eq('user_id', userId).order('day'),
       ])
 
     async function charger() {
-      let [profil, logs, feedback, activites, ecarts, dossards] = await requetes()
+      let [profil, logs, feedback, activites, ecarts, dossards, renfo] = await requetes()
 
       // Au démarrage à froid, le jeton d'accès peut encore être en cours de
       // rafraîchissement quand ces requêtes partent : elles reviennent alors
@@ -219,7 +228,7 @@ export function DataProvider({
       // supprimer la bannière qui obligeait à relancer l'app.
       if (vivant && [profil, logs, feedback, activites, ecarts].some((r) => r.error)) {
         await new Promise((r) => setTimeout(r, 700))
-        if (vivant) [profil, logs, feedback, activites, ecarts, dossards] = await requetes()
+        if (vivant) [profil, logs, feedback, activites, ecarts, dossards, renfo] = await requetes()
       }
 
       if (!vivant) return
@@ -233,12 +242,14 @@ export function DataProvider({
       // La table des dossards est la seule qui peut manquer sans que rien ne
       // soit cassé : elle arrive avec un script à part. Son absence ne doit
       // pas allumer la bannière de synchronisation en échec.
-      const tableAbsente =
-        dossards.error != null && /does not exist|schema cache|42P01|PGRST205/i.test(
-          `${dossards.error.code ?? ''} ${dossards.error.message}`,
-        )
+      const absente = (e: { code?: string; message: string } | null) =>
+        e != null && /does not exist|schema cache|42P01|PGRST205/i.test(`${e.code ?? ''} ${e.message}`)
+      const tableAbsente = absente(dossards.error)
       setDossardsIndisponibles(tableAbsente)
       if (dossards.error && !tableAbsente && !premierEchec) setErreur(dossards.error.message)
+      // Même règle pour le renfo, arrivé lui aussi avec son propre script.
+      setRenfoIndisponible(absente(renfo.error))
+      if (renfo.error && !absente(renfo.error) && !premierEchec) setErreur(renfo.error.message)
 
       const suivant: DonneesDistantes = {
         profil: (profil.data as ProfilRow | null) ?? donnees.profil,
@@ -247,6 +258,7 @@ export function DataProvider({
         activites: (activites.data as ActiviteRow[] | null) ?? donnees.activites,
         ecarts: (ecarts.data as EcartRow[] | null) ?? donnees.ecarts,
         dossards: (dossards.data as DossardRow[] | null) ?? donnees.dossards ?? [],
+        renfo: (renfo.data as RenfoRow[] | null)?.map((r) => ({ ...r, kg: Number(r.kg) })) ?? donnees.renfo ?? [],
       }
       setDonnees(suivant)
       ecrireCache(suivant)
@@ -416,6 +428,36 @@ export function DataProvider({
     [userId, viderFile],
   )
 
+  /**
+   * Écriture optimiste d'un exercice de renfo. Un exercice du mollet coche
+   * aussi l'excentrique du jour dans le carnet : une seule saisie pour un
+   * seul geste, et c'est la case que lit l'indice (−6 le lendemain).
+   */
+  const enregistrerRenfo = useCallback(
+    (ligne: RenfoRow) => {
+      setDonnees((d) => {
+        const liste = d.renfo ?? []
+        const i = liste.findIndex((x) => x.day === ligne.day && x.exercice === ligne.exercice)
+        const renfo = i === -1 ? [...liste, ligne] : liste.map((x, idx) => (idx === i ? ligne : x))
+        const suivant = { ...d, renfo }
+        if (!demo) ecrireCache(suivant)
+        return suivant
+      })
+      if (!demo) empiler({
+        table: 'renfo_series',
+        cle: `${ligne.day}|${ligne.exercice}`,
+        valeurs: { user_id: userId, ...ligne, updated_at: new Date().toISOString() },
+        maj: Date.now(),
+      })
+      if (!demo) viderFile()
+      if (ligne.series > 0 && exerciceParId(ligne.exercice)?.excentrique) {
+        const deja = donnees.logs.find((l) => l.day === ligne.day)?.eccentric
+        if (!deja) enregistrerLog(ligne.day, { eccentric: true })
+      }
+    },
+    [userId, viderFile, donnees.logs, enregistrerLog],
+  )
+
   const valeur = useMemo<EtatProvider>(
     () => ({
       ...donnees,
@@ -423,6 +465,8 @@ export function DataProvider({
       erreur,
       dossardsIndisponibles,
       enregistrerDossard,
+      renfoIndisponible,
+      enregistrerRenfo,
       actualiser,
       enregistrerLog,
       enregistrerFeedback,
@@ -435,6 +479,8 @@ export function DataProvider({
       erreur,
       dossardsIndisponibles,
       enregistrerDossard,
+      renfoIndisponible,
+      enregistrerRenfo,
       actualiser,
       enregistrerLog,
       enregistrerFeedback,
@@ -456,6 +502,12 @@ function useDonnees(): EtatProvider {
 export function useDossards() {
   const { dossards, dossardsIndisponibles, enregistrerDossard } = useDonnees()
   return { dossards: dossards ?? [], indisponibles: dossardsIndisponibles, enregistrerDossard }
+}
+
+/** Le suivi du renfo : charge et répétitions, exercice par exercice. */
+export function useRenfo() {
+  const { renfo, renfoIndisponible, enregistrerRenfo } = useDonnees()
+  return { renfo: renfo ?? [], indisponible: renfoIndisponible, enregistrerRenfo }
 }
 
 export function useProfile() {

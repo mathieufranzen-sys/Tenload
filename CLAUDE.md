@@ -1365,6 +1365,33 @@ le dit et n'enregistre rien, sans allumer la bannière de synchronisation.
   `chronoEquivalent`, l'inverse exact de `projeterMarathon` sur la forme
   projetée, puis, la course passée, le chrono à l'objectif et à la forme.
 
+## Le suivi du renfo
+
+`src/lib/renfo.ts` (+ 13 tests), `ExercicesRenfo` dans la feuille de séance,
+`RenfoChart` dans Suivi, table `supabase/renfo.sql` **à exécuter une fois**.
+Demandé par Mathieu le 6 octobre 2026 : la liste du plan disait « 3 x 15 » de
+la semaine 7 à la 34, et il faisait 3 x 20 à 14 kg sur une jambe sans savoir
+que c'était trop léger. Le tendon se renforce sous une charge lourde (Bohm
+2015, Beyer 2015), pas sous un grand nombre de répétitions.
+
+- **Une ligne par exercice et par jour**, jamais par série : séries,
+  répétitions (ou secondes, ou contacts), charge ajoutée, et la difficulté de
+  la dernière série (facile, juste, à la limite). Jambes ensemble, sauts en
+  contacts seulement : arbitrés par Mathieu.
+- **Le catalogue suit un exercice sous ses noms du plan** (les deux Stanish
+  sont « mollet-tendu »). La clé en base est l'identifiant, jamais le nom.
+- **La charge proposée monte sur deux séances faciles de suite**, plus un
+  réveil calme le lendemain pour ce qui charge le tendon (`lendemainCalme`,
+  même définition que la reprise). Elle ne descend jamais d'elle-même. Un
+  exercice lesté gagne des kilos et ses répétitions redescendent vers 12
+  (Beyer), un exercice au poids du corps gagne une répétition.
+- **Noter un exercice du mollet coche l'excentrique du jour** : une saisie,
+  un geste, et c'est la case que lit l'indice. Le coût du renfo dans l'indice
+  ne change pas : aucune source ne donne un coût au kilo.
+- Les sauts (Baxter 2021) s'ajoutent à une séance du bas, puis reviennent
+  d'office tant qu'ils ont été faits dans les quatre dernières semaines.
+- On ne note jamais une séance à venir.
+
 ## Le laboratoire de charge
 
 `npm run dev`, puis **http://localhost:5173/labo.html**. Demandé par Mathieu

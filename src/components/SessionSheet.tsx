@@ -36,6 +36,9 @@ import { DecoupageSeance, ProfilSeance } from './ProfilSeance'
 import { RessentiJauges } from './RessentiJauges'
 import { JaugeRessenti } from './JaugeRessenti'
 import { StatsSeance } from './StatsSeance'
+import { ExercicesRenfo } from './ExercicesRenfo'
+import type { RenfoRow } from '../lib/renfo'
+import type { PainMap } from '../lib/tendonIndex'
 
 const plan = planJson as unknown as Plan
 
@@ -64,6 +67,12 @@ interface Props {
   formeActuelle?: number
   /** Enregistre une nouvelle forme projetée, calculée sur le chrono d'une course. */
   onRecalibrerForme?: (allure: number) => void
+  /** Le suivi du renfo, et le carnet qui décide si la charge peut monter. */
+  renfo?: RenfoRow[]
+  pain?: PainMap
+  renfoIndisponible?: boolean
+  /** Absent en lecture seule. */
+  onSaveRenfo?: (ligne: RenfoRow) => void
   onClose: () => void
 }
 
@@ -78,6 +87,10 @@ export function SessionSheet({
   onDeplacer,
   formeActuelle,
   onRecalibrerForme,
+  renfo = [],
+  pain = {},
+  renfoIndisponible,
+  onSaveRenfo,
   onClose,
 }: Props) {
   const { s, jourOrigine, slot, day } = seance
@@ -286,28 +299,16 @@ export function SessionSheet({
               {s.ex && (
                 <>
                   <TitreSection>{deroule.length > 0 ? 'Renforcement enchaîné' : 'Exercices'}</TitreSection>
-                  {s.ex.map(([nom, serie, precision], i) => (
-                    <div
-                      key={i}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        gap: 14,
-                        padding: '11px 0',
-                        borderBottom: i < s.ex!.length - 1 ? '1px solid var(--border)' : undefined,
-                      }}
-                    >
-                      <div style={{ fontSize: 'var(--fs-texte)' }}>
-                        {nom}
-                        {precision && (
-                          <em style={{ display: 'block', fontStyle: 'normal', color: 'var(--ink-3)', fontSize: 'var(--fs-detail)', marginTop: 2 }}>
-                            {precision}
-                          </em>
-                        )}
-                      </div>
-                      <div style={{ fontSize: 'var(--fs-texte)', color: 'var(--sur-ink-2)', whiteSpace: 'nowrap' }}>{serie}</div>
-                    </div>
-                  ))}
+                  <ExercicesRenfo
+                    ex={s.ex}
+                    type={s.type}
+                    jour={day}
+                    now={today()}
+                    historique={renfo}
+                    pain={pain}
+                    indisponible={renfoIndisponible}
+                    onSave={onSaveRenfo}
+                  />
                 </>
               )}
 

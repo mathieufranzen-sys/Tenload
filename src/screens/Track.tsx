@@ -7,6 +7,8 @@
  * Mathieu — les gestes protecteurs se saisissent dans Aujourd'hui et pèsent
  * dans l'indice, un décompte de plus n'apportait rien.
  */
+import { RenfoChart } from '../components/charts/RenfoChart'
+import type { RenfoRow } from '../lib/renfo'
 import { Fragment, useMemo, useState, type ReactNode } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan } from '../data/types'
@@ -85,6 +87,8 @@ interface Props {
   ecarts?: Map<string, EcartRow>
   attestes?: Set<string>
   onOuvrirProfil: () => void
+  /** Le suivi du renfo, exercice par exercice. */
+  renfo?: RenfoRow[]
 }
 
 /**
@@ -120,6 +124,7 @@ export function Track({
   ecarts,
   attestes,
   onOuvrirProfil,
+  renfo = [],
 }: Props) {
   const now = todayISO()
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
@@ -531,6 +536,10 @@ export function Track({
           ]}
         >
           <LoadChart rows={loadRows} />
+        </Viz>
+
+        <Viz titre="Renforcement">
+          <RenfoChart historique={renfo} />
         </Viz>
 
         {/* En dernier : c'est ce vers quoi tout le reste tend. Une règle qui

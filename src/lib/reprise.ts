@@ -138,6 +138,18 @@ function matinCalme(m: string, lire: ReturnType<typeof lecteur>, now: string): '
 }
 
 /**
+ * Le verdict du lendemain d'une séance, sur la même définition du matin
+ * calme. Sert au renfo : la charge ne monte que si le tendon a passé la nuit.
+ * Un lendemain encore à venir est `inconnu` ici, jamais supposé calme : on
+ * ne monte pas une charge sur une projection.
+ */
+export function lendemainCalme(pain: PainMap, jour: string, now: string): 'calme' | 'agite' | 'inconnu' {
+  const m = addDays(jour, 1)
+  if (m > now) return 'inconnu'
+  return matinCalme(m, lecteur(pain, m, now), now)
+}
+
+/**
  * Le réveil calme : 2, ou jusqu'à 2,5 si c'est la raideur habituelle.
  *
  * Arbitré par Mathieu le 29 septembre 2026. Un seuil fixe à 2 bloquait la

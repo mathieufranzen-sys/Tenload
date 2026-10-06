@@ -28,6 +28,7 @@ import { Paces } from './screens/Paces'
 import { Profile, type SectionKey } from './screens/Profile'
 import { GardeEcran } from './components/GardeEcran'
 import { BottomNav, type Onglet } from './components/BottomNav'
+import type { RenfoRow } from './lib/renfo'
 import { SessionSheet } from './components/SessionSheet'
 import { BilansPasses } from './components/BilansPasses'
 import { SectionDossards } from './components/SectionDossards'
@@ -40,6 +41,7 @@ import {
   useEcarts,
   useProfile,
   useSeanceFeedback,
+  useRenfo,
   type ActiviteRow,
   type ProfilRow,
 } from './hooks/DataProvider'
@@ -151,6 +153,7 @@ export function CoquilleDemoInterne({
   const { ecarts, enregistrerEcart } = useEcarts()
   const { profil, enregistrerProfil } = useProfile()
   const { dossards, enregistrerDossard } = useDossards()
+  const { renfo, enregistrerRenfo } = useRenfo()
 
   // `bascule` au plus tôt : sans compte, tout le carnet de la démo est
   // considéré comme saisi dans l'app, jamais importé.
@@ -176,6 +179,8 @@ export function CoquilleDemoInterne({
       onSaveEcart={enregistrerEcart}
       dossards={dossards}
       onSaveDossard={enregistrerDossard}
+      renfo={renfo}
+      onSaveRenfo={enregistrerRenfo}
     />
   )
 }
@@ -194,6 +199,7 @@ function CoquilleConnectee({
   const { enregistrerFeedback } = useSeanceFeedback()
   const { ecarts, enregistrerEcart } = useEcarts()
   const { dossards, indisponibles: dossardsIndisponibles, enregistrerDossard } = useDossards()
+  const { renfo, indisponible: renfoIndisponible, enregistrerRenfo } = useRenfo()
 
   const activities: ActivityRow[] = useMemo(
     () =>
@@ -226,6 +232,9 @@ function CoquilleConnectee({
       dossards={dossards}
       dossardsIndisponibles={dossardsIndisponibles}
       onSaveDossard={enregistrerDossard}
+      renfo={renfo}
+      renfoIndisponible={renfoIndisponible}
+      onSaveRenfo={enregistrerRenfo}
       onSaveFeedback={enregistrerFeedback}
       onSaveProfil={enregistrerProfil}
       onSaveEcart={enregistrerEcart}
@@ -316,9 +325,17 @@ function Coquille({
   dossards = [],
   dossardsIndisponibles = false,
   onSaveDossard,
+  renfo = [],
+  renfoIndisponible = false,
+  onSaveRenfo,
   labo,
 }: {
   labo?: OptionsLabo
+  /** Le suivi du renfo, exercice par exercice. */
+  renfo?: RenfoRow[]
+  renfoIndisponible?: boolean
+  /** Absent en mode instantanés : le renfo reste alors en lecture seule. */
+  onSaveRenfo?: (ligne: RenfoRow) => void
   /** Les dossards ajoutés et les objectifs de ceux du plan. */
   dossards?: DossardRow[]
   /** La table `dossards` n'existe pas encore : le script SQL reste à passer. */
@@ -564,6 +581,7 @@ function Coquille({
           forme={forme}
           ecarts={ecarts}
           attestes={attestes}
+          renfo={renfo}
           onVoirANoter={() => {
             setSectionProfil('anoter')
             setOnglet('profile')
@@ -676,6 +694,10 @@ function Coquille({
           }}
           formeActuelle={fitnessPaceTest}
           onRecalibrerForme={onSaveProfil && ((allure) => onSaveProfil({ fitness_pace_s: allure }))}
+          renfo={renfo}
+          pain={data.pain}
+          renfoIndisponible={renfoIndisponible}
+          onSaveRenfo={onSaveRenfo}
           onClose={() => setSeance(null)}
         />
         </GardeEcran>
