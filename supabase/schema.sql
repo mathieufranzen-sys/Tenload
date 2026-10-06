@@ -284,7 +284,7 @@ select
                                  * case when name ~* '\mz3\M|seuil|tempo|fractionn|interval' then 0.10 else 0.05 end
       when sport = 'Weight' then (moving_s / 60.0)
                                  * case when name ~* 'jambe|bas|bulgare|trx' then 0.08 else 0.0 end
-      when sport = 'Hike'   then (moving_s / 60.0) * 0.05
+      when sport = 'Hike'   then case when distance_m > 0 then (distance_m / 1000.0) * 0.7 else (moving_s / 60.0) * 0.05 end
       else 0
     end
   )::numeric, 2) as load_km_eq

@@ -374,5 +374,99 @@
       "valeur": "médiane 19, 2 jour(s) douloureux sur 2 en orange",
       "ok": true
     }
+  },
+  "rando07": {
+    "1.1": {
+      "valeur": "68, Rouge, charge 0 %",
+      "ok": true
+    },
+    "1.2": {
+      "valeur": "noir : course au 3e matin calme, intensité au 14e",
+      "ok": true
+    },
+    "1.3": {
+      "valeur": "50, Orange, compteur 0",
+      "ok": true
+    },
+    "1.4": {
+      "valeur": "Je ne sais pas, course suspendue",
+      "ok": true
+    },
+    "2.1": {
+      "valeur": "vert en 0 j, maximum 19 ensuite",
+      "ok": true
+    },
+    "2.2": {
+      "valeur": "max 19, yoyo 19, 1 séance(s) changée(s)",
+      "ok": false
+    },
+    "2.3": {
+      "valeur": "maximum 12",
+      "ok": true
+    },
+    "2.4": {
+      "valeur": "maximum 24, emballement 20",
+      "ok": false
+    },
+    "2.5": {
+      "valeur": "36, Jaune, charge 0 %, intensité en pause, course en pause",
+      "ok": true
+    },
+    "3.1": {
+      "valeur": "max 3, yoyo 3, 0 séance(s) changée(s)",
+      "ok": true
+    },
+    "3.2": {
+      "valeur": "+1 points (1 contre 0)",
+      "ok": false
+    },
+    "3.3": {
+      "valeur": "1,03 par km contre 1,00",
+      "ok": true
+    },
+    "3.4": {
+      "valeur": "Z3 0 contre Z2 0",
+      "ok": false
+    },
+    "3.5": {
+      "valeur": "maximum 10",
+      "ok": false
+    },
+    "3.6": {
+      "valeur": "0,0 point par jour",
+      "ok": true
+    },
+    "3.7": {
+      "valeur": "50 → 50 → 24 → 0, qualité du jeudi en pause",
+      "ok": true
+    },
+    "3.8": {
+      "valeur": "24, Vert, intensité en pause, course gardée, qualité rendue au 3e matin calme",
+      "ok": false
+    },
+    "4.1": {
+      "valeur": "61, Orange, charge 0 %",
+      "ok": true
+    },
+    "4.2": {
+      "valeur": "crise : course au 2e matin, intensité au 7e",
+      "ok": true
+    },
+    "4.3": {
+      "valeur": "0 jour(s) sans course sur 14",
+      "ok": true
+    },
+    "4.4": {
+      "valeur": "0 jour(s) orange, maximum 14",
+      "ok": true
+    },
+    "R.1": {
+      "valeur": "37, Jaune, au-dessus de 81 % des jours",
+      "ok": false
+    },
+    "R.2": {
+      "valeur": "médiane 19, 2 jour(s) douloureux sur 2 en orange",
+      "ok": true
+    }
   }
 }

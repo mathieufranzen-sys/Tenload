@@ -368,6 +368,9 @@ avec le calcul d'origine, 16 aujourd'hui.
    seuls pics de douleur du soir du carnet suivent tous les deux une séance de
    home trainer en Z3, pas une course. La flexion plantaire soutenue compte, et
    la force sur le tendon monte avec la puissance (Dick et al. 2016).
+   **La randonnée compte au kilomètre, 0,7** (`RANDONNEE_KM`, 6 octobre
+   2026) : la marche (0,5) plus le dénivelé, qui augmente le dommage cumulé
+   sur le tendon en montée. À la minute, un sentier lent coûtait moins.
 3. **Le renfo bas pèse 0,08 point par minute**, soit 3,6 pour 45 minutes
    (1er octobre 2026). Il valait 0,25, autant que 11 km d'endurance, et
    faisait à lui seul l'essentiel de la fraîcheur du jeudi. C'est le

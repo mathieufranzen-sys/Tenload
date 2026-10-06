@@ -67,9 +67,19 @@ export const MIN_COST: Record<string, number> = {
   'muscu-bas': 0.08,
   escalade: 0.06, // appuis en pointe
   'muscu-haut': 0,
-  hike: 0.05,
+  hike: 0.05, // repli quand la randonnée n'a pas de distance, voir RANDONNEE_KM
   repos: 0,
 }
+
+/**
+ * La randonnée au kilomètre : la marche (0,5) plus le dénivelé. En montée, le
+ * dommage cumulé sur le tendon d'Achille augmente (Van Hooren et al. 2024) ;
+ * c'est elle qui sépare une randonnée d'une marche. Arbitré par Mathieu le
+ * 6 octobre 2026 entre 0,6 et 0,7 : 0,7, le dénivelé faisant la randonnée.
+ * Elle valait 0,05 par minute, soit 0,6 au kilomètre à 5 km/h mais 0,3 sur un
+ * sentier lent, là où le tendon travaille le plus.
+ */
+export const RANDONNEE_KM = 0.7
 
 /** Le vélo appuyé : Z3, seuil, tempo ou fractionné, au titre ou au nom de l'activité. */
 export const VELO_Z3 = 0.1

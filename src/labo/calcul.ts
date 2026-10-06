@@ -24,6 +24,7 @@ import {
   KM_COST,
   LONGUE_SEUIL_KM,
   MIN_COST,
+  RANDONNEE_KM,
   RUN_COST,
   SURCOUT_FIN_DE_LONGUE,
   VELO_Z3,
@@ -228,12 +229,13 @@ const SECTIONS: Section[] = [
       },
       {
         element: 'Randonnée',
-        actuel: `${n(MIN_COST.hike)} par minute`,
+        actuel: '0,05 par minute',
         statut: 'origine',
-        propose: `${n(MIN_COST.hike)} par minute, inchangé`,
+        propose: `${n(RANDONNEE_KM)} par km`,
         statutPropose: 'inspire',
-        pourquoi: 'À 5 km/h, c’est le coût de la marche ramené à la minute : 0,5 × 5 / 60, soit 0,04. Cohérent.',
-        sources: [S.demangeot],
+        pourquoi:
+          'La randonnée, c’est la marche plus le dénivelé. La marche charge le tendon à environ la moitié de la course au pic (0,5) ; en montée, le dommage cumulé sur le tendon d’Achille augmente. Au kilomètre et non à la minute : un sentier lent faisait baisser son coût là où le tendon travaille le plus. 0,7 est l’arbitrage de Mathieu du 6 octobre, entre 0,6 et 0,7.',
+        sources: [S.demangeot, S.vanHooren],
       },
     ],
   },
@@ -568,7 +570,7 @@ const BAREME: Array<{ activite: string; cout: string; exemple: string; statut: S
   { activite: 'Vélo appuyé (Z3, seuil)', cout: parMin(VELO_Z3), exemple: `60 min : ${pts(60 * VELO_Z3)}`, statut: 'inspire', sources: [S.dick, S.carnet] },
   { activite: 'Renfo bas du corps', cout: parMin(MIN_COST['muscu-bas']), exemple: `45 min : ${pts(45 * MIN_COST['muscu-bas'])}`, statut: 'inspire', sources: [S.demangeot, S.beyer] },
   { activite: 'Escalade', cout: parMin(MIN_COST.escalade), exemple: `90 min : ${pts(90 * MIN_COST.escalade)}`, statut: 'origine', sources: [] },
-  { activite: 'Randonnée', cout: parMin(MIN_COST.hike), exemple: `120 min : ${pts(120 * MIN_COST.hike)}`, statut: 'inspire', sources: [S.demangeot] },
+  { activite: 'Randonnée', cout: parKm(RANDONNEE_KM), exemple: `12 km : ${pts(12 * RANDONNEE_KM)}`, statut: 'inspire', sources: [S.demangeot, S.vanHooren] },
   { activite: 'Renfo haut du corps, repos', cout: '0', exemple: 'Le tendon ne travaille pas', statut: 'origine', sources: [] },
 ]
 
@@ -689,6 +691,7 @@ const VERSIONS: Array<{ cle: string; titre: string }> = [
   { cle: 'apres', titre: 'Recalage sur les sources' },
   { cle: 'option3', titre: 'Plus la douleur sous 4' },
   { cle: 'volume50', titre: 'Ouverture du volume à 50' },
+  { cle: 'rando07', titre: 'Randonnée à 0,7 par km' },
 ]
 const figes = resultats as Record<string, Record<string, Resultat>>
 

@@ -14,7 +14,7 @@
  * activité enregistrée, on ignore le plan pour cette journée.
  */
 import type { Session, SessionType, Week } from '../data/types'
-import { KM_COST, MIN_COST, RUN_COST, VELO_Z3, estVeloAppuye, surcoutLongue, type LoadMap } from './tendonIndex'
+import { KM_COST, MIN_COST, RANDONNEE_KM, RUN_COST, VELO_Z3, estVeloAppuye, surcoutLongue, type LoadMap } from './tendonIndex'
 import { addDays } from './dates'
 import { formeNotee, seancesAvecEcarts, slotsParJour, type EcartRow } from './overrides'
 import type { FeedbackRow } from './buildPain'
@@ -52,7 +52,7 @@ export function activityLoad(a: ActivityRow): number {
       // Seul le bas du corps charge le tendon.
       return /jambe|bas|bulgare|trx|squat|mollet/.test(name) ? min * MIN_COST['muscu-bas'] : 0
     case 'Hike':
-      return min * MIN_COST.hike
+      return km > 0 ? km * RANDONNEE_KM : min * MIN_COST.hike
     case 'Climb':
       return min * MIN_COST.escalade
     default:
