@@ -621,6 +621,7 @@ const VERSIONS: Array<{ cle: string; titre: string }> = [
   { cle: 'avant', titre: 'Calcul d’origine' },
   { cle: 'apres', titre: 'Recalage sur les sources' },
   { cle: 'option3', titre: 'Plus la douleur sous 4' },
+  { cle: 'volume50', titre: 'Ouverture du volume à 50' },
 ]
 const figes = resultats as Record<string, Record<string, Resultat>>
 

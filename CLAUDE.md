@@ -701,7 +701,8 @@ plus longtemps le tendon a mal, plus fort et plus longtemps le plan s'adapte.**
   habituelle (moyenne des 28 jours précédents, dix relevés au moins), jamais
   plus : un seuil fixe à 2 bloquait pour de bon un tendon dont la raideur de
   fond s'est installée juste au-dessus (arbitré le 29 septembre 2026). Le
-  compteur d'ouverture du volume, lui, reste strict à 2. Le compteur part du dernier relevé douloureux, donc un
+  compteur d'ouverture du volume, lui, ne lit que l'indice (50, voir la
+  contrainte 5). Le compteur part du dernier relevé douloureux, donc un
   épisode long le démarre tard.
   **Un réveil non saisi ne compte pas, mais ne remet pas le compteur à zéro**,
   et un palier atteint est acquis (30 septembre 2026) : un pic du 25 août
@@ -1424,7 +1425,8 @@ avait révélé que le jaune d'un tendon à 3 tous les matins venait de la charg
 pas de la douleur. Deux réponses depuis : une douleur de 3 vaut le jaune à
 elle seule (`ECHELLE_DOULEUR`), et trois matins non calmes font une alerte de
 reprise (`episodeDeFond`). Batterie : 14 attentes tenues avec le calcul
-d'origine, 15 après le recalage, 16 avec l'option 3, sur 23.
+d'origine, 15 après le recalage, 16 avec l'option 3, 16 encore avec
+l'ouverture du volume à 50 (version `volume50`), sur 23.
 
 ## Le garde-fou contre la page blanche
 
