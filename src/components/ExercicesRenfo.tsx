@@ -51,6 +51,7 @@ export function ExercicesRenfo({
 }) {
   const [ouvert, setOuvert] = useState<string | null>(null)
   const [ajouts, setAjouts] = useState<ExerciceRenfo[]>([])
+  const [suggestions, setSuggestions] = useState(false)
 
   const liste = exercicesDeLaSeance(ex, type, jour, historique, pain, now)
   // Un exercice ajouté mais pas encore enregistré n'existe que dans l'écran.
@@ -92,29 +93,41 @@ export function ExercicesRenfo({
             setOuvert(null)
           }}
           onRetirer={() => {
-            onSave?.({ day: jour, exercice: x.exo.id, series: 0, valeur: 0, kg: 0, marge: null })
+            // Un ajout jamais enregistré n'a rien à effacer en base.
+            if (x.note) onSave?.({ day: jour, exercice: x.exo.id, series: 0, valeur: 0, kg: 0, marge: null })
             setAjouts((a) => a.filter((e) => e.id !== x.exo.id))
             setOuvert(null)
           }}
         />
       ))}
+      {/* Repliée derrière un bouton (retour du 6 octobre) : le jour du haut,
+          onze propositions faisaient une liste plus longue que la séance. */}
       {aAjouter.length > 0 && (
-        <p className="etiquette" style={{ margin: '16px 0 0' }}>Ajouter un exercice</p>
+        <button
+          type="button"
+          className="puce"
+          aria-expanded={suggestions}
+          onClick={() => setSuggestions((v) => !v)}
+          style={{ marginTop: 16, cursor: 'pointer' }}
+        >
+          <Icon name={suggestions ? 'x' : 'plus'} size={14} />
+          {suggestions ? 'Fermer les suggestions' : 'Ajouter un exercice'}
+        </button>
       )}
-      {aAjouter.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '8px 0 4px' }}>
+      {aAjouter.length > 0 && suggestions && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '10px 0 4px' }}>
           {aAjouter.map((exo) => (
             <button
               key={exo.id}
               type="button"
               className="puce"
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: 'pointer', background: 'var(--surface)', border: '1px solid var(--border-2)' }}
               onClick={() => {
                 setAjouts((a) => [...a, exo])
                 setOuvert(exo.id)
+                setSuggestions(false)
               }}
             >
-              <Icon name="plus" size={14} />
               {exo.nom}
             </button>
           ))}
