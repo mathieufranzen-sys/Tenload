@@ -184,7 +184,7 @@ export function CarteBilan({
               : 'Douleur max'
           }
         />
-        <Tuile valeur={`${b.excentrique}`} unite="/7" libelle="Jours d'excentrique" />
+        <Tuile valeur={`${b.excentrique}`} libelle={b.excentrique > 1 ? 'Séances d’excentrique' : 'Séance d’excentrique'} />
         <Tuile valeur={`${b.sautees}`} libelle={b.sautees > 1 ? 'Séances sautées' : 'Séance sautée'} bonne={b.sautees === 0} />
       </div>
 
@@ -314,12 +314,14 @@ export function CarteBilan({
         {pluriel(b.sansDouleur.jours, 'jour')}
         <Secondaire>{b.sansDouleur.releves} relevés</Secondaire>
       </Ligne>
+      {/* Une à deux séances par semaine, la cible du kiné (6 octobre 2026) :
+          une semaine sans n'est pas une faute, elle n'a pas de pastille. */}
       <Ligne
         libelle="Excentrique"
-        pastille={{ texte: b.excentrique >= 4 ? 'observance tenue' : 'à relancer', bonne: b.excentrique >= 4 }}
+        pastille={b.excentrique >= 1 ? { texte: 'le rythme du kiné', bonne: true } : undefined}
       >
-        {pluriel(b.excentrique, 'jour')} sur 7
-        {b.excentriqueSerie > 1 && <Secondaire>série de {b.excentriqueSerie}</Secondaire>}
+        {pluriel(b.excentrique, 'séance')} cette semaine
+        <Secondaire>cible 1 à 2</Secondaire>
       </Ligne>
       <Ligne
         libelle="Journées attestées"

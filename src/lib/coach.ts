@@ -60,6 +60,14 @@ function reveils(pain: PainMap, fin: string, jours: number): number[] {
 
 const moyenne = (xs: number[]): number => xs.reduce((a, b) => a + b, 0) / xs.length
 
+/**
+ * Le rythme tenu de l'excentrique : une séance par semaine sur quatre. Son
+ * kiné le veut une à deux fois par semaine, pas tous les jours (6 octobre
+ * 2026) ; les seuils d'avant, 8 et 12 jours sur 28, récompensaient un
+ * protocole quotidien qu'il ne doit pas suivre.
+ */
+const EXCENTRIQUE_TENU = 4
+
 /** Jours où le protocole excentrique a été fait, sur la fenêtre demandée. */
 function joursExcentrique(pain: PainMap, fin: string, jours: number): number {
   let n = 0
@@ -448,31 +456,31 @@ function candidatsFond(entree: EntreeCoach): MotCoach[] {
         cle: 'raideur-baisse', sujet: 'raideur',
         ton: 'bravo',
         texte:
-          excentrique >= 8
-            ? `Bien joué. Ton excentrique ${excentrique} jours sur les 28 derniers a payé : ta raideur au réveil est passée ${chiffres}.${relance}`
+          excentrique >= EXCENTRIQUE_TENU
+            ? `Bien joué. Tes ${excentrique} séances de renfo mollet en quatre semaines ont payé : ta raideur au réveil est passée ${chiffres}.${relance}`
             : `Ça descend. Ta raideur au réveil est passée ${chiffres} en deux semaines. Continue exactement comme ça.${relance}`,
       })
     } else if (ecart <= -0.4) {
       out.push({
         cle: 'raideur-hausse', sujet: 'raideur',
         ton: 'vigilance',
-        texte: `Ta raideur au réveil remonte : de ${formatNumber(a)} à ${formatNumber(b)} sur 10. Ce n'est pas encore une alerte, mais c'est le moment de ne rien forcer et de tenir l'excentrique.`,
+        texte: `Ta raideur au réveil remonte : de ${formatNumber(a)} à ${formatNumber(b)} sur 10. Ce n'est pas encore une alerte, mais c'est le moment de ne rien forcer et de garder tes séances de renfo mollet.`,
       })
-    } else if (excentrique >= 12) {
+    } else if (excentrique >= EXCENTRIQUE_TENU) {
       out.push({
         cle: 'raideur-stable-observance', sujet: 'raideur',
         ton: 'bravo',
-        texte: `Raideur au réveil stable à ${formatNumber(b)} sur 10, avec l'excentrique fait ${excentrique} jours sur 28. C'est exactement ce qu'on cherche : de la charge encaissée sans que le tendon proteste.${relance}`,
+        texte: `Raideur au réveil stable à ${formatNumber(b)} sur 10, avec ${excentrique} séances de renfo mollet en quatre semaines. C'est exactement ce qu'on cherche : de la charge encaissée sans que le tendon proteste.${relance}`,
       })
     }
   }
 
   // ── L'observance du protocole ───────────────────────────────────────────
-  if (excentrique >= 8) {
+  if (excentrique >= EXCENTRIQUE_TENU) {
     out.push({
       cle: 'excentrique', sujet: 'excentrique',
       ton: 'bravo',
-      texte: `Excentrique fait ${excentrique} jours sur les 28 derniers. C'est le seul geste qui répare vraiment le tendon, et c'est celui que tu tiens le mieux.`,
+      texte: `${excentrique} séances de renfo mollet sur les quatre dernières semaines : le rythme que ton kiné demande. C'est le geste qui répare vraiment le tendon.`,
     })
   }
 
@@ -733,28 +741,9 @@ function candidatsHier({ hier }: EntreeCoach): MotCoach[] {
 function candidatsRecul({ pain, now, forme }: EntreeCoach): MotCoach[] {
   const out: MotCoach[] = []
 
-  // ── L'excentrique, poussé plutôt que seulement salué ────────────────────
-  let serie = 0
-  for (let k = pain[now]?.eccentric ? 0 : 1; k < 60; k++) {
-    if (!pain[addDays(now, -k)]?.eccentric) break
-    serie++
-  }
-  const hier = pain[addDays(now, -1)]
-  if (serie >= 3) {
-    out.push({
-      cle: 'excentrique-serie', sujet: 'excentrique',
-      ton: 'bravo',
-      texte: `${serie} jours d'excentrique d'affilée. Chaque séance retire 6 points à ton indice du lendemain : c'est le seul chiffre de l'app que tu décides entièrement.`,
-    })
-  } else if (hier && !hier.eccentric && !pain[now]?.eccentric) {
-    // Seulement sur un carnet tenu hier : sinon l'absence de coche ne dit rien.
-    const sur7 = joursExcentrique(pain, addDays(now, -1), 7)
-    out.push({
-      cle: 'excentrique-relance', sujet: 'excentrique',
-      ton: 'neutre',
-      texte: `Pas d'excentrique noté hier${sur7 > 0 ? `, ${sur7} jour${sur7 > 1 ? 's' : ''} sur les sept derniers` : ''}. Ton Stanish ce soir, et ton indice de demain perd 6 points. C'est le traitement, pas un bonus.`,
-    })
-  }
+  // L'excentrique n'est plus relancé ni compté en jours d'affilée : son kiné
+  // le veut une à deux fois par semaine, pas tous les jours (retour de
+  // Mathieu, 6 octobre 2026). Il est salué dans `candidatsFond`, à ce rythme.
 
   // ── Le jour de la semaine qui revient en tête des douleurs ──────────────
   const parJour: number[][] = Array.from({ length: 7 }, () => [])

@@ -136,7 +136,7 @@ describe('le bilan du dimanche', () => {
     const m = messageBilan(DIMANCHE, { notees: 5, sautees: 1, releves })!
     expect(m.titre).toBe('Bilan de la semaine 6')
     expect(m.corps).toBe(
-      '5 séances notées, 1 sautée. Raideur au réveil à 1,2, contre 2 la semaine d’avant. Excentrique 2 jours sur 7. La charge et la semaine prochaine sont dans l’app.',
+      '5 séances notées, 1 sautée. Raideur au réveil à 1,2, contre 2 la semaine d’avant. Excentrique : 2 séances cette semaine. La charge et la semaine prochaine sont dans l’app.',
     )
     expect(m.tag).toBe('tenload-bilan')
   })

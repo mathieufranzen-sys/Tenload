@@ -675,7 +675,7 @@ const TEXTE_BANDE: Partial<Record<Band['key'], string>> = {
   orange:
     'Séance de qualité remplacée par du vélo Z3, renfo bas du corps allégé, sortie longue raccourcie de 20 %.',
   rouge:
-    'Aucune course. Vélo Z2 et haut du corps uniquement, protocole excentrique quotidien à charge légère.',
+    'Aucune course. Vélo Z2 et haut du corps uniquement, renfo mollet à charge légère, une à deux fois par semaine.',
   noir: 'Repos complet des jambes. Mobilité de cheville seulement. Trois jours dans cette zone et tu appelles ton kiné.',
 }
 

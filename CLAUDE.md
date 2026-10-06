@@ -373,7 +373,13 @@ avec le calcul d'origine, 16 aujourd'hui.
    faisait à lui seul l'essentiel de la fraîcheur du jeudi. C'est le
    traitement (Beyer 2015), pas gratuit pour autant (Magnusson 2010).
 4. **Faire son excentrique fait BAISSER l'indice.** C'est le traitement d'une
-   tendinopathie, pas une agression, et ça récompense l'observance.
+   tendinopathie, pas une agression, et ça récompense l'observance. **Son
+   kiné le veut une à deux fois par semaine, pas tous les jours** (6 octobre
+   2026) : l'app ne le réclame jamais au lendemain d'un jour sans, ne compte
+   plus de séries de jours d'affilée, et le salue dès quatre séances sur
+   quatre semaines (`EXCENTRIQUE_TENU`). Le bilan affiche « cible 1 à 2 » et
+   une semaine sans n'a pas de pastille. Le rappel du dimanche n'en parle que
+   s'il a été fait : à redéployer (`supabase functions deploy rappels`).
 
 ### Garde-fous
 
@@ -916,7 +922,6 @@ le coach ne fait que les lire, pour rester pur et testable.
 | `decharge-trop-chargee` | réel de lundi à hier + projection, contre la dernière semaine de charge | au-dessus de 80 %, la barre de `check_plan.py` ; jamais sur `chargeInconnue` |
 | `semaine-hors-attentes` | réel contre plan de référence sur les mêmes jours | ±20 %, deux jours écoulés, jamais sur `chargeInconnue` |
 | `seance-hier` | effort perçu contre `RPE_ATTENDU`, durée réelle contre la fourchette du plan | course seulement ; la fourchette vient du plan de référence, pas de l'écart |
-| `excentrique-serie` / `excentrique-relance` | série de jours, ou oubli d'hier | la relance exige un carnet tenu hier |
 | `jour-douloureux` | douleur du soir et d'effort par jour de semaine, six semaines | trois relevés par jour sur cinq jours, +1 point et ≥ 2,5 |
 | `douleur-long-terme` | trois premières semaines du carnet contre les deux dernières | six semaines de recul, huit relevés de chaque côté |
 | `forme-long-terme` | écart de `ajusterForme` et chrono projeté | trois séances, écart ≥ 3 s/km |

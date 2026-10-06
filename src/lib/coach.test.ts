@@ -33,9 +33,10 @@ describe('motDuCoach — raideur au réveil', () => {
   })
 
   it('cite l’excentrique quand il est tenu', () => {
-    const pain = carnet([...serie(14, 0.8), ...serie(14, 2)], { excentrique: 10 })
+    // Une à deux séances par semaine suffisent, le rythme du kiné.
+    const pain = carnet([...serie(14, 0.8), ...serie(14, 2)], { excentrique: 5 })
     const m = motDuCoach({ pain, byDate: {}, now: NOW, seancesTotal: TOTAL })
-    expect(m.texte).toContain('10 jours')
+    expect(m.texte).toContain('5 séances de renfo mollet')
   })
 
   it('alerte quand la raideur remonte', () => {
@@ -75,10 +76,10 @@ describe('motDuCoach — raideur au réveil', () => {
 
 describe('motDuCoach — replis', () => {
   it('parle de l’excentrique quand le carnet est trop court', () => {
-    const pain = carnet([], { excentrique: 9 })
+    const pain = carnet([], { excentrique: 4 })
     const m = motDuCoach({ pain, byDate: {}, now: NOW, seancesTotal: TOTAL })
     expect(m.ton).toBe('bravo')
-    expect(m.texte).toContain('9 jours')
+    expect(m.texte).toContain('4 séances')
   })
 
   it('salue une semaine complète', () => {
@@ -503,10 +504,12 @@ describe('motDuCoach — lectures réfléchies', () => {
     expect(m.texte).toContain('60 %')
   })
 
-  it('pousse l’excentrique quand hier est noté sans lui', () => {
+  // Retour de Mathieu, 6 octobre 2026 : le kiné le veut une à deux fois par
+  // semaine, l'app ne le réclame plus au lendemain d'un jour sans.
+  it('ne réclame pas l’excentrique au lendemain d’un jour sans', () => {
     const pain = carnet([null, 1])
     const m = motDuCoach({ ...base, pain, exclureSujets: ['carnet'] })
-    expect(m.cle).toBe('excentrique-relance')
+    expect(m.cle).not.toMatch(/^excentrique/)
   })
 
   it('trouve le jour de la semaine qui fait mal', () => {

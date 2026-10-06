@@ -184,7 +184,9 @@ export function messageBilan(jour: string, d: DonneesBilan): Message | null {
       `Raideur au réveil à ${virgule(raideur)}${raideurAvant != null ? `, contre ${virgule(raideurAvant)} la semaine d’avant` : ''}.`,
     )
   }
-  phrases.push(`Excentrique ${pluriel(excentrique, 'jour')} sur 7.`)
+  // Une à deux séances par semaine, la cible du kiné : « sur 7 » sous-entendait
+  // un protocole quotidien (6 octobre 2026). Une semaine sans ne se dit pas.
+  if (excentrique > 0) phrases.push(`Excentrique : ${pluriel(excentrique, 'séance')} cette semaine.`)
   phrases.push('La charge et la semaine prochaine sont dans l’app.')
 
   return { titre: `Bilan de la semaine ${n}`, corps: phrases.join(' '), tag: 'tenload-bilan' }
