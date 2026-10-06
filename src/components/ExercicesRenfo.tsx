@@ -187,7 +187,22 @@ function LigneExercice({
             Fait{note.marge && `, dernière série ${MARGE_MOT[note.marge]}`}
           </span>
           {saisie && (
-            <button type="button" onClick={onOuvrir} style={{ color: 'var(--bleu-600)', fontSize: 'var(--fs-detail)', fontWeight: 600, cursor: 'pointer' }}>
+            // Le même lien que le « Modifier » du ressenti, dans la même feuille.
+            <button
+              type="button"
+              onClick={onOuvrir}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                padding: '4px 2px',
+                fontSize: 'var(--fs-detail)',
+                fontWeight: 600,
+                color: 'var(--sur-ink-2)',
+                textDecoration: 'underline',
+                textUnderlineOffset: 3,
+                cursor: 'pointer',
+              }}
+            >
               Modifier
             </button>
           )}
