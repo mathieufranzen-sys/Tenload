@@ -24,6 +24,7 @@ import {
   KM_COST,
   LONGUE_SEUIL_KM,
   MIN_COST,
+  RUN_COST,
   SURCOUT_FIN_DE_LONGUE,
   VELO_Z3,
 } from '../lib/tendonIndex'
@@ -166,7 +167,7 @@ const S = {
 
 const SECTIONS: Section[] = [
   {
-    titre: 'Charge d’une journée',
+    titre: 'Charge d’une journée, avant et après le recalage',
     intro: 'En kilomètres-équivalents : 1 km d’endurance vaut 1 point.',
     lignes: [
       {
@@ -528,6 +529,71 @@ const SECTIONS: Section[] = [
   },
 ]
 
+// ─────────────────────────────────────────────────────────── barème
+
+/**
+ * Le barème de la charge d'une journée, une ligne par activité, lu dans le
+ * modèle (demande de Mathieu, 6 octobre 2026) : la table « avant et après »
+ * dit ce qui a changé, celle-ci dit ce qui compte aujourd'hui, avec un
+ * exemple chiffré.
+ */
+const parKm = (v: number) => `${n(v)} par km`
+const parMin = (v: number) => `${n(v)} par minute`
+const pts = (v: number) => `${formatNumber(Math.round(v * 10) / 10)} points`
+
+const BAREME: Array<{ activite: string; cout: string; exemple: string; statut: Statut; sources: Source[] }> = [
+  { activite: 'Récupération', cout: parKm(KM_COST.recup), exemple: `8 km : ${pts(8 * KM_COST.recup)}`, statut: 'inspire', sources: [S.firminger, S.vanHooren] },
+  { activite: 'Endurance', cout: parKm(KM_COST.ef), exemple: `10 km : ${pts(10 * KM_COST.ef)}`, statut: 'inspire', sources: [S.firminger] },
+  {
+    activite: 'Sortie longue',
+    cout: `${parKm(KM_COST.ef)} jusqu’à ${LONGUE_SEUIL_KM} km, ${parKm(KM_COST.ef + SURCOUT_FIN_DE_LONGUE)} au-delà`,
+    exemple: `26 km : ${pts(26 * KM_COST.ef + (26 - LONGUE_SEUIL_KM) * SURCOUT_FIN_DE_LONGUE)}`,
+    statut: 'inspire',
+    sources: [S.semi, S.jsams],
+  },
+  { activite: 'Allure marathon', cout: parKm(KM_COST.am), exemple: `10 km : ${pts(10 * KM_COST.am)}`, statut: 'inspire', sources: [S.firminger, S.vanHooren] },
+  { activite: 'Allure semi', cout: parKm(KM_COST.semi), exemple: `4 km : ${pts(4 * KM_COST.semi)}`, statut: 'inspire', sources: [S.firminger, S.vanHooren] },
+  { activite: 'Seuil', cout: parKm(KM_COST.seuil), exemple: `5 km : ${pts(5 * KM_COST.seuil)}`, statut: 'inspire', sources: [S.firminger, S.vanHooren] },
+  { activite: 'Intervalles, répétitions', cout: parKm(KM_COST.vo2), exemple: `3 km : ${pts(3 * KM_COST.vo2)}`, statut: 'inspire', sources: [S.firminger, S.vanHooren, S.baggaley] },
+  {
+    activite: 'Séance de qualité sans détail',
+    cout: `tempo ${parKm(RUN_COST.tempo)}, fractionné ${parKm(RUN_COST.inter)}`,
+    exemple: `12 km de fractionné : ${pts(12 * RUN_COST.inter)}`,
+    statut: 'inspire',
+    sources: [S.firminger],
+  },
+  { activite: 'Course, dossard', cout: parKm(RUN_COST.race), exemple: `10 km : ${pts(10 * RUN_COST.race)}`, statut: 'inspire', sources: [S.firminger] },
+  { activite: 'Marche', cout: parKm(RUN_COST.marche), exemple: `8 km : ${pts(8 * RUN_COST.marche)}`, statut: 'inspire', sources: [S.demangeot] },
+  { activite: 'Vélo facile (Z2)', cout: parMin(MIN_COST.velo), exemple: `60 min : ${pts(60 * MIN_COST.velo)}`, statut: 'inspire', sources: [S.dick, S.carnet] },
+  { activite: 'Vélo appuyé (Z3, seuil)', cout: parMin(VELO_Z3), exemple: `60 min : ${pts(60 * VELO_Z3)}`, statut: 'inspire', sources: [S.dick, S.carnet] },
+  { activite: 'Renfo bas du corps', cout: parMin(MIN_COST['muscu-bas']), exemple: `45 min : ${pts(45 * MIN_COST['muscu-bas'])}`, statut: 'inspire', sources: [S.demangeot, S.beyer] },
+  { activite: 'Escalade', cout: parMin(MIN_COST.escalade), exemple: `90 min : ${pts(90 * MIN_COST.escalade)}`, statut: 'origine', sources: [] },
+  { activite: 'Randonnée', cout: parMin(MIN_COST.hike), exemple: `120 min : ${pts(120 * MIN_COST.hike)}`, statut: 'inspire', sources: [S.demangeot] },
+  { activite: 'Renfo haut du corps, repos', cout: '0', exemple: 'Le tendon ne travaille pas', statut: 'origine', sources: [] },
+]
+
+function bareme(): string {
+  return `
+    <section class="calcul-section">
+      <h2>Charge d’une journée</h2>
+      <p class="intro">Elle s’exprime en kilomètres-équivalents : 1 km d’endurance vaut 1 point. La charge d’une journée est la somme de ses séances, telles qu’elles ont été faites.</p>
+      <div class="table-defile">
+        <table class="table-bareme">
+          <thead><tr><th>Activité</th><th>Coût</th><th>Exemple</th><th>Statut et source</th></tr></thead>
+          <tbody>${BAREME.map(
+            (b) => `
+            <tr>
+              <th scope="row">${echapper(b.activite)}</th>
+              <td>${echapper(b.cout)}</td>
+              <td>${echapper(b.exemple)}</td>
+              <td>${pastille(b.statut)}${b.sources.length ? `<ul class="sources">${b.sources.map((x) => `<li>${lien(x)}</li>`).join('')}</ul>` : ''}</td>
+            </tr>`,
+          ).join('')}</tbody>
+        </table>
+      </div>
+    </section>`
+}
+
 // ─────────────────────────────────────────────────────────── rendu
 
 const LIBELLE: Record<Statut, string> = { ref: 'Référence', inspire: 'Inspiré', origine: 'D’origine' }
@@ -597,6 +663,7 @@ function rendre() {
         <div><b>${changes.length}</b><span>valeurs changées</span></div>
       </div>
     </header>
+    ${bareme()}
     ${SECTIONS.map(
       (s) => `
       <section class="calcul-section">
