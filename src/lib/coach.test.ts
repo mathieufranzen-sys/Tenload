@@ -553,3 +553,48 @@ describe('motDuCoach — la règle du lendemain de sortie longue', () => {
     expect(m.texte).not.toContain('32 sur 100')
   })
 })
+
+describe('le jour d’un dossard', () => {
+  const calme = { idx: 20, painInconnue: false, chargeInconnue: false }
+  const seance = (p: Partial<SeanceDuJour> = {}): SeanceDuJour => ({
+    type: 'ef',
+    typePlan: 'ef',
+    titre: 'Endurance facile 7 km',
+    dist: 7,
+    distPlan: 7,
+    ecart: null,
+    adaptee: false,
+    faite: false,
+    saute: false,
+    ...p,
+  })
+  const vingt = seance({ type: 'course', typePlan: 'course', titre: '20 km de Paris', dist: 20, distPlan: 20 })
+
+  it('parle de la course et seulement d’elle, même avec un excentrique à saluer', () => {
+    const m = motDuCoach({
+      pain: carnet([1, 1, 1, 1, 1, 1, 1, 1], { excentrique: 6 }),
+      byDate: {},
+      now: NOW,
+      seancesTotal: TOTAL,
+      duJour: [vingt],
+      indice: calme,
+      motsPrecedents: [{ sujet: 'seance', cle: 'seance-hier', ton: 'neutre' }],
+    })
+    expect(m.cle).toBe('jour-de-course')
+    expect(m.ton).toBe('bravo')
+    expect(m.texte).toContain('20 km de Paris')
+  })
+
+  it('une raideur à 4 au réveil fait passer le tendon avant le chrono', () => {
+    const m = motDuCoach({
+      pain: {},
+      byDate: {},
+      now: NOW,
+      seancesTotal: TOTAL,
+      duJour: [{ ...vingt, raideurMatin: 4 }],
+      indice: calme,
+    })
+    expect(m.ton).toBe('vigilance')
+    expect(m.texte).toContain('réveil à 4')
+  })
+})

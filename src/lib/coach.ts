@@ -245,6 +245,14 @@ function candidatsSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach[] {
     : `l'indice est à ${indice.idx} sur 100`
   const bas = indice.idx < INDICE_VIGILANCE
 
+  // ── 0. Jour de course ───────────────────────────────────────────────────
+  // Le jour d'un dossard, le coach ne parle que de lui (retour de Mathieu,
+  // 11 octobre 2026 : le matin du 20 km de Paris, il a eu un mot sur
+  // l'excentrique). Obligatoire pour passer devant les sujets des deux
+  // derniers jours : la course n'a lieu qu'une fois.
+  const dossard = vivantes.find((x) => x.type === 'course' || x.type === 'race')
+  if (dossard) return [motDeCourse(dossard)]
+
   // ── 1. L'indice a retiré la course du jour ──────────────────────────────
   const neutralisee = vivantes.find(
     (x) => x.adaptee && COURSE.includes(x.typePlan) && !COURSE.includes(x.type),
@@ -419,6 +427,36 @@ function candidatsSeance({ duJour, indice, alertes }: EntreeCoach): MotCoach[] {
   return out
 }
 
+/**
+ * Le mot du matin d'une course. Le départ prudent et la fin plus rapide, et la
+ * limite de douleur au-delà de laquelle on repasse en endurance : 3 sur 10,
+ * le plafond que s'imposait Running Addict sur sa tendinopathie d'Achille.
+ * La raideur du matin, si elle est notée, décide du ton : c'est le seul
+ * chiffre qui dit ce que le tendon peut donner aujourd'hui.
+ */
+function motDeCourse(x: SeanceDuJour): MotCoach {
+  const course = x.dist != null ? `${x.titre}, ${formatNumber(x.dist)} km` : x.titre
+  const r = x.raideurMatin
+  const base = { cle: 'jour-de-course', sujet: 'course', obligatoire: true }
+  if (r != null && r >= 4)
+    return {
+      ...base,
+      ton: 'vigilance',
+      texte: `Jour de course, mais réveil à ${formatNumber(r)} sur 10. Ce matin, le tendon décide avant le chrono : cours ${course} en endurance, ou regarde-la du bord. Un dossard se recourt, une rechute coûte des semaines.`,
+    }
+  const matin =
+    r == null
+      ? ''
+      : r <= 2
+        ? ` Réveil à ${formatNumber(r)} sur 10 : le tendon est prêt.`
+        : ` Réveil à ${formatNumber(r)} sur 10 : pars encore plus sur la réserve, et garde l'accélération seulement si tout reste calme.`
+  return {
+    ...base,
+    ton: 'bravo',
+    texte: `C'est aujourd'hui : ${course}.${matin} Tout le bloc t'a amené ici, profite. Pars sur la réserve les premiers kilomètres, c'est là qu'une course se gagne ou se paie, et garde ce qu'il te reste pour la fin. Si le tendon dépasse 3 sur 10, repasse en endurance : le chrono peut attendre, lui. Bonne course !`,
+  }
+}
+
 /** La plus forte douleur saisie un jour donné, toutes mesures confondues. */
 function douleurMax(pain: PainMap, jour: string): number | null {
   const p = pain[jour]
@@ -480,7 +518,12 @@ function candidatsFond(entree: EntreeCoach): MotCoach[] {
     out.push({
       cle: 'excentrique', sujet: 'excentrique',
       ton: 'bravo',
-      texte: `${excentrique} séances de renfo mollet sur les quatre dernières semaines : le rythme que ton kiné demande. C'est le geste qui répare vraiment le tendon.`,
+      // Le kiné en veut une à deux par semaine : au-delà de huit en quatre
+      // semaines, dire « le rythme que ton kiné demande » serait faux.
+      texte:
+        excentrique <= 8
+          ? `${excentrique} séances de renfo mollet sur les quatre dernières semaines : le rythme que ton kiné demande. C'est le geste qui répare vraiment le tendon.`
+          : `${excentrique} séances de renfo mollet sur les quatre dernières semaines, plus que les une à deux par semaine de ton kiné. Le tendon se renforce sous la charge plus que sous la répétition : mieux vaut deux séances lourdes que quatre légères.`,
     })
   }
 

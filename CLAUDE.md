@@ -880,6 +880,11 @@ l'indice et qui font passer `chargeInconnue` à vrai.
 `src/lib/coach.ts` produit l'encouragement du bas de l'écran Aujourd'hui.
 **Règle unique : ne jamais affirmer un chiffre absent des données.**
 
+**Le jour d'un dossard, il ne parle que de la course** (`motDeCourse`,
+11 octobre 2026 : le matin du 20 km de Paris, il a salué l'excentrique). Départ
+sur la réserve, fin plus rapide, retour en endurance au-delà de 3 sur 10 au
+tendon ; une raideur à 4 au réveil fait passer le tendon avant le chrono.
+
 **Il parle d'abord de la séance du jour.** `motSurLaSeance` passe avant toutes
 les autres règles : le jour où l'indice retire la course, féliciter pour
 l'excentrique de la quinzaine n'est pas un coach, c'est un bandeau.
