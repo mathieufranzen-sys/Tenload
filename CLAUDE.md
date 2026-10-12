@@ -884,6 +884,10 @@ l'indice et qui font passer `chargeInconnue` à vrai.
 11 octobre 2026 : le matin du 20 km de Paris, il a salué l'excentrique). Départ
 sur la réserve, fin plus rapide, retour en endurance au-delà de 3 sur 10 au
 tendon ; une raideur à 4 au réveil fait passer le tendon avant le chrono.
+**Et les jours qui l'entourent** (`candidatsDossard`, 12 octobre 2026) : un
+mot par jour de J-5 à J+2, chacun sa clé et obligatoire. La veille, le repère
+de la forme (`chronoEquivalent`) et l'objectif ; le lendemain, le chrono,
+l'écart à l'objectif et le réveil.
 
 **Il parle d'abord de la séance du jour.** `motSurLaSeance` passe avant toutes
 les autres règles : le jour où l'indice retire la course, féliciter pour

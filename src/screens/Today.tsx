@@ -44,6 +44,7 @@ import { CarteBilan } from '../components/CarteBilan'
 import { construireBilan } from '../lib/bilanDeSemaine'
 import type { SeanceANoter } from '../lib/aNoter'
 import { libelleNature } from '../lib/natureSemaine'
+import { listerDossards, type DossardRow } from '../lib/dossards'
 
 const plan = planJson as unknown as Plan
 
@@ -84,6 +85,8 @@ interface Props {
   activities: ActivityRow[]
   /** Écarts volontaires, indexés par `cleEcart`. */
   ecarts?: Map<string, EcartRow>
+  /** Objectifs et dossards ajoutés : le coach en parle les jours qui entourent une course. */
+  dossards?: DossardRow[]
   /** Jours dont la charge est une mesure et non un silence. Sans elle, une
    *  séance sautée retombe sur `load > 0` et se lit comme une absence. */
   attestes?: Set<string>
@@ -114,6 +117,7 @@ export function Today({
   feedback,
   activities,
   ecarts,
+  dossards = [],
   attestes,
   forme,
   marathonPace,
@@ -382,6 +386,11 @@ export function Today({
     })
   }, [now, semaineCourante, debutPlan, A.byDate, ecarts, contexte, feedback, pain, attestes, forme, marathonPace])
 
+  const dossardsPourCoach = useMemo(
+    () => listerDossards(plan, dossards, ecarts, now, marathonPace),
+    [dossards, ecarts, now, marathonPace],
+  )
+
   const mot = useMemo(
     () =>
       motDuCoach({
@@ -404,8 +413,9 @@ export function Today({
         hier: hierPourCoach,
         semaine: semainePourCoach,
         forme,
+        dossards: dossardsPourCoach,
       }),
-    [pain, A.byDate, A.detail, now, insights.seancesTotal, duJourPourCoach, alertesSemaine, hierPourCoach, semainePourCoach, forme],
+    [pain, A.byDate, A.detail, now, insights.seancesTotal, duJourPourCoach, alertesSemaine, hierPourCoach, semainePourCoach, forme, dossardsPourCoach],
   )
 
   // Le sujet du jour devient l'exclusion des deux jours suivants. Réécrit à

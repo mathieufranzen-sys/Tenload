@@ -13,6 +13,7 @@
  */
 import { DAYS_LONG, addDays, daysBetween, formatDay, formatNumber, weekdayIndex } from './dates'
 import { formatDuration, formatPace } from './paces'
+import { chronoEquivalent, formatChrono } from './dossards'
 import type { MotifAdaptation, SessionType } from '../data/types'
 import type { PainMap } from './tendonIndex'
 
@@ -172,6 +173,16 @@ export interface EntreeCoach {
   semaine?: SemaineEnCours
   /** Forme projetée par le ressenti, voir `forme.ts`. */
   forme?: { allure: number; ecart: number; seances: number }
+  /** Les dossards, du plan et ajoutés, avec objectif et chrono s'ils existent. */
+  dossards?: DossardCoach[]
+}
+
+export interface DossardCoach {
+  nom: string
+  day: string
+  km: number
+  objectifS: number | null
+  chronoS: number | null
 }
 
 const COURSE: SessionType[] = ['ef', 'long', 'tempo', 'inter', 'test', 'course', 'race']
@@ -455,6 +466,63 @@ function motDeCourse(x: SeanceDuJour): MotCoach {
     ton: 'bravo',
     texte: `C'est aujourd'hui : ${course}.${matin} Tout le bloc t'a amené ici, profite. Pars sur la réserve les premiers kilomètres, c'est là qu'une course se gagne ou se paie, et garde ce qu'il te reste pour la fin. Si le tendon dépasse 3 sur 10, repasse en endurance : le chrono peut attendre, lui. Bonne course !`,
   }
+}
+
+/**
+ * Les jours qui entourent un dossard : les cinq qui le précèdent et les deux
+ * qui le suivent (retour de Mathieu, 12 octobre 2026 : « il en faut à chaque
+ * fois qu'on est proche ou sur un dossard »). Un mot par jour, chacun sa clé,
+ * obligatoire pour passer devant les sujets déjà servis : on ne vit cette
+ * semaine-là qu'une fois. Le jour même est dans `motDeCourse`.
+ */
+function candidatsDossard({ dossards, now, forme, pain }: EntreeCoach): MotCoach[] {
+  if (!dossards?.length) return []
+  const proche = dossards
+    .map((d) => ({ d, j: daysBetween(now, d.day) }))
+    .filter(({ j }) => (j >= 1 && j <= 5) || (j >= -2 && j <= -1))
+    .sort((a, b) => Math.abs(a.j) - Math.abs(b.j))[0]
+  if (!proche) return []
+  const { d, j } = proche
+  const mot = (texte: string, ton: MotCoach['ton'] = 'bravo'): MotCoach => ({
+    cle: `dossard-j${j}`, sujet: 'course', obligatoire: true, ton, texte,
+  })
+
+  if (j > 0) {
+    const projete = forme ? chronoEquivalent(d.km, forme.allure) : null
+    const repere = projete
+      ? ` Ta forme du moment vaut ${formatChrono(projete)}, soit ${formatPace(projete / d.km)}/km${
+          d.objectifS ? `, pour un objectif de ${formatChrono(d.objectifS)}` : ''
+        }.`
+      : ''
+    if (j === 1)
+      return [mot(`Demain, ${d.nom}.${repere} Prépare tes affaires ce soir, et décide maintenant l'allure de tes premiers kilomètres : c'est la seule décision de course qui se prend à froid, et la plus rentable. Le reste, tu l'as déjà construit.`)]
+    if (j === 2)
+      return [mot(`Après-demain, ${d.nom}. Rien à gagner aujourd'hui, tout à perdre : une séance réussie à deux jours d'une course ne rapporte plus rien. Dors, mange à ta faim, et revois ton plan de ravitaillement.`)]
+    if (j === 3)
+      return [mot(`J-3 avant ${d.nom}.${repere} Le travail est fait. Ces jours-ci on enlève de la fatigue, on n'ajoute rien : c'est comme ça qu'on arrive frais sur la ligne.`)]
+    return [mot(`Plus que ${j} jours avant ${d.nom}. La semaine de course ne sert pas à prouver sa forme, elle sert à la garder : les séances restent, en plus court. Tu arrives avec un bloc entier derrière toi.`)]
+  }
+
+  const reveil = pain[now]?.wake
+  const tendon =
+    reveil == null
+      ? ' Note ta raideur ce matin : c’est elle qui dit si le tendon a encaissé.'
+      : reveil <= 2
+        ? ` Et réveil à ${formatNumber(reveil)} sur 10 : le tendon a encaissé, c'est la meilleure nouvelle de la course.`
+        : ` Réveil à ${formatNumber(reveil)} sur 10 : laisse le tendon redescendre avant de rallonger quoi que ce soit.`
+  if (j === -1) {
+    if (d.chronoS == null)
+      return [mot(`Bravo pour ${d.nom} ! Saisis ton chrono dans la séance : c'est lui qui recale ta forme et tes équivalences.${tendon}`)]
+    const ecart = d.objectifS != null ? d.objectifS - d.chronoS : null
+    const vsObjectif =
+      ecart == null
+        ? ''
+        : ecart >= 0
+          ? ` ${formatChrono(ecart)} sous ton objectif.`
+          : ` À ${formatChrono(-ecart)} de ton objectif, et c'est déjà une course pleine.`
+    return [mot(`Bravo pour ${d.nom} : ${formatChrono(d.chronoS)}, à ${formatPace(d.chronoS / d.km)}/km.${vsObjectif}${tendon}`)]
+  }
+  return [mot(`Deux jours après ${d.nom}. La fatigue d'une course à fond se dissipe en plusieurs jours, même quand les jambes disent le contraire : le plan repart en douceur, laisse-le faire. Le bénéfice de la course arrive maintenant, pendant la récupération.`, 'neutre')]
 }
 
 /** La plus forte douleur saisie un jour donné, toutes mesures confondues. */
@@ -889,6 +957,7 @@ function candidatsRecul({ pain, now, forme }: EntreeCoach): MotCoach[] {
 export function motDuCoach(entree: EntreeCoach): MotCoach {
   const candidats = [
     ...candidatsSeance(entree),
+    ...candidatsDossard(entree),
     ...candidatsVigilance(entree),
     ...candidatsHier(entree),
     ...candidatsFond(entree),

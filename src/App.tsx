@@ -525,6 +525,7 @@ function Coquille({
           feedback={feedback}
           activities={data.activities}
           ecarts={ecarts}
+          dossards={dossards}
           attestes={attestes}
           forme={forme}
           marathonPace={marathonPace}

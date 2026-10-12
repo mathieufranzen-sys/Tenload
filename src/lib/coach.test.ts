@@ -598,3 +598,37 @@ describe('le jour d’un dossard', () => {
     expect(m.texte).toContain('réveil à 4')
   })
 })
+
+describe('les jours qui entourent un dossard', () => {
+  const dix = { nom: '10 km Hoka de Paris', day: addDays(NOW, 1), km: 10, objectifS: 2412, chronoS: null }
+  const base = { pain: {}, byDate: {}, now: NOW, seancesTotal: TOTAL }
+
+  it('la veille : un repère tiré de la forme et de l’objectif, même si la course a déjà été le sujet', () => {
+    const m = motDuCoach({
+      ...base,
+      dossards: [dix],
+      forme: { allure: 264, ecart: 0, seances: 3 },
+      motsPrecedents: [{ sujet: 'course', cle: 'dossard-j2', ton: 'bravo' }],
+    })
+    expect(m.cle).toBe('dossard-j1')
+    expect(m.texte).toContain('Demain, 10 km Hoka de Paris')
+    expect(m.texte).toContain('40:12')
+  })
+
+  it('le lendemain : le chrono, l’écart à l’objectif et le réveil', () => {
+    const m = motDuCoach({
+      ...base,
+      pain: { [NOW]: { wake: 0.5 } },
+      dossards: [{ ...dix, day: addDays(NOW, -1), chronoS: 2380 }],
+    })
+    expect(m.cle).toBe('dossard-j-1')
+    expect(m.ton).toBe('bravo')
+    expect(m.texte).toContain('sous ton objectif')
+    expect(m.texte).toContain('réveil à 0,5')
+  })
+
+  it('au-delà de cinq jours, rien', () => {
+    const m = motDuCoach({ ...base, dossards: [{ ...dix, day: addDays(NOW, 9) }] })
+    expect(m.cle.startsWith('dossard')).toBe(false)
+  })
+})
