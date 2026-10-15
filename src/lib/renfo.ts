@@ -18,6 +18,13 @@
  * 2007). Elle ne descend jamais d'elle-même : réduire est le travail de
  * l'indice, ici on refuse seulement de monter. Même règle que le palier de
  * la sortie longue.
+ *
+ * Un exercice lesté progresse au TONNAGE, séries × répétitions × kilos
+ * (15 octobre 2026, Mathieu) : 3 x 12 à 10 kg soulève plus que 3 x 8 à
+ * 14 kg. Trois leviers, kilos, séries, répétitions, dans un cadre fixe :
+ * trois séries au plus, 6 à 10 répétitions (la fin du protocole de Beyer
+ * 2015, qui descend de 15 vers 6 RM), et le matériel de Mathieu, deux
+ * haltères de 10 kg ou une de 16.
  */
 import type { Exercise, SessionType } from '../data/types'
 import { addDays, formatDay, formatNumber } from './dates'
@@ -52,8 +59,8 @@ export interface ExerciceRenfo {
   leste: boolean
   /** Pas de progression : kilos pour un exercice lesté, sinon répétitions, secondes ou contacts. */
   pas: number
-  /** Au-delà, une montée de charge ramène les répétitions ici (Beyer : de 15 vers 6). */
-  repsMax?: number
+  /** Charge que le matériel permet, si elle diffère de deux haltères de 10 kg. */
+  kgMax?: number
   consigne?: string
 }
 
@@ -63,7 +70,8 @@ const MOLLET = {
   excentrique: true,
   leste: true,
   pas: 2,
-  repsMax: 12,
+  // Une main tient le mur : une seule haltère, la 16 kg.
+  kgMax: 16,
 }
 
 /**
@@ -118,22 +126,22 @@ const CATALOGUE: Array<ExerciceRenfo & { motif: RegExp }> = [
     pas: 2,
     consigne: 'Sur place, après des sauts sur deux jambes bien tolérés.',
   },
-  { id: 'sdt-roumain', nom: 'Soulevé de terre roumain', motif: /terre roumain/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 2, repsMax: 10 },
-  { id: 'sdt-unilateral', nom: 'Soulevé de terre unilatéral', motif: /terre unilat/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 2, repsMax: 12 },
-  { id: 'fentes-bulgares', nom: 'Fentes bulgares', motif: /fentes/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 2, repsMax: 10 },
-  { id: 'squat-talonnette', nom: 'Squat talonnette', motif: /squat/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 2, repsMax: 12 },
+  { id: 'sdt-roumain', nom: 'Soulevé de terre roumain', motif: /terre roumain/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 2 },
+  { id: 'sdt-unilateral', nom: 'Soulevé de terre unilatéral', motif: /terre unilat/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 2, kgMax: 16 },
+  { id: 'fentes-bulgares', nom: 'Fentes bulgares', motif: /fentes/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 2 },
+  { id: 'squat-talonnette', nom: 'Squat talonnette', motif: /squat/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 2 },
   { id: 'hip-extension', nom: 'Hip extension unilatéral', motif: /hip extension/i, mesure: 'reps', tendon: false, excentrique: false, leste: false, pas: 1 },
   { id: 'pont-fessier', nom: 'Pont fessier unilatéral', motif: /pont fessier/i, mesure: 'reps', tendon: false, excentrique: false, leste: false, pas: 1 },
   { id: 'crab-walk', nom: 'Crab walk élastique', motif: /crab walk/i, mesure: 'reps', tendon: false, excentrique: false, leste: false, pas: 1 },
   { id: 'gainage', nom: 'Gainage', motif: /gainage/i, mesure: 'duree', tendon: false, excentrique: false, leste: false, pas: 5 },
   { id: 'mobilite-cheville', nom: 'Mobilité cheville et voûte plantaire', motif: /mobilit/i, mesure: 'libre', tendon: false, excentrique: false, leste: false, pas: 0 },
   { id: 'tractions', nom: 'Tractions ou tirage vertical', motif: /traction/i, mesure: 'reps', tendon: false, excentrique: false, leste: false, pas: 1 },
-  { id: 'developpe-couche', nom: 'Développé couché ou pompes lestées', motif: /couch/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 2, repsMax: 10 },
-  { id: 'developpe-militaire', nom: 'Développé militaire', motif: /militaire/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 2, repsMax: 10 },
+  { id: 'developpe-couche', nom: 'Développé couché ou pompes lestées', motif: /couch/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 2 },
+  { id: 'developpe-militaire', nom: 'Développé militaire', motif: /militaire/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 2 },
   { id: 'pompes', nom: 'Pompes', motif: /^pompes/i, mesure: 'reps', tendon: false, excentrique: false, leste: false, pas: 1 },
-  { id: 'rowing', nom: 'Rowing haltère', motif: /rowing/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 2, repsMax: 12 },
-  { id: 'elevations', nom: 'Élévations latérales', motif: /[ée]l[ée]vations/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 1, repsMax: 15 },
-  { id: 'curl', nom: 'Curl biceps', motif: /curl/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 1, repsMax: 12 },
+  { id: 'rowing', nom: 'Rowing haltère', motif: /rowing/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 2, kgMax: 16 },
+  { id: 'elevations', nom: 'Élévations latérales', motif: /[ée]l[ée]vations/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 1 },
+  { id: 'curl', nom: 'Curl biceps', motif: /curl/i, mesure: 'reps', tendon: false, excentrique: false, leste: true, pas: 1 },
   { id: 'dips', nom: 'Dips sur banc', motif: /dips/i, mesure: 'reps', tendon: false, excentrique: false, leste: false, pas: 1 },
 ]
 
@@ -208,6 +216,16 @@ export function lirePrescription(serie: string, precision = ''): Charge | null {
   return { series: Number(m[1]), valeur: Number(m[2]), kg }
 }
 
+/** Le cadre de progression d'un exercice lesté. */
+export const SERIES_MAX = 3
+export const REPS_MIN = 6
+export const REPS_MAX = 10
+/** Deux haltères de 10 kg. Une seule main : la 16 kg (`kgMax`). */
+export const KG_MAX = 20
+
+/** Ce que soulève une séance : séries × répétitions × kilos. */
+export const tonnage = (c: Charge) => c.series * c.valeur * c.kg
+
 export type StatutProposition = 'plan' | 'monte' | 'tient'
 
 export interface Proposition extends Charge {
@@ -233,12 +251,29 @@ export function proposer(
   const avant = historique.filter((r) => r.exercice === exo.id && r.day < jour && r.series > 0)
   avant.sort((a, b) => a.day.localeCompare(b.day))
   const der = avant[avant.length - 1]
+  const lesteReps = exo.leste && exo.mesure === 'reps'
   if (!der) {
     if (!plan) return null
-    return { ...plan, statut: 'plan', raison: 'Première séance notée : la charge du plan sert de départ.', hausse: null }
+    const depart = lesteReps ? { ...plan, series: Math.min(plan.series, SERIES_MAX), valeur: Math.min(plan.valeur, REPS_MAX) } : plan
+    return { ...depart, statut: 'plan', raison: 'Première séance notée : la charge du plan sert de départ.', hausse: null }
   }
   const base: Charge = { series: der.series, valeur: der.valeur, kg: der.kg }
   const tient = (raison: string): Proposition => ({ ...base, statut: 'tient', raison, hausse: null })
+
+  // Au-delà de 10 répétitions, la charge est trop légère pour le tendon : on
+  // rentre dans le cadre sans attendre deux séances faciles, puisque chaque
+  // répétition devient plus lourde mais la séance plus courte.
+  if (lesteReps && base.kg > 0 && (base.valeur > REPS_MAX || base.series > SERIES_MAX)) {
+    const kg = Math.min(base.kg + exo.pas, exo.kgMax ?? KG_MAX)
+    return {
+      series: Math.min(base.series, SERIES_MAX),
+      valeur: REPS_MAX,
+      kg,
+      statut: 'monte',
+      raison: `Hors du cadre de ${REPS_MIN} à ${REPS_MAX} répétitions : plus lourd, moins de répétitions.`,
+      hausse: kg > base.kg ? `+${formatNumber(kg - base.kg)} kg` : null,
+    }
+  }
 
   if (der.marge == null) return tient('Marge non notée la dernière fois : même charge.')
   if (der.marge === 'limite') return tient('Dernière série à la limite : même charge.')
@@ -250,21 +285,54 @@ export function proposer(
     if (verdict === 'inconnu') return tient('Le réveil d’après n’est pas noté : même charge.')
   }
 
-  const monte = (c: Charge, hausse: string): Proposition => ({
+  const monte = (c: Charge, hausse: string, raison?: string): Proposition => ({
     ...c,
     statut: 'monte',
-    raison: exo.tendon
-      ? 'Deux séances faciles et un réveil calme : la charge monte.'
-      : 'Deux séances faciles : la charge monte.',
+    raison:
+      raison ??
+      (exo.tendon ? 'Deux séances faciles et un réveil calme : la charge monte.' : 'Deux séances faciles : la charge monte.'),
     hausse,
   })
   if (exo.mesure === 'duree') return monte({ ...base, valeur: base.valeur + exo.pas }, `+${exo.pas} s`)
   if (exo.mesure === 'contacts') return monte({ ...base, valeur: base.valeur + exo.pas }, `+${exo.pas} contacts`)
-  if (exo.leste || base.kg > 0) {
-    const valeur = exo.repsMax ? Math.min(base.valeur, exo.repsMax) : base.valeur
-    return monte({ ...base, kg: base.kg + exo.pas, valeur }, `+${formatNumber(exo.pas)} kg`)
+  if (!exo.leste && base.kg === 0)
+    return monte({ ...base, valeur: base.valeur + exo.pas }, `+${exo.pas} répétition${exo.pas > 1 ? 's' : ''}`)
+  if (base.kg === 0) return monte({ ...base, kg: exo.pas, valeur: Math.min(base.valeur, REPS_MAX) }, `+${formatNumber(exo.pas)} kg`)
+
+  const suite = progresser(base, exo.kgMax ?? KG_MAX, exo.pas)
+  if (!suite) return tient('Au plafond de ton matériel : ralentis la descente à 4 ou 5 s pour durcir.')
+  const avantT = tonnage(base)
+  const apresT = tonnage(suite.charge)
+  const pourquoi = exo.tendon ? 'Deux séances faciles et un réveil calme' : 'Deux séances faciles'
+  return monte(suite.charge, suite.hausse, `${pourquoi} : ${formatNumber(avantT)} → ${formatNumber(apresT)} kg soulevés.`)
+}
+
+/**
+ * Le pas suivant d'un exercice lesté : le plus petit gain de tonnage parmi les
+ * trois leviers, dans le cadre. Le plus petit, parce qu'une progression qui
+ * saute une marche est celle qu'on rate. À égalité, les kilos : c'est la
+ * charge qui renforce le tendon (Bohm 2015). Ce qui en sort ressemble à une
+ * double progression : les répétitions montent jusqu'à 10, puis la charge
+ * monte et les répétitions redescendent juste assez pour soulever plus.
+ */
+export function progresser(c: Charge, kgMax: number, pas: number): { charge: Charge; hausse: string } | null {
+  const t = tonnage(c)
+  // Le moins de répétitions, dans le cadre, qui soulève plus qu'avant.
+  const repsPour = (series: number, kg: number) => Math.max(REPS_MIN, Math.floor(t / (series * kg)) + 1)
+  const candidats: Array<{ charge: Charge; hausse: string; rang: number }> = []
+  const kg = Math.min(c.kg + pas, kgMax)
+  if (kg > c.kg) {
+    const valeur = repsPour(c.series, kg)
+    if (valeur <= REPS_MAX) candidats.push({ charge: { ...c, kg, valeur }, hausse: `+${formatNumber(kg - c.kg)} kg`, rang: 0 })
   }
-  return monte({ ...base, valeur: base.valeur + exo.pas }, `+${exo.pas} répétition${exo.pas > 1 ? 's' : ''}`)
+  if (c.series < SERIES_MAX) {
+    const valeur = repsPour(c.series + 1, c.kg)
+    if (valeur <= REPS_MAX) candidats.push({ charge: { ...c, series: c.series + 1, valeur }, hausse: '+1 série', rang: 1 })
+  }
+  if (c.valeur < REPS_MAX) candidats.push({ charge: { ...c, valeur: c.valeur + 1 }, hausse: '+1 répétition', rang: 2 })
+  candidats.sort((a, b) => tonnage(a.charge) - tonnage(b.charge) || a.rang - b.rang)
+  const choix = candidats[0]
+  return choix ? { charge: choix.charge, hausse: choix.hausse } : null
 }
 
 const UNITE: Record<Mesure, string> = { reps: '', duree: ' s', contacts: ' contacts', libre: '' }
@@ -276,9 +344,9 @@ export function formatCharge(exo: ExerciceRenfo, c: Charge): string {
 }
 
 /**
- * Ce que l'exercice a gagné sur les séances notées jusqu'à `jour` inclus.
- * La charge d'abord, les répétitions ensuite : c'est la charge qui renforce
- * le tendon (Bohm 2015), et un « 14 → 18 kg » se lit sans calcul.
+ * Ce que l'exercice a gagné sur les séances notées jusqu'à `jour` inclus. Le
+ * tonnage pour un exercice lesté : c'est la mesure de sa progression, et
+ * passer de 3 x 10 à 3 x 9 avec 2 kg de plus se lit comme une hausse.
  */
 export function evolution(exo: ExerciceRenfo, historique: RenfoRow[], jour: string): string | null {
   const lignes = historique
@@ -288,9 +356,10 @@ export function evolution(exo: ExerciceRenfo, historique: RenfoRow[], jour: stri
   const premiere = lignes[0]
   const derniere = lignes[lignes.length - 1]
   const depuis = `Depuis le ${formatDay(premiere.day)}`
-  if (exo.mesure === 'reps' && premiere.kg !== derniere.kg)
-    return `${depuis} : ${formatNumber(premiere.kg)} → ${formatNumber(derniere.kg)} kg`
-  if (premiere.valeur !== derniere.valeur) {
+  if (exo.mesure === 'reps' && derniere.kg > 0) {
+    const [a, b] = [tonnage(premiere), tonnage(derniere)]
+    if (a !== b) return `${depuis} : ${formatNumber(a)} → ${formatNumber(b)} kg soulevés`
+  } else if (premiere.valeur !== derniere.valeur) {
     const unite = exo.mesure === 'duree' ? ' s' : exo.mesure === 'contacts' ? ' contacts' : ' répétitions'
     return `${depuis} : ${premiere.valeur} → ${derniere.valeur}${unite}`
   }

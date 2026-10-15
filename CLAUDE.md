@@ -1376,7 +1376,7 @@ le dit et n'enregistre rien, sans allumer la bannière de synchronisation.
 
 ## Le suivi du renfo
 
-`src/lib/renfo.ts` (+ 13 tests), `ExercicesRenfo` dans la feuille de séance,
+`src/lib/renfo.ts` (+ 20 tests), `ExercicesRenfo` dans la feuille de séance,
 `RenfoChart` dans Suivi, table `supabase/renfo.sql` **à exécuter une fois**.
 Demandé par Mathieu le 6 octobre 2026 : la liste du plan disait « 3 x 15 » de
 la semaine 7 à la 34, et il faisait 3 x 20 à 14 kg sur une jambe sans savoir
@@ -1392,8 +1392,16 @@ que c'était trop léger. Le tendon se renforce sous une charge lourde (Bohm
 - **La charge proposée monte sur deux séances faciles de suite**, plus un
   réveil calme le lendemain pour ce qui charge le tendon (`lendemainCalme`,
   même définition que la reprise). Elle ne descend jamais d'elle-même. Un
-  exercice lesté gagne des kilos et ses répétitions redescendent vers 12
-  (Beyer), un exercice au poids du corps gagne une répétition.
+  exercice au poids du corps gagne une répétition.
+- **Un exercice lesté progresse au tonnage** (séries × répétitions × kilos,
+  15 octobre 2026) : 3 x 12 à 10 kg soulève plus que 3 x 8 à 14 kg. Trois
+  leviers dans un cadre fixé par Mathieu : trois séries au plus, 6 à 10
+  répétitions (la fin du protocole de Beyer), deux haltères de 10 kg ou une
+  de 16 (`kgMax`, le mollet et les exercices à une main). `progresser`
+  prend le plus petit gain de tonnage, les kilos à égalité, ce qui donne une
+  double progression. Au-delà de 10 répétitions, on rentre dans le cadre
+  sans attendre. Au plafond du matériel, l'app propose de ralentir la
+  descente. L'évolution et le graphique de Suivi lisent le tonnage.
 - **Noter un exercice du mollet coche l'excentrique du jour** : une saisie,
   un geste, et c'est la case que lit l'indice. Le coût du renfo dans l'indice
   ne change pas : aucune source ne donne un coût au kilo.

@@ -1,11 +1,11 @@
 /**
  * La progression du renfo, une ligne par exercice suivi : une courbe courte
- * et ce que l'exercice a gagné. La charge pour un exercice lesté, sinon les
- * répétitions, les secondes ou les contacts. Pas d'axe : on y lit un sens,
+ * et ce que l'exercice a gagné. Le tonnage pour un exercice lesté (séries ×
+ * répétitions × kilos), sinon les répétitions, les secondes ou les contacts. Pas d'axe : on y lit un sens,
  * pas une valeur, et la valeur est écrite à côté.
  */
 import { formatNumber } from '../../lib/dates'
-import { seriesParExercice, type RenfoRow } from '../../lib/renfo'
+import { seriesParExercice, tonnage, type RenfoRow } from '../../lib/renfo'
 
 const L = 96
 const H = 28
@@ -24,7 +24,7 @@ export function RenfoChart({ historique }: { historique: RenfoRow[] }) {
     <div>
       {exos.map(({ exo, lignes }, i) => {
         const enKg = exo.mesure === 'reps' && lignes.some((r) => r.kg > 0)
-        const vals = lignes.map((r) => (enKg ? r.kg : r.valeur))
+        const vals = lignes.map((r) => (enKg ? tonnage(r) : r.valeur))
         const unite = enKg ? ' kg' : exo.mesure === 'duree' ? ' s' : exo.mesure === 'contacts' ? ' contacts' : ' rép.'
         const min = Math.min(...vals)
         const max = Math.max(...vals)
@@ -46,7 +46,7 @@ export function RenfoChart({ historique }: { historique: RenfoRow[] }) {
             <span style={{ fontSize: 'var(--fs-texte)', minWidth: 0 }}>
               {exo.nom}
               <span style={{ display: 'block', color: 'var(--ink-3)', fontSize: 'var(--fs-detail)' }}>
-                {lignes.length} séances
+                {lignes.length} séances{enKg && ', kilos soulevés'}
               </span>
             </span>
             <svg width={L} height={H} viewBox={`0 0 ${L} ${H}`} aria-hidden>
