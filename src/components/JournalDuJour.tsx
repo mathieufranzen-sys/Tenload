@@ -6,9 +6,10 @@
  * gestes de soin), et la saisie vit dans sa propre page (`PageCarnet`),
  * ordonnée comme la journée : ce matin, après la séance, ce soir.
  *
- * Volontairement limité à ce qui compte pour le modèle — `stretching` et
- * `icing` sont en base mais n'entrent dans aucun terme de `tendonIndex.ts`,
- * les exposer laisserait croire qu'ils comptent.
+ * Volontairement limité à ce qui compte pour le modèle. `icing` est en base
+ * sans être exposé : il laisserait croire qu'il compte. `stretching` l'est
+ * depuis le 17 octobre 2026, sous le nom de mobilité, à zéro point : il se
+ * suit en série dans Suivi (`mobilite.ts`), et son 0 le dit.
  */
 import type { ReactNode } from 'react'
 import type { DailyLogRow, FeedbackRow } from '../lib/buildPain'
@@ -29,10 +30,10 @@ export interface SeanceDuCarnet {
 }
 
 const GESTES: Array<{
-  champ: 'eccentric' | 'jumps' | 'hydration_l'
+  champ: 'eccentric' | 'jumps' | 'hydration_l' | 'stretching'
   label: string
   effet: string
-  icone: 'dumb' | 'up' | 'heart'
+  icone: 'dumb' | 'up' | 'heart' | 'target'
   detail: string
 }> = [
   { champ: 'eccentric', label: 'Excentrique', effet: '−6', icone: 'dumb', detail: 'Le traitement, pas un complément' },
@@ -42,6 +43,7 @@ const GESTES: Array<{
   // Hydratation n'est pas un booléen en base (`hydration_l` est en litres) :
   // le geste écrit 2 L ou efface la saisie, seuil retenu pour le crédit.
   { champ: 'hydration_l', label: 'Hydratation', effet: '−2', icone: 'heart', detail: '2 litres ou plus' },
+  { champ: 'stretching', label: 'Mobilité', effet: '0', icone: 'target', detail: 'Une série, pas un crédit' },
 ]
 
 const actif = (l: DailyLogRow | null, champ: (typeof GESTES)[number]['champ']) =>

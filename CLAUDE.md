@@ -1411,6 +1411,29 @@ que c'était trop léger. Le tendon se renforce sous une charge lourde (Bohm
   a été fait dans les quatre dernières semaines.
 - On ne note jamais une séance à venir.
 
+## La mobilité
+
+`src/lib/mobilite.ts` (+ 4 tests), `components/Mobilite.tsx`. Demandée par
+Mathieu le 17 octobre 2026.
+
+- **Un geste du carnet à zéro point**, à côté de l'excentrique, des sauts et
+  de l'hydratation. Il écrit `daily_logs.stretching`, colonne qui existait
+  sans être saisie : aucune table à créer. Zéro, parce que l'étirement ne
+  prévient pas les blessures (Lauersen 2014, BJSM) ; ce qu'il donne est de
+  l'amplitude, qui se gagne en deux semaines de pratique fréquente (Konrad
+  2024) et recule en deux à six semaines d'arrêt (Konrad 2025). Un bénéfice de
+  régularité : il se suit donc en **série de jours**, dans Suivi.
+- **La série ne casse pas avant la fin de la journée** : aujourd'hui non fait,
+  elle compte jusqu'à hier. La carte donne la série, le record, les jours sur
+  28, et un mot du coach (variante `.carte-braise`) qui dit l'état puis un
+  bienfait sourcé, différent chaque jour. Aucun ne promet une protection.
+- **Les exercices vivent dans Suivi, pas dans le Programme** : Mathieu ne veut
+  pas d'une séance quotidienne de plus. Une page par zone (cheville et pied,
+  hanche, genou, dos), à cocher pour soi ; seul « Noter la mobilité du jour »
+  écrit, et c'est le même champ que le geste du carnet. Un exercice peut être
+  en pause le temps d'une blessure (`pause`) : les ischios, depuis la lésion
+  du 20 km de Paris.
+
 ## Le laboratoire de charge
 
 `npm run dev`, puis **http://localhost:5173/labo.html**. Demandé par Mathieu

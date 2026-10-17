@@ -8,6 +8,8 @@
  * dans l'indice, un décompte de plus n'apportait rien.
  */
 import { RenfoChart } from '../components/charts/RenfoChart'
+import { CarteMobilite, PageMobilite } from '../components/Mobilite'
+import { SubPage } from '../components/SubPage'
 import type { RenfoRow } from '../lib/renfo'
 import { Fragment, useMemo, useState, type ReactNode } from 'react'
 import planJson from '../data/plan.json'
@@ -20,7 +22,7 @@ import type { EcartRow } from '../lib/overrides'
 import { Icon } from '../components/Icon'
 import { indexSeries, type LoadMap, type PainMap } from '../lib/tendonIndex'
 import type { ActivityRow, LoadParDiscipline } from '../lib/load'
-import type { FeedbackRow } from '../lib/buildPain'
+import type { DailyLogRow, FeedbackRow } from '../lib/buildPain'
 import { IndexChart } from '../components/charts/IndexChart'
 import { OuvertureChart } from '../components/charts/OuvertureChart'
 import { PainChart, type PainRow, type VuePain } from '../components/charts/PainChart'
@@ -89,6 +91,10 @@ interface Props {
   onOuvrirProfil: () => void
   /** Le suivi du renfo, exercice par exercice. */
   renfo?: RenfoRow[]
+  /** Le carnet, pour la série de mobilité. */
+  logs?: DailyLogRow[]
+  /** Sans carnet branché, la page de mobilité ne propose pas de noter. */
+  journalActif?: boolean
 }
 
 /**
@@ -125,8 +131,11 @@ export function Track({
   attestes,
   onOuvrirProfil,
   renfo = [],
+  logs = [],
+  journalActif = false,
 }: Props) {
   const now = todayISO()
+  const [mobiliteOuverte, setMobiliteOuverte] = useState(false)
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
 
   // Les compteurs de la semaine ont quitté la jauge d'Aujourd'hui le
@@ -542,12 +551,20 @@ export function Track({
           <RenfoChart historique={renfo} />
         </Viz>
 
+        <Viz titre="Mobilité">
+          <CarteMobilite now={now} logs={logs} onOuvrir={() => setMobiliteOuverte(true)} />
+        </Viz>
+
         {/* En dernier : c'est ce vers quoi tout le reste tend. Une règle qui
             se déclenche seule doit se voir venir. */}
         <Viz titre="Ouverture du volume">
           <OuvertureChart progres={volume} pain={pain} now={now} />
         </Viz>
       </div>
+
+      <SubPage ouvert={mobiliteOuverte} surtitre="Suivi" titre="Mobilité" onBack={() => setMobiliteOuverte(false)}>
+        {mobiliteOuverte && <PageMobilite now={now} journalActif={journalActif} />}
+      </SubPage>
     </div>
   )
 }

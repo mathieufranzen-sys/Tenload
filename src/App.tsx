@@ -583,6 +583,8 @@ function Coquille({
           ecarts={ecarts}
           attestes={attestes}
           renfo={renfo}
+          logs={data.logs}
+          journalActif={journalActif}
           onVoirANoter={() => {
             setSectionProfil('anoter')
             setOnglet('profile')
