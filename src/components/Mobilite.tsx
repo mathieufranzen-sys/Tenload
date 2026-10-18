@@ -1,5 +1,5 @@
 /**
- * La mobilité dans Suivi : la série, le record, le mot du coach, et la page
+ * La mobilité dans Suivi : la série, le record, et la page
  * des exercices (17 octobre 2026).
  *
  * Les exercices vivent ici et pas dans le Programme : Mathieu ne veut pas
@@ -10,11 +10,12 @@
 import { useState } from 'react'
 import { useJournal } from '../hooks/DataProvider'
 import type { DailyLogRow } from '../lib/buildPain'
-import { EXERCICES_MOBILITE, motMobilite, serieMobilite, type ZoneMobilite } from '../lib/mobilite'
+import { EXERCICES_MOBILITE, serieMobilite, type ZoneMobilite } from '../lib/mobilite'
 import { BoutonAction } from './BoutonAction'
 import { Icon } from './Icon'
 
-export function CarteMobilite({ now, logs, onOuvrir }: { now: string; logs: DailyLogRow[]; onOuvrir: () => void }) {
+/** La série et le record ; la page s'ouvre par le bouton du coin de la carte (`Viz`). */
+export function CarteMobilite({ now, logs }: { now: string; logs: DailyLogRow[] }) {
   const s = serieMobilite(logs, now)
 
   return (
@@ -24,18 +25,6 @@ export function CarteMobilite({ now, logs, onOuvrir }: { now: string; logs: Dail
         <Chiffre valeur={s.record} libelle="Record" detail={`${s.sur28} jour${s.sur28 > 1 ? 's' : ''} sur 28`} />
       </div>
 
-      <section className="carte-braise" style={{ padding: '18px 18px 20px', marginTop: 12, borderRadius: 22 }}>
-        <p className="etiquette" style={{ color: 'var(--pale)', opacity: 0.85 }}>
-          Le mot du coach
-        </p>
-        <p className="display-it" style={{ margin: '8px 0 0', fontSize: 'var(--fs-coach-s)', lineHeight: 1.4 }}>
-          {motMobilite(s, now)}
-        </p>
-      </section>
-
-      <BoutonAction onClick={onOuvrir} style={{ marginTop: 14 }}>
-        Voir les exercices
-      </BoutonAction>
     </div>
   )
 }

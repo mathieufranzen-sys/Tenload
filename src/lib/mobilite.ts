@@ -48,36 +48,6 @@ export function serieMobilite(logs: DailyLogRow[], now: string): SerieMobilite {
   return { enCours, record, faitAujourdhui, sur28 }
 }
 
-/**
- * Ce que disent les études, une phrase chacune, au tutoiement du coach.
- * Rien qui promette une protection que les sources ne donnent pas.
- */
-const BIENFAITS = [
-  'Étirer souvent pendant au moins deux semaines gagne de l’amplitude, et le statique tenu 30 à 60 s en gagne plus que le dynamique (Konrad 2024, 77 études).',
-  'Une cheville qui plie mal vers l’avant est associée à plus de tendinopathies d’Achille (Rabin 2014). Le genou au mur est l’exercice qui la travaille.',
-  'L’amplitude gagnée recule dès deux à six semaines sans étirement (Konrad 2025) : c’est la régularité qui la garde, pas la séance longue.',
-  'Le renfo en pleine amplitude gagne autant de mobilité que l’étirement (Afonso 2021). Tes descentes lentes au mollet travaillent aussi ta cheville.',
-  'Avant de courir, préfère un échauffement dynamique : l’étirement statique ne change pas l’économie de course (Sports Medicine Open 2025). Garde-le pour après ou le soir.',
-  'S’étirer ne protège pas des blessures à lui seul, le renforcement si (Lauersen 2014). La mobilité accompagne ton renfo, elle ne le remplace pas.',
-]
-
-/** Le mot du coach sous la série : où tu en es, puis un bienfait qui change chaque jour. */
-export function motMobilite(s: SerieMobilite, now: string): string {
-  const jour = Math.floor(Date.parse(`${now}T12:00:00Z`) / 86_400_000)
-  const bienfait = BIENFAITS[((jour % BIENFAITS.length) + BIENFAITS.length) % BIENFAITS.length]
-
-  let etat: string
-  if (s.enCours === 0 && s.record === 0) etat = 'Dix minutes suffisent pour lancer ta première série.'
-  else if (s.enCours === 0) etat = `Ta série s’est arrêtée. Ton record est de ${s.record} jours : une séance aujourd’hui la relance.`
-  else if (!s.faitAujourdhui) etat = `${s.enCours} jour${s.enCours > 1 ? 's' : ''} d’affilée. Fais-la aujourd’hui pour ne pas casser la série.`
-  else if (s.enCours >= s.record)
-    etat = s.enCours > 1 ? `${s.enCours} jours d’affilée, c’est ton record.` : 'Premier jour de ta série.'
-  else if (s.enCours >= 14) etat = `${s.enCours} jours d’affilée : tu as passé les deux semaines où l’amplitude commence à gagner.`
-  else etat = `${s.enCours} jour${s.enCours > 1 ? 's' : ''} d’affilée, ${s.record - s.enCours} de plus pour égaler ton record.`
-
-  return `${etat} ${bienfait}`
-}
-
 export type ZoneMobilite = 'Cheville et pied' | 'Hanche' | 'Genou' | 'Dos'
 
 export interface ExerciceMobilite {

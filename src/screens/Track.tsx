@@ -551,8 +551,8 @@ export function Track({
           <RenfoChart historique={renfo} />
         </Viz>
 
-        <Viz titre="Mobilité">
-          <CarteMobilite now={now} logs={logs} onOuvrir={() => setMobiliteOuverte(true)} />
+        <Viz titre="Mobilité" action={{ label: 'Voir les exercices de mobilité', onClick: () => setMobiliteOuverte(true) }}>
+          <CarteMobilite now={now} logs={logs} />
         </Viz>
 
         {/* En dernier : c'est ce vers quoi tout le reste tend. Une règle qui
@@ -630,17 +630,41 @@ function Viz({
   controle,
   legendeCouleurs,
   note,
+  action,
   children,
 }: {
   titre: string
+  /** Le bouton rond du coin, blanc à flèche bleue, comme celui de la jauge de charge. */
+  action?: { label: string; onClick: () => void }
   controle?: ReactNode
   legendeCouleurs?: Array<{ label: string; couleur: string }>
   note?: string
   children: ReactNode
 }) {
   return (
-    <section className="carte" style={{ padding: '18px 18px', marginBottom: 12 }}>
-      <h2 className="display" style={{ margin: '0 0 6px', fontSize: 'var(--fs-t-carte)', lineHeight: 1.2, }}>
+    <section className="carte" style={{ position: 'relative', padding: '18px 18px', marginBottom: 12 }}>
+      {action && (
+        <button
+          type="button"
+          aria-label={action.label}
+          onClick={action.onClick}
+          style={{
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            width: 52,
+            height: 52,
+            borderRadius: '50%',
+            background: 'var(--surface-2)',
+            color: 'var(--bleu-500)',
+            display: 'grid',
+            placeItems: 'center',
+          }}
+        >
+          <Icon name="arrowUpRight" size={20} />
+        </button>
+      )}
+      <h2 className="display" style={{ margin: '0 0 6px', fontSize: 'var(--fs-t-carte)', lineHeight: 1.2, paddingRight: action ? 64 : 0, minHeight: action ? 28 : undefined }}>
         {titre}
       </h2>
       {controle && <div style={{ marginTop: 14 }}>{controle}</div>}

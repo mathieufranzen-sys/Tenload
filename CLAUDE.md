@@ -1424,9 +1424,9 @@ Mathieu le 17 octobre 2026.
   2024) et recule en deux à six semaines d'arrêt (Konrad 2025). Un bénéfice de
   régularité : il se suit donc en **série de jours**, dans Suivi.
 - **La série ne casse pas avant la fin de la journée** : aujourd'hui non fait,
-  elle compte jusqu'à hier. La carte donne la série, le record, les jours sur
-  28, et un mot du coach (variante `.carte-braise`) qui dit l'état puis un
-  bienfait sourcé, différent chaque jour. Aucun ne promet une protection.
+  elle compte jusqu'à hier. La carte donne la série, le record et les jours
+  sur 28 ; la page s'ouvre par le bouton rond de son coin (`Viz`, prop
+  `action`). Le mot du coach qu'elle portait a été retiré le 18 octobre.
 - **Les exercices vivent dans Suivi, pas dans le Programme** : Mathieu ne veut
   pas d'une séance quotidienne de plus. Une page par zone (cheville et pied,
   hanche, genou, dos), à cocher pour soi ; seul « Noter la mobilité du jour »
