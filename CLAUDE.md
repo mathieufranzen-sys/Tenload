@@ -1365,7 +1365,8 @@ le dit et n'enregistre rien, sans allumer la bannière de synchronisation.
   de liste. Sur sa page, l'allure visée a son propre bloc.
 - **Chronos équivalents de Suivi : six mois de progression** (18 octobre
   2026, `historiqueForme.ts` + 2 tests, `ChronoChart`), une distance au
-  choix au-dessus du tableau. `serieForme` rejouait le passé sur l'ancre
+  choix. Le tableau des chronos et le graphique « Niveau en course »
+  (`FormeChart`), qui faisait doublon, sont retirés. `serieForme` rejouait le passé sur l'ancre
   ACTUELLE et effaçait le progrès : ici chaque date reprend l'ancre de son
   jour, le test de 3 km (`DATE_TEST_3K` tant que le profil n'a pas sa date)
   puis chaque course qui recale. Rien avant la première mesure, et le dernier
@@ -1431,8 +1432,9 @@ Mathieu le 17 octobre 2026.
   2024) et recule en deux à six semaines d'arrêt (Konrad 2025). Un bénéfice de
   régularité : il se suit donc en **série de jours**, dans Suivi.
 - **La série ne casse pas avant la fin de la journée** : aujourd'hui non fait,
-  elle compte jusqu'à hier. La carte donne la série, le record et les jours
-  sur 28 ; la page s'ouvre par le bouton rond de son coin (`Viz`, prop
+  elle compte jusqu'à hier. La carte donne la série, puis huit semaines en
+  carrés (le dessin de l'ouverture du volume), le record et les jours sur
+  28 ; la page s'ouvre par le bouton rond de son coin (`Viz`, prop
   `action`). Le mot du coach qu'elle portait a été retiré le 18 octobre.
 - **Les exercices vivent dans Suivi, pas dans le Programme** : Mathieu ne veut
   pas d'une séance quotidienne de plus. Une page par zone (cheville et pied,

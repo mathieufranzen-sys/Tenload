@@ -11,7 +11,7 @@ import { RenfoChart } from '../components/charts/RenfoChart'
 import { CarteMobilite, PageMobilite } from '../components/Mobilite'
 import { SubPage } from '../components/SubPage'
 import type { RenfoRow } from '../lib/renfo'
-import { Fragment, useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import planJson from '../data/plan.json'
 import type { Plan } from '../data/types'
 import type { SessionType } from '../data/types'
@@ -29,11 +29,11 @@ import { PainChart, type PainRow, type VuePain } from '../components/charts/Pain
 import { VolumeChart, type BarRow, type VueVolume } from '../components/charts/VolumeChart'
 import { LoadChart, type StackRow } from '../components/charts/LoadChart'
 import { MeshBackground } from '../components/MeshBackground'
-import { EffortChart, FormeChart } from '../components/charts/NiveauChart'
-import { MIN_SEANCES, RPE_ATTENDU, coursesChronometrees, serieForme, type AjustementForme } from '../lib/forme'
+import { EffortChart } from '../components/charts/NiveauChart'
+import { RPE_ATTENDU, coursesChronometrees, type AjustementForme } from '../lib/forme'
 import { RepartitionChart } from '../components/charts/RepartitionChart'
 import { RatioChart, type PointRatio } from '../components/charts/RatioChart'
-import { chronoEquivalent, formatChrono, listerDossards, type DossardRow } from '../lib/dossards'
+import { chronoEquivalent, listerDossards, type DossardRow } from '../lib/dossards'
 import { ancresDeForme, historiqueForme } from '../lib/historiqueForme'
 import { ChronoChart } from '../components/charts/ChronoChart'
 import { HALF_KM } from '../lib/paces'
@@ -52,19 +52,6 @@ const DISTANCES_EQUIVALENTES: Array<[string, number]> = [
   ['Marathon', MARATHON_KM],
 ]
 
-/** Les lignes du tableau des chronos : même filet, même hauteur, alignées. */
-const LIGNE_EQ = {
-  padding: '10px 0',
-  borderTop: '1px solid var(--border)',
-  fontSize: 'var(--fs-texte)',
-  color: 'var(--ink-2)',
-} as const
-const VALEUR_EQ = {
-  fontSize: 'var(--fs-c-s)',
-  textAlign: 'right',
-  color: 'var(--ink)',
-  fontVariantNumeric: 'tabular-nums',
-} as const
 
 interface Props {
   load: LoadMap
@@ -81,8 +68,6 @@ interface Props {
   notesEnRetard: number
   /** Ouvre la liste de ces séances. Absent en mode instantanés. */
   onVoirANoter?: () => void
-  /** Forme du dernier test, l'ancre des graphiques de niveau. */
-  formeTest: number
   /** Allure marathon visée, pour la ligne d'objectif. */
   marathonPace: number
   /** La forme projetée du jour, ressenti compris. */
@@ -130,7 +115,6 @@ export function Track({
   feedback,
   notesEnRetard,
   onVoirANoter,
-  formeTest,
   marathonPace,
   forme,
   ecarts,
@@ -355,21 +339,7 @@ export function Track({
       }))
   }, [loadParDiscipline, now])
 
-  // Le niveau en course sur les douze dernières semaines, un point par lundi
-  // plus aujourd'hui : la forme telle que l'app l'aurait affichée ce jour-là.
   const niveau = useMemo(() => {
-    const lundiCourant = mondayOf(now)
-    const lundis = Array.from({ length: 12 }, (_, k) => addDays(lundiCourant, -7 * (11 - k)))
-    const dates = [...lundis.slice(1), now]
-    const chronos = coursesChronometrees(feedback, ecarts, plan.weeks)
-    const forme = serieForme(formeTest, feedback, dates, chronos).map((f, i) => ({
-      label: i === dates.length - 1 ? "auj." : formatDay(dates[i]),
-      minutes: Math.round((f.allure * MARATHON_KM) / 60),
-      secondes: Math.round(f.allure * MARATHON_KM),
-      lu: f.seances >= MIN_SEANCES,
-      seances: f.seances,
-      chronometrees: f.chronometrees,
-    }))
     // Séance par séance sur un mois (retour du 23 septembre) : une moyenne
     // par semaine sur trois mois lissait tout ce qu'on vient y voir, et
     // quinze jours ne montraient pas assez de séances pour juger.
@@ -381,8 +351,8 @@ export function Track({
         label: formatDay(f.day),
         ecart: f.rpe - (RPE_ATTENDU[f.session_type as SessionType] as number),
       }))
-    return { forme, effort }
-  }, [formeTest, feedback, now, ecarts])
+    return { effort }
+  }, [feedback, now])
 
   const volumeAffiche =
     vueVolume === 'cumul'
@@ -468,26 +438,6 @@ export function Track({
         </Viz>
 
         <Viz
-          titre="Niveau en course"
-          legendeCouleurs={[
-            { label: 'Marathon projeté', couleur: 'var(--chart-1)' },
-            { label: 'Objectif', couleur: 'var(--chart-3)' },
-          ]}
-          note={(() => {
-            const f = niveau.forme
-            const d = f.length > 1 ? f[f.length - 1].minutes - f[0].minutes : 0
-            const tendance = d === 0 ? 'Stable sur 12 semaines' : `${d < 0 ? '−' : '+'}${Math.abs(d)} min sur 12 semaines`
-            // Ce que la courbe lit : sans le dire, une ligne plate passait
-            // pour une absence de progrès au lieu d'une absence de mesure.
-            const dernier = f[f.length - 1]
-            if (!dernier || dernier.seances < MIN_SEANCES) return `${tendance}. Pas assez de séances notées ces 28 jours pour la faire bouger.`
-            return `${tendance}. Ces 28 jours : ${dernier.chronometrees} course${dernier.chronometrees > 1 ? 's' : ''} chronométrée${dernier.chronometrees > 1 ? 's' : ''} sur ${dernier.seances} séances lues.`
-          })()}
-        >
-          <FormeChart points={niveau.forme} objectif={Math.round((marathonPace * MARATHON_KM) / 60)} />
-        </Viz>
-
-        <Viz
           titre="Effort perçu contre effort attendu"
           legendeCouleurs={[
             { label: 'Plus facile que prévu', couleur: 'var(--chart-1)' },
@@ -531,26 +481,6 @@ export function Track({
               Entre deux, le ressenti des séances la nuance.
             </p>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', columnGap: 18 }}>
-            <span />
-            <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--accent)', textAlign: 'right', paddingBottom: 6 }}>
-              Aujourd'hui
-            </span>
-            <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--bleu-700)', textAlign: 'right', paddingBottom: 6 }}>
-              Visé le 4 avril
-            </span>
-            {DISTANCES_EQUIVALENTES.map(([libelle, km]) => (
-              <Fragment key={libelle}>
-                <span style={LIGNE_EQ}>{libelle}</span>
-                <span className="chiffre" style={{ ...LIGNE_EQ, ...VALEUR_EQ }}>
-                  {formatChrono(chronoEquivalent(km, forme.allure))}
-                </span>
-                <span className="chiffre" style={{ ...LIGNE_EQ, ...VALEUR_EQ, color: 'var(--bleu-700)' }}>
-                  {formatChrono(chronoEquivalent(km, allureVisee(marathonPace)))}
-                </span>
-              </Fragment>
-            ))}
-          </div>
         </Viz>
 
         <Viz titre="Rapport aigu sur chronique">

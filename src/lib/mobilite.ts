@@ -48,6 +48,15 @@ export function serieMobilite(logs: DailyLogRow[], now: string): SerieMobilite {
   return { enCours, record, faitAujourdhui, sur28 }
 }
 
+/** Les `n` derniers jours, du plus ancien à aujourd'hui, pour la grille de Suivi. */
+export function joursMobilite(logs: DailyLogRow[], now: string, n = 56): Array<{ day: string; fait: boolean }> {
+  const jours = new Set(logs.filter((l) => l.stretching).map((l) => l.day))
+  return Array.from({ length: n }, (_, k) => {
+    const day = addDays(now, k - n + 1)
+    return { day, fait: jours.has(day) }
+  })
+}
+
 export type ZoneMobilite = 'Cheville et pied' | 'Hanche' | 'Genou' | 'Dos'
 
 export interface ExerciceMobilite {

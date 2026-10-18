@@ -2,87 +2,16 @@
  * Le niveau en course à pied, semaine après semaine. Demandé le 22 septembre
  * 2026 : Suivi montrait le tendon et le volume, rien de ce qu'on gagne.
  *
- * `FormeChart` trace le marathon projeté, l'axe à l'envers pour que plus vite
- * se lise plus haut, avec l'objectif en pointillés. `EffortChart` montre ce
- * qui le fait bouger : l'effort perçu de la semaine contre l'effort attendu.
- * Les deux lisent exactement ce que lit `ajusterForme`, rien d'autre.
+ * Le marathon projeté qui vivait ici est devenu `ChronoChart` (18 octobre
+ * 2026), sur six mois et à la bonne ancre. `EffortChart` montre ce qui le
+ * fait bouger : l'effort perçu contre l'effort attendu, exactement ce que
+ * lit `ajusterForme`.
  */
-import { formatDuration } from '../../lib/paces'
-import { indicesEtiquettes, POINTILLE } from './etiquettes'
+import { indicesEtiquettes } from './etiquettes'
 
 const W = 320
-const H = 170
 const P = { t: 12, r: 8, b: 22, l: 44 }
 const IW = W - P.l - P.r
-const IH = H - P.t - P.b
-
-export interface PointForme {
-  label: string
-  /** Marathon projeté, en minutes. */
-  minutes: number
-  /** Assez de séances notées pour que le ressenti compte. */
-  lu: boolean
-}
-
-export function FormeChart({ points, objectif }: { points: PointForme[]; objectif: number }) {
-  const n = points.length
-  if (!n) return null
-  const valeurs = [...points.map((p) => p.minutes), objectif]
-  const haut = Math.min(...valeurs) - 2
-  const bas = Math.max(...valeurs) + 2
-  const x = (i: number) => P.l + (n === 1 ? IW / 2 : (i * IW) / (n - 1))
-  // Plus vite = plus haut : `haut` est le temps le plus court.
-  const y = (m: number) => P.t + ((m - haut) / (bas - haut)) * IH
-  const etiquettes = indicesEtiquettes(n, x)
-  const graduations = [haut + 2, (haut + bas) / 2, bas - 2].map(Math.round)
-
-  let d = ''
-  points.forEach((p, i) => (d += `${i ? 'L' : 'M'}${x(i)} ${y(p.minutes)} `))
-
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Marathon projeté par semaine">
-      {graduations.map((m) => (
-        <g key={m}>
-          <line x1={P.l} x2={W - P.r} y1={y(m)} y2={y(m)} stroke="var(--chart-grille)" strokeWidth={1} />
-          <text x={P.l - 6} y={y(m) + 3.5} textAnchor="end" fontSize={10} fill="var(--chart-texte)">
-            {formatDuration(m).replace(' min', '')}
-          </text>
-        </g>
-      ))}
-      <line
-        x1={P.l}
-        x2={W - P.r}
-        y1={y(objectif)}
-        y2={y(objectif)}
-        stroke="var(--chart-3)"
-        strokeWidth={1.2}
-        strokeDasharray={POINTILLE}
-      />
-      <text x={W - P.r} y={y(objectif) - 5} textAnchor="end" fontSize={10} fill="var(--chart-3)">
-        Objectif {formatDuration(objectif).replace(' min', '')}
-      </text>
-      <path d={d} fill="none" stroke="var(--chart-1)" strokeWidth={2.4} strokeLinejoin="round" strokeLinecap="round" />
-      {points.map((p, i) => (
-        <circle
-          key={i}
-          cx={x(i)}
-          cy={y(p.minutes)}
-          r={i === n - 1 ? 4.5 : 3}
-          // Un seul remplissage : des points blancs puis verts sur la même
-          // courbe se lisaient comme deux séries (retour du 23 septembre).
-          fill="var(--chart-1)"
-        />
-      ))}
-      {points.map((p, i) =>
-        etiquettes.has(i) ? (
-          <text key={`e${i}`} x={x(i)} y={H - 6} textAnchor="middle" fontSize={10} fill="var(--chart-texte)">
-            {p.label}
-          </text>
-        ) : null,
-      )}
-    </svg>
-  )
-}
 
 export interface PointEffort {
   label: string

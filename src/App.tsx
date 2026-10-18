@@ -579,7 +579,6 @@ function Coquille({
           activities={data.activities}
           feedback={feedback}
           notesEnRetard={notesEnRetard}
-          formeTest={fitnessPaceTest}
           marathonPace={marathonPace}
           forme={forme}
           ecarts={ecarts}

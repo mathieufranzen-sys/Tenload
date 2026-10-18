@@ -10,36 +10,64 @@
 import { useState } from 'react'
 import { useJournal } from '../hooks/DataProvider'
 import type { DailyLogRow } from '../lib/buildPain'
-import { EXERCICES_MOBILITE, serieMobilite, type ZoneMobilite } from '../lib/mobilite'
+import { EXERCICES_MOBILITE, joursMobilite, serieMobilite, type ZoneMobilite } from '../lib/mobilite'
 import { BoutonAction } from './BoutonAction'
 import { Icon } from './Icon'
 
-/** La série et le record ; la page s'ouvre par le bouton du coin de la carte (`Viz`). */
+/**
+ * Huit semaines, un carré par jour, deux semaines par ligne : le même dessin
+ * que l'ouverture du volume (choisi par Mathieu le 18 octobre 2026). Une
+ * série se lit mieux en carrés qu'en chiffre, et un trou se voit comme un
+ * trou. Aujourd'hui, pas encore fait, reste en pointillés : la journée n'est
+ * pas finie.
+ */
+const PAR_LIGNE = 14
+const W = 320
+const ECART = 3
+const COTE = (W - (PAR_LIGNE - 1) * ECART) / PAR_LIGNE
+
 export function CarteMobilite({ now, logs }: { now: string; logs: DailyLogRow[] }) {
   const s = serieMobilite(logs, now)
+  const jours = joursMobilite(logs, now)
+  const lignes = Math.ceil(jours.length / PAR_LIGNE)
+  const H = lignes * COTE + (lignes - 1) * ECART
 
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-        <Chiffre valeur={s.enCours} libelle="Série en cours" detail={s.faitAujourdhui ? 'Faite aujourd’hui' : 'À faire aujourd’hui'} />
-        <Chiffre valeur={s.record} libelle="Record" detail={`${s.sur28} jour${s.sur28 > 1 ? 's' : ''} sur 28`} />
-      </div>
-
-    </div>
-  )
-}
-
-function Chiffre({ valeur, libelle, detail }: { valeur: number; libelle: string; detail: string }) {
-  return (
-    <div style={{ padding: '14px 14px 13px', borderRadius: 20, background: 'var(--surface)' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
         <span className="chiffre" style={{ fontSize: 'var(--fs-c-l)', lineHeight: 1 }}>
-          {valeur}
+          {s.enCours}
         </span>
-        <span style={{ fontSize: 'var(--fs-texte)', color: 'var(--accent)' }}>{valeur > 1 ? 'jours' : 'jour'}</span>
+        <span style={{ fontSize: 'var(--fs-texte)', color: 'var(--accent)' }}>
+          {s.enCours > 1 ? 'jours d’affilée' : 'jour d’affilée'}
+        </span>
       </div>
-      <div style={{ fontSize: 'var(--fs-meta)', marginTop: 8, color: 'var(--accent)' }}>{libelle}</div>
-      <div style={{ fontSize: 'var(--fs-detail)', marginTop: 3, color: 'var(--sur-ink-3)' }}>{detail}</div>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', marginTop: 14 }} role="img" aria-label={`Mobilité sur huit semaines : ${s.sur28} jours sur les 28 derniers`}>
+        {jours.map((j, i) => {
+          const x = (i % PAR_LIGNE) * (COTE + ECART)
+          const y = Math.floor(i / PAR_LIGNE) * (COTE + ECART)
+          return j.fait ? (
+            <rect key={j.day} x={x} y={y} width={COTE} height={COTE} rx={3} fill="var(--chart-1)" />
+          ) : (
+            <rect
+              key={j.day}
+              x={x + 0.75}
+              y={y + 0.75}
+              width={COTE - 1.5}
+              height={COTE - 1.5}
+              rx={3}
+              fill="none"
+              stroke="var(--border-2)"
+              strokeWidth={1.5}
+              strokeDasharray={j.day === now ? '3 2' : undefined}
+            />
+          )
+        })}
+      </svg>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 10, fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)' }}>
+        <span>Record {s.record} jour{s.record > 1 ? 's' : ''}</span>
+        <span>{s.sur28} jour{s.sur28 > 1 ? 's' : ''} sur les 28 derniers</span>
+      </div>
     </div>
   )
 }
