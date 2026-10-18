@@ -56,6 +56,8 @@ function versSport(sport: string): string {
 }
 
 const plan = planJson as unknown as Plan
+/** Le test de calibrage du 8 août 2026, tant que le profil ne porte pas sa date. */
+const DATE_TEST_3K = '2026-08-08'
 
 /**
  * Le laboratoire de charge (`labo.html`) : quatre profils fictifs qu'on avance
@@ -585,6 +587,8 @@ function Coquille({
           renfo={renfo}
           logs={data.logs}
           journalActif={journalActif}
+          dossards={dossards}
+          test3k={{ day: profil?.test_3k_date ?? DATE_TEST_3K, secondes: test3k }}
           onVoirANoter={() => {
             setSectionProfil('anoter')
             setOnglet('profile')

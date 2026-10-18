@@ -1363,6 +1363,13 @@ le dit et n'enregistre rien, sans allumer la bannière de synchronisation.
 - Une carte de dossard à venir est bleu clair et non grise, avec sa pastille
   de compte à rebours en blanc : un dossard est un rendez-vous, pas une ligne
   de liste. Sur sa page, l'allure visée a son propre bloc.
+- **Chronos équivalents de Suivi : six mois de progression** (18 octobre
+  2026, `historiqueForme.ts` + 2 tests, `ChronoChart`), une distance au
+  choix au-dessus du tableau. `serieForme` rejouait le passé sur l'ancre
+  ACTUELLE et effaçait le progrès : ici chaque date reprend l'ancre de son
+  jour, le test de 3 km (`DATE_TEST_3K` tant que le profil n'a pas sa date)
+  puis chaque course qui recale. Rien avant la première mesure, et le dernier
+  point est la forme affichée par l'app.
 - **Chronos équivalents** dans Objectif : 5 km, 10 km, semi et marathon, en
   deux colonnes, la forme du jour et l'objectif. Même équivalence que le
   recalage sur un chrono de course, prise à l'envers (`chronoEquivalent`).

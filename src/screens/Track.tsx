@@ -33,7 +33,9 @@ import { EffortChart, FormeChart } from '../components/charts/NiveauChart'
 import { MIN_SEANCES, RPE_ATTENDU, coursesChronometrees, serieForme, type AjustementForme } from '../lib/forme'
 import { RepartitionChart } from '../components/charts/RepartitionChart'
 import { RatioChart, type PointRatio } from '../components/charts/RatioChart'
-import { chronoEquivalent, formatChrono } from '../lib/dossards'
+import { chronoEquivalent, formatChrono, listerDossards, type DossardRow } from '../lib/dossards'
+import { ancresDeForme, historiqueForme } from '../lib/historiqueForme'
+import { ChronoChart } from '../components/charts/ChronoChart'
 import { HALF_KM } from '../lib/paces'
 import { repartitionSemaine } from '../lib/repartition'
 import { MARATHON_KM, allureVisee } from '../lib/paces'
@@ -95,6 +97,10 @@ interface Props {
   logs?: DailyLogRow[]
   /** Sans carnet branché, la page de mobilité ne propose pas de noter. */
   journalActif?: boolean
+  /** Les dossards, pour les courses qui ont recalé la forme. */
+  dossards?: DossardRow[]
+  /** Le test de 3 km, première ancre de l'historique de la forme. */
+  test3k?: { day: string; secondes: number }
 }
 
 /**
@@ -133,9 +139,27 @@ export function Track({
   renfo = [],
   logs = [],
   journalActif = false,
+  dossards = [],
+  test3k,
 }: Props) {
   const now = todayISO()
   const [mobiliteOuverte, setMobiliteOuverte] = useState(false)
+  const [distanceChrono, setDistanceChrono] = useState(String(MARATHON_KM))
+
+  // Six mois de forme, chaque date sur l'ancre qui existait ce jour-là : le
+  // test de 3 km, puis les courses qui recalent. Un point par lundi, plus le
+  // jour de chaque ancre pour que la marche tombe à sa date.
+  const debutChronos = addDays(now, -182)
+  const historique = useMemo(() => {
+    const courses = listerDossards(plan, dossards, ecarts, now, marathonPace).filter((d) => d.recale)
+    const ancres = test3k ? ancresDeForme(test3k, courses, now) : []
+    const dates = new Set<string>()
+    for (let d = mondayOf(debutChronos); d < now; d = addDays(d, 7)) if (d >= debutChronos) dates.add(d)
+    for (const a of ancres) if (a.day >= debutChronos && a.day < now) dates.add(a.day)
+    dates.add(now)
+    const chronos = coursesChronometrees(feedback, ecarts, plan.weeks)
+    return { ancres, points: historiqueForme(ancres, feedback, [...dates].sort(), chronos, forme.allure) }
+  }, [dossards, ecarts, now, marathonPace, test3k, feedback, forme.allure, debutChronos])
   const A = useMemo(() => adapt(load, pain, feedback, now), [load, pain, feedback, now])
 
   // Les compteurs de la semaine ont quitté la jauge d'Aujourd'hui le
@@ -479,7 +503,34 @@ export function Track({
         {/* Ce que ta forme du jour vaut sur les autres distances, et ce que
             l'objectif du 4 avril y vaudrait. Même équivalence que le recalage
             d'un chrono de course, prise à l'envers (`chronoEquivalent`). */}
-        <Viz titre="Chronos équivalents">
+        <Viz
+          titre="Chronos équivalents"
+          controle={
+            <Segmented
+              label="Distance du graphique"
+              valeur={distanceChrono}
+              onChange={setDistanceChrono}
+              options={DISTANCES_EQUIVALENTES.map(([libelle, km]) => ({ cle: String(km), libelle: libelle === 'Semi-marathon' ? 'Semi' : libelle }))}
+            />
+          }
+        >
+          <ChronoChart
+            debut={debutChronos}
+            fin={now}
+            objectif={chronoEquivalent(Number(distanceChrono), allureVisee(marathonPace))}
+            points={historique.points.map((p) => ({
+              day: p.day,
+              secondes: p.allure == null ? null : chronoEquivalent(Number(distanceChrono), p.allure),
+              ancre: p.ancre?.source,
+            }))}
+          />
+          {historique.ancres.length > 0 && (
+            <p style={{ margin: '6px 0 18px', fontSize: 'var(--fs-detail)', color: 'var(--sur-ink-3)', lineHeight: 1.45 }}>
+              Les marches viennent des mesures :{' '}
+              {historique.ancres.map((a) => `${a.source.toLowerCase().startsWith('test') ? 'test de 3 km' : a.source} le ${formatDay(a.day)}`).join(', ')}.
+              Entre deux, le ressenti des séances la nuance.
+            </p>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', columnGap: 18 }}>
             <span />
             <span style={{ fontSize: 'var(--fs-detail)', color: 'var(--accent)', textAlign: 'right', paddingBottom: 6 }}>
