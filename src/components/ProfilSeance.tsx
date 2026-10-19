@@ -13,7 +13,7 @@
  * du tendon.
  */
 import type { Session } from '../data/types'
-import { formatPace, zonePace } from '../lib/paces'
+import { PLAGE_LENTE, formatPace, zonePace } from '../lib/paces'
 import {
   couleurSegment,
   hauteurSegment,
@@ -230,7 +230,12 @@ function Ligne({
   phase: PhaseCle
   marathonPace: number
 }) {
-  const allure = seg.zone ? `${formatPace(seg.allure ?? zonePace(marathonPace, seg.zone))} /km` : null
+  // L'endurance et la récupération se courent en plage, comme l'écran
+  // Objectif les affiche : une seule allure se lisait comme une cible à tenir.
+  const lente = seg.zone ? PLAGE_LENTE[seg.zone] : undefined
+  const allure = seg.zone
+    ? `${formatPace(seg.allure ?? zonePace(marathonPace, seg.zone))}${lente != null ? ` – ${formatPace(marathonPace + lente)}` : ''} /km`
+    : null
   return (
     <div style={{ display: 'flex', gap: 12, alignItems: 'stretch', paddingLeft: 14 }}>
       <span
