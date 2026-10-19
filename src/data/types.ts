@@ -121,8 +121,8 @@ export interface Session {
    */
   specifique?: boolean
   /**
-   * Séance à allure 10 km du bloc B : sa zone vo2 suit l'objectif du dossard
-   * du 15 novembre quand il est saisi (`allureZone`, 19 octobre 2026).
+   * Séance à allure 10 km du bloc B : sa zone vo2 se court à `ALLURE_10K`,
+   * 3:45/km (`allureZone`, 19 octobre 2026).
    */
   allure10k?: boolean
   /** La séance attend un ressenti après coup. */

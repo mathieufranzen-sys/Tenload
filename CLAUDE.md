@@ -163,15 +163,15 @@ plus le dossard. L'allure 10 km est la zone `vo2` du modèle, 3:57/km.
 | Mer 11/11 (S14) | 5 x 400 m, rappel d'allure |
 | Dim 15/11 (S14) | **10 km Hoka**, l'objectif de l'automne |
 
-**Les séances à allure 10 km suivent l'objectif du dossard** (arbitré par
-Mathieu le 19 octobre 2026, `allure10k.ts`, `allureZone` dans paces.ts).
-Ancrées sur 3 h 15, elles tombaient à 3:57, soit un 10 km en 39:30, alors
-que sa forme le situait vers 38:00. Les cinq séances de S10 à S14 et le
-10 km Hoka portent `allure10k` dans `plan.json` (et le générateur l'écrit) :
-leur zone vo2 vaut l'objectif SAISI sur la page du dossard divisé par 10.
-Sans objectif saisi, rien ne change : le repli du dossard est le record de
-40:12, plus lent que le plan. Les notes qui citaient « 4:05 » et « 40:40 »
-ont perdu leur chiffre. Les chiffres du tableau ci-dessus sont ceux d'avant.
+**Les séances à allure 10 km se courent à 3:45/km** (arbitré par Mathieu le
+19 octobre 2026, `ALLURE_10K` dans `allure10k.ts`, `allureZone` dans
+paces.ts), soit 37:30 au 10 km Hoka. Ancrées sur 3 h 15, elles tombaient à
+3:57, un 10 km en 39:30. Les cinq séances de S10 à S14 et le 10 km Hoka
+portent `allure10k` dans `plan.json` (et le générateur l'écrit). **La valeur
+est en dur, pas lue sur le dossard** : l'objectif saisi sur la page du
+dossard est un objectif mental, pas une consigne de séance. Les notes qui
+citaient « 4:05 » et « 40:40 » ont perdu leur chiffre ; les allures du
+tableau ci-dessus sont celles d'avant.
 
 Le volume ne baisse pas pendant le bloc : 55 puis 58 km, les plus grosses
 semaines depuis le début. C'est ce qui distingue ce bloc d'une prépa 10 km

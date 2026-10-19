@@ -15,8 +15,7 @@ import { buildPain, type DailyLogRow, type FeedbackRow } from './lib/buildPain'
 import { NOTE_DEMO, construireDemo } from './data/demo'
 import { cleEcart, indexerEcarts, type EcartPatch, type EcartRow } from './lib/overrides'
 import { adapt, construireContexte, formeProjetee, weekSessions, type AdaptResult, type ContextePlan } from './lib/adapt'
-import { dossardsAjoutes, listerDossards, type DossardRow } from './lib/dossards'
-import { definirObjectif10k } from './lib/allure10k'
+import { dossardsAjoutes, type DossardRow } from './lib/dossards'
 import type { PainMap } from './lib/tendonIndex'
 import { addDays, today } from './lib/dates'
 import { isConfigured } from './lib/supabase'
@@ -415,15 +414,6 @@ function Coquille({
    * l'indice ne les voient pas, c'est l'affichage seul qui les pose.
    */
   const ajoutes = useMemo(() => dossardsAjoutes(dossards), [dossards])
-
-  // L'objectif SAISI du 10 km du plan, sans repli sur le record : c'est lui
-  // qui règle l'allure des séances à allure 10 km (`allure10k.ts`). Posé
-  // pendant le rendu, avant les écrans qui calculent les allures.
-  const objectif10k = useMemo(
-    () => listerDossards(plan, dossards, ecarts, now).find((d) => d.duPlan && d.km === 10)?.objectifS ?? null,
-    [dossards, ecarts, now],
-  )
-  definirObjectif10k(objectif10k)
 
   // Le contexte avant la charge : la projection de la charge lit ses plafonds
   // de progression et sa reprise, qui ne dépendent pas de l'indice.

@@ -1010,7 +1010,11 @@ export function motDuCoach(entree: EntreeCoach): MotCoach {
  * Les séances sans objet de progression clair (vélo, escalade, repos, renfo)
  * ne renvoient rien : un texte pour tout le monde ne veut plus rien dire.
  */
-export function butDeLaSeance(type: SessionType): string | null {
+export function butDeLaSeance(type: SessionType, allure10k = false): string | null {
+  // Les séances du bloc 10 km se courent à l'allure de la course, pas au
+  // plafond d'oxygène : leur dire « VO2max » contredisait l'allure affichée.
+  if (allure10k && type === 'inter')
+    return "À quoi ça sert : ces répétitions installent ton allure du 10 km du 15 novembre. Le corps apprend à la tenir sur des distances de plus en plus longues, pour qu'elle te paraisse familière le jour de la course."
   switch (type) {
     case 'inter':
       return "À quoi ça sert : ces répétitions courtes travaillent ta VO2max, le plafond d'oxygène que ton corps sait utiliser. Tu ne courras jamais le marathon à cette allure, mais plus le plafond est haut, plus ton allure cible se court bas dans la zone confortable."

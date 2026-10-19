@@ -10,7 +10,7 @@
  *   seuil 4:16, intervalles 3:56, répétitions 3:38, endurance 5:07 à 5:44.
  */
 import type { Plan, ZoneKey } from '../data/types'
-import { objectif10k } from './allure10k'
+import { ALLURE_10K } from './allure10k'
 
 /** Écarts en secondes par kilomètre par rapport à l'allure marathon. */
 export const ZONE_OFFSETS: Record<ZoneKey, number> = {
@@ -48,12 +48,11 @@ export const zonePace = (marathonPace: number, zone: ZoneKey): number =>
 
 /**
  * L'allure d'une zone POUR UNE SÉANCE donnée. Une séance à allure 10 km du
- * bloc B suit l'objectif du dossard quand il est saisi (`allure10k.ts`) ;
- * toute autre séance garde l'écart à l'allure marathon.
+ * bloc B se court à `ALLURE_10K` ; toute autre séance garde l'écart à
+ * l'allure marathon.
  */
 export function allureZone(marathonPace: number, zone: ZoneKey, s?: { allure10k?: boolean } | null): number {
-  const o = zone === 'vo2' && s?.allure10k ? objectif10k() : null
-  return o != null ? o / 10 : zonePace(marathonPace, zone)
+  return zone === 'vo2' && s?.allure10k ? ALLURE_10K : zonePace(marathonPace, zone)
 }
 
 /** Formate une allure en `m:ss`. */

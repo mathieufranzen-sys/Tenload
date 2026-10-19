@@ -2,8 +2,7 @@
  * La VAP est un calcul maison : Strava l'affiche mais ne l'expose pas. Ces
  * tests verrouillent le sens et l'ordre de grandeur, pas la décimale.
  */
-import { afterEach, describe, expect, it } from 'vitest'
-import { definirObjectif10k } from './allure10k'
+import { describe, expect, it } from 'vitest'
 import planJson from '../data/plan.json'
 import type { Plan, Session, ZoneKey } from '../data/types'
 import {
@@ -213,23 +212,20 @@ describe('le temps visé', () => {
   })
 })
 
-describe('les séances à allure 10 km suivent l’objectif du dossard', () => {
-  const seance = { allure10k: true }
-  afterEach(() => definirObjectif10k(null))
-
-  it('sans objectif saisi, la zone vo2 garde l’écart à l’allure marathon', () => {
-    expect(allureZone(277, 'vo2', seance)).toBe(237)
-  })
-
-  it('37:30 donne 3:45/km aux séances du bloc, et à elles seules', () => {
-    definirObjectif10k(37 * 60 + 30)
-    expect(allureZone(277, 'vo2', seance)).toBe(225)
+describe('les séances à allure 10 km se courent à 3:45', () => {
+  it('3:45/km pour les séances du bloc, et pour elles seules', () => {
+    expect(allureZone(277, 'vo2', { allure10k: true })).toBe(225)
     expect(allureZone(277, 'vo2', {})).toBe(237)
-    expect(allureZone(277, 'seuil', seance)).toBe(257)
+    expect(allureZone(277, 'seuil', { allure10k: true })).toBe(257)
   })
 
   it('les cinq séances du bloc et le 10 km Hoka portent le drapeau', () => {
     const marquees = (planJson as unknown as Plan).weeks.flatMap((w) => w.sessions.filter((s) => s.allure10k).map(() => w.n))
     expect(marquees).toEqual([10, 11, 12, 13, 14, 14])
+  })
+
+  it('le 10 km Hoka affiche 3:45, soit 37:30', () => {
+    const hoka = (planJson as unknown as Plan).weeks[13].sessions.find((s) => s.title.startsWith('10 km Hoka'))!
+    expect(allureUnique(hoka, 277)).toBe(225)
   })
 })

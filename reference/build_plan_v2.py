@@ -534,7 +534,7 @@ for w in range(1, 35):
 
 # Les séances à allure 10 km du bloc B suivent l'objectif du dossard du
 # 15 novembre, pas l'allure marathon (arbitré par Mathieu le 19 octobre 2026) :
-# l'app remplace leur zone vo2 par l'objectif saisi sur la page du dossard.
+# l'app remplace leur zone vo2 par ALLURE_10K, 3:45/km (src/lib/allure10k.ts).
 for wk in weeks:
     if wk["bloc"] != "B":
         continue
