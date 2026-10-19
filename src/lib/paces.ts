@@ -10,6 +10,7 @@
  *   seuil 4:16, intervalles 3:56, répétitions 3:38, endurance 5:07 à 5:44.
  */
 import type { Plan, ZoneKey } from '../data/types'
+import { objectif10k } from './allure10k'
 
 /** Écarts en secondes par kilomètre par rapport à l'allure marathon. */
 export const ZONE_OFFSETS: Record<ZoneKey, number> = {
@@ -44,6 +45,16 @@ export const PLAGE_LENTE: Partial<Record<ZoneKey, number>> = {
 /** Allure d'une zone, en secondes par kilomètre. */
 export const zonePace = (marathonPace: number, zone: ZoneKey): number =>
   marathonPace + (ZONE_OFFSETS[zone] ?? 0)
+
+/**
+ * L'allure d'une zone POUR UNE SÉANCE donnée. Une séance à allure 10 km du
+ * bloc B suit l'objectif du dossard quand il est saisi (`allure10k.ts`) ;
+ * toute autre séance garde l'écart à l'allure marathon.
+ */
+export function allureZone(marathonPace: number, zone: ZoneKey, s?: { allure10k?: boolean } | null): number {
+  const o = zone === 'vo2' && s?.allure10k ? objectif10k() : null
+  return o != null ? o / 10 : zonePace(marathonPace, zone)
+}
 
 /** Formate une allure en `m:ss`. */
 export function formatPace(secPerKm: number): string {
@@ -277,7 +288,7 @@ export function allureUnique(
     }
   }
   if (zones.size !== 1) return null
-  return zonePace(marathonPace, [...zones][0])
+  return allureZone(marathonPace, [...zones][0], session)
 }
 
 /** Une série « N x Q unité », décomposée. */
@@ -329,35 +340,35 @@ export function estimateDuration(
 
   // Le marathon se court à l'allure cible, sans ajouter échauffement ni retour au calme.
   if (session.type === 'race' && session.dist) {
-    const t = (session.dist * zonePace(marathonPace, 'am')) / 60
+    const t = (session.dist * allureZone(marathonPace, 'am', session)) / 60
     return [round5(t * 0.99), round5(t * 1.05)]
   }
 
   let sec = 0
   if (session.struct) {
-    for (const seg of session.struct) sec += seg.km * zonePace(marathonPace, seg.zone)
+    for (const seg of session.struct) sec += seg.km * allureZone(marathonPace, seg.zone, session)
   } else {
     const steps = [...(session.wu ?? []), ...(session.main ?? []), ...(session.cd ?? [])]
     for (const [label, zone] of steps) {
       const z = typeof zone === 'string' && zone in ZONE_OFFSETS ? (zone as ZoneKey) : null
       if (typeof label === 'number') {
-        sec += label * zonePace(marathonPace, z ?? 'ef')
+        sec += label * allureZone(marathonPace, z ?? 'ef', session)
         continue
       }
       const text = String(label)
       const reps = lireRepetitions(text)
       if (reps) {
         const effort =
-          reps.secondes != null ? reps.secondes : reps.km! * zonePace(marathonPace, z ?? 'vo2')
+          reps.secondes != null ? reps.secondes : reps.km! * allureZone(marathonPace, z ?? 'vo2', session)
         sec += reps.n * effort + reps.n * 90 // 90 s de récupération
         continue
       }
       const km = text.match(/([\d,.]+)\s*km/)
       const min = text.match(/(\d+)\s*min/)
       const m = text.match(/([\d,.]+)\s*m\b/)
-      if (km) sec += parseFloat(km[1].replace(',', '.')) * zonePace(marathonPace, z ?? 'ef')
+      if (km) sec += parseFloat(km[1].replace(',', '.')) * allureZone(marathonPace, z ?? 'ef', session)
       else if (min) sec += Number(min[1]) * 60
-      else if (m) sec += (parseFloat(m[1].replace(',', '.')) / 1000) * zonePace(marathonPace, z ?? 'vo2')
+      else if (m) sec += (parseFloat(m[1].replace(',', '.')) / 1000) * allureZone(marathonPace, z ?? 'vo2', session)
       else sec += 180
     }
   }

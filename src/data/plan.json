@@ -2240,7 +2240,8 @@
       ]
      ],
      "note": "Le bloc 10 km reprend, quatre jours après le 20 km. Si les jambes sont encore lourdes, tu coupes après la troisième : une séance tronquée vaut mieux qu'une semaine perdue. Effort 7,5 sur 10 au maximum, et trois à quatre répétitions en réserve à la fin : au-delà, la séance n'est plus du seuil et tu la paies toute la semaine.",
-     "feedback": true
+     "feedback": true,
+     "allure10k": true
     },
     {
      "day": 6,
@@ -2385,8 +2386,9 @@
        "recup"
       ]
      ],
-     "note": "Cœur du bloc. 800 m à 4:05, soit 3 min 16. L'allure est celle du 15 novembre, pas plus vite : l'objectif est de l'installer, pas de la battre à l'entraînement. Effort 7,5 sur 10 au maximum, et trois à quatre répétitions en réserve à la fin : au-delà, la séance n'est plus du seuil et tu la paies toute la semaine.",
-     "feedback": true
+     "note": "Cœur du bloc. L'allure est celle du 15 novembre, pas plus vite : l'objectif est de l'installer, pas de la battre à l'entraînement. Effort 7,5 sur 10 au maximum, et trois à quatre répétitions en réserve à la fin : au-delà, la séance n'est plus du seuil et tu la paies toute la semaine.",
+     "feedback": true,
+     "allure10k": true
     },
     {
      "day": 4,
@@ -2586,8 +2588,9 @@
        "recup"
       ]
      ],
-     "note": "La séance de référence du bloc. Cinq kilomètres à allure de course, fractionnés. Note tes sensations : c'est elle qui dira si 40:40 est jouable. Effort 7,5 sur 10 au maximum, et trois à quatre répétitions en réserve à la fin : au-delà, la séance n'est plus du seuil et tu la paies toute la semaine.",
-     "feedback": true
+     "note": "La séance de référence du bloc. Cinq kilomètres à allure de course, fractionnés. Note tes sensations : c'est elle qui dira si ton objectif est jouable. Effort 7,5 sur 10 au maximum, et trois à quatre répétitions en réserve à la fin : au-delà, la séance n'est plus du seuil et tu la paies toute la semaine.",
+     "feedback": true,
+     "allure10k": true
     },
     {
      "day": 4,
@@ -2788,7 +2791,8 @@
       ]
      ],
      "note": "Dernière séance dure avant la course. Récupération plus courte, allure identique : on travaille la tolérance, pas la vitesse. La semaine s'allège à partir de vendredi. Effort 7,5 sur 10 au maximum, et trois à quatre répétitions en réserve à la fin : au-delà, la séance n'est plus du seuil et tu la paies toute la semaine.",
-     "feedback": true
+     "feedback": true,
+     "allure10k": true
     },
     {
      "day": 4,
@@ -2957,7 +2961,8 @@
       ]
      ],
      "note": "Mercredi, quatre jours avant le 10 km. On réveille l'allure, on ne la travaille pas. Tu dois finir cette séance en la trouvant trop courte. Effort 7,5 sur 10 au maximum, et trois à quatre répétitions en réserve à la fin : au-delà, la séance n'est plus du seuil et tu la paies toute la semaine.",
-     "feedback": true
+     "feedback": true,
+     "allure10k": true
     },
     {
      "day": 3,
@@ -3036,8 +3041,9 @@
        "zone": "vo2"
       }
      ],
-     "note": "L'objectif de l'automne. Ton record est 40:12. Cinq séances à allure 10 km et huit semaines de volume te situent entre 40:40 et 41:30. Pars à 4:05, pas plus vite, et décide au sixième kilomètre. Ton chrono recalera ta forme projetée depuis la feuille de séance.",
-     "feedback": true
+     "note": "L'objectif de l'automne. Ton record est 40:12. Cinq séances à allure 10 km et huit semaines de volume. Pars à ton allure objectif, pas plus vite, et décide au sixième kilomètre. Ton chrono recalera ta forme projetée depuis la feuille de séance.",
+     "feedback": true,
+     "allure10k": true
     }
    ]
   },

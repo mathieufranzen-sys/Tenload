@@ -14,7 +14,7 @@
  */
 import planJson from '../data/plan.json'
 import type { Plan, Session, Step, ZoneKey } from '../data/types'
-import { zonePace } from './paces'
+import { allureZone } from './paces'
 import { COULEUR_ZONE } from './seanceStyle'
 
 const plan = planJson as unknown as Plan
@@ -29,6 +29,8 @@ export interface SegmentDeroule {
   zone: ZoneKey | null
   /** Durée estimée, en secondes. `null` quand la quantité ne se convertit pas. */
   secondes: number | null
+  /** Allure de la zone pour CETTE séance (`allureZone`), en s/km. */
+  allure?: number | null
 }
 
 export interface BlocDeroule {
@@ -59,14 +61,15 @@ export function dureeSegment(
   quantite: string,
   zone: ZoneKey | null,
   marathonPace: number,
+  s?: Session | null,
 ): number | null {
   const t = quantite.trim().toLowerCase().replace(',', '.')
 
   const km = /^([\d.]+)\s*km\b/.exec(t)
-  if (km && zone) return Number(km[1]) * zonePace(marathonPace, zone)
+  if (km && zone) return Number(km[1]) * allureZone(marathonPace, zone, s)
 
   const metres = /^([\d.]+)\s*m\b(?!in)/.exec(t)
-  if (metres && zone) return (Number(metres[1]) / 1000) * zonePace(marathonPace, zone)
+  if (metres && zone) return (Number(metres[1]) / 1000) * allureZone(marathonPace, zone, s)
 
   // Une somme entre parenthèses — « (1 min vif + 1 min souple) » — vaut le
   // total de ses termes : c'est un tour complet, pas deux blocs.
@@ -104,7 +107,7 @@ const allureDe = (z: ZoneKey) => {
   return /^allure/i.test(l) ? l.charAt(0).toUpperCase() + l.slice(1) : `Allure ${l}`
 }
 
-function segment(step: Step, marathonPace: number): SegmentDeroule {
+function segment(step: Step, marathonPace: number, s: Session): SegmentDeroule {
   const brut = String(step[0])
   const second = step[1]
   const zone = second && second in plan.zones ? (second as ZoneKey) : null
@@ -127,7 +130,8 @@ function segment(step: Step, marathonPace: number): SegmentDeroule {
     libelle,
     quantite,
     zone,
-    secondes: dureeSegment(quantite, zone ?? (recup ? 'recup' : null), marathonPace),
+    secondes: dureeSegment(quantite, zone ?? (recup ? 'recup' : null), marathonPace, s),
+    allure: zone ? allureZone(marathonPace, zone, s) : null,
   }
 }
 
@@ -143,12 +147,13 @@ function depuisStruct(s: Session, marathonPace: number): BlocDeroule[] {
       libelle: allureDe(seg.zone),
       quantite: `${String(seg.km).replace('.', ',')} km`,
       zone: seg.zone,
-      secondes: seg.km * zonePace(marathonPace, seg.zone),
+      secondes: seg.km * allureZone(marathonPace, seg.zone, s),
+      allure: allureZone(marathonPace, seg.zone, s),
     },
   }))
 }
 
-function depuisPas(steps: Step[], phase: PhaseCle, marathonPace: number): BlocDeroule[] {
+function depuisPas(steps: Step[], phase: PhaseCle, marathonPace: number, s: Session): BlocDeroule[] {
   const blocs: BlocDeroule[] = []
   for (let i = 0; i < steps.length; i++) {
     // Un pas écrit en nombre est un nombre de kilomètres : c'est ainsi que le
@@ -162,12 +167,12 @@ function depuisPas(steps: Step[], phase: PhaseCle, marathonPace: number): BlocDe
     if (estRecup(brut)) {
       // Une récupération orpheline reste un bloc à elle : elle a bien eu lieu.
       if (blocs.length && blocs[blocs.length - 1].recup === undefined && blocs[blocs.length - 1].reps > 1) {
-        blocs[blocs.length - 1].recup = segment(steps[i], marathonPace)
+        blocs[blocs.length - 1].recup = segment(steps[i], marathonPace, s)
         continue
       }
     }
     const { reps, reste } = lireRepetition(brut)
-    const seg = segment([reste, steps[i][1]], marathonPace)
+    const seg = segment([reste, steps[i][1]], marathonPace, s)
     blocs.push({ phase, reps, effort: seg })
   }
   return blocs
@@ -176,9 +181,9 @@ function depuisPas(steps: Step[], phase: PhaseCle, marathonPace: number): BlocDe
 export function deroulerSeance(s: Session, marathonPace: number): BlocDeroule[] {
   if (s.struct?.length) return depuisStruct(s, marathonPace)
   return [
-    ...depuisPas(s.wu ?? [], 'wu', marathonPace),
-    ...depuisPas(s.main ?? [], 'main', marathonPace),
-    ...depuisPas(s.cd ?? [], 'cd', marathonPace),
+    ...depuisPas(s.wu ?? [], 'wu', marathonPace, s),
+    ...depuisPas(s.main ?? [], 'main', marathonPace, s),
+    ...depuisPas(s.cd ?? [], 'cd', marathonPace, s),
   ]
 }
 

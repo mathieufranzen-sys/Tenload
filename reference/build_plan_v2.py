@@ -113,9 +113,9 @@ COURSES = {
                 "course sert d'abord de répétition générale."},
     14: {"jour": 6, "qualite": 2, "title": "10 km Hoka de Paris", "dist": 10, "zone": "vo2",
          "note": "L'objectif de l'automne. Ton record est 40:12. Cinq séances à allure 10 km et "
-                 "huit semaines de volume te situent entre 40:40 et 41:30. Pars à 4:05, pas plus "
-                 "vite, et décide au sixième kilomètre. Ton chrono recalera ta forme projetée "
-                 "depuis la feuille de séance."},
+                 "huit semaines de volume. Pars à ton allure objectif, pas plus vite, et décide au "
+                 "sixième kilomètre. Ton chrono recalera ta forme projetée depuis la feuille de "
+                 "séance."},
     25: {"jour": 5, "qualite": 3, "title": "Semi-marathon test", "dist": 21.1, "zone": "seuil",
          "note": "Le point de bascule du plan. Sous 1 h 30, l'objectif 3 h 15 tient. Au-delà de "
                  "1 h 35, on recale sur 3 h 25 sans état d'âme. Course officielle ou solo "
@@ -144,11 +144,11 @@ QUALITE = {
          "Le bloc 10 km reprend, quatre jours après le 20 km. Si les jambes sont encore lourdes, "
          "tu coupes après la troisième : une séance tronquée vaut mieux qu'une semaine perdue."),
     11: ("6 x 800 m allure 10 km", 13, [("6 x 800 m", "vo2"), ("récup 2 min", "")],
-         "Cœur du bloc. 800 m à 4:05, soit 3 min 16. L'allure est celle du 15 novembre, pas plus "
-         "vite : l'objectif est de l'installer, pas de la battre à l'entraînement."),
+         "Cœur du bloc. L'allure est celle du 15 novembre, pas plus vite : l'objectif est de "
+         "l'installer, pas de la battre à l'entraînement."),
     12: ("5 x 1000 m allure 10 km", 14, [("5 x 1000 m", "vo2"), ("récup 2 min", "")],
          "La séance de référence du bloc. Cinq kilomètres à allure de course, fractionnés. Note "
-         "tes sensations : c'est elle qui dira si 40:40 est jouable."),
+         "tes sensations : c'est elle qui dira si ton objectif est jouable."),
     13: ("8 x 600 m allure 10 km", 12, [("8 x 600 m", "vo2"), ("récup 1 min 30", "")],
          "Dernière séance dure avant la course. Récupération plus courte, allure identique : on "
          "travaille la tolérance, pas la vitesse. La semaine s'allège à partir de vendredi."),
@@ -531,6 +531,17 @@ for w in range(1, 35):
         "efKm": 8 if VOLUME[w] < 55 else 10,
         "sessions": sessions,
     })
+
+# Les séances à allure 10 km du bloc B suivent l'objectif du dossard du
+# 15 novembre, pas l'allure marathon (arbitré par Mathieu le 19 octobre 2026) :
+# l'app remplace leur zone vo2 par l'objectif saisi sur la page du dossard.
+for wk in weeks:
+    if wk["bloc"] != "B":
+        continue
+    for x in wk["sessions"]:
+        etapes = (x.get("wu") or []) + (x.get("main") or []) + (x.get("cd") or [])
+        if any(z == "vo2" for _, z in etapes) or any(g["zone"] == "vo2" for g in (x.get("struct") or [])):
+            x["allure10k"] = True
 
 # Les contraintes du plan, numérotées comme dans CLAUDE.md. Elles venaient de
 # l'archive, c'est-à-dire du plan d'avant la refonte du 18 septembre : le

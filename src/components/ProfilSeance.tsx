@@ -230,7 +230,7 @@ function Ligne({
   phase: PhaseCle
   marathonPace: number
 }) {
-  const allure = seg.zone ? `${formatPace(zonePace(marathonPace, seg.zone))} /km` : null
+  const allure = seg.zone ? `${formatPace(seg.allure ?? zonePace(marathonPace, seg.zone))} /km` : null
   return (
     <div style={{ display: 'flex', gap: 12, alignItems: 'stretch', paddingLeft: 14 }}>
       <span
