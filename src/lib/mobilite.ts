@@ -137,7 +137,6 @@ export const EXERCICES_MOBILITE: ExerciceMobilite[] = [
     nom: 'Ischios jambe tendue',
     dose: '2 × 45 s par côté',
     consigne: 'Sur le dos, jambe tendue tenue par une sangle, jusqu’à la première tension.',
-    pause: 'En pause jusqu’au feu vert du kiné pour ton ischio.',
   },
   {
     id: 'livre-ouvert',

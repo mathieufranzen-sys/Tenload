@@ -1450,8 +1450,8 @@ Mathieu le 17 octobre 2026.
   pas d'une séance quotidienne de plus. Une page par zone (cheville et pied,
   hanche, genou, dos), à cocher pour soi ; seul « Noter la mobilité du jour »
   écrit, et c'est le même champ que le geste du carnet. Un exercice peut être
-  en pause le temps d'une blessure (`pause`) : les ischios, depuis la lésion
-  du 20 km de Paris.
+  en pause le temps d'une blessure (`pause`) : les ischios l'ont été après la
+  lésion du 20 km de Paris, débloqués le 19 octobre 2026.
 
 ## Le laboratoire de charge
 
