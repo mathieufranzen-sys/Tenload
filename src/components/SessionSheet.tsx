@@ -259,6 +259,7 @@ export function SessionSheet({
             <div style={{ marginTop: 14 }}>
               <ActionsSeance
                 origine={origine}
+                affichee={seance.s.type}
                 actuel={seance.ecart?.patch ?? null}
                 actuelRaison={seance.ecart?.reason ?? null}
                 semaineAvant={semaineAvant}

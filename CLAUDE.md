@@ -61,7 +61,13 @@ comme référence. Elles sont vérifiées par `reference/check_plan_v2.py` sur l
    à un mois datait des deux vélos. Seul le vélo DU PLAN bascule, jamais un vélo
    posé par un écart, jamais dans le passé, et l'indice passe par-dessus. Cette
    course est la seconde exception de la contrainte 6 : si le compteur l'a
-   ouverte, le tendon peut de nouveau enchaîner. Le compteur est le dernier
+   ouverte, le tendon peut de nouveau enchaîner. **Un écart de Mathieu l'arrête**
+   (`choixDeMathieu`, 20 octobre 2026) : une discipline, une distance, une
+   durée ou une séance composée posées sur le vélo le gardent tel quel. Un
+   vélo de 60 min corrigé à 18,6 km redevenait une course de 11 km, et
+   « Remplacer » ne proposait pas le vélo, puisqu'il filtrait la discipline
+   du PLAN et non celle affichée. Un remplacement posé après avoir noté
+   l'emporte aussi sur la discipline du ressenti (`traceCorrigee`). Le compteur est le dernier
    graphique de Suivi (`OuvertureChart`), un carré par jour sur huit semaines.
 6. **Jamais deux jours de course consécutifs**, sauf la paire lundi-mardi où le
    mardi est une récupération très lente, et qui bascule en vélo si la douleur

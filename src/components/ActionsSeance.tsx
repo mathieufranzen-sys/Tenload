@@ -40,6 +40,12 @@ type Panneau = 'reel' | 'remplacer' | null
 interface Props {
   /** La séance du plan, avant tout écart : la base de comparaison. */
   origine: Session
+  /**
+   * La discipline AFFICHÉE, moteur compris. « Remplacer » la retire de la
+   * liste, pas celle du plan : un vélo du plan passé en course par
+   * l'ouverture du volume doit pouvoir redevenir un vélo (20 octobre 2026).
+   */
+  affichee?: SessionType
   /** L'écart déjà enregistré, s'il existe. */
   actuel: EcartPatch | null
   actuelRaison?: string | null
@@ -59,6 +65,7 @@ interface Props {
 
 export function ActionsSeance({
   origine,
+  affichee,
   actuel,
   actuelRaison,
   semaineAvant,
@@ -250,7 +257,7 @@ export function ActionsSeance({
       {panneau === 'remplacer' && (
         <Panneau titre="Remplacer par">
           <div style={{ display: 'grid', gap: 7 }}>
-            {TYPES_REMPLACEMENT.filter((r) => r.type !== origine.type).map((r) => (
+            {TYPES_REMPLACEMENT.filter((r) => r.type !== (affichee ?? origine.type)).map((r) => (
               <button
                 key={r.type}
                 onClick={() => maj({ type: r.type, qualite: undefined })}

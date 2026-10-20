@@ -295,6 +295,14 @@ export function avecDistance(s: Session, km: number): Session {
   return out
 }
 
+/**
+ * La trace d'une séance notée, corrigée par un écart de discipline posé
+ * après coup : « Remplacer » sur une séance déjà notée dit ce qui a vraiment
+ * été fait, il l'emporte sur la discipline affichée au moment de noter.
+ */
+export const traceCorrigee = <T extends TraceRessenti>(f: T, p?: EcartPatch | null): T =>
+  p?.type && p.type !== f.session_type ? { ...f, session_type: p.type } : f
+
 /** Ce qu'un ressenti dit de la séance : la discipline et la distance affichées quand elle a été notée. */
 export interface TraceRessenti {
   session_type: string

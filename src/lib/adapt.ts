@@ -19,7 +19,7 @@ import {
   type PainMap,
 } from './tendonIndex'
 import type { Session, SessionType, Week } from '../data/types'
-import { avecDistance, cleEcart, formeNotee, labelType, seancesAvecEcarts, slotsParJour, versType, type EcartRow } from './overrides'
+import { avecDistance, cleEcart, formeNotee, labelType, seancesAvecEcarts, slotsParJour, traceCorrigee, versType, type EcartPatch, type EcartRow } from './overrides'
 import { EFFORT_TOLERE, SEUIL_SANS_DOULEUR, avancement, etatReprise, raisonEpisode, type EtatReprise } from './reprise'
 import { plafondsProgression, type Plafond } from './progression'
 import {
@@ -294,6 +294,8 @@ export interface ContextePlan {
   reveils?: Record<string, number>
   /** Huit semaines sans douleur au-dessus de 2 : le vélo du plan devient une course. */
   volumeOuvert?: boolean
+  /** Les séances dont Mathieu a fixé la discipline ou la mesure par un écart (`choixDeMathieu`). */
+  choisies?: Set<string>
   /**
    * Les ressentis par séance. Une séance notée prend la forme sous laquelle
    * elle a été faite : sans eux, une course passée au vélo par l'indice
@@ -312,6 +314,17 @@ export interface ContextePlan {
  * compteur l'a ouverte, c'est que le tendon va bien et peut de nouveau
  * enchaîner. L'indice passe par-dessus : une bande rouge la rend au vélo.
  */
+/**
+ * Un écart qui dit ce que Mathieu a fait ou veut faire : une discipline, une
+ * distance, une durée, une séance composée. Le moteur ne passe jamais
+ * par-dessus (20 octobre 2026) : un vélo de 60 min corrigé à 18,6 km
+ * redevenait une course facile de 11 km, parce que l'ouverture du volume ne
+ * voyait qu'un vélo du plan, et « Remplacer par du vélo » ne changeait rien,
+ * un vélo remplacé par un vélo ressemblant trait pour trait au vélo du plan.
+ */
+export const choixDeMathieu = (p?: EcartPatch | null): boolean =>
+  !!p && (p.type != null || p.dist != null || p.durMin != null || p.qualite != null)
+
 export function ouvrirVolume(s: Session): Session {
   return {
     ...versType(s, 'ef'),
@@ -354,6 +367,7 @@ export function construireContexte(
     palier: palierProchaineLongue(seances, feedback, pain, now),
     palierSpecifique: palierProchaineSpecifique(seances, feedback, pain, now),
     volumeOuvert: progresVolume(pain, now, indices).atteint,
+    choisies: new Set([...(ecarts?.values() ?? [])].filter((e) => choixDeMathieu(e.patch)).map((e) => cleEcart(e.week, e.day_index, e.slot))),
     reveils: Object.fromEntries(
       Object.entries(pain)
         .filter(([, p]) => p?.wake != null)
@@ -452,7 +466,8 @@ export function formeProjetee(
 ): Session {
   if (s.saute) return s
   let v = s
-  if (contexte.volumeOuvert && s.type === 'velo' && plan.type === 'velo' && day >= now) v = ouvrirVolume(v)
+  if (contexte.volumeOuvert && s.type === 'velo' && plan.type === 'velo' && day >= now && !contexte.choisies?.has(cle))
+    v = ouvrirVolume(v)
   const p = contexte.plafonds?.get(cle)
   if (p && v.dist && v.dist > p.km) v = appliquerPlafond(v, p)
   const e = contexte.reprise?.[day]
@@ -537,7 +552,9 @@ export function weekSessions(
     // Supabase reste celle du plan de référence, seule la date change.
     const day = addDays(week.monday, s.day + 7 * (s.semaines ?? 0))
     const cle = cleEcart(week.n, jourOrigine, slot)
-    const fait = contexte?.realisees?.get(cle)
+    const ecart = ecarts?.get(cle)
+    const brut = contexte?.realisees?.get(cle)
+    const fait = brut ? traceCorrigee(brut, ecart?.patch) : undefined
 
     // Sans le détail du ressenti, une séance notée reste figée telle que le
     // plan la donne : c'est l'ancien gel, gardé pour les appelants qui ne
@@ -551,7 +568,13 @@ export function weekSessions(
       if (!s.saute && !fait) {
         // Le vélo DU PLAN seulement : un vélo que Mathieu a posé lui-même
         // par un écart reste sa décision. Et jamais dans le passé.
-        if (contexte?.volumeOuvert && s.type === 'velo' && week.sessions[i].type === 'velo' && day >= now) {
+        if (
+          contexte?.volumeOuvert &&
+          s.type === 'velo' &&
+          week.sessions[i].type === 'velo' &&
+          day >= now &&
+          !choixDeMathieu(ecart?.patch)
+        ) {
           vecue = ouvrirVolume(vecue)
         }
         const palier = contexte?.palier

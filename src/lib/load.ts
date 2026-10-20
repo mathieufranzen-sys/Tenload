@@ -16,7 +16,7 @@
 import type { Session, SessionType, Week } from '../data/types'
 import { KM_COST, MIN_COST, RANDONNEE_KM, RUN_COST, VELO_Z3, estVeloAppuye, surcoutLongue, type LoadMap } from './tendonIndex'
 import { addDays } from './dates'
-import { formeNotee, seancesAvecEcarts, slotsParJour, type EcartRow } from './overrides'
+import { formeNotee, seancesAvecEcarts, slotsParJour, traceCorrigee, type EcartRow } from './overrides'
 import type { FeedbackRow } from './buildPain'
 import { familleDe, familleDuSport } from './insights'
 
@@ -184,7 +184,8 @@ export function buildLoadParDiscipline({
         const cle = `${w.n}-${w.sessions[i].day}-${slots[i]}`
         if (!completed.has(cle)) return
         const f = notees.get(cle)
-        const faite = f ? formeNotee(s, f, ecarts?.get(cle)?.patch.dist != null) : s
+        const patch = ecarts?.get(cle)?.patch
+        const faite = f ? formeNotee(s, traceCorrigee(f, patch), patch?.dist != null) : s
         bump(day, familleSession(faite.type), sessionLoad(faite))
         return
       }
