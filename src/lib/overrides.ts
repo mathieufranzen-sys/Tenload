@@ -359,7 +359,10 @@ export function formeNotee(s: Session, trace: TraceRessenti, distanceCorrigee = 
  * plus rien.
  */
 export function appliquerEcart(s: Session, e: EcartPatch): Session {
-  let out: Session = e.type ? versType(s, e.type) : { ...s }
+  // Toujours une copie : `versType` rend la séance elle-même quand la
+  // discipline ne change pas, et un vélo remplacé par un vélo mutait alors la
+  // séance de `plan.json` en mémoire, jour et badge compris (21 octobre 2026).
+  let out: Session = { ...(e.type ? versType(s, e.type) : s) }
   // La séance composée passe après le changement de discipline : elle le
   // remplace entièrement, elle ne s'y ajoute pas.
   if (e.qualite) out = versQualite(out, e.qualite)
@@ -371,18 +374,21 @@ export function appliquerEcart(s: Session, e: EcartPatch): Session {
   if (e.skipped) out.saute = true
 
   // Le badge dit ce que la séance ÉTAIT, pas ce qu'elle est devenue : ce
-  // qu'elle est devenue, la carte l'affiche déjà en grand juste à côté.
+  // qu'elle est devenue, la carte l'affiche déjà en grand juste à côté. Et
+  // seulement ce qui a réellement changé (21 octobre 2026) : un vélo remplacé
+  // par un vélo de 60 min affichait « initialement vélo · initialement
+  // 60 min », trois étiquettes pour ne rien dire.
   const parts: string[] = []
   if (e.skipped) parts.push('non faite')
-  if (e.qualite || e.type) parts.push(`initialement ${s.cat.toLowerCase()}`)
+  if (e.qualite || (e.type && e.type !== s.type)) parts.push(`initialement ${s.cat.toLowerCase()}`)
   if ((e.day != null && e.day !== s.day) || e.semaines) {
     // Le badge se lit depuis l'endroit où la séance se trouve MAINTENANT :
     // une séance poussée d'une semaine vient donc de la semaine d'avant.
     const semaine = !e.semaines ? '' : e.semaines > 0 ? ', semaine d’avant' : ', semaine d’après'
     parts.push(`initialement ${JOURS[s.day]}${semaine}`)
   }
-  if (e.dist != null && s.dist != null) parts.push(`initialement ${s.dist} km`)
-  if (e.durMin != null && s.dur) parts.push(`initialement ${s.dur[0]} min`)
+  if (e.dist != null && s.dist != null && Math.abs(e.dist - s.dist) >= 0.05) parts.push(`initialement ${s.dist} km`)
+  if (e.durMin != null && s.dur && e.durMin !== s.dur[0]) parts.push(`initialement ${s.dur[0]} min`)
   if (parts.length) out.ecart = parts.join(' · ')
 
   return out

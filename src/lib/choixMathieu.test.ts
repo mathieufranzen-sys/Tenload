@@ -3,7 +3,7 @@ import planJson from '../data/plan.json'
 import type { Plan } from '../data/types'
 import type { FeedbackRow } from './buildPain'
 import { weekSessions, type ContextePlan } from './adapt'
-import { cleEcart, indexerEcarts, type EcartPatch } from './overrides'
+import { appliquerEcart, cleEcart, indexerEcarts, type EcartPatch } from './overrides'
 
 // 20 octobre 2026 : un vélo de 60 min corrigé à 18,6 km redevenait une course
 // facile de 11 km, et « Remplacer par du vélo » ne changeait rien.
@@ -39,5 +39,12 @@ describe('l’ouverture du volume ne passe jamais par-dessus un écart de Mathie
 
   it('remplacer après avoir noté l’emporte sur la discipline affichée au moment de noter', () => {
     expect(veloDuMercredi({ type: 'velo', dist: 18.6 }, 'ef')).toMatchObject({ type: 'velo', dist: 18.6 })
+  })
+})
+
+describe('le badge d’écart ne dit que ce qui a changé', () => {
+  it('un vélo remplacé par un vélo de même durée, déplacé au mardi : seul le jour', () => {
+    const velo = semaine.sessions.find((s) => s.type === 'velo')!
+    expect(appliquerEcart(velo, { type: 'velo', durMin: 60, day: 1 }).ecart).toBe('initialement mercredi')
   })
 })
