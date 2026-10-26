@@ -92,6 +92,26 @@ export function VueCalendrier({
 }: Props) {
   const [initial, setInitial] = useState(false)
   const [prise, setPrise] = useState<SeancePlanifiee | null>(null)
+  /**
+   * Bloque le défilement de la page pendant le geste (26 octobre 2026 : sur
+   * iPhone, la page défilait au lieu de déplacer la séance). Changer
+   * `touch-action` une fois le doigt posé ne sert à rien, Safari a déjà
+   * décidé ; seul un `touchmove` non passif qui appelle `preventDefault`
+   * l'arrête en cours de geste. Il n'agit qu'une fois la séance attrapée :
+   * avant les 220 ms, la page défile normalement.
+   */
+  const conteneur = useRef<HTMLDivElement | null>(null)
+  const priseRef = useRef<SeancePlanifiee | null>(null)
+  priseRef.current = prise
+  useEffect(() => {
+    const el = conteneur.current
+    if (!el) return
+    const bloquer = (e: TouchEvent) => {
+      if (priseRef.current && e.cancelable) e.preventDefault()
+    }
+    el.addEventListener('touchmove', bloquer, { passive: false })
+    return () => el.removeEventListener('touchmove', bloquer)
+  }, [])
   const [survol, setSurvol] = useState<string | null>(null)
   const [curseur, setCurseur] = useState<{ x: number; y: number } | null>(null)
 
@@ -232,6 +252,7 @@ export function VueCalendrier({
 
   return (
     <div
+      ref={conteneur}
       onPointerMove={(e) => {
         if (depart.current && !prise) {
           const d = Math.hypot(e.clientX - depart.current.x, e.clientY - depart.current.y)
@@ -615,6 +636,9 @@ function CarteJour({
     <div
       onPointerDown={onPrise}
       onClick={onOuvrir}
+      // L'appui long ouvrirait sinon la loupe et le menu de sélection d'iOS,
+      // qui volent le geste avant la prise.
+      onContextMenu={onPrise ? (e) => e.preventDefault() : undefined}
       // La classe inverse les encres (texte blanc, filets clairs) pour tout ce
       // que la carte contient, comme la séance du jour d'Aujourd'hui.
       className={aFaire ? 'carte-bleue' : undefined}
@@ -635,6 +659,7 @@ function CarteJour({
         cursor: onOuvrir ? 'pointer' : 'default',
         userSelect: 'none',
         WebkitUserSelect: 'none',
+        WebkitTouchCallout: 'none',
       }}
     >
       {enDossard && (
