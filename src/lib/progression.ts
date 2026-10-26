@@ -14,12 +14,17 @@
  *    le plus solide sur 5 200 coureurs). Le plan de référence le respecte
  *    partout, marathon excepté : ce plafond ne mord que quand la réalité s'en
  *    écarte.
- * 2. **Une semaine ne dépasse pas de plus de 15 % la part du plan tenue la
- *    semaine d'avant.** Plus de 30 % de hausse sur deux semaines s'accompagne
- *    de davantage de blessures (Nielsen 2014) ; 15 % par semaine en est la
- *    moitié. La hausse se compte en PART DU PLAN et non en kilomètres, sinon
- *    le retour d'une décharge prévue passerait pour un emballement. Le taux a
- *    été choisi par Mathieu le 29 septembre 2026.
+ * 2. **Une semaine ne dépasse pas de plus de 15 % la meilleure part du plan
+ *    tenue sur les trois semaines d'avant.** Plus de 30 % de hausse sur deux
+ *    semaines s'accompagne de davantage de blessures (Nielsen 2014) ; 15 % par
+ *    semaine en est la moitié. La hausse se compte en PART DU PLAN et non en
+ *    kilomètres, sinon le retour d'une décharge prévue passerait pour un
+ *    emballement. Le taux a été choisi par Mathieu le 29 septembre 2026.
+ *    **La meilleure des trois, et non la dernière** (arbitré le 26 octobre
+ *    2026) : une semaine de repos tenue à 70 % plafonnait la suivante à 82 %,
+ *    puis 94 %, et chaque séance sautée pour l'agenda relançait le compteur,
+ *    si bien que le plan ne se rattrapait jamais. Une crise de trois semaines,
+ *    elle, plafonne toujours la reprise : c'est pour elle que la règle existe.
  *
  * C'est proportionnel par construction : un épisode d'un jour laisse la
  * semaine à 90 % du plan, et la suivante revient à 100 %. Trois semaines à
@@ -39,6 +44,8 @@ import type { SeanceArrangee } from './palier'
 export const HAUSSE_SORTIE = 0.1
 export const FENETRE_SORTIE = 30
 export const HAUSSE_SEMAINE = 0.15
+/** La référence de la hausse : la meilleure part du plan sur ces semaines-là. */
+export const SEMAINES_REFERENCE = 3
 /** Une course facile raccourcie ne descend pas sous vingt minutes : la reprise de Running Addict partait de 15 à 20. */
 export const EF_MINIMUM = 4
 
@@ -81,7 +88,10 @@ export function plafondsProgression(
   const prevu = (liste: SeanceArrangee[]) =>
     liste.filter((s) => COURSE.includes(s.type)).reduce((a, s) => a + (s.dist ?? 0), 0)
 
-  let part = 1
+  // Les parts du plan tenues, semaine après semaine ; la référence est la
+  // meilleure des trois dernières.
+  const parts: number[] = []
+  const reference = () => (parts.length ? Math.max(...parts.slice(-SEMAINES_REFERENCE)) : 1)
   for (const lundi of lundis) {
     const liste = semaines.get(lundi)!
     if (lundi < courant) {
@@ -99,7 +109,7 @@ export function plafondsProgression(
         }
       }
       const p = prevu(liste)
-      part = notee && p > 0 ? fait / p : 1
+      parts.push(notee && p > 0 ? fait / p : 1)
       continue
     }
 
@@ -134,6 +144,7 @@ export function plafondsProgression(
 
     const p = prevu(liste)
     if (p === 0) continue
+    const part = reference()
     const permis = Math.min(1, part * (1 + HAUSSE_SEMAINE)) * p
     let exces = dejaFait + aVenir.reduce((a, x) => a + x.km, 0) - permis
     if (exces > 0.25) {
@@ -160,7 +171,7 @@ export function plafondsProgression(
       }
     }
     const tenu = dejaFait + aVenir.reduce((a, x) => a + x.km, 0)
-    part = tenu / p
+    parts.push(tenu / p)
   }
   return out
 }

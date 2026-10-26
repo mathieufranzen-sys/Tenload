@@ -56,24 +56,26 @@ describe('la semaine remonte de 15 % au plus, en part du plan', () => {
     expect(plafondsProgression(seances, fb, lundi3).size).toBe(0)
   })
 
-  it('une semaine à 40 % : la suivante à 46 %, les courses faciles d’abord', () => {
+  it('une seule semaine creuse ne plafonne plus rien : la référence est la meilleure des trois', () => {
+    // 26 octobre 2026 : une semaine de repos tenue à 70 % plafonnait toute la suite.
     const fb = [...faite(seances, 1, 1), ...faite(seances, 2, 0.4)]
-    const p = plafondsProgression(seances, fb, lundi3)
-    // Plan 50 km, permis 23 : les EF descendent à 4 km, puis la longue.
-    expect(p.get('3-5-0')!.km).toBe(4)
-    expect(p.get('3-1-0')!.km).toBe(4)
-    expect(p.get('3-0-0')!.km).toBeLessThan(20)
-    expect(p.get('3-0-0')!.motif).toBe('progression')
-    // La qualité ne se raccourcit pas.
-    expect(p.has('3-3-0')).toBe(false)
+    expect(plafondsProgression(seances, fb, lundi3).size).toBe(0)
   })
 
-  it('la remontée continue les semaines suivantes, de plus en plus près du plan', () => {
-    const fb = [...faite(seances, 1, 1), ...faite(seances, 2, 0.4)]
-    const p = plafondsProgression(seances, fb, lundi3)
-    const longue3 = p.get('3-0-0')!.km
-    const longue4 = p.get('4-0-0')?.km ?? 20
-    expect(longue4).toBeGreaterThan(longue3)
+  it('trois semaines à 40 % : la suivante à 46 %, les courses faciles d’abord', () => {
+    const long = plan(6)
+    const lundi4 = addDays(S1, 21)
+    const fb = [...faite(long, 1, 0.4), ...faite(long, 2, 0.4), ...faite(long, 3, 0.4)]
+    const p = plafondsProgression(long, fb, lundi4)
+    // Plan 50 km, permis 23 : les EF descendent à 4 km, puis la longue.
+    expect(p.get('4-5-0')!.km).toBe(4)
+    expect(p.get('4-1-0')!.km).toBe(4)
+    expect(p.get('4-0-0')!.km).toBeLessThan(20)
+    expect(p.get('4-0-0')!.motif).toBe('progression')
+    // La qualité ne se raccourcit pas.
+    expect(p.has('4-3-0')).toBe(false)
+    // Et la remontée continue la semaine d'après, de plus en plus près du plan.
+    expect(p.get('5-0-0')?.km ?? 20).toBeGreaterThan(p.get('4-0-0')!.km)
   })
 
   it('une semaine sans aucun ressenti ne dit rien et ne dégrade pas', () => {

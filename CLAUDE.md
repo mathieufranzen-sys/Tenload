@@ -753,7 +753,13 @@ plus longtemps le tendon a mal, plus fort et plus longtemps le plan s'adapte.**
   encore à venir est supposé calme pour la projection ; aujourd'hui et le
   passé exigent un vrai relevé.
 - **Le volume remonte de 15 % par semaine au plus, en part du plan** : une
-  semaine ne dépasse pas de 15 % la part du plan tenue la semaine d'avant.
+  semaine ne dépasse pas de 15 % la MEILLEURE part du plan tenue sur les trois
+  semaines d'avant (`SEMAINES_REFERENCE`, arbitré le 26 octobre 2026 : une
+  décharge tenue à 70 % plafonnait la suite à 82 puis 94 %, et chaque séance
+  sautée pour l'agenda relançait le compteur, le plan ne se rattrapait
+  jamais). Une seule semaine creuse ne plafonne donc plus rien ; une crise de
+  trois semaines, si. Batterie `meilleure3` : 15 sur 23, le 2.1 tombe (maximum
+  22 au lieu de 20 après une fin de crise, toujours en vert).
   Compté en part du plan et non en kilomètres, pour que le retour d'une
   décharge prévue ne passe pas pour un emballement. Un épisode d'un jour
   (90 % tenu) ne plafonne rien ; trois semaines à 45 % demandent cinq
