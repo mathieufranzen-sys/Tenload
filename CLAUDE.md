@@ -1356,9 +1356,11 @@ parce qu'ils nommaient l'onglet Allures.
   septembre) : elles s'ouvrent par-dessus un écran et n'en héritent pas, donc
   le déroulé d'une séance et le carnet remontaient sous l'horloge. Le retour
   reste en haut, le titre d'une sous-page avec lui. La recette est dans
-  `styleCollant` (`components/collant.ts`) : zone sûre occupée, voile presque
-  opaque, flou, et fondu plutôt que coupe. **C'est elle qui fait foi pour tout
-  nouveau voile** ; les cinq écrans ont gardé la leur, aux valeurs près.
+  `components/collant.ts` (`FOND_BANDEAU`, `styleCollant`) : zone sûre
+  occupée, **bloc plein à bord net**, celui du Programme (arbitré par
+  Mathieu le 26 octobre 2026 : le fondu en dégradé laissait le contenu se lire
+  à travers le bas du titre). Les cinq écrans, la feuille de séance et les
+  sous-pages la partagent ; **elle fait foi pour tout nouvel en-tête**.
 - **Une piste qui défile s'estompe à ses bords, elle ne se coupe pas net.**
   La barre d'actions d'une séance tranchait « Corriger » en deux, ce qui se
   lit comme un bouton mal posé et non comme une suite à faire venir. Le fondu

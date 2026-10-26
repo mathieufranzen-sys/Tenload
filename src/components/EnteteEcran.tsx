@@ -6,29 +6,23 @@
  * l'horloge est pire qu'un titre absent. En restant en haut, l'en-tête occupe
  * lui-même la zone sûre et sert de fond au reste du défilement.
  *
- * Le flou du fond est masqué en dégradé plutôt que coupé net : un
- * `backdrop-filter` qui s'arrête sur une ligne droite dessine une arête
- * visible au milieu de l'écran, ce qui se remarque d'autant plus que le fond
- * est un dégradé.
+ * Son fond est le bandeau plein de `collant.ts`, à bord net (26 octobre
+ * 2026). Le Programme le pose lui-même autour du titre ET du sélecteur :
+ * l'en-tête y est alors nu (`dansBandeau`), sinon deux fonds se superposent.
  */
 import type { ReactNode } from 'react'
 import { ProfileButton } from './ProfileButton'
-
-/**
- * Hauteur du fondu, en pixels, et retrait bas de l'en-tête : les deux valeurs
- * sont la même. Le fondu doit tomber ENTIÈREMENT sous le texte — exprimé en
- * pourcentage, il commençait au milieu de la ligne de contexte et le contenu
- * qui défile se lisait au travers.
- */
-const FONDU = 26
-const MASQUE = `linear-gradient(180deg, #000 0, #000 calc(100% - ${FONDU}px), transparent 100%)`
+import { BAS_BANDEAU, FOND_BANDEAU } from './collant'
 
 export function EnteteEcran({
   titre,
   contexte,
   onOuvrirProfil,
+  dansBandeau = false,
 }: {
   titre: string
+  /** Posé dans un bandeau collant plus grand : ni collant, ni fond. */
+  dansBandeau?: boolean
   contexte?: ReactNode
   /** Absent sur l'écran Profil lui-même, qui n'a pas à s'ouvrir depuis lui-même. */
   onOuvrirProfil?: () => void
@@ -36,30 +30,23 @@ export function EnteteEcran({
   return (
     <header
       style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 20,
-        // Le retrait horizontal de la page est repris ici, puis annulé par la
-        // marge négative : sans ça le fond flouté s'arrêterait avant les bords.
-        margin: '0 calc(-1 * var(--page-x))',
-        padding: `calc(20px + env(safe-area-inset-top)) var(--page-x) ${FONDU}px`,
+        ...(dansBandeau
+          ? null
+          : {
+              position: 'sticky' as const,
+              top: 0,
+              zIndex: 20,
+              // Le retrait horizontal de la page est repris ici, puis annulé
+              // par la marge négative : le bandeau couvre toute la largeur.
+              margin: '0 calc(-1 * var(--page-x))',
+              ...FOND_BANDEAU,
+            }),
+        // Dans le bandeau du Programme, l'écart au sélecteur reste celui d'avant.
+        padding: `calc(20px + env(safe-area-inset-top)) ${dansBandeau ? 0 : 'var(--page-x)'} ${dansBandeau ? 26 : BAS_BANDEAU}px`,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         gap: 10,
-        // Aucun fond posé par-dessus : l'en-tête garde exactement la couleur
-        // du dégradé qui passe dessous, comme avant qu'il ne devienne collant.
-        // Un voile sombre le détachait du reste de l'écran alors qu'il doit y
-        // appartenir ; c'est le flou seul qui rend le titre lisible quand du
-        // contenu défile derrière.
-        // En mode clair, le flou seul ne suffit plus : une carte vert profond
-        // qui passe sous le titre le rendait illisible. Un voile du fond,
-        // presque opaque, le garde lisible sans dessiner de bande.
-        background: 'color-mix(in srgb, var(--bg) 88%, transparent)',
-        backdropFilter: 'blur(18px) saturate(1.4)',
-        WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
-        maskImage: MASQUE,
-        WebkitMaskImage: MASQUE,
       }}
     >
       <div style={{ minWidth: 0 }}>

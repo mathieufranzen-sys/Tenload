@@ -33,6 +33,7 @@ import { SessionCard } from '../components/SessionCard'
 import { CarteCarnet, PageCarnet } from '../components/JournalDuJour'
 import { CarteCharge } from '../components/CarteCharge'
 import { SubPage } from '../components/SubPage'
+import { BAS_BANDEAU, FOND_BANDEAU } from '../components/collant'
 import { ProfileButton } from '../components/ProfileButton'
 import { MeshBackground } from '../components/MeshBackground'
 import { SessionHero } from '../components/SessionHero'
@@ -697,8 +698,6 @@ const MOIS = [
 
 /** Hauteur du fondu sous la barre, en pixels, et son retrait bas : les deux
  *  sont la même valeur, pour que le flou ne s'arrête pas sur une arête. */
-const FONDU_JOUR = 16
-const MASQUE_JOUR = `linear-gradient(180deg, #000 0, #000 calc(100% - ${FONDU_JOUR}px), transparent 100%)`
 
 /**
  * L'en-tête de l'écran Aujourd'hui, propre à lui : la semaine et le bloc en
@@ -785,16 +784,12 @@ function EnteteJour({
           top: 0,
           zIndex: 20,
           margin: '0 calc(-1 * var(--page-x))',
-          padding: `calc(14px + env(safe-area-inset-top)) var(--page-x) ${FONDU_JOUR}px`,
+          padding: `calc(14px + env(safe-area-inset-top)) var(--page-x) ${BAS_BANDEAU}px`,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: 10,
-          background: 'color-mix(in srgb, var(--bg) 88%, transparent)',
-          backdropFilter: 'blur(18px) saturate(1.4)',
-          WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
-          maskImage: MASQUE_JOUR,
-          WebkitMaskImage: MASQUE_JOUR,
+          ...FOND_BANDEAU,
         }}
       >
         {/* Les deux titres occupent la même case : la bascule est un fondu et

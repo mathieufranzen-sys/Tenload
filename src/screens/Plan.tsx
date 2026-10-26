@@ -25,6 +25,7 @@ import { SessionCard } from '../components/SessionCard'
 import { Icon } from '../components/Icon'
 import { BoutonAction } from '../components/BoutonAction'
 import { EnteteEcran } from '../components/EnteteEcran'
+import { FOND_BANDEAU } from '../components/collant'
 import { MeshBackground } from '../components/MeshBackground'
 import { Segmented } from '../components/Segmented'
 import { VueCalendrier } from '../components/VueCalendrier'
@@ -178,14 +179,13 @@ export function Plan({
             zIndex: 20,
             margin: '0 calc(var(--page-x) * -1) 14px',
             padding: '0 var(--page-x) 10px',
-            background: 'color-mix(in srgb, var(--bg) 86%, transparent)',
-            backdropFilter: 'var(--glass-blur)',
-            WebkitBackdropFilter: 'var(--glass-blur)',
+            ...FOND_BANDEAU,
           }}
         >
           <EnteteEcran
             titre="Programme"
             onOuvrirProfil={onOuvrirProfil}
+            dansBandeau
           />
           <Segmented
             label="Vue du programme"

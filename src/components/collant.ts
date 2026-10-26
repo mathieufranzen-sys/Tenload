@@ -1,28 +1,27 @@
 /**
- * Le voile collant en haut d'une page qui défile.
+ * Le bandeau collant en haut d'une page qui défile, le même partout.
  *
- * Les écrans en ont un depuis la refonte, les pages qui s'ouvrent par-dessus
- * (feuille de séance, sous-pages) n'en avaient pas : le contenu remontait
- * jusque sous l'horloge et la Dynamic Island, et un titre à moitié caché par
- * l'heure est pire qu'un titre absent.
+ * Un BLOC PLEIN, à bord net, comme l'en-tête du Programme : arbitré par
+ * Mathieu le 26 octobre 2026, à la place du flou qui s'effaçait en dégradé.
+ * Le dégradé laissait le contenu se lire à travers le bas du titre ; le bloc
+ * dit clairement où s'arrête l'en-tête.
  *
- * Deux détails comptent autant que le flou lui-même :
- *
- * - le voile occupe la ZONE SÛRE (`env(safe-area-inset-top)`), sinon il n'y a
- *   rien sous l'horloge et le flou commence trop bas ;
- * - il s'arrête en FONDU et non sur une ligne droite : un `backdrop-filter`
- *   coupé net dessine une arête au milieu de l'écran.
- *
- * Les écrans ont chacun gardé sa propre recette, aux valeurs près ; c'est
- * cette fonction qui fait foi pour tout ce qui s'écrit à partir d'ici.
+ * Il occupe la ZONE SÛRE (`env(safe-area-inset-top)`) : sans ça, le contenu
+ * qui défile remonte jusque sous l'horloge et la Dynamic Island.
  */
 import type { CSSProperties } from 'react'
 
-/** Hauteur du fondu sous le voile, en pixels. */
-export const FONDU_COLLANT = 16
+/** Le fond du bandeau : celui de la page, presque opaque, avec un léger flou. */
+export const FOND_BANDEAU: CSSProperties = {
+  background: 'color-mix(in srgb, var(--bg) 86%, transparent)',
+  backdropFilter: 'var(--glass-blur)',
+  WebkitBackdropFilter: 'var(--glass-blur)',
+}
 
-export function styleCollant(fondu = FONDU_COLLANT): CSSProperties {
-  const masque = `linear-gradient(180deg, #000 0, #000 calc(100% - ${fondu}px), transparent 100%)`
+/** Le retrait sous le contenu du bandeau, avant son bord. */
+export const BAS_BANDEAU = 12
+
+export function styleCollant(): CSSProperties {
   return {
     position: 'sticky',
     top: 0,
@@ -30,13 +29,7 @@ export function styleCollant(fondu = FONDU_COLLANT): CSSProperties {
     paddingTop: 'calc(14px + env(safe-area-inset-top))',
     paddingLeft: 'var(--page-x)',
     paddingRight: 'var(--page-x)',
-    paddingBottom: fondu,
-    // Presque opaque : le flou seul ne suffit pas en mode clair, une carte
-    // vert profond qui passe dessous rendait le titre illisible.
-    background: 'color-mix(in srgb, var(--bg) 88%, transparent)',
-    backdropFilter: 'blur(18px) saturate(1.4)',
-    WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
-    maskImage: masque,
-    WebkitMaskImage: masque,
+    paddingBottom: BAS_BANDEAU,
+    ...FOND_BANDEAU,
   }
 }
