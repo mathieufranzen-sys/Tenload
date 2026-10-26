@@ -14,7 +14,8 @@ import { ajusterForme, coursesChronometrees } from './lib/forme'
 import { buildPain, type DailyLogRow, type FeedbackRow } from './lib/buildPain'
 import { NOTE_DEMO, construireDemo } from './data/demo'
 import { cleEcart, indexerEcarts, type EcartPatch, type EcartRow } from './lib/overrides'
-import { adapt, construireContexte, formeProjetee, weekSessions, type AdaptResult, type ContextePlan } from './lib/adapt'
+import { adapt, construireContexte, formeProjetee, seancesDeLaSemaine, weekSessions, type AdaptResult, type ContextePlan } from './lib/adapt'
+import { signauxSemaine } from './lib/signal'
 import { dossardsAjoutes, type DossardRow } from './lib/dossards'
 import type { PainMap } from './lib/tendonIndex'
 import { addDays, today } from './lib/dates'
@@ -500,7 +501,15 @@ function Coquille({
     const x = weekSessions(semaine, now, A.byDate, ecarts, contexte).find(
       (v) => v.jourOrigine === seance.jourOrigine && v.slot === seance.slot,
     )
-    return x ? { semaine, seance: x } : null
+    if (!x) return null
+    // Les contraintes se vérifient sur la semaine de CALENDRIER où la séance
+    // tombe, pas sur sa semaine du plan : elle a pu changer de semaine.
+    const calendrier = plan.weeks.find((w) => x.day >= w.monday && x.day <= addDays(w.monday, 6)) ?? semaine
+    const alertes =
+      signauxSemaine(seancesDeLaSemaine(plan.weeks, calendrier, now, A.byDate, ecarts, contexte)).get(
+        cleEcart(x.semaineOrigine, x.jourOrigine, x.slot),
+      )?.alertes ?? []
+    return { semaine, seance: x, alertes }
   }, [seance, now, A.byDate, ecarts, contexte])
 
   const feedbackOuvert = seance
@@ -684,6 +693,7 @@ function Coquille({
         <SessionSheet
           week={ouverte.semaine}
           seance={ouverte.seance}
+          alertes={ouverte.alertes}
           ecarts={ecarts}
           feedback={feedbackOuvert}
           marathonPace={marathonPace}

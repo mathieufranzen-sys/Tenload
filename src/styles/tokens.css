@@ -182,6 +182,16 @@
   --orange-500: #f5b32e;
   --orange-700: #b45309;
   --orange-900: #78350f;
+  /* Les signaux des cartes de séance (option B, palette arbitrée par Mathieu
+     le 26 octobre 2026) : l'ambre pour une contrainte cassée, un grenat
+     sourd pour une séance changée par la douleur, le bleu pâle de la jauge
+     pour une séance changée par le volume. Aplat clair, encre foncée. */
+  --signal-alerte-fond: var(--orange-100);
+  --signal-alerte-encre: var(--orange-900);
+  --signal-douleur-fond: #f3d6dc;
+  --signal-douleur-encre: #7a1631;
+  --signal-adapte-fond: var(--bleu-100);
+  --signal-adapte-encre: var(--bleu-700);
 
   /* ─── état ───────────────────────────────────────────────────────────────
      Des encres lisibles sur blanc : le jaune et le vert d'eau des bandes

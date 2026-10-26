@@ -426,6 +426,12 @@ export interface Alerte {
   /** Le numéro de la contrainte dans le CLAUDE.md, de 1 à 6. */
   contrainte: number
   texte: string
+  /**
+   * Les séances qui la portent : un jour de la semaine et les disciplines
+   * visées ce jour-là. Absent quand l'alerte porte sur la semaine entière
+   * (aucun jour sans jambes). C'est ce que lit l'icône d'alerte d'une carte.
+   */
+  cibles?: Array<{ jour: number; types: SessionType[] }>
 }
 
 /**
@@ -462,11 +468,13 @@ export function verifierContraintes(seances: Session[]): Alerte[] {
         alertes.push({
           contrainte: 3,
           texte: `Une séance de qualité est accolée à la sortie longue (${ou}).`,
+          cibles: [{ jour: d, types: TYPES_QUALITE }],
         })
       if (porte(d, ['muscu-bas']))
         alertes.push({
           contrainte: 3,
           texte: `Un renfo bas du corps est accolé à la sortie longue (${ou}).`,
+          cibles: [{ jour: d, types: ['muscu-bas'] }],
         })
     }
   }
@@ -484,6 +492,9 @@ export function verifierContraintes(seances: Session[]): Alerte[] {
       alertes.push({
         contrainte: 4,
         texte: `Une séance tombe sur le jour de repos (${JOURS[repos.day]}).`,
+        cibles: [
+          { jour: repos.day, types: [...new Set(jour(repos.day).map((x) => x.type))].filter((t) => t !== 'repos') },
+        ],
       })
   }
   const repose = (d: number) => !jour(d).some((s) => TYPES_JAMBES.includes(s.type))
@@ -503,6 +514,7 @@ export function verifierContraintes(seances: Session[]): Alerte[] {
       alertes.push({
         contrainte: 6,
         texte: `Deux séances de course le même jour (${JOURS[d]}).`,
+        cibles: [{ jour: d, types: TYPES_COURSE }],
       })
   }
   // Seconde exception : la course qui remplace le vélo une fois le volume
@@ -517,6 +529,10 @@ export function verifierContraintes(seances: Session[]): Alerte[] {
       alertes.push({
         contrainte: 6,
         texte: `Deux jours de course consécutifs (${JOURS[d]} et ${JOURS[d + 1]}).`,
+        cibles: [
+          { jour: d, types: TYPES_COURSE },
+          { jour: d + 1, types: TYPES_COURSE },
+        ],
       })
   }
 

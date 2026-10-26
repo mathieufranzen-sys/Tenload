@@ -32,6 +32,7 @@ import { libelleNature } from '../lib/natureSemaine'
 import { GrilleCalendrier } from '../components/GrilleCalendrier'
 import { CarteDossardJour } from '../components/CarteDossardJour'
 import { estDossard, type Dossard } from '../lib/dossards'
+import { signauxSemaine } from '../lib/signal'
 
 const plan = planJson as unknown as PlanType
 
@@ -108,6 +109,8 @@ export function Plan({
     () => seancesDeLaSemaine(plan.weeks, semaine, now, A.byDate, ecarts, contexte),
     [semaine, now, A.byDate, ecarts, contexte],
   )
+  // Une icône par carte, celle du message le plus important (`signal.ts`).
+  const signaux = useMemo(() => signauxSemaine(seances), [seances])
 
   // Une séance déclarée non faite ne compte plus dans le décompte de la semaine.
   const courses = seances.filter((x) => !x.s.saute && TYPES_COURSE.includes(x.s.type))
@@ -441,6 +444,7 @@ export function Plan({
                         dossard={estDossard(x.s)}
                         marathonPace={marathonPace}
                         feedback={feedbackDe(x)}
+                        signal={signaux.get(cleEcart(x.semaineOrigine, x.jourOrigine, x.slot))?.niveau}
                         onClick={onOuvrirSeance && (() => onOuvrirSeance(x))}
                       />
                     ))

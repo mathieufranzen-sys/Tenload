@@ -18,6 +18,8 @@ import { libelleNature } from '../lib/natureSemaine'
 import { CarteDossardJour } from './CarteDossardJour'
 import { Icon } from './Icon'
 import { estDossard, type Dossard } from '../lib/dossards'
+import { signauxSemaine, type NiveauSignal } from '../lib/signal'
+import { SignalSeance } from './SignalSeance'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Plan, Session, Week } from '../data/types'
 import type { SeancePlanifiee } from '../lib/adapt'
@@ -100,6 +102,18 @@ export function VueCalendrier({
    * l'arrête en cours de geste. Il n'agit qu'une fois la séance attrapée :
    * avant les 220 ms, la page défile normalement.
    */
+  // Les signaux se calculent semaine de calendrier par semaine de calendrier :
+  // les contraintes portent sur la semaine telle qu'elle tombe.
+  const signaux = useMemo(() => {
+    const parSemaine = new Map<string, SeancePlanifiee[]>()
+    for (const x of seances) {
+      const lundi = addDays(x.day, -weekdayIndex(x.day))
+      parSemaine.set(lundi, [...(parSemaine.get(lundi) ?? []), x])
+    }
+    const out = new Map<string, NiveauSignal | null>()
+    for (const liste of parSemaine.values()) for (const [cle, sg] of signauxSemaine(liste)) out.set(cle, sg.niveau)
+    return out
+  }, [seances])
   const conteneur = useRef<HTMLDivElement | null>(null)
   const priseRef = useRef<SeancePlanifiee | null>(null)
   priseRef.current = prise
@@ -403,6 +417,7 @@ export function VueCalendrier({
                       passe={jour < now}
                       aFaire={jour === now && x.s.type !== 'repos' && !x.s.saute && !estNotee?.(x)}
                       misEnAvant={focus === cleEcart(x.semaineOrigine, x.jourOrigine, x.slot)}
+                      signal={signaux.get(cleEcart(x.semaineOrigine, x.jourOrigine, x.slot)) ?? null}
                       onOuvrir={
                         onOuvrirSeance && !prise
                           ? () => {
@@ -614,10 +629,13 @@ function CarteJour({
   aFaire,
   dossard,
   misEnAvant,
+  signal,
   onOuvrir,
   onPrise,
 }: {
   seance: SeancePlanifiee
+  /** L'icône du message le plus important ; les étiquettes vivent dans la fiche. */
+  signal: NiveauSignal | null
   priseEnCours: boolean
   /** La séance du jour pas encore notée : le même bloc bleu que dans la vue semaine. */
   aFaire?: boolean
@@ -679,12 +697,8 @@ function CarteJour({
         >
           {seance.s.title}
         </div>
-        {seance.ecart && (
-          <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--sur-ink-3)', fontWeight: 500, marginTop: 1 }}>
-            {seance.s.ecart}
-          </div>
-        )}
       </div>
+      {signal && <SignalSeance niveau={signal} taille={22} />}
     </div>
   )
 }

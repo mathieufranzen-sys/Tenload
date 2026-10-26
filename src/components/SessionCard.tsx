@@ -12,6 +12,8 @@ import { estimateDuration, formatDuration } from '../lib/paces'
 import { Icon } from './Icon'
 import { EchelleIntensite } from './MarqueSeance'
 import { styleSeance } from '../lib/seanceStyle'
+import type { NiveauSignal } from '../lib/signal'
+import { SignalSeance } from './SignalSeance'
 
 interface Props {
   session: Session
@@ -38,9 +40,14 @@ interface Props {
    * qu'on ajoute soi-même.
    */
   dossard?: boolean
+  /**
+   * Vue semaine du Programme : l'icône du message le plus important
+   * (`signal.ts`). Elle remplace les étiquettes, qui vivent dans la fiche.
+   */
+  signal?: NiveauSignal | null
 }
 
-export function SessionCard({ session: s, marathonPace, feedback, onClick, compact = false, etat, dossard }: Props) {
+export function SessionCard({ session: s, marathonPace, feedback, onClick, compact = false, etat, dossard, signal }: Props) {
   if (compact)
     return (
       <CarteCompacte
@@ -50,6 +57,7 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
         onClick={onClick}
         etat={etat}
         dossard={dossard}
+        signal={signal}
       />
     )
   const [lo, hi] = estimateDuration(s, marathonPace)
@@ -172,7 +180,7 @@ export function SessionCard({ session: s, marathonPace, feedback, onClick, compa
   )
 }
 
-function CarteCompacte({ session: s, marathonPace, feedback, onClick, etat, dossard }: Omit<Props, 'compact'>) {
+function CarteCompacte({ session: s, marathonPace, feedback, onClick, etat, dossard, signal }: Omit<Props, 'compact'>) {
   const [lo, hi] = estimateDuration(s, marathonPace)
   const duree = lo === hi ? formatDuration(lo) : `${formatDuration(lo)} à ${formatDuration(hi)}`
   const repos = s.type === 'repos'
@@ -248,12 +256,11 @@ function CarteCompacte({ session: s, marathonPace, feedback, onClick, etat, doss
         >
           <span>{feedback ? `Douleur ${formatNumber(feedback.pain)} · effort ${feedback.rpe}` : duree}</span>
           {st.intensite > 0 && <EchelleIntensite niveau={st.intensite} hauteur={10} />}
-        </div>
-      )}
-      {(s.ecart || s.adapted) && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 9 }}>
-          {s.ecart && <span className="tag-ecart">{s.ecart}</span>}
-          {s.adapted && <span className="tag-adapte">{s.adapted}</span>}
+          {signal && (
+            <span style={{ marginLeft: 'auto' }}>
+              <SignalSeance niveau={signal} />
+            </span>
+          )}
         </div>
       )}
     </button>

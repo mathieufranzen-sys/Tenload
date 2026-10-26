@@ -626,6 +626,18 @@ en-têtes de semaine.
   semaine d'origine les distingue, et un écart enregistré sur l'une écrasait
   l'autre. `onOuvrirSeance` ne reçoit donc plus de semaine du tout : la séance
   porte la sienne.
+- **Une icône par carte, plus d'étiquettes** (`signal.ts` + 3 tests,
+  `SignalSeance`, arbitré par Mathieu le 26 octobre 2026, option B). Les
+  étiquettes empilées ne se lisaient plus, et les « initialement mercredi »
+  décrivaient son agenda : il déplace et modifie sans cesse. Sur les cartes
+  du Programme (vue semaine et calendrier), une seule icône, en bas à droite,
+  celle du niveau le plus haut : **alerte** (triangle, ambre) quand la
+  semaine RÉELLE casse une contrainte 3, 4 ou 6 sur cette séance
+  (`Alerte.cibles`) ; **douleur** (pouls, grenat) pour les motifs indice,
+  raideur, palier, reprise, alternance, intensité ; **volume** (curseurs,
+  bleu) pour plafond, progression, volume ouvert. Faite autrement, non faite,
+  déplacée, corrigée : rien sur la carte. **Tout le détail vit dans la
+  fiche**, contraintes cassées en premier, en ambre. Jetons `--signal-*`.
 - **« Voir initial »** montre le plan de référence nu, sans écart ni
   adaptation. C'est le seul sens non ambigu de « avant toute modification ».
 

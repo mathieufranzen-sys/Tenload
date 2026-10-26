@@ -73,6 +73,11 @@ interface Props {
   renfoIndisponible?: boolean
   /** Absent en lecture seule. */
   onSaveRenfo?: (ligne: RenfoRow) => void
+  /**
+   * Les contraintes que la semaine RÉELLE casse sur cette séance (`signal.ts`).
+   * La carte du calendrier n'en montre que l'icône : le texte vit ici.
+   */
+  alertes?: string[]
   onClose: () => void
 }
 
@@ -91,6 +96,7 @@ export function SessionSheet({
   pain = {},
   renfoIndisponible,
   onSaveRenfo,
+  alertes = [],
   onClose,
 }: Props) {
   const { s, jourOrigine, slot, day } = seance
@@ -230,8 +236,15 @@ export function SessionSheet({
             <span>Semaine {week.n}</span>
           </p>
 
-          {(s.adapted || s.ecart) && (
+          {(alertes.length > 0 || s.adapted || s.ecart) && (
             <div style={{ margin: '14px 0 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {/* Les contraintes cassées d'abord : c'est le seul message que
+                  l'app ne corrige pas d'elle-même. */}
+              {alertes.map((a) => (
+                <NoteSeance key={a} teinte="var(--signal-alerte-encre)" fond="var(--signal-alerte-fond)">
+                  {a}
+                </NoteSeance>
+              ))}
               {/* Deux origines distinctes, deux couleurs : le jaune vient du
                   moteur d'adaptation, la pêche d'une décision de Mathieu. */}
               {s.adapted && (
