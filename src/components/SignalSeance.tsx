@@ -11,7 +11,16 @@ const LIBELLE: Record<NiveauSignal, string> = {
   adapte: 'Séance adaptée par le volume',
 }
 
-export function SignalSeance({ niveau, taille = 24 }: { niveau: NiveauSignal; taille?: number }) {
+export function SignalSeance({
+  niveau,
+  taille = 24,
+  surAplat = false,
+}: {
+  niveau: NiveauSignal
+  taille?: number
+  /** Posée sur l'aplat de son propre niveau (message de la fiche) : pastille blanche, sinon elle s'y fond. */
+  surAplat?: boolean
+}) {
   return (
     <span
       role="img"
@@ -24,7 +33,7 @@ export function SignalSeance({ niveau, taille = 24 }: { niveau: NiveauSignal; ta
         flex: 'none',
         display: 'grid',
         placeItems: 'center',
-        background: `var(--signal-${niveau}-fond)`,
+        background: surAplat ? 'var(--surface-2)' : `var(--signal-${niveau}-fond)`,
         color: `var(--signal-${niveau}-encre)`,
       }}
     >

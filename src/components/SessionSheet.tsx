@@ -19,6 +19,8 @@ import { CarteCoach } from './CarteCoach'
 import { butDeLaSeance } from '../lib/coach'
 import { formatDayLong, today } from '../lib/dates'
 import { ChronoCourse, recalageSurCourse } from './ChronoCourse'
+import { SignalSeance } from './SignalSeance'
+import { niveauDe, type NiveauSignal } from '../lib/signal'
 import {
   DOULEUR_DETAIL,
   DOULEUR_MOT,
@@ -238,24 +240,33 @@ export function SessionSheet({
 
           {(alertes.length > 0 || s.adapted || s.ecart) && (
             <div style={{ margin: '14px 0 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {/* Les contraintes cassées d'abord : c'est le seul message que
-                  l'app ne corrige pas d'elle-même. */}
+              {/* Le même ordre et les mêmes signes que sur la carte du
+                  Programme (26 octobre 2026) : la contrainte cassée d'abord,
+                  seul message que l'app ne corrige pas d'elle-même, puis ce que
+                  la douleur ou le volume ont changé, puis tes modifications. */}
               {alertes.map((a) => (
-                <NoteSeance key={a} teinte="var(--signal-alerte-encre)" fond="var(--signal-alerte-fond)">
+                <MessageSeance key={a} niveau="alerte" titre="Contrainte non respectée">
                   {a}
-                </NoteSeance>
+                </MessageSeance>
               ))}
-              {/* Deux origines distinctes, deux couleurs : le jaune vient du
-                  moteur d'adaptation, la pêche d'une décision de Mathieu. */}
               {s.adapted && (
-                <NoteSeance teinte="var(--warning)" fond="color-mix(in srgb, var(--adapte-fond) 45%, transparent)">
+                <MessageSeance
+                  niveau={niveauDe(s, [])}
+                  titre={
+                    niveauDe(s, []) === 'douleur'
+                      ? 'Adaptée par la douleur'
+                      : niveauDe(s, []) === 'adapte'
+                        ? 'Adaptée par le volume'
+                        : 'Faite autrement'
+                  }
+                >
                   {s.adapted}
-                </NoteSeance>
+                </MessageSeance>
               )}
               {s.ecart && (
-                <NoteSeance teinte="var(--pale)" fond="color-mix(in srgb, var(--ink) 5%, transparent)">
-                  {s.ecart}
-                </NoteSeance>
+                <MessageSeance niveau={null} titre="Ta modification">
+                  {s.ecart.charAt(0).toUpperCase() + s.ecart.slice(1)}
+                </MessageSeance>
               )}
             </div>
           )}
@@ -459,21 +470,39 @@ function TitreSection({ children }: { children: string }) {
 }
 
 /** Une note sous le titre : ce que le moteur ou Mathieu a changé à la séance. */
-function NoteSeance({ teinte, fond, children }: { teinte: string; fond: string; children: string }) {
+/**
+ * Un message de la fiche, au dessin du signal de la carte : l'icône du niveau,
+ * son aplat, un titre court qui dit d'où vient le message, puis le message.
+ * Sans niveau, c'est ta propre modification : fond neutre, pas d'icône.
+ */
+function MessageSeance({ niveau, titre, children }: { niveau: NiveauSignal | null; titre: string; children: string }) {
   return (
     <div
       style={{
         display: 'flex',
+        alignItems: 'flex-start',
         gap: 12,
-        padding: '13px 16px',
+        padding: '12px 14px',
         borderRadius: 20,
-        border: `1px solid ${teinte}`,
-        borderColor: `color-mix(in srgb, ${teinte} 45%, transparent)`,
-        background: fond,
+        background: niveau ? `var(--signal-${niveau}-fond)` : 'color-mix(in srgb, var(--ink) 5%, transparent)',
       }}
     >
-      <span aria-hidden style={{ width: 4, borderRadius: 2, background: teinte, flex: 'none' }} />
-      <span style={{ fontSize: 'var(--fs-texte)', lineHeight: 1.45, color: 'var(--ink)' }}>{children}</span>
+      {niveau && <SignalSeance niveau={niveau} taille={28} surAplat />}
+      <span style={{ minWidth: 0 }}>
+        <span
+          style={{
+            display: 'block',
+            fontSize: 'var(--fs-detail)',
+            fontWeight: 600,
+            color: niveau ? `var(--signal-${niveau}-encre)` : 'var(--ink-2)',
+          }}
+        >
+          {titre}
+        </span>
+        <span style={{ display: 'block', marginTop: 2, fontSize: 'var(--fs-texte)', lineHeight: 1.45, color: 'var(--ink)' }}>
+          {children}
+        </span>
+      </span>
     </div>
   )
 }

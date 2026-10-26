@@ -637,7 +637,11 @@ en-têtes de semaine.
   raideur, palier, reprise, alternance, intensité ; **volume** (curseurs,
   bleu) pour plafond, progression, volume ouvert. Faite autrement, non faite,
   déplacée, corrigée : rien sur la carte. **Tout le détail vit dans la
-  fiche**, contraintes cassées en premier, en ambre. Jetons `--signal-*`.
+  fiche**, au même dessin (`MessageSeance`) : l'aplat du niveau, l'icône sur
+  pastille blanche, un titre (« Contrainte non respectée », « Adaptée par la
+  douleur », « Adaptée par le volume », « Faite autrement », « Ta
+  modification »), puis le message. Contraintes cassées en premier, tes
+  modifications en dernier sur fond neutre. Jetons `--signal-*`.
 - **« Voir initial »** montre le plan de référence nu, sans écart ni
   adaptation. C'est le seul sens non ambigu de « avant toute modification ».
 
